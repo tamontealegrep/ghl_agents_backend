@@ -6,11 +6,11 @@ from zoneinfo import ZoneInfo
 from agent_backend.calendars import CalendarSettings
 from fastapi.testclient import TestClient
 
-from surrogacy.api.v1.endpoints import book_appointment as book_endpoint
-from surrogacy.api.v1.endpoints import cancel_appointment as cancel_endpoint
-from surrogacy.api.v1.endpoints import edit_appointment as edit_endpoint
-from surrogacy.api.v1.endpoints import find_appointment as find_endpoint
-from surrogacy.api.v1.endpoints import get_available_slots as slots_endpoint
+from surrogacy.api.v1.endpoints import book_appointment_google as book_endpoint
+from surrogacy.api.v1.endpoints import cancel_appointment_google as cancel_endpoint
+from surrogacy.api.v1.endpoints import edit_appointment_google as edit_endpoint
+from surrogacy.api.v1.endpoints import find_appointment_google as find_endpoint
+from surrogacy.api.v1.endpoints import get_available_slots_google as slots_endpoint
 from surrogacy.services import notifications
 from tests.tools.apps import surrogacy_app as app
 
@@ -56,7 +56,7 @@ def test_slots_use_the_requested_calendars_credentials_hours_and_timings(monkeyp
     monkeypatch.setattr(slots_endpoint, "get_access_token", _tok)
     monkeypatch.setattr(slots_endpoint, "get_free_busy", _busy)
 
-    body = client.post("/api/v1/get-available-slots", json={"calendar_type": "control"}).json()
+    body = client.post("/api/v1/get-available-slots-google", json={"calendar_type": "control"}).json()
 
     assert seen == {"client_id": "c-id", "calendar_id": "control@cal"}
     assert body["success"] is True and body["available_slots"]
@@ -71,11 +71,11 @@ def test_slots_use_the_requested_calendars_credentials_hours_and_timings(monkeyp
 def test_every_scheduling_tool_fails_when_calendar_type_is_missing(monkeypatch):
     _use(monkeypatch, slots_endpoint, book_endpoint, cancel_endpoint, edit_endpoint, find_endpoint)
     payloads = {
-        "get-available-slots": {},
-        "book-appointment": {"start_date": "2030-01-07T15:00:00Z", "contact_name": "Ana", "contact_email": "a@b.co", "contact_phone": "1"},
-        "cancel-appointment": {"event_id": "e"},
-        "edit-appointment": {"event_id": "e"},
-        "find-appointment": {"contact_name": "Ana"},
+        "get-available-slots-google": {},
+        "book-appointment-google": {"start_date": "2030-01-07T15:00:00Z", "contact_name": "Ana", "contact_email": "a@b.co", "contact_phone": "1"},
+        "cancel-appointment-google": {"event_id": "e"},
+        "edit-appointment-google": {"event_id": "e"},
+        "find-appointment-google": {"contact_name": "Ana"},
     }
     for tool, payload in payloads.items():
         for body_calendar in ({}, {"calendar_type": ""}, {"calendar_type": None}):
@@ -88,11 +88,11 @@ def test_every_scheduling_tool_fails_when_calendar_type_is_missing(monkeypatch):
 def test_every_scheduling_tool_rejects_an_unknown_calendar_with_the_valid_keys(monkeypatch):
     _use(monkeypatch, slots_endpoint, book_endpoint, cancel_endpoint, edit_endpoint, find_endpoint)
     payloads = {
-        "get-available-slots": {},
-        "book-appointment": {"start_date": "2030-01-07T15:00:00Z", "contact_name": "Ana", "contact_email": "a@b.co", "contact_phone": "1"},
-        "cancel-appointment": {"event_id": "e"},
-        "edit-appointment": {"event_id": "e"},
-        "find-appointment": {"contact_name": "Ana"},
+        "get-available-slots-google": {},
+        "book-appointment-google": {"start_date": "2030-01-07T15:00:00Z", "contact_name": "Ana", "contact_email": "a@b.co", "contact_phone": "1"},
+        "cancel-appointment-google": {"event_id": "e"},
+        "edit-appointment-google": {"event_id": "e"},
+        "find-appointment-google": {"contact_name": "Ana"},
     }
     for tool, payload in payloads.items():
         body = client.post(f"/api/v1/{tool}", json={**payload, "calendar_type": "NOPE"}).json()
@@ -117,8 +117,8 @@ def test_cancel_and_find_use_the_requested_calendar(monkeypatch):
     monkeypatch.setattr(find_endpoint, "get_access_token", _token)
     monkeypatch.setattr(find_endpoint, "list_events", _list)
 
-    client.post("/api/v1/cancel-appointment", json={"event_id": "e", "calendar_type": "CONTROL"})
-    client.post("/api/v1/find-appointment", json={"contact_name": "Ana", "calendar_type": "CONTROL"})
+    client.post("/api/v1/cancel-appointment-google", json={"event_id": "e", "calendar_type": "CONTROL"})
+    client.post("/api/v1/find-appointment-google", json={"contact_name": "Ana", "calendar_type": "CONTROL"})
 
     assert seen == [("delete", "control@cal"), ("list", "control@cal")]
 
@@ -126,7 +126,7 @@ def test_cancel_and_find_use_the_requested_calendar(monkeypatch):
 def test_calendar_without_credentials_names_the_variables_to_define(monkeypatch):
     _use(monkeypatch, slots_endpoint)
 
-    body = client.post("/api/v1/get-available-slots", json={"calendar_type": "sin_credenciales"}).json()
+    body = client.post("/api/v1/get-available-slots-google", json={"calendar_type": "sin_credenciales"}).json()
 
     assert body["success"] is False
     assert "BN_GOOGLE_CLIENT_ID_SIN_CREDENCIALES" in body["errors"]
@@ -165,7 +165,7 @@ def test_booking_in_a_new_calendar_uses_its_hours_title_and_notifies_the_team(mo
         "contact_email": "ana@gmail.com",
         "contact_phone": "+573000000000",
     }
-    body = client.post("/api/v1/book-appointment", json=payload).json()
+    body = client.post("/api/v1/book-appointment-google", json=payload).json()
 
     assert body["success"] is True and body["errors"] is None
     assert created["calendar_id"] == "control@cal"
@@ -173,5 +173,5 @@ def test_booking_in_a_new_calendar_uses_its_hours_title_and_notifies_the_team(mo
     assert sent and sent[0][0] == "team@example.org" and sent[0][1].startswith("CONTROL - ")
 
     # The default hours end at 18:00: 19:00 is rejected for this calendar.
-    late = client.post("/api/v1/book-appointment", json={**payload, "start_date": _monday_at(19)}).json()
+    late = client.post("/api/v1/book-appointment-google", json={**payload, "start_date": _monday_at(19)}).json()
     assert late["reason"] == "invalid_hour"

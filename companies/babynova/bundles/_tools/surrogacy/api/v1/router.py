@@ -1,24 +1,24 @@
 from fastapi import APIRouter
 
 from .endpoints import (
-    book_appointment,
+    book_appointment_google,
     calendars,
     ghl_scheduling,
-    cancel_appointment,
-    edit_appointment,
-    find_appointment,
+    cancel_appointment_google,
+    edit_appointment_google,
+    find_appointment_google,
     check_documentation,
     health,
-    get_available_slots,
+    get_available_slots_google,
     surrogate_classification,
 )
 
 api_router = APIRouter()
-api_router.include_router(get_available_slots.router, tags=["get_available_slots"])
-api_router.include_router(book_appointment.router, tags=["book_appointment"])
-api_router.include_router(find_appointment.router, tags=["find_appointment"])
-api_router.include_router(cancel_appointment.router, tags=["cancel_appointment"])
-api_router.include_router(edit_appointment.router, tags=["edit_appointment"])
+api_router.include_router(get_available_slots_google.router, tags=["get_available_slots_google"])
+api_router.include_router(book_appointment_google.router, tags=["book_appointment_google"])
+api_router.include_router(find_appointment_google.router, tags=["find_appointment_google"])
+api_router.include_router(cancel_appointment_google.router, tags=["cancel_appointment_google"])
+api_router.include_router(edit_appointment_google.router, tags=["edit_appointment_google"])
 api_router.include_router(surrogate_classification.router, tags=["surrogate_classification"])
 api_router.include_router(check_documentation.router, tags=["check_documentation"])
 api_router.include_router(calendars.router, tags=["calendars"])

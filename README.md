@@ -71,7 +71,7 @@ Los dos contenedores pueden correr a la vez: usan proyectos de compose distintos
 
 | Agente | Canal | Endpoint |
 |---|---|---|
-| `family_aims_sam_text` | Texto (GoHighLevel) | `POST /agents/family_aims_sam_text/sam-text` (webhook) |
+| `family_aims_sam_text` | Texto (GoHighLevel) | `POST /agents/family_aims/sam-text` (webhook) |
 | `family_aims_sam_en_voice`, `_es_voice`, `_pt_voice` | Voz | `POST /agents/<agente>/chat` |
 
 Herramientas (plugin `bundles/_tools/desk`): reservar, buscar, editar y cancelar citas, horarios disponibles, `check-visa`, `resolve-event-link-ghl` y `calendars`. Las de agenda que usan los agentes son las de **GoHighLevel**, con sufijo `-ghl` (`/agents/<agente>/tools/book-appointment-ghl`); sus variantes de **Google Calendar** se conservan con el sufijo `-google` (`book-appointment-google`) y ningún agente las usa.
@@ -80,11 +80,13 @@ Herramientas (plugin `bundles/_tools/desk`): reservar, buscar, editar y cancelar
 
 | Agente | Canal | Endpoint |
 |---|---|---|
-| `babynova_triage_obstetrico_text` | Texto (GoHighLevel) | `POST /agents/babynova_triage_obstetrico_text/triage-text` |
-| `babynova_surrogate_questions_text` | Texto (GoHighLevel) | `POST /agents/babynova_surrogate_questions_text/surrogate-questions-text` |
+| `babynova_triage_obstetrico_text` | Texto (GoHighLevel) | `POST /agents/babynova/triage-text` |
+| `babynova_surrogate_questions_text` | Texto (GoHighLevel) | `POST /agents/babynova/surrogate-questions-text` |
 | `babynova_surrogate_questions_voice` | Chat / voz | `POST /agents/<agente>/chat` |
 
-Herramientas (plugin `bundles/_tools/surrogacy`): citas, `check-documentation-sur`, `surrogate-classification`.
+Herramientas (plugin `bundles/_tools/surrogacy`): citas con Google (`*-google`) y con GHL (`*-ghl`), `check-documentation-sur`, `surrogate-classification`.
+
+**URL de los webhooks:** `/agents/<COMPANY>/<path del agent.yaml>`. `COMPANY` es el id de la empresa y se define en el `docker-compose.yml` (`family_aims`, `babynova`); sin `COMPANY`, el webhook queda en `/agents/<agente>/<path>`. `chat`, `reset` y las herramientas siguen en `/agents/<agente>/...`.
 
 ### Endpoints que tiene todo contenedor
 
@@ -193,7 +195,7 @@ router = build_ghl_scheduling_router(GhlSchedulingHooks(
 ))
 ```
 
-BabyNova las tiene montadas junto a las de Google, y sus tres agentes con agenda (`babynova_surrogate_questions_text` y `_voice`) **ya usan las de GHL** gracias a `tool_route_suffixes: ["-ghl", "-sur"]` en su `agent.yaml` (la ruta `-ghl` se prueba primero; `-sur` sigue sirviendo a las demás herramientas). Para volver a Google basta con quitar `"-ghl"` y reiniciar. Con GHL no hay enlace RSVP (`event_link` llega vacío) y la invitación por correo al paciente ya no la envía Google Calendar: depende de las notificaciones del calendario o de los flujos de GHL. Family Aims conserva por ahora sus propias herramientas `-ghl`, con la misma configuración; moverlas al código compartido queda pendiente.
+BabyNova las tiene montadas junto a las de Google (`*-google`), y sus tres agentes con agenda (`babynova_surrogate_questions_text` y `_voice`) **ya usan las de GHL** gracias a `tool_route_suffixes: ["-ghl", "-sur"]` en su `agent.yaml` (la ruta `-ghl` se prueba primero; `-sur` sigue sirviendo a las demás herramientas). Para volver a Google basta con quitar `"-ghl"` y reiniciar. Con GHL no hay enlace RSVP (`event_link` llega vacío) y la invitación por correo al paciente ya no la envía Google Calendar: depende de las notificaciones del calendario o de los flujos de GHL. Family Aims conserva por ahora sus propias herramientas `-ghl`, con la misma configuración; moverlas al código compartido queda pendiente.
 
 **Variables vacías = se leen de GHL.** Si `<PREFIJO>_DURATION_MINUTES_<CLAVE>`, `..._PRE_BUFFER_MINUTES_...`, `..._POST_BUFFER_MINUTES_...`, `..._MIN_NOTICE_MINUTES_...` o `..._DATE_RANGE_DAYS_...` están vacías, las herramientas `-ghl` las toman del calendario de GHL (`slotDuration`, `preBuffer`, `slotBuffer`, `allowBookingAfter`, `allowBookingFor`; se guardan 5 minutos en memoria). Un valor escrito en el `.env` siempre manda. En BabyNova ocurre así; en Family Aims las variables traen valores por defecto (buffer posterior de 10 minutos), así que no se leen de GHL.
 
@@ -313,7 +315,7 @@ curl -X POST http://localhost:8011/agents/family_aims_sam_text/admin/reload \
    tools: mi_plugin                 # plugin compartido en bundles/_tools/mi_plugin (omítelo si usas tools/ propia)
    tool_route_suffixes: ["-ghl"]    # opcional; prueba primero book-appointment-ghl y luego book-appointment
    ghl:                             # opcional; omítelo si el agente no recibe webhook de GoHighLevel
-     path: /mi-agente               # queda en /agents/<agente>/mi-agente
+     path: /mi-agente               # queda en /agents/<COMPANY>/mi-agente (COMPANY: ver docker-compose.yml)
      token_envs: [GHL_TOKEN]        # nombre de la variable del .env; el secreto nunca va aquí
      allowed_phones_env: MI_DEV_ALLOWED_PHONES            # opcional; sin esto: <CARPETA>_ALLOWED_PHONES
      enforce_whitelist_env: MI_DEV_ENFORCE_PHONE_WHITELIST  # opcional; sin esto: <CARPETA>_ENFORCE_PHONE_WHITELIST

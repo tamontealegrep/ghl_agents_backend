@@ -11,7 +11,7 @@ from agent_backend.timezones import get_weekday_in_tz
 
 router = APIRouter()
 
-@router.post("/edit-appointment", response_model=EditAppointmentResponse)
+@router.post("/edit-appointment-google", response_model=EditAppointmentResponse)
 async def edit_appointment(req: EditAppointmentRequest):
     settings = get_settings()
     cal = resolve_calendar(settings, req.calendar_type)

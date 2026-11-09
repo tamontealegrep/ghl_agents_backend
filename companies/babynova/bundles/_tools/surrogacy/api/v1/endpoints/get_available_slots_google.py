@@ -12,7 +12,7 @@ from agent_backend.timezones import add_days
 router = APIRouter()
 
 
-@router.post("/get-available-slots", response_model=SlotsResponse)
+@router.post("/get-available-slots-google", response_model=SlotsResponse)
 async def get_available_slots(req: SlotsRequest):
     settings = get_settings()
     user_tz = req.iana_timezone.strip() if req.iana_timezone and req.iana_timezone.strip() else BUSINESS_TZ

@@ -10,6 +10,8 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: "8010"
+      # Company id: webhooks are served at /agents/<COMPANY>/<path>.
+      COMPANY: babynova
     ports:
       - "${HOST_PORT:-8012}:8010"
     volumes:

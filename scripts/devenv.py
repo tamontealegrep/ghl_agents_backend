@@ -62,7 +62,10 @@ def load_environment(company: str | None, env_file: Path | None) -> dict[str, st
         FileNotFoundError: The chosen file does not exist.
     """
     path = env_file or (company_env_path(company) if company else None)
-    return {**os.environ, **(read_env_file(path) if path else {})}
+    env = {**os.environ, **(read_env_file(path) if path else {})}
+    if company:
+        env.setdefault("COMPANY", company)
+    return env
 
 
 def base_url(env: dict[str, str], target: str) -> str:

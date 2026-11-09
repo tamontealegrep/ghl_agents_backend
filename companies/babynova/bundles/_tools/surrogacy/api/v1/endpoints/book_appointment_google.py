@@ -13,7 +13,7 @@ from agent_backend.timezones import get_weekday_in_tz
 router = APIRouter()
 
 
-@router.post("/book-appointment", response_model=BookAppointmentResponse)
+@router.post("/book-appointment-google", response_model=BookAppointmentResponse)
 async def book_appointment(req: BookAppointmentRequest):
     settings = get_settings()
     cal = resolve_calendar(settings, req.calendar_type)

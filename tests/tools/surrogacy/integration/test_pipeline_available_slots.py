@@ -3,7 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from surrogacy.api.v1.endpoints import get_available_slots as slots_endpoint
+from surrogacy.api.v1.endpoints import get_available_slots_google as slots_endpoint
 from tests.tools.apps import surrogacy_app as app
 
 client = TestClient(app)
@@ -51,7 +51,7 @@ def mocked_google_calendar(monkeypatch):
 
 
 def test_available_slots_endpoint_success_shape(mocked_google_calendar):
-    response = client.post("/api/v1/get-available-slots", json={"iana_timezone": "America/Bogota", "calendar_type": "FT"})
+    response = client.post("/api/v1/get-available-slots-google", json={"iana_timezone": "America/Bogota", "calendar_type": "FT"})
     assert response.status_code == 200
 
     body = response.json()
@@ -64,14 +64,14 @@ def test_available_slots_endpoint_success_shape(mocked_google_calendar):
 
 
 def test_available_slots_endpoint_defaults_timezone_when_blank(mocked_google_calendar):
-    response = client.post("/api/v1/get-available-slots", json={"iana_timezone": "   "})
+    response = client.post("/api/v1/get-available-slots-google", json={"iana_timezone": "   "})
     assert response.json()["iana_timezone"] == "America/Bogota"
 
 
 def test_available_slots_endpoint_fails_gracefully_when_credentials_missing(monkeypatch):
     monkeypatch.setattr(slots_endpoint, "get_settings", lambda: _EmptySettings())
 
-    response = client.post("/api/v1/get-available-slots", json={"calendar_type": "FT"})
+    response = client.post("/api/v1/get-available-slots-google", json={"calendar_type": "FT"})
 
     assert response.status_code == 200
     body = response.json()
@@ -88,7 +88,7 @@ def test_available_slots_endpoint_fails_gracefully_when_google_api_errors(monkey
 
     monkeypatch.setattr(slots_endpoint, "get_access_token", _raise)
 
-    response = client.post("/api/v1/get-available-slots", json={"calendar_type": "FT"})
+    response = client.post("/api/v1/get-available-slots-google", json={"calendar_type": "FT"})
 
     assert response.status_code == 200
     body = response.json()

@@ -24,12 +24,15 @@ class Settings:
         port: Port the HTTP server binds to.
         agents_dir: Directory scanned for agent bundles (one subfolder each).
         admin_token: When set, admin endpoints require it as a bearer token.
+        company: Company this container serves (``COMPANY``). When set, the agents' webhooks
+            are mounted at ``/agents/<company>/<path>`` instead of ``/agents/<slug>/<path>``.
     """
 
     host: str
     port: int
     agents_dir: Path
     admin_token: str | None
+    company: str | None = None
 
     @property
     def self_base_url(self) -> str:
@@ -58,6 +61,7 @@ class Settings:
             port=int(env.get("PORT", "8010")),
             agents_dir=Path(env.get("AGENTS_DIR", "bundles")).resolve(),
             admin_token=env.get("ADMIN_TOKEN") or None,
+            company=env.get("COMPANY") or None,
         )
 
 

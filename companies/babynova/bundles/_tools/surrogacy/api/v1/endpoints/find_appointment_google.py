@@ -17,7 +17,7 @@ from agent_backend.timezones import parse_iso
 router = APIRouter()
 
 
-@router.post("/find-appointment", response_model=FindAppointmentResponse)
+@router.post("/find-appointment-google", response_model=FindAppointmentResponse)
 async def find_appointment(req: FindAppointmentRequest):
     settings = get_settings()
     cal = resolve_calendar(settings, req.calendar_type)

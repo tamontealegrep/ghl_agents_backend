@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 import pytest
 from fastapi.testclient import TestClient
 
-from surrogacy.api.v1.endpoints import book_appointment as endpoint
+from surrogacy.api.v1.endpoints import book_appointment_google as endpoint
 from surrogacy.services import notifications
 from tests.tools.apps import surrogacy_app as app
 
@@ -103,7 +103,7 @@ def mocked_success(monkeypatch):
 
 
 def test_book_appointment_success(mocked_success):
-    response = client.post("/api/v1/book-appointment", json=_valid_payload())
+    response = client.post("/api/v1/book-appointment-google", json=_valid_payload())
     assert response.status_code == 200
     body = response.json()
     assert body["success"] is True
@@ -114,7 +114,7 @@ def test_book_appointment_success(mocked_success):
 def test_book_appointment_rejects_past_date(mocked_success):
     payload = _valid_payload()
     payload["start_date"] = "2020-01-01T09:00:00-05:00"
-    response = client.post("/api/v1/book-appointment", json=payload)
+    response = client.post("/api/v1/book-appointment-google", json=payload)
     body = response.json()
     assert body["success"] is False
     assert body["reason"] == "past_date"
@@ -123,7 +123,7 @@ def test_book_appointment_rejects_past_date(mocked_success):
 def test_book_appointment_rejects_invalid_start_date(mocked_success):
     payload = _valid_payload()
     payload["start_date"] = "no-es-una-fecha"
-    response = client.post("/api/v1/book-appointment", json=payload)
+    response = client.post("/api/v1/book-appointment-google", json=payload)
     body = response.json()
     assert body["success"] is False
     assert body["reason"] == "invalid_start_date"
@@ -132,7 +132,7 @@ def test_book_appointment_rejects_invalid_start_date(mocked_success):
 def test_book_appointment_rejects_outside_business_hours(mocked_success):
     payload = _valid_payload()
     payload["start_date"] = _next_business_datetime_iso(hour=20)
-    response = client.post("/api/v1/book-appointment", json=payload)
+    response = client.post("/api/v1/book-appointment-google", json=payload)
     body = response.json()
     assert body["success"] is False
     assert body["reason"] == "invalid_hour"
@@ -144,7 +144,7 @@ def test_book_appointment_rejects_sunday(mocked_success):
     next_sunday = (now + timedelta(days=days_until_sunday)).replace(hour=10, minute=0, second=0, microsecond=0)
     payload = _valid_payload()
     payload["start_date"] = next_sunday.isoformat()
-    response = client.post("/api/v1/book-appointment", json=payload)
+    response = client.post("/api/v1/book-appointment-google", json=payload)
     body = response.json()
     assert body["success"] is False
     assert body["reason"] == "invalid_hour"
@@ -155,7 +155,7 @@ def test_book_appointment_reports_creation_failed(monkeypatch):
     monkeypatch.setattr(endpoint, "get_access_token", _fake_get_access_token)
     monkeypatch.setattr(endpoint, "create_event", _fake_create_event_no_id)
 
-    response = client.post("/api/v1/book-appointment", json=_valid_payload())
+    response = client.post("/api/v1/book-appointment-google", json=_valid_payload())
     body = response.json()
     assert body["success"] is False
     assert body["reason"] == "creation_failed"
@@ -164,7 +164,7 @@ def test_book_appointment_reports_creation_failed(monkeypatch):
 def test_book_appointment_fails_gracefully_when_calendar_credentials_missing(monkeypatch):
     monkeypatch.setattr(endpoint, "get_settings", lambda: _EmptyCalendarSettings())
 
-    response = client.post("/api/v1/book-appointment", json=_valid_payload())
+    response = client.post("/api/v1/book-appointment-google", json=_valid_payload())
     body = response.json()
     assert body["success"] is False
     assert "GOOGLE_CLIENT_ID" in body["errors"]
@@ -186,7 +186,7 @@ def _book(monkeypatch, settings_cls):
     monkeypatch.setattr(endpoint, "get_settings", lambda: settings_cls())
     monkeypatch.setattr(endpoint, "get_access_token", _fake_get_access_token)
     monkeypatch.setattr(endpoint, "create_event", _fake_create_event)
-    return client.post("/api/v1/book-appointment", json=_valid_payload()).json()
+    return client.post("/api/v1/book-appointment-google", json=_valid_payload()).json()
 
 
 def test_book_appointment_without_notification_email_sends_nothing(monkeypatch):
@@ -226,7 +226,7 @@ def test_book_appointment_succeeds_even_if_email_fails(monkeypatch):
     monkeypatch.setattr(endpoint, "get_access_token", _fake_get_access_token)
     monkeypatch.setattr(endpoint, "create_event", _fake_create_event)
 
-    response = client.post("/api/v1/book-appointment", json=_valid_payload())
+    response = client.post("/api/v1/book-appointment-google", json=_valid_payload())
     body = response.json()
     assert body["success"] is True
     assert body["event_id"] == "evt789"

@@ -14,6 +14,8 @@ services:
       # listen on all interfaces, whatever a developer left in a local .env.
       HOST: 0.0.0.0
       PORT: "8010"
+      # Company id: webhooks are served at /agents/<COMPANY>/<path>.
+      COMPANY: my_company
     ports:
       # Host port: change it per company so several containers can run side by side.
       - "${HOST_PORT:-8010}:8010"

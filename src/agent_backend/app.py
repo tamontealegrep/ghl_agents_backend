@@ -57,7 +57,7 @@ def _ghl_config(bundle: AgentBundle) -> CompiledAgentGhlConfig | None:
     )
 
 
-def _mount_bundle(app: FastAPI, registry: AgentRegistry, bundle: AgentBundle) -> None:
+def _mount_bundle(app: FastAPI, registry: AgentRegistry, bundle: AgentBundle, company: str | None = None) -> None:
     """Mounts one agent's tool plugin and channels, isolating its failures.
 
     A broken bundle is logged and skipped so it cannot take down the others.
@@ -66,6 +66,7 @@ def _mount_bundle(app: FastAPI, registry: AgentRegistry, bundle: AgentBundle) ->
         app: Application to mount on.
         registry: Registry the channels load graphs from.
         bundle: Bundle to mount.
+        company: Company id. Webhooks go under ``/agents/<company>``; without it, under ``/agents/<slug>``.
     """
     prefix = f"/agents/{bundle.slug}"
     try:
@@ -75,7 +76,9 @@ def _mount_bundle(app: FastAPI, registry: AgentRegistry, bundle: AgentBundle) ->
         ghl_config = _ghl_config(bundle)
         if ghl_config is not None:
             app.include_router(
-                build_compiled_agent_router(ghl_config, registry), prefix=prefix, tags=[f"{bundle.slug}.ghl"]
+                build_compiled_agent_router(ghl_config, registry),
+                prefix=f"/agents/{company}" if company else prefix,
+                tags=[f"{bundle.slug}.ghl"],
             )
     except Exception:
         logger.error("Bundle %r failed to mount and was skipped.", bundle.slug, exc_info=True)
@@ -108,6 +111,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(builtin_tools_router, prefix=BUILTIN_TOOLS_PREFIX, tags=["builtin-tools"])
     bundles = discover_bundles(settings.agents_dir)
     for bundle in bundles.values():
-        _mount_bundle(app, registry, bundle)
+        _mount_bundle(app, registry, bundle, settings.company)
     logger.info("Serving %d agent(s) from %s: %s", len(bundles), settings.agents_dir, ", ".join(bundles))
     return app

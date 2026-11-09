@@ -11,7 +11,7 @@ from agent_backend.google_calendar import delete_event, get_access_token
 router = APIRouter()
 
 
-@router.post("/cancel-appointment", response_model=CancelAppointmentResponse)
+@router.post("/cancel-appointment-google", response_model=CancelAppointmentResponse)
 async def cancel_appointment(req: CancelAppointmentRequest):
     settings = get_settings()
     cal = resolve_calendar(settings, req.calendar_type)

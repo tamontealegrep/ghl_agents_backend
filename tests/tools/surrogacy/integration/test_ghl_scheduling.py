@@ -93,7 +93,7 @@ def _starts(body):
 def test_the_ghl_tools_are_mounted_next_to_the_google_ones():
     paths = {p.removeprefix("/api/v1/") for p in app.openapi()["paths"]}
     for tool in ("get-available-slots", "book-appointment", "find-appointment", "edit-appointment", "cancel-appointment"):
-        assert f"{tool}-ghl" in paths and tool in paths
+        assert f"{tool}-ghl" in paths and f"{tool}-google" in paths
 
 
 def test_ft_slots_use_the_ft_opening_hours_and_its_ghl_calendar(ghl):
