@@ -1,0 +1,8 @@
+# Keep LF line endings in the repository and in the working copy (Docker and Linux expect LF).
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.ico binary
+*.db binary
