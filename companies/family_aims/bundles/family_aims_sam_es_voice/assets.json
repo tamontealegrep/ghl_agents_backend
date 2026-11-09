@@ -1,0 +1,497 @@
+[
+  {
+    "name": "callback",
+    "description": "Authorized tool for escalating the conversation to a human call. It must be called when the flow cannot resolve something on its own (no availability, the booking fails repeatedly, a piece of information remains ambiguous, or the user explicitly asks to speak with a person). It only validates and normalizes the request — it does not send any email or create any task; the actual notification mechanism is executed by a subsequent step in the flow.",
+    "notes": [
+      "MANDATORY EXECUTION TRIGGER: if the active flow node is C__CB_RUN, execute this tool immediately — execution on this node is mandatory, without exception. Also execute it when get_available_slots returns no availability after several attempts, when book_appointment fails repeatedly, when a piece of information remains ambiguous after retrying, or when the user explicitly asks to speak with a person.",
+      "ARGUMENT RULE: contact_name is always required. You must send at least one of contact_phone and contact_email — you do not need to send both, but do not send neither.",
+      "ARGUMENT RULE: reason must be one of the 5 exact values listed below — map the actual flow situation to the closest one; do not invent another value.",
+      "ARGUMENT RULE: if the user mentions a preferred day, send it in preferred_days — accepts one day, multiple days separated by commas, or shortcuts such as 'weekdays'/'weekend'. If the user mentions a time range, map it to morning/midday/afternoon/evening in preferred_time_window. Neither is mandatory — if the user did not provide a preference, do not send them (or send 'any').",
+      "ARGUMENT RULE: iana_timezone is required and must be the same IANA timezone already determined for the user (the same one you would use for get_available_slots) — do not ask for it again if you already have it.",
+      "SOURCE OF TRUTH RULE: use 'errors' as the sole indicator that the request is incomplete or malformed — if it is null, the request is ready for the flow to escalate.",
+      "POST-EXECUTION RULE: after a successful execution (errors is null), inform the user that someone will contact them and close that branch of the conversation warmly — do not continue trying to resolve yourself what prompted the callback.",
+      "POST-EXECUTION RULE: if errors is not null, the data indicated in the message is missing or invalid — collect or correct it with the user and call the tool again before considering the request complete."
+    ],
+    "inputs": [
+      {
+        "name": "contact_name",
+        "required": true,
+        "description": "Full name of the contact as mentioned during the call."
+      },
+      {
+        "name": "contact_phone",
+        "required": false,
+        "description": "Contact's phone number in international format. At least one of contact_phone and contact_email must be provided. e.g. +573001234567"
+      },
+      {
+        "name": "contact_email",
+        "required": false,
+        "description": "Contact's email address. At least one of contact_phone and contact_email must be provided. e.g. maria@example.com"
+      },
+      {
+        "name": "reason",
+        "required": true,
+        "description": "Callback reason. One of: no_availability (no availability was found), booking_failed (the booking failed repeatedly), user_requested (the user asked to speak with a person), ambiguous_data (a piece of information remained ambiguous after several attempts), technical_error (technical error during the flow)."
+      },
+      {
+        "name": "context",
+        "required": false,
+        "description": "Short summary of what happened in the conversation, so the person calling does not do so blindly. e.g. 'No availability was found in the next 14 days'"
+      },
+      {
+        "name": "preferred_days",
+        "required": false,
+        "description": "Day or days when the user prefers to be called. Accepts one day, multiple days separated by commas, a list, or the shortcuts 'weekdays' / 'weekend' / 'any' (no preference). e.g. 'weekdays', 'monday,wednesday'"
+      },
+      {
+        "name": "preferred_time_window",
+        "required": false,
+        "description": "Time window when the user prefers to be called. One of: morning, midday, afternoon, evening, any."
+      },
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "Standard IANA timezone identifier for the user — the same one already determined for get_available_slots. Examples: 'America/Bogota', 'America/Sao_Paulo', 'Europe/Madrid', 'Asia/Tokyo'."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean value indicating whether the tool executed successfully."
+      },
+      {
+        "name": "contact_name",
+        "required": true,
+        "description": "Echo of the received name. null if the request was rejected."
+      },
+      {
+        "name": "contact_phone",
+        "required": true,
+        "description": "Echo of the received phone number."
+      },
+      {
+        "name": "contact_email",
+        "required": true,
+        "description": "Echo of the received email address."
+      },
+      {
+        "name": "reason",
+        "required": true,
+        "description": "Normalized echo of the reason (lowercase)."
+      },
+      {
+        "name": "context",
+        "required": true,
+        "description": "Echo of the received context."
+      },
+      {
+        "name": "preferred_days",
+        "required": true,
+        "description": "Normalized list of days (Monday through Sunday, in that order), with shortcuts already expanded. Empty array ([]) if no preference was provided or 'any' was provided."
+      },
+      {
+        "name": "preferred_time_window",
+        "required": true,
+        "description": "Normalized echo of the time window. null if no preference was provided or 'any' was provided."
+      },
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "Echo of the received timezone."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Explains why the request was rejected (missing or invalid data: contact_name, contact_phone/contact_email, reason, iana_timezone, preferred_days, or preferred_time_window). null when the request is ready to be escalated."
+      }
+    ]
+  },
+  {
+    "name": "end_call",
+    "description": "Closes the call session in an orderly way.",
+    "notes": [
+      "This is always the last tool executed in any terminal flow.",
+      "Make sure all required updates have been completed before end_call."
+    ],
+    "inputs": [],
+    "outputs": []
+  },
+  {
+    "name": "time_now",
+    "description": "Authorized tool for getting the real current date and time in the given timezone. Its response is the flow's only authorized time reference.",
+    "notes": [
+      "MANDATORY EXECUTION TRIGGER: when a node declares EXECUTE: time_now, call it as the first action of the turn — imperative, no exception.",
+      "ABSOLUTE EXECUTION RULE: FORBIDDEN to deduce, estimate, or assume the current date or time from the model's knowledge, training, or conversational context. Do not speak or route before capturing the 'now' field.",
+      "ARGUMENT RULE: iana_timezone is an IANA continent/city identifier (e.g. America/Bogota, Europe/Madrid, America/Sao_Paulo). Send whatever the flow fixes; never use abbreviations (EST, COT, BRT).",
+      "SOURCE OF TRUTH RULE: use the 'now' field as the only authorized time reference. To normalize a relative date ('8 months ago', 'last year'), compute it from 'now'.",
+      "POST-EXECUTION RULE: if 'now' comes back null or 'errors' is not null, call the tool again before continuing."
+    ],
+    "inputs": [
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "IANA identifier of the timezone the current time is wanted in (continent/city). Examples: America/Bogota, Europe/Madrid, America/Sao_Paulo."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean: the query ran successfully."
+      },
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "Echo of the IANA timezone identifier used."
+      },
+      {
+        "name": "now",
+        "required": true,
+        "description": "Current date and time in the given timezone, ISO 8601 with offset. Example: 2026-08-28T18:18:28.935329-05:00. null on error."
+      },
+      {
+        "name": "calendar",
+        "required": false,
+        "description": "The next 21 days starting today in the given timezone, as 'YYYY-MM-DD Weekday' entries separated by commas (e.g. '2026-10-27 Tuesday, 2026-10-28 Wednesday'). Use it to resolve weekday names and relative days ('Wednesday', 'tomorrow') to a calendar date. null on error."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Error message if the query failed. null on success."
+      }
+    ]
+  },
+  {
+    "name": "check_visa",
+    "description": "Checks whether one or more nationalities require a visa to enter Colombia as a tourist.",
+    "notes": [
+      "MANDATORY EXECUTION TRIGGER: execute it when the contact mentions their nationality or asks whether they need a visa to travel to Colombia.",
+      "ARGUMENTS: nationalities as CSV or list; prefer ISO 3166-1 alpha-3 (UPPERCASE).",
+      "SOURCE OF TRUTH RULE: use nationality, requires_visa, and conditional_visa (not an array) to decide the outcome of the query. Check conditional_visa for cases like China or India where a visa is required unless they hold a US/Schengen visa."
+    ],
+    "inputs": [
+      {
+        "name": "nationalities",
+        "required": true,
+        "description": "One or more nationalities to check. Examples: 'USA', 'China, India', ['Spain', 'AFG']."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean indicating whether the tool executed correctly."
+      },
+      {
+        "name": "nationality",
+        "required": true,
+        "description": "Name of the nationality(ies) checked, trimmed of whitespace."
+      },
+      {
+        "name": "requires_visa",
+        "required": true,
+        "description": "Indicates whether the person requires a visa to enter Colombia (bool)."
+      },
+      {
+        "name": "conditional_visa",
+        "required": true,
+        "description": "Indicates whether the requirement is conditioned on a US/Schengen visa (bool)."
+      },
+      {
+        "name": "summary",
+        "required": true,
+        "description": "Human-readable summary of the requirements found."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Technical error message if the query failed. null on success."
+      }
+    ]
+  },
+  {
+    "name": "get_available_slots",
+    "description": "Authorized availability tool; source of truth for days and times.",
+    "notes": [
+      "MANDATORY EXECUTION: on entering SC__SC_AV and any schedule/reschedule/see-more/retry intent.",
+      "ARGUMENTS: calendar_type in {'IVF','SUR'}; iana_timezone is a real IANA zone resolved in-flow (e.g., America/Bogota).",
+      "SOURCE OF TRUTH: use only available_slots with start_co/end_co and start_local/end_local.",
+      "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal."
+    ],
+    "inputs": [
+      {
+        "name": "calendar_type",
+        "required": true,
+        "description": "Literal defining the calendar to use: 'IVF' for in vitro fertilization or 'SUR' for surrogacy. Determined by the flow node where the contact is located."
+      },
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "Real IANA identifier of the contact's current timezone (continent/city, or continent/country/city for zones that need it). Examples: America/Bogota, Europe/Madrid, America/New_York, America/Argentina/Buenos_Aires. Resolved from the contact's country and city before executing — never guessed, never shortened to two parts when the real identifier has three."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean: the query ran correctly. It does not by itself indicate whether there is availability — check available_slots for that."
+      },
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "Echo of the real IANA identifier (continent/city, or continent/country/city) used to compute start_local/end_local."
+      },
+      {
+        "name": "available_slots",
+        "required": true,
+        "description": "Array of objects with the available slots. Each object carries start_co/end_co (Colombia time, ISO 8601) and start_local/end_local (contact's zone, ISO 8601). Empty array ([]) if there is no availability."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Error message if the query failed. null on success, even when available_slots came back empty."
+      }
+    ]
+  },
+  {
+    "name": "book_appointment",
+    "description": "Authorized booking tool; creates the appointment from a valid slot.",
+    "notes": [
+      "MANDATORY EXECUTION: on entering SC__SC_BOOK; requires prior get_available_slots.",
+      "ARGUMENTS: start_date = slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language = 'ES'; iana_timezone = same as availability; calendar_type in {'IVF','SUR'}.",
+      "SOURCE OF TRUTH: success determines creation; do not confirm before success == true and event_id != null."
+    ],
+    "inputs": [
+      {
+        "name": "calendar_type",
+        "required": true,
+        "description": "Literal defining the calendar where the booking will be made: 'IVF' for in vitro fertilization or 'SUR' for surrogacy."
+      },
+      {
+        "name": "start_date",
+        "required": true,
+        "description": "Start date and time in ISO 8601 with offset. Literal copy of the start_co field of the chosen slot in available_slots. Example: 2026-06-04T08:00:00-05:00"
+      },
+      {
+        "name": "duration",
+        "required": true,
+        "description": "Appointment duration in minutes, sent as a string. Fixed value for this flow: <APPOINTMENT_DURATION_MINUTES>."
+      },
+      {
+        "name": "language",
+        "required": true,
+        "description": "Two-letter uppercase code in {'ES','EN','PT'} for notifications (this agent uses 'ES')."
+      },
+      {
+        "name": "contact_name",
+        "required": true,
+        "description": "Contact's full name, already confirmed in the flow."
+      },
+      {
+        "name": "contact_email",
+        "required": true,
+        "description": "Contact's email in lowercase, already confirmed in the flow. Used to send the appointment confirmation."
+      },
+      {
+        "name": "contact_phone",
+        "required": true,
+        "description": "Contact's phone in E.164 international format, already confirmed in the flow. Example: +573001234567"
+      },
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "IANA identifier of the contact's timezone, the same one used to check availability in get_available_slots."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean: the booking was created correctly."
+      },
+      {
+        "name": "reason",
+        "required": true,
+        "description": "Reason for rejection when success is false: 'invalid_start_date', 'past_date', 'invalid_hour', 'invalid_email', 'creation_failed', 'slot_taken'. null when success is true."
+      },
+      {
+        "name": "event_id",
+        "required": true,
+        "description": "Created event identifier. null if the booking was not completed."
+      },
+      {
+        "name": "event_link",
+        "required": true,
+        "description": "Link to the event in the calendar. null if the booking was not completed."
+      },
+      {
+        "name": "meet_link",
+        "required": true,
+        "description": "Video call link for the appointment. null if the booking was not completed."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Technical error message. May be present with success == true if the appointment was created but the email notification failed."
+      }
+    ]
+  },
+  {
+    "name": "find_appointment",
+    "description": "Authorized tool to search for a contact's existing appointments by name or email in the Family Aims calendars.",
+    "notes": [
+      "MANDATORY EXECUTION TRIGGER: execute it when the contact wants to check, verify, or learn the details of an appointment they believe they already booked.",
+      "ARGUMENTS: contact_name and/or contact_email; calendar_type in {'IVF','SUR'}; optional iana_timezone/language.",
+      "SOURCE OF TRUTH RULE: the 'appointments' array contains the list of appointments found. If it is empty, tell the contact that no records were found under that name or email."
+    ],
+    "inputs": [
+      {
+        "name": "contact_name",
+        "required": false,
+        "description": "Contact's full name to perform the search."
+      },
+      {
+        "name": "contact_email",
+        "required": false,
+        "description": "Contact's email address to perform the search."
+      },
+      {
+        "name": "calendar_type",
+        "required": true,
+        "description": "Calendar filter: 'IVF' or 'SUR'."
+      },
+      {
+        "name": "iana_timezone",
+        "required": false,
+        "description": "IANA timezone to display the times of the appointments found. Default: America/Bogota."
+      },
+      {
+        "name": "language",
+        "required": false,
+        "description": "Two-letter uppercase code in {'ES','EN','PT'} to format results. Default: ES."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean indicating whether the search completed."
+      },
+      {
+        "name": "appointments",
+        "required": true,
+        "description": "List of objects with information about the appointments found (event_id, summary, start_time, calendar_type)."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Error message if the search failed."
+      }
+    ]
+  },
+  {
+    "name": "cancel_appointment",
+    "description": "Authorized tool to cancel/delete an existing appointment in the Family Aims calendars.",
+    "notes": [
+      "MANDATORY EXECUTION TRIGGER: execute it only when the contact explicitly requests to cancel their appointment and provides or confirms the event_id (previously obtained via find_appointment).",
+      "ABSOLUTE EXECUTION RULE: do not confirm the cancellation before receiving success == true.",
+      "ARGUMENTS: event_id exact; calendar_type in {'IVF','SUR'}; optional iana_timezone.",
+      "SOURCE OF TRUTH: use success as the only authorized verdict."
+    ],
+    "inputs": [
+      {
+        "name": "event_id",
+        "required": true,
+        "description": "Unique Google Calendar event identifier to cancel."
+      },
+      {
+        "name": "calendar_type",
+        "required": true,
+        "description": "Calendar type where the appointment resides: 'IVF' or 'SUR'."
+      },
+      {
+        "name": "iana_timezone",
+        "required": false,
+        "description": "Contact's IANA timezone."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean indicating whether the cancellation was successful."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Error message if the cancellation failed."
+      }
+    ]
+  },
+  {
+    "name": "edit_appointment",
+    "description": "Authorized tool to modify or reschedule an existing appointment in the Family Aims calendars.",
+    "notes": [
+      "MANDATORY EXECUTION TRIGGER: execute it when the contact requests to change the date, time, or duration of an already scheduled appointment.",
+      "ABSOLUTE EXECUTION RULE: do not confirm the change before receiving success == true.",
+      "ARGUMENTS: event_id; calendar_type in {'IVF','SUR'}; optional new_start_date (from availability), new_duration, iana_timezone/language.",
+      "VALIDATION RULE: the tool automatically checks availability and business hours before applying the change.",
+      "SOURCE OF TRUTH: use success as the only authorized verdict; message/new_start_time are supporting details."
+    ],
+    "inputs": [
+      {
+        "name": "event_id",
+        "required": true,
+        "description": "Unique Google Calendar event identifier to modify."
+      },
+      {
+        "name": "calendar_type",
+        "required": true,
+        "description": "Calendar type: 'IVF' or 'SUR'."
+      },
+      {
+        "name": "new_start_date",
+        "required": false,
+        "description": "New date and time in ISO 8601 with offset. Required if changing the time."
+      },
+      {
+        "name": "new_duration",
+        "required": false,
+        "description": "New duration in minutes (as a string). Required if changing the duration."
+      },
+      {
+        "name": "iana_timezone",
+        "required": false,
+        "description": "Contact's IANA timezone. Default: America/Bogota."
+      },
+      {
+        "name": "language",
+        "required": false,
+        "description": "Two-letter uppercase code in {'ES','EN','PT'} for confirmation. Default: ES."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean indicating whether the modification was successful."
+      },
+      {
+        "name": "message",
+        "required": false,
+        "description": "Confirmation message for the change made."
+      },
+      {
+        "name": "new_start_time",
+        "required": false,
+        "description": "Formatted date and time if the schedule changed."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Error message if the modification failed."
+      }
+    ]
+  }
+]

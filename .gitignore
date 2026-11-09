@@ -1,0 +1,26 @@
+# graphify output
+graphify-out/
+
+# Python / tooling
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Secrets and local state
+.env
+*.db
+*.db-shm
+*.db-wal
+
+# Development framework (project memory and policies): kept locally, never pushed
+/CLAUDE.md
+/SPEC.md
+/FRAMEWORK.md
+/EXPERTS.md
+/TESTING.md
+/DESIGN_PATTERNS.md
+/STATUS.yaml

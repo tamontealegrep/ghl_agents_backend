@@ -1,0 +1,1935 @@
+{
+  "agent_id": "babynova_triage_obstetrico_text",
+  "graph": {
+    "subflow_id": "babynova_triage_obstetrico_text",
+    "entry_point": "TRIAGE_START",
+    "nodes": [
+      {
+        "node_id": "TRIAGE_START",
+        "node_type": "start",
+        "goal": [
+          "Punto de entrada del triage obstétrico por texto cuando la paciente inicia el contacto."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_INIT_RETRY_COUNTS",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_INIT_RETRY_COUNTS",
+        "node_type": "registration",
+        "goal": [
+          "Inicializar contadores del flujo de triage obstétrico."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[data_protection_notice_shown] = no",
+          "[data_protection_consent_retry_count] = 0",
+          "[document_retry_count] = 0",
+          "[gestational_stage_retry_count] = 0",
+          "[main_reason_retry_count] = 0",
+          "[respiratory_subreason_retry_count] = 0",
+          "[support_subreason_retry_count] = 0",
+          "[priority_appointment_retry_count] = 0",
+          "[other_subreason_retry_count] = 0",
+          "[associated_symptoms_retry_count] = 0",
+          "[patient_support_needed_retry_count] = 0"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DATA_PROTECTION_NOTICE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_DATA_PROTECTION_NOTICE",
+        "node_type": "question",
+        "goal": [
+          "Informar obligatoriamente a la paciente que al continuar acepta las políticas de protección de datos y solicitar consentimiento para continuar."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Si usted continua con esta conversación, está aceptando nuestra Política de Privacidad y Protección de Datos Personales que se da en cumplimiento de lo dispuesto por el artículo 15 de la Constitución Política de 1991, así como por la Ley 1581 de 2012, el Decreto 1377 de 2013 y el Decreto 886 de 2014. Política de Privacidad y Protección de Datos Personales de Novafem S.A.S., la cual aplicaremos en la medida en que suministres tus datos personales que incluiremos en nuestras bases de datos. ¿Deseas continuar?"
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [
+          "[data_protection_consent] = [data_protection_consent]"
+        ],
+        "capture": [
+          [
+            "data_protection_consent",
+            "Literal[yes, no]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DECIDE_DATA_PROTECTION",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_DECIDE_DATA_PROTECTION",
+        "node_type": "decision",
+        "goal": [
+          "Evaluar si la paciente aceptó continuar con la conversación."
+        ],
+        "do": [
+          "[data_protection_consent_retry_count] = [data_protection_consent_retry_count] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_END_NO_CONSENT",
+            "condition_text": "IF [data_protection_consent_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: TRIAGE_END_NO_CONSENT",
+            "is_mechanical": true,
+            "python_expression": "data_protection_consent_retry_count >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_DOCUMENT",
+            "condition_text": "IF [data_protection_consent] == 'yes' -> GO_TO: TRIAGE_ASK_DOCUMENT",
+            "is_mechanical": true,
+            "python_expression": "data_protection_consent == 'yes'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_END_NO_CONSENT",
+            "condition_text": "IF [data_protection_consent] == 'no' -> GO_TO: TRIAGE_END_NO_CONSENT",
+            "is_mechanical": true,
+            "python_expression": "data_protection_consent == 'no'",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "TRIAGE_DATA_PROTECTION_NOTICE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "TRIAGE_ASK_DOCUMENT",
+        "node_type": "question",
+        "goal": [
+          "Presentarse y solicitar número de documento de la paciente para iniciar la identificación."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Hola, soy <AGENT_NAME> de <COMPANY_NAME>. Para poder ayudarte con el triage obstétrico, primero necesitamos identificarte. Por favor escribe tu número de documento sin puntos ni espacios."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [
+          "[document_number] = [document_number]"
+        ],
+        "capture": [
+          [
+            "document_number",
+            "numeric_string_without_spaces_or_punctuation"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DECIDE_DOCUMENT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_DECIDE_DOCUMENT",
+        "node_type": "decision",
+        "goal": [
+          "Validar que el documento tenga formato numérico sin puntos ni espacios."
+        ],
+        "do": [
+          "[document_retry_count] = [document_retry_count] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_ASK_DOCUMENT",
+            "condition_text": "IF [document_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: TRIAGE_ASK_DOCUMENT",
+            "is_mechanical": true,
+            "python_expression": "document_retry_count >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_DOCUMENT",
+            "condition_text": "IF [document_number] IS NULL -> GO_TO: TRIAGE_ASK_DOCUMENT",
+            "is_mechanical": true,
+            "python_expression": "document_number is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_GESTATIONAL_STAGE",
+            "condition_text": "IF [document_number] MATCHES numeric_string_without_spaces_or_punctuation -> GO_TO: TRIAGE_ASK_GESTATIONAL_STAGE",
+            "is_mechanical": true,
+            "python_expression": "_matches(document_number, 'numeric_string_without_spaces_or_punctuation')",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_DOCUMENT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "TRIAGE_ASK_DOCUMENT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "TRIAGE_ASK_GESTATIONAL_STAGE",
+        "node_type": "question",
+        "goal": [
+          "Capturar etapa gestacional o post parto."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Selecciona una opción: 1. Menos de 20 semanas. 2. Más de 20 semanas. 3. Estoy en trabajo de parto. 4. Post parto."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [
+          "[gestational_stage] = [gestational_stage]"
+        ],
+        "capture": [
+          [
+            "gestational_stage",
+            "Literal[menos_de_20, mas_de_20, trabajo_de_parto, post_parto]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DECIDE_GESTATIONAL_STAGE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_DECIDE_GESTATIONAL_STAGE",
+        "node_type": "decision",
+        "goal": [
+          "Validar etapa gestacional antes de continuar."
+        ],
+        "do": [
+          "[gestational_stage_retry_count] = [gestational_stage_retry_count] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_ASK_GESTATIONAL_STAGE",
+            "condition_text": "IF [gestational_stage_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: TRIAGE_ASK_GESTATIONAL_STAGE",
+            "is_mechanical": true,
+            "python_expression": "gestational_stage_retry_count >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_GESTATIONAL_STAGE",
+            "condition_text": "IF [gestational_stage] IS NULL -> GO_TO: TRIAGE_ASK_GESTATIONAL_STAGE",
+            "is_mechanical": true,
+            "python_expression": "gestational_stage is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_URGENCIAS",
+            "condition_text": "IF [gestational_stage] == 'trabajo_de_parto' -> GO_TO: TRIAGE_URGENCIAS",
+            "is_mechanical": true,
+            "python_expression": "gestational_stage == 'trabajo_de_parto'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_MAIN_REASON",
+            "condition_text": "IF [gestational_stage] IN [menos_de_20, mas_de_20, post_parto] -> GO_TO: TRIAGE_ASK_MAIN_REASON",
+            "is_mechanical": true,
+            "python_expression": "gestational_stage in [menos_de_20, mas_de_20, post_parto]",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_GESTATIONAL_STAGE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "TRIAGE_ASK_GESTATIONAL_STAGE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "TRIAGE_ASK_MAIN_REASON",
+        "node_type": "question",
+        "goal": [
+          "Capturar motivo principal de consulta."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "¿Cuál es el motivo principal de consulta? Responde con el número o el texto: 1. Sangrado vaginal o pérdida de líquido. 2. Dolor abdominal o contracciones. 3. Ausencia de movimientos fetales. 4. Tensión elevada o dolor de cabeza fuerte con pitidos o luces. 5. Fiebre o síntomas de infección. 6. Dificultad para respirar o dolor de pecho. 7. Náuseas, vómito o mareo. 8. Dolor, adormecimiento o inflamación de piernas, brazos o cara. 9. Quiero una cita prioritaria. 10. Accidente o caída. 11. Otro."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [
+          "[main_reason] = [main_reason]"
+        ],
+        "capture": [
+          [
+            "main_reason",
+            "Literal[sangrado_o_liquido, dolor_o_contracciones, ausencia_movimientos, tension_o_cefalea, fiebre_o_infeccion, respiratorio_o_pecho, nauseas_vomito_mareo, dolor_adormecimiento_inflamacion, necesito_apoyo, accidente_caida, otro]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DECIDE_MAIN_REASON",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_DECIDE_MAIN_REASON",
+        "node_type": "decision",
+        "goal": [
+          "Clasificar el motivo principal y decidir si requiere subpregunta."
+        ],
+        "do": [
+          "[main_reason_retry_count] = [main_reason_retry_count] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_ASK_MAIN_REASON",
+            "condition_text": "IF [main_reason_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: TRIAGE_ASK_MAIN_REASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason_retry_count >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_MAIN_REASON",
+            "condition_text": "IF [main_reason] IS NULL -> GO_TO: TRIAGE_ASK_MAIN_REASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_MARK_URGENCIAS",
+            "condition_text": "IF [main_reason] IN [sangrado_o_liquido, dolor_o_contracciones, ausencia_movimientos, tension_o_cefalea, fiebre_o_infeccion, nauseas_vomito_mareo, dolor_adormecimiento_inflamacion, accidente_caida] -> GO_TO: TRIAGE_MARK_URGENCIAS",
+            "is_mechanical": true,
+            "python_expression": "main_reason in [sangrado_o_liquido, dolor_o_contracciones, ausencia_movimientos, tension_o_cefalea, fiebre_o_infeccion, nauseas_vomito_mareo, dolor_adormecimiento_inflamacion, accidente_caida]",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "condition_text": "IF [main_reason] == 'respiratorio_o_pecho' -> GO_TO: TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason == 'respiratorio_o_pecho'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_SUPPORT_SUBREASON",
+            "condition_text": "IF [main_reason] == 'necesito_apoyo' -> GO_TO: TRIAGE_ASK_SUPPORT_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason == 'necesito_apoyo'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_OTHER_SUBREASON",
+            "condition_text": "IF [main_reason] == 'otro' -> GO_TO: TRIAGE_ASK_OTHER_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason == 'otro'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_MAIN_REASON",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "TRIAGE_ASK_MAIN_REASON",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "TRIAGE_ASK_RESPIRATORY_SUBREASON",
+        "node_type": "question",
+        "goal": [
+          "Capturar submotivo respiratorio."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Sobre la dificultad para respirar o dolor de pecho, selecciona una opción: 1. Gripa sin fiebre. 2. Gripa con fiebre. 3. Me siento ahogada."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [
+          "[respiratory_subreason] = [respiratory_subreason]"
+        ],
+        "capture": [
+          [
+            "respiratory_subreason",
+            "Literal[gripa_sin_fiebre, gripa_con_fiebre, me_siento_ahogada]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DECIDE_RESPIRATORY_SUBREASON",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_DECIDE_RESPIRATORY_SUBREASON",
+        "node_type": "decision",
+        "goal": [
+          "Clasificar submotivo respiratorio."
+        ],
+        "do": [
+          "[respiratory_subreason_retry_count] = [respiratory_subreason_retry_count] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "condition_text": "IF [respiratory_subreason_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "respiratory_subreason_retry_count >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "condition_text": "IF [respiratory_subreason] IS NULL -> GO_TO: TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "respiratory_subreason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_MARK_RECOMENDACIONES",
+            "condition_text": "IF [respiratory_subreason] == 'gripa_sin_fiebre' -> GO_TO: TRIAGE_MARK_RECOMENDACIONES",
+            "is_mechanical": true,
+            "python_expression": "respiratory_subreason == 'gripa_sin_fiebre'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_MARK_URGENCIAS",
+            "condition_text": "IF [respiratory_subreason] IN [gripa_con_fiebre, me_siento_ahogada] -> GO_TO: TRIAGE_MARK_URGENCIAS",
+            "is_mechanical": true,
+            "python_expression": "respiratory_subreason in [gripa_con_fiebre, me_siento_ahogada]",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "TRIAGE_ASK_SUPPORT_SUBREASON",
+        "node_type": "question",
+        "goal": [
+          "Capturar tipo de apoyo solicitado."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "¿Qué apoyo necesitas? 1. Deseo una cita por psicología prioritaria. 2. Deseo una cita con trabajadora social prioritaria. 3. Deseo una cita con un coordinador de portadoras de vida."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [
+          "[support_subreason] = [support_subreason]"
+        ],
+        "capture": [
+          [
+            "support_subreason",
+            "Literal[psicologia_prioritaria, trabajadora_social_prioritaria, coordinador_portadoras_vida]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DECIDE_SUPPORT_SUBREASON",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_DECIDE_SUPPORT_SUBREASON",
+        "node_type": "decision",
+        "goal": [
+          "Clasificar solicitud de apoyo como mensaje."
+        ],
+        "do": [
+          "[support_subreason_retry_count] = [support_subreason_retry_count] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_ASK_SUPPORT_SUBREASON",
+            "condition_text": "IF [support_subreason_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: TRIAGE_ASK_SUPPORT_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "support_subreason_retry_count >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_SUPPORT_SUBREASON",
+            "condition_text": "IF [support_subreason] IS NULL -> GO_TO: TRIAGE_ASK_SUPPORT_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "support_subreason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_MARK_SUPPORT_PRIORITY_APPOINTMENT",
+            "condition_text": "IF [support_subreason] IN [psicologia_prioritaria, trabajadora_social_prioritaria, coordinador_portadoras_vida] -> GO_TO: TRIAGE_MARK_SUPPORT_PRIORITY_APPOINTMENT",
+            "is_mechanical": true,
+            "python_expression": "support_subreason in [psicologia_prioritaria, trabajadora_social_prioritaria, coordinador_portadoras_vida]",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_SUPPORT_SUBREASON",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "TRIAGE_ASK_SUPPORT_SUBREASON",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "TRIAGE_ASK_OTHER_SUBREASON",
+        "node_type": "question",
+        "goal": [
+          "Capturar detalle de otro motivo."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Selecciona una opción: 1. Necesito trasladarme a urgencias inmediatamente. 2. No es una urgencia, pero me gusta una cita médica prioritaria."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [
+          "[other_subreason] = [other_subreason]"
+        ],
+        "capture": [
+          [
+            "other_subreason",
+            "Literal[traslado_urgencias_inmediato, cita_medica_prioritaria]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DECIDE_OTHER_SUBREASON",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_DECIDE_OTHER_SUBREASON",
+        "node_type": "decision",
+        "goal": [
+          "Clasificar otro motivo como urgencias o mensaje."
+        ],
+        "do": [
+          "[other_subreason_retry_count] = [other_subreason_retry_count] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_ASK_OTHER_SUBREASON",
+            "condition_text": "IF [other_subreason_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: TRIAGE_ASK_OTHER_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "other_subreason_retry_count >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_OTHER_SUBREASON",
+            "condition_text": "IF [other_subreason] IS NULL -> GO_TO: TRIAGE_ASK_OTHER_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "other_subreason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_MARK_URGENCIAS",
+            "condition_text": "IF [other_subreason] == 'traslado_urgencias_inmediato' -> GO_TO: TRIAGE_MARK_URGENCIAS",
+            "is_mechanical": true,
+            "python_expression": "other_subreason == 'traslado_urgencias_inmediato'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_MARK_MEDICAL_PRIORITY_APPOINTMENT",
+            "condition_text": "IF [other_subreason] == 'cita_medica_prioritaria' -> GO_TO: TRIAGE_MARK_MEDICAL_PRIORITY_APPOINTMENT",
+            "is_mechanical": true,
+            "python_expression": "other_subreason == 'cita_medica_prioritaria'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_OTHER_SUBREASON",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "TRIAGE_ASK_OTHER_SUBREASON",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "TRIAGE_MARK_SUPPORT_PRIORITY_APPOINTMENT",
+        "node_type": "registration",
+        "goal": [
+          "Registrar destino final de mensaje y el tipo de cita prioritaria solicitado desde apoyo."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[triage_destination] = mensaje",
+          "[priority_appointment_type] = [support_subreason]"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_ROUTE_FINAL",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_MARK_MEDICAL_PRIORITY_APPOINTMENT",
+        "node_type": "registration",
+        "goal": [
+          "Registrar destino final de mensaje y el tipo de cita prioritaria médica."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[triage_destination] = mensaje",
+          "[priority_appointment_type] = cita_medica_prioritaria"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_ROUTE_FINAL",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_MARK_URGENCIAS",
+        "node_type": "registration",
+        "goal": [
+          "Registrar destino final de urgencias."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[triage_destination] = urgencias"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_ASK_ASSOCIATED_SYMPTOMS",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_MARK_RECOMENDACIONES",
+        "node_type": "registration",
+        "goal": [
+          "Registrar destino final de recomendaciones."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[triage_destination] = recomendaciones"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_ASK_ASSOCIATED_SYMPTOMS",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_ASK_ASSOCIATED_SYMPTOMS",
+        "node_type": "question",
+        "goal": [
+          "Capturar síntomas asociados antes de entregar la ruta final."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Selecciona todos los síntomas asociados que apliquen: 1. Sangrado vaginal. 2. Pérdida de líquido. 3. Dolor abdominal intenso. 4. Fiebre. 5. Disminución de movimientos fetales. 6. Dolor de cabeza intenso o visión borrosa. 7. Dificultad respiratoria. 8. Ninguno."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [
+          "[associated_symptoms] = [associated_symptoms]"
+        ],
+        "capture": [
+          [
+            "associated_symptoms",
+            "list[Literal[sangrado_vaginal, perdida_liquido, dolor_abdominal_intenso, fiebre, disminucion_movimientos_fetales, cefalea_vision_borrosa, dificultad_respiratoria, ninguno]]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DECIDE_ASSOCIATED_SYMPTOMS",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_DECIDE_ASSOCIATED_SYMPTOMS",
+        "node_type": "decision",
+        "goal": [
+          "Validar síntomas asociados y elevar a urgencias si aparece cualquier síntoma de alarma."
+        ],
+        "do": [
+          "[associated_symptoms_retry_count] = [associated_symptoms_retry_count] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "llm",
+        "route": [
+          {
+            "target": "TRIAGE_ROUTE_FINAL",
+            "condition_text": "IF [associated_symptoms_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: TRIAGE_ROUTE_FINAL",
+            "is_mechanical": false,
+            "python_expression": null,
+            "reason": "eval='llm' forces an LLM-evaluated edge"
+          },
+          {
+            "target": "TRIAGE_ASK_ASSOCIATED_SYMPTOMS",
+            "condition_text": "IF [associated_symptoms] IS NULL -> GO_TO: TRIAGE_ASK_ASSOCIATED_SYMPTOMS",
+            "is_mechanical": false,
+            "python_expression": null,
+            "reason": "eval='llm' forces an LLM-evaluated edge"
+          },
+          {
+            "target": "TRIAGE_MARK_URGENCIAS_FINAL",
+            "condition_text": "IF [associated_symptoms] CONTAINS ANY OF [sangrado_vaginal, perdida_liquido, dolor_abdominal_intenso, fiebre, disminucion_movimientos_fetales, cefalea_vision_borrosa, dificultad_respiratoria] -> GO_TO: TRIAGE_MARK_URGENCIAS_FINAL",
+            "is_mechanical": false,
+            "python_expression": null,
+            "reason": "not a parseable expression: invalid syntax (<unknown>, line 1)"
+          },
+          {
+            "target": "TRIAGE_ROUTE_FINAL",
+            "condition_text": null,
+            "is_mechanical": false,
+            "python_expression": null,
+            "reason": "eval='llm' forces an LLM-evaluated edge"
+          }
+        ],
+        "fallback": [
+          {
+            "target": "TRIAGE_ROUTE_FINAL",
+            "condition_text": null,
+            "is_mechanical": false,
+            "python_expression": null,
+            "reason": "eval='llm' forces an LLM-evaluated edge"
+          }
+        ]
+      },
+      {
+        "node_id": "TRIAGE_MARK_URGENCIAS_FINAL",
+        "node_type": "registration",
+        "goal": [
+          "Elevar destino final a urgencias por síntoma asociado de alarma."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[triage_destination] = urgencias"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_ROUTE_FINAL",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_ROUTE_FINAL",
+        "node_type": "decision",
+        "goal": [
+          "Enviar a la paciente al nodo final según [triage_destination]."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_URGENCIAS",
+            "condition_text": "IF [triage_destination] == 'urgencias' -> GO_TO: TRIAGE_URGENCIAS",
+            "is_mechanical": true,
+            "python_expression": "triage_destination == 'urgencias'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_RECOMENDACIONES",
+            "condition_text": "IF [triage_destination] == 'recomendaciones' -> GO_TO: TRIAGE_RECOMENDACIONES",
+            "is_mechanical": true,
+            "python_expression": "triage_destination == 'recomendaciones'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_PRIORITY_APPOINTMENT",
+            "condition_text": "IF [triage_destination] == 'mensaje' -> GO_TO: TRIAGE_PRIORITY_APPOINTMENT",
+            "is_mechanical": true,
+            "python_expression": "triage_destination == 'mensaje'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_URGENCIAS",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "TRIAGE_URGENCIAS",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "TRIAGE_URGENCIAS",
+        "node_type": "message",
+        "goal": [
+          "Entregar instrucción exacta de traslado a urgencias antes de preguntar por apoyo para transporte."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Por favor, solicita un servicio de transporte y trasladate al hospital más cercano donde te atiendan. El valor pagado te lo devolveremos en horario habil."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_ASK_PATIENT_SUPPORT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_ASK_PATIENT_SUPPORT",
+        "node_type": "question",
+        "goal": [
+          "Preguntar con tacto si la paciente necesita que se contacte a Apoyo al Paciente por no contar con recursos para solicitar transporte."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Si no cuentas con los recursos para solicitar el transporte, podemos contactar a Apoyo al Paciente para que solicite el transporte por ti. ¿Necesitas que lo solicitemos?"
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [
+          "[patient_support_needed] = [patient_support_needed]"
+        ],
+        "capture": [
+          [
+            "patient_support_needed",
+            "Literal[yes, no]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DECIDE_PATIENT_SUPPORT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_DECIDE_PATIENT_SUPPORT",
+        "node_type": "decision",
+        "goal": [
+          "Determinar si se debe llamar la herramienta para contactar a Apoyo al Paciente."
+        ],
+        "do": [
+          "Si [patient_support_needed] es inválido o no se pudo parsear, incrementar [patient_support_needed_retry_count]."
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_CONTACT_PATIENT_SUPPORT",
+            "condition_text": "IF [patient_support_needed_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: TRIAGE_CONTACT_PATIENT_SUPPORT",
+            "is_mechanical": true,
+            "python_expression": "patient_support_needed_retry_count >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_PATIENT_SUPPORT",
+            "condition_text": "IF [patient_support_needed] IS NULL -> GO_TO: TRIAGE_ASK_PATIENT_SUPPORT",
+            "is_mechanical": true,
+            "python_expression": "patient_support_needed is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_CONTACT_PATIENT_SUPPORT",
+            "condition_text": "IF [patient_support_needed] == 'yes' -> GO_TO: TRIAGE_CONTACT_PATIENT_SUPPORT",
+            "is_mechanical": true,
+            "python_expression": "patient_support_needed == 'yes'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_CONTACT_PATIENT_SUPPORT",
+            "condition_text": "IF [patient_support_needed] == 'no' -> GO_TO: TRIAGE_CONTACT_PATIENT_SUPPORT",
+            "is_mechanical": true,
+            "python_expression": "patient_support_needed == 'no'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_PATIENT_SUPPORT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "TRIAGE_ASK_PATIENT_SUPPORT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "TRIAGE_CONTACT_PATIENT_SUPPORT",
+        "node_type": "action",
+        "goal": [
+          "Contactar a Apoyo al Paciente cuando la paciente confirma que necesita ayuda para el traslado.",
+          "No responder al usuario ni avanzar sin ejecutar la herramienta contacto_ap."
+        ],
+        "do": [
+          "TOOL CALL: call contacto_ap now."
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": true,
+        "execute": "contacto_ap",
+        "store": [],
+        "capture": [
+          [
+            "call_success",
+            "bool"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_HANDLE_PATIENT_SUPPORT_RESULT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_HANDLE_PATIENT_SUPPORT_RESULT",
+        "node_type": "decision",
+        "goal": [
+          "Manejar el resultado del intento de contactar a Apoyo al Paciente."
+        ],
+        "do": [
+          "[patient_support_needed_retry_count] = [patient_support_needed_retry_count] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_PATIENT_SUPPORT_CONTACTED",
+            "condition_text": "IF [call_success] == TRUE -> GO_TO: TRIAGE_PATIENT_SUPPORT_CONTACTED",
+            "is_mechanical": true,
+            "python_expression": "call_success == True",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_PATIENT_SUPPORT_FAILURE",
+            "condition_text": "IF [patient_support_needed_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: TRIAGE_PATIENT_SUPPORT_FAILURE",
+            "is_mechanical": true,
+            "python_expression": "patient_support_needed_retry_count >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_CONTACT_PATIENT_SUPPORT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "TRIAGE_PATIENT_SUPPORT_FAILURE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "TRIAGE_PATIENT_SUPPORT_CONTACTED",
+        "node_type": "message",
+        "goal": [
+          "Informar que Apoyo al Paciente fue contactado."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Listo, contactamos a Apoyo al Paciente para ayudarte con la solicitud. Por favor permanece atenta a este canal."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_END",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_PATIENT_SUPPORT_FAILURE",
+        "node_type": "message",
+        "goal": [
+          "Informar que no fue posible contactar a Apoyo al Paciente después de varios reintentos."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Lamentamos informar que no fue posible contactar a Apoyo al Paciente después de varios intentos. Por favor, intenta solicitar el transporte y trasladate al hospital más cercano donde te atiendan."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_END",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_RECOMENDACIONES",
+        "node_type": "message",
+        "goal": [
+          "Entregar recomendaciones exactas para gripa sin fiebre."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Para tus síntomas gripales, te recomendamos estos remedios caseros seguros:\n\n- Hidratación constante: Bebe agua, caldos suaves de verduras o pollo y jugos naturales.\n- Bebidas calientes: Toma agua tibia con limón y miel para calmar la garganta e hidratar las vías respiratorias.\n- Descanso: Mantén reposo en cama para que tu cuerpo concentre su energía en combatir el virus.\n- Lavados nasales: Usa suero fisiológico o agua de mar en espray para limpiar la congestión de forma natural.\n- Gárgaras de agua salada: Mezcla agua tibia con sal y haz gárgaras pa desinflamar y aliviar el dolor de garganta."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_END",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_PRIORITY_APPOINTMENT",
+        "node_type": "action",
+        "goal": [
+          "Gestionar la cita prioritaria mediante la herramienta citas_prioritarias antes de informar el resultado a la paciente.",
+          "No responder al usuario ni avanzar sin ejecutar la herramienta citas_prioritarias."
+        ],
+        "do": [
+          "TOOL CALL: call citas_prioritarias (tipo_cita=[priority_appointment_type])."
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": true,
+        "execute": "citas_prioritarias",
+        "store": [],
+        "capture": [
+          [
+            "priority_appointment_success",
+            "bool"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_HANDLE_PRIORITY_APPOINTMENT_RESULT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_HANDLE_PRIORITY_APPOINTMENT_RESULT",
+        "node_type": "decision",
+        "goal": [
+          "Manejar el resultado del intento de gestionar la cita prioritaria."
+        ],
+        "do": [
+          "[priority_appointment_retry_count] = [priority_appointment_retry_count] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_PRIORITY_APPOINTMENT_CONFIRMED",
+            "condition_text": "IF [priority_appointment_success] == TRUE -> GO_TO: TRIAGE_PRIORITY_APPOINTMENT_CONFIRMED",
+            "is_mechanical": true,
+            "python_expression": "priority_appointment_success == True",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_PRIORITY_APPOINTMENT_FAILURE",
+            "condition_text": "IF [priority_appointment_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: TRIAGE_PRIORITY_APPOINTMENT_FAILURE",
+            "is_mechanical": true,
+            "python_expression": "priority_appointment_retry_count >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_PRIORITY_APPOINTMENT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "TRIAGE_PRIORITY_APPOINTMENT_FAILURE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "TRIAGE_PRIORITY_APPOINTMENT_CONFIRMED",
+        "node_type": "message",
+        "goal": [
+          "Informar que la solicitud de cita prioritaria fue gestionada correctamente."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Entendemos tu solicitud de cita prioritaria. Nuestro equipo se pondrá en contacto contigo a partir del próximo día hábil en horario de 7:00 am a 4:00 p.m para agendarte la cita solicitada. Gracias."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_END",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_PRIORITY_APPOINTMENT_FAILURE",
+        "node_type": "message",
+        "goal": [
+          "Informar que no fue posible gestionar la cita prioritaria después de varios intentos."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Lamentamos informar que en este momento no fue posible registrar tu solicitud de cita prioritaria. Por favor intenta nuevamente más tarde por este mismo canal."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_END",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_END",
+        "node_type": "terminal",
+        "goal": [
+          "Cerrar el flujo de triage obstétrico después del mensaje final."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [],
+        "fallback": []
+      },
+      {
+        "node_id": "TRIAGE_END_NO_CONSENT",
+        "node_type": "terminal",
+        "goal": [
+          "Cerrar la conversación cuando la paciente no acepta las políticas de datos."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Entiendo. No podemos continuar con el triage sin su autorización. Gracias por contactarnos, ¡que tenga un buen día!"
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [],
+        "fallback": []
+      }
+    ]
+  },
+  "global_router": {
+    "handlers": [
+      {
+        "node_id": "HNDLR_PANIC_CONTAINMENT",
+        "node_type": "message",
+        "goal": [],
+        "do": [],
+        "trigger": [
+          "estoy asustada",
+          "tengo miedo",
+          "estoy en panico",
+          "estoy en pánico",
+          "no sé qué hacer",
+          "no se que hacer",
+          "ayuda",
+          "por favor ayudenme",
+          "por favor ayúdenme"
+        ],
+        "disabled_in": [],
+        "say": [
+          "Entiendo que estés asustada. Vamos paso a paso para orientarte rápido y seguir el triage en orden."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DATA_PROTECTION_NOTICE",
+            "condition_text": "IF [data_protection_notice_shown] != 'yes' -> GO_TO: TRIAGE_DATA_PROTECTION_NOTICE",
+            "is_mechanical": true,
+            "python_expression": "data_protection_notice_shown != 'yes'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_DOCUMENT",
+            "condition_text": "IF [document_number] IS NULL -> GO_TO: TRIAGE_ASK_DOCUMENT",
+            "is_mechanical": true,
+            "python_expression": "document_number is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_GESTATIONAL_STAGE",
+            "condition_text": "IF [gestational_stage] IS NULL -> GO_TO: TRIAGE_ASK_GESTATIONAL_STAGE",
+            "is_mechanical": true,
+            "python_expression": "gestational_stage is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_MAIN_REASON",
+            "condition_text": "IF [main_reason] IS NULL -> GO_TO: TRIAGE_ASK_MAIN_REASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "condition_text": "IF [main_reason] == 'respiratorio_o_pecho' AND [respiratory_subreason] IS NULL -> GO_TO: TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason == 'respiratorio_o_pecho' and respiratory_subreason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_SUPPORT_SUBREASON",
+            "condition_text": "IF [main_reason] == 'necesito_apoyo' AND [support_subreason] IS NULL -> GO_TO: TRIAGE_ASK_SUPPORT_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason == 'necesito_apoyo' and support_subreason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_OTHER_SUBREASON",
+            "condition_text": "IF [main_reason] == 'otro' AND [other_subreason] IS NULL -> GO_TO: TRIAGE_ASK_OTHER_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason == 'otro' and other_subreason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_ASSOCIATED_SYMPTOMS",
+            "condition_text": "IF [triage_destination] IN [urgencias, recomendaciones] AND [associated_symptoms] IS NULL -> GO_TO: TRIAGE_ASK_ASSOCIATED_SYMPTOMS",
+            "is_mechanical": true,
+            "python_expression": "triage_destination in [urgencias, recomendaciones] and associated_symptoms is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_PATIENT_SUPPORT",
+            "condition_text": "IF [triage_destination] == 'urgencias' AND [patient_support_needed] IS NULL -> GO_TO: TRIAGE_ASK_PATIENT_SUPPORT",
+            "is_mechanical": true,
+            "python_expression": "triage_destination == 'urgencias' and patient_support_needed is None",
+            "reason": null
+          },
+          {
+            "target": "[current_state]",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "HNDLR_EMERGENCY_LANGUAGE",
+        "node_type": "message",
+        "goal": [],
+        "do": [],
+        "trigger": [
+          "me estoy desangrando",
+          "no puedo respirar",
+          "dolor de pecho fuerte",
+          "me desmayé",
+          "convulsión",
+          "necesito urgencias",
+          "necesito ir a urgencias"
+        ],
+        "disabled_in": [],
+        "say": [
+          "Entiendo. Puede ser una situación importante, y para orientarte bien necesitamos seguir el triage en orden."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DATA_PROTECTION_NOTICE",
+            "condition_text": "IF [data_protection_notice_shown] != 'yes' -> GO_TO: TRIAGE_DATA_PROTECTION_NOTICE",
+            "is_mechanical": true,
+            "python_expression": "data_protection_notice_shown != 'yes'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_DOCUMENT",
+            "condition_text": "IF [document_number] IS NULL -> GO_TO: TRIAGE_ASK_DOCUMENT",
+            "is_mechanical": true,
+            "python_expression": "document_number is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_GESTATIONAL_STAGE",
+            "condition_text": "IF [gestational_stage] IS NULL -> GO_TO: TRIAGE_ASK_GESTATIONAL_STAGE",
+            "is_mechanical": true,
+            "python_expression": "gestational_stage is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_MAIN_REASON",
+            "condition_text": "IF [main_reason] IS NULL -> GO_TO: TRIAGE_ASK_MAIN_REASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "condition_text": "IF [main_reason] == 'respiratorio_o_pecho' AND [respiratory_subreason] IS NULL -> GO_TO: TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason == 'respiratorio_o_pecho' and respiratory_subreason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_SUPPORT_SUBREASON",
+            "condition_text": "IF [main_reason] == 'necesito_apoyo' AND [support_subreason] IS NULL -> GO_TO: TRIAGE_ASK_SUPPORT_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason == 'necesito_apoyo' and support_subreason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_OTHER_SUBREASON",
+            "condition_text": "IF [main_reason] == 'otro' AND [other_subreason] IS NULL -> GO_TO: TRIAGE_ASK_OTHER_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason == 'otro' and other_subreason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_ASSOCIATED_SYMPTOMS",
+            "condition_text": "IF [triage_destination] IN [urgencias, recomendaciones] AND [associated_symptoms] IS NULL -> GO_TO: TRIAGE_ASK_ASSOCIATED_SYMPTOMS",
+            "is_mechanical": true,
+            "python_expression": "triage_destination in [urgencias, recomendaciones] and associated_symptoms is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_PATIENT_SUPPORT",
+            "condition_text": "IF [triage_destination] == 'urgencias' AND [patient_support_needed] IS NULL -> GO_TO: TRIAGE_ASK_PATIENT_SUPPORT",
+            "is_mechanical": true,
+            "python_expression": "triage_destination == 'urgencias' and patient_support_needed is None",
+            "reason": null
+          },
+          {
+            "target": "[current_state]",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "HNDLR_REPEAT",
+        "node_type": "message",
+        "goal": [],
+        "do": [],
+        "trigger": [
+          "me repites",
+          "no entendí",
+          "qué opciones son",
+          "puedes repetir"
+        ],
+        "disabled_in": [],
+        "say": [
+          "Claro, te comparto la pregunta de nuevo."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "TRIAGE_DATA_PROTECTION_NOTICE",
+            "condition_text": "IF [data_protection_notice_shown] != 'yes' -> GO_TO: TRIAGE_DATA_PROTECTION_NOTICE",
+            "is_mechanical": true,
+            "python_expression": "data_protection_notice_shown != 'yes'",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_DOCUMENT",
+            "condition_text": "IF [document_number] IS NULL -> GO_TO: TRIAGE_ASK_DOCUMENT",
+            "is_mechanical": true,
+            "python_expression": "document_number is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_GESTATIONAL_STAGE",
+            "condition_text": "IF [gestational_stage] IS NULL -> GO_TO: TRIAGE_ASK_GESTATIONAL_STAGE",
+            "is_mechanical": true,
+            "python_expression": "gestational_stage is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_MAIN_REASON",
+            "condition_text": "IF [main_reason] IS NULL -> GO_TO: TRIAGE_ASK_MAIN_REASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "condition_text": "IF [main_reason] == 'respiratorio_o_pecho' AND [respiratory_subreason] IS NULL -> GO_TO: TRIAGE_ASK_RESPIRATORY_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason == 'respiratorio_o_pecho' and respiratory_subreason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_SUPPORT_SUBREASON",
+            "condition_text": "IF [main_reason] == 'necesito_apoyo' AND [support_subreason] IS NULL -> GO_TO: TRIAGE_ASK_SUPPORT_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason == 'necesito_apoyo' and support_subreason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_OTHER_SUBREASON",
+            "condition_text": "IF [main_reason] == 'otro' AND [other_subreason] IS NULL -> GO_TO: TRIAGE_ASK_OTHER_SUBREASON",
+            "is_mechanical": true,
+            "python_expression": "main_reason == 'otro' and other_subreason is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_ASSOCIATED_SYMPTOMS",
+            "condition_text": "IF [triage_destination] IN [urgencias, recomendaciones] AND [associated_symptoms] IS NULL -> GO_TO: TRIAGE_ASK_ASSOCIATED_SYMPTOMS",
+            "is_mechanical": true,
+            "python_expression": "triage_destination in [urgencias, recomendaciones] and associated_symptoms is None",
+            "reason": null
+          },
+          {
+            "target": "TRIAGE_ASK_PATIENT_SUPPORT",
+            "condition_text": "IF [triage_destination] == 'urgencias' AND [patient_support_needed] IS NULL -> GO_TO: TRIAGE_ASK_PATIENT_SUPPORT",
+            "is_mechanical": true,
+            "python_expression": "triage_destination == 'urgencias' and patient_support_needed is None",
+            "reason": null
+          },
+          {
+            "target": "[current_state]",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      }
+    ],
+    "faqs": [
+      {
+        "faq_id": "FAQ_TRIAGE_SCOPE",
+        "match": [
+          "para qué es esto",
+          "qué es este triage",
+          "esto reemplaza al médico",
+          "me van a diagnosticar"
+        ],
+        "say": [
+          "Este triage solo nos ayuda a clasificar rápidamente tu necesidad y orientarte al siguiente paso. No reemplaza una valoración médica."
+        ],
+        "say_verbatim": true,
+        "resume_to": "[current_state]"
+      }
+    ]
+  },
+  "tool_contracts": [
+    {
+      "name": "contacto_ap",
+      "description": "Authorized tool to contact Patient Support; source of truth for [call_success].",
+      "inputs": [
+        {
+          "name": "identificacion",
+          "required": true,
+          "description": "Identificación del paciente.",
+          "type_expr": "numeric_string_without_spaces_or_punctuation",
+          "examples": []
+        },
+        {
+          "name": "etapa_gestacional",
+          "required": true,
+          "description": "Etapa gestacional actual.",
+          "type_expr": "free_text",
+          "examples": []
+        },
+        {
+          "name": "motivo_consulta",
+          "required": true,
+          "description": "Motivo principal de la consulta.",
+          "type_expr": "free_text",
+          "examples": []
+        },
+        {
+          "name": "sintomas_adicionales",
+          "required": true,
+          "description": "Síntomas adicionales reportados.",
+          "type_expr": "free_text",
+          "examples": []
+        },
+        {
+          "name": "tiene_recursos",
+          "required": true,
+          "description": "Indica si la paciente tiene recursos para soporte (true/false).",
+          "type_expr": "bool",
+          "examples": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "call_success",
+          "required": true,
+          "description": "Ejecución correcta del contacto (true/false).",
+          "type_expr": "bool",
+          "examples": []
+        }
+      ],
+      "notes": [
+        "MANDATORY EXECUTION: on entering TRIAGE_CONTACT_PATIENT_SUPPORT.",
+        "ARGUMENTS: identificacion, etapa_gestacional, motivo_consulta, sintomas_adicionales, tiene_recursos.",
+        "SOURCE OF TRUTH: use call_success as the only verdict."
+      ]
+    },
+    {
+      "name": "citas_prioritarias",
+      "description": "Authorized tool to register a priority appointment request; source of truth for [priority_appointment_success].",
+      "inputs": [
+        {
+          "name": "tipo_cita",
+          "required": true,
+          "description": "Tipo de cita prioritaria solicitada.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "priority_appointment_success",
+          "required": true,
+          "description": "Ejecución correcta del registro (true/false).",
+          "type_expr": "bool",
+          "examples": []
+        }
+      ],
+      "notes": [
+        "MANDATORY EXECUTION: on entering TRIAGE_PRIORITY_APPOINTMENT.",
+        "ARGUMENTS: tipo_cita = [priority_appointment_type].",
+        "SOURCE OF TRUTH: use priority_appointment_success as the only verdict."
+      ]
+    }
+  ],
+  "constants": {
+    "AGENT_NAME": "Camila",
+    "COMPANY_NAME": "BabyNova",
+    "MAX_RETRY_ATTEMPTS": "3",
+    "SUPPORT_LINE_NAME": "Linea de Apoyo al Paciente"
+  },
+  "session_timeout_minutes": 10080,
+  "say_policies": [
+    "Usa mensajes breves, claros y numerados cuando presentes opciones.",
+    "En preguntas de selección múltiple, permite que la paciente responda con número, texto de la opción o varias opciones separadas por coma.",
+    "Confirma internamente la clasificación, pero no agregues explicaciones clínicas no solicitadas antes del nodo final.",
+    "Asume que la paciente puede estar en pánico: usa tono sereno, directo y contenido, sin regañar, discutir ni pedir explicaciones largas.",
+    "Si la paciente escribe mensajes desordenados, desesperados o repetidos, responde con calma y regresa al paso activo del flujo sin abrir rutas paralelas.",
+    "No uses frases que aumenten alarma como 'cálmate' o 'no pasa nada'; valida brevemente la emoción y continúa con la pregunta exacta del estado activo.",
+    "No hagas diagnósticos médicos, no indiques tratamientos farmacológicos y no minimices síntomas obstétricos.",
+    "No modifiques los textos de los nodos finales de Urgencias, Recomendaciones y Mensaje; deben decirse exactamente como están escritos en sus SAY verbatim.",
+    "Si una respuesta contiene un síntoma o motivo marcado como urgencias, la ruta final debe ser Urgencias aunque también existan motivos de mensaje o recomendaciones.",
+    "La opción Recomendaciones solo aplica para gripa sin fiebre dentro del motivo dificultad para respirar o dolor de pecho.",
+    "La opción Mensaje solo aplica para solicitudes de apoyo prioritario o para la opción 'No es una urgencia, pero me gusta una cita médica prioritaria'.",
+    "Aunque la paciente escriba algo que sugiera riesgo vital, urgencia obstétrica o traslado inmediato, no saltes identificación, semanas de gestación, motivo principal ni síntomas asociados; registra esa información dentro del flujo y clasifica al final.",
+    "La clasificación definitiva solo ocurre después de capturar identificación, semanas de gestación, motivo principal y síntomas asociados.",
+    "Está prohibido entrar a TRIAGE_URGENCIAS, TRIAGE_RECOMENDACIONES o TRIAGE_MENSAJE antes de completar identificación, semanas de gestación, motivo principal de consulta y síntomas asociados."
+  ],
+  "judgment_policies": [
+    "Memory slots are referenced with square brackets in the DSL. Do not invent undeclared slots.",
+    "Never verbalize the contents of internal variables, memory slots, or state IDs."
+  ]
+}

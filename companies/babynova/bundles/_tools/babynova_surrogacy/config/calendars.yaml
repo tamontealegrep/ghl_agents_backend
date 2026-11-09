@@ -1,0 +1,39 @@
+# Rules for the calendars of this company.
+#
+# A calendar EXISTS when one of its variables is in the environment, for example
+# BN_GHL_CALENDAR_ID_<KEY>, BN_GOOGLE_CALENDAR_ID_<KEY>, BN_GOOGLE_CLIENT_ID_<KEY>,
+# BN_DURATION_MINUTES_<KEY> (see README, "Varios calendarios"). This file says how it BEHAVES.
+# <KEY> is matched case-insensitively against the keys below.
+#
+# FT keeps its own rules in code (services/booking.py) and slots.yaml; the entries here apply
+# to every other calendar.
+#
+# Hours: weekday number (0 = Sunday ... 6 = Saturday) -> [start_hour, start_minute, end_hour, end_minute].
+# A weekday that is not listed is closed. Times are in America/Bogota. Plain windows only
+# (the "first Saturday of the month" form of slots.yaml is not available here).
+
+# Used by a calendar that has no entry under "calendars". PLACEHOLDER VALUES: the owner has
+# not confirmed hours for new calendars; they copy FT's Monday-to-Friday booking window.
+default:
+  event_title_prefix: null        # null -> the calendar key, e.g. "CONTROL"
+  email_subject_prefix: null      # null -> same as event_title_prefix
+  email_template_name: null       # null -> "book_appointment" (team notification)
+  hours:
+    1: [7, 0, 18, 0]
+    2: [7, 0, 18, 0]
+    3: [7, 0, 18, 0]
+    4: [7, 0, 18, 0]
+    5: [7, 0, 18, 0]
+  lunch_break:
+    start_hour: 12
+    end_hour: 13
+
+# Overrides per calendar. Any field left out comes from "default". Example:
+#
+# calendars:
+#   control:
+#     event_title_prefix: "Control"
+#     hours:
+#       2: [8, 0, 12, 0]
+#       4: [8, 0, 12, 0]
+calendars: {}

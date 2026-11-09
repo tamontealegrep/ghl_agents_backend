@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nueva cita agendada</title>
+</head>
+<body style="margin:0; padding:24px; background-color:#f7f9fb; font-family: Arial, Helvetica, sans-serif; color:#243447;">
+  <table cellpadding="0" cellspacing="0" style="max-width:560px; background-color:#ffffff; border-radius:12px; padding:24px;">
+    <tr><td>
+      <h2 style="margin:0 0 16px; color:#1f6fb2;">Nueva cita agendada (${calendar})</h2>
+      <p style="margin:0 0 6px;"><strong>Paciente:</strong> ${contact_name}</p>
+      <p style="margin:0 0 6px;"><strong>Correo:</strong> ${contact_email}</p>
+      <p style="margin:0 0 6px;"><strong>Teléfono:</strong> ${contact_phone}</p>
+      <p style="margin:0 0 6px;"><strong>Fecha:</strong> ${booking_date}</p>
+      <p style="margin:0 0 6px;"><strong>Hora:</strong> ${booking_time} (${timezone})</p>
+      <p style="margin:0 0 6px;"><strong>Enlace de la cita:</strong> ${event_link}</p>
+      <p style="margin:0;"><strong>Enlace de Meet:</strong> ${meet_link}</p>
+    </td></tr>
+  </table>
+</body>
+</html>

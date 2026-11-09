@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirmación de tu consulta con Family Aims</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f7f9fb; font-family: Arial, Helvetica, sans-serif; color:#243447;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f7f9fb; padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; background-color:#ffffff; border-radius:14px; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,0.06);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color:#eaf4ff; padding:28px 32px; text-align:center;">
+              <h1 style="margin:0; font-size:24px; color:#1f6fb2; font-weight:700;">
+                🎉 ¡Tu consulta está confirmada!
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              <p style="font-size:16px; line-height:1.6; margin:0 0 18px;">
+                Hola, <strong>${contact_name}</strong>:
+              </p>
+
+              <p style="font-size:16px; line-height:1.6; margin:0 0 18px;">
+                ¡Tu cita se ha agendado con éxito! Nos emociona mucho tener la oportunidad de conversar contigo en esta primera consulta con <strong>${agent_name}</strong>.
+              </p>
+
+              <p style="font-size:16px; line-height:1.6; margin:0 0 18px;">
+                Queremos conocerte mejor, entender tus necesidades y ver cómo podemos apoyarte para dar los primeros pasos en este camino.
+              </p>
+
+              <!-- Detalles de la cita -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f8ff; border-radius:10px; padding:18px; margin:24px 0;">
+                <tr>
+                  <td style="font-size:16px; line-height:1.8; color:#243447;">
+                    📅 <strong>Fecha:</strong> ${booking_date}<br />
+                    ⏰ <strong>Hora:</strong> ${booking_time}<br />
+                    📍 <strong>Plataforma:</strong> Videollamada online<br />
+                    🎥 <strong>Google Meet:</strong> <a href="${meet_link}" style="color:#1f6fb2;">Unirse a la videollamada</a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size:16px; line-height:1.6; margin:0 0 22px;">
+                Usa los botones a continuación para confirmar tu asistencia y unirte a la videollamada:
+              </p>
+
+              <!-- Botón RSVP -->
+              <table cellpadding="0" cellspacing="0" style="margin:0 0 12px;">
+                <tr>
+                  <td align="center" bgcolor="#1f6fb2" style="border-radius:8px;">
+                    <a href="${event_link}" target="_blank" style="display:inline-block; padding:14px 24px; font-size:16px; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px;">
+                      📆 Confirmar asistencia (RSVP)
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Botón Google Meet -->
+              <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+                <tr>
+                  <td align="center" bgcolor="#34a853" style="border-radius:8px;">
+                    <a href="${meet_link}" target="_blank" style="display:inline-block; padding:14px 24px; font-size:16px; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px;">
+                      🎥 Unirse a Google Meet
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size:16px; line-height:1.6; margin:0 0 18px;">
+                En Family Aims sabemos lo importante que es este momento, y nuestro compromiso es acompañarte en cada etapa de este viaje tan especial hacia la formación de tu familia. ✨
+              </p>
+
+              <p style="font-size:16px; line-height:1.6; margin:0 0 18px;">
+                Si por alguna razón necesitas hacer cambios o reagendar la fecha, puedes hacerlo a través del enlace de confirmación que recibiste o respondiendo a este correo con anticipación.
+              </p>
+
+              <p style="font-size:16px; line-height:1.6; margin:0 0 24px;">
+                ¡Nos vemos muy pronto! 💙
+              </p>
+
+              <p style="font-size:16px; line-height:1.6; margin:0;">
+                Con cariño,<br />
+                <strong>Equipo Family Aims</strong>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#f7f9fb; padding:22px 32px; text-align:center;">
+              <p style="font-size:13px; line-height:1.5; color:#6b7c8f; margin:0 0 10px;">
+                Family Aims · Acompañándote en tu camino para formar familia
+              </p>
+              <p style="font-size:13px; line-height:1.5; margin:0;">
+                <a href="https://familyaims.com/es/" target="_blank" style="color:#1f6fb2; text-decoration:none;">
+                  Visitar nuestro sitio web
+                </a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

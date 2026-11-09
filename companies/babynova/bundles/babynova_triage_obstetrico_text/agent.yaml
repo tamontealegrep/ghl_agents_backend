@@ -1,0 +1,8 @@
+tools: babynova_surrogacy
+tool_route_suffixes: ["-sur"]
+ghl:
+  path: /triage-text
+  token_envs: [GHL_TOKEN]
+  allowed_phones_env: BN_DEV_ALLOWED_PHONES
+  enforce_whitelist_env: BN_DEV_ENFORCE_PHONE_WHITELIST
+  debounce_seconds: 15

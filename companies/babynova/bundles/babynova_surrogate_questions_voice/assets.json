@@ -1,0 +1,618 @@
+[
+  {
+    "name": "end_call",
+    "description": "Closes the call session in an orderly way.",
+    "notes": [
+      "This is always the last tool executed in any terminal flow.",
+      "Make sure all required updates have been completed before end_call."
+    ],
+    "inputs": [],
+    "outputs": []
+  },
+  {
+    "name": "callback",
+    "description": "Authorized tool for escalating the conversation to a human call. It must be called when the flow cannot resolve something on its own (no availability, the booking fails repeatedly, a piece of information remains ambiguous, or the user explicitly asks to speak with a person). It only validates and normalizes the request — it does not send any email or create any task; the actual notification mechanism is executed by a subsequent step in the flow.",
+    "notes": [
+      "MANDATORY EXECUTION TRIGGER: if the active flow node is C__CB_RUN, execute this tool immediately — execution on this node is mandatory, without exception. Also execute it when get_available_slots returns no availability after several attempts, when book_appointment fails repeatedly, when a piece of information remains ambiguous after retrying, or when the user explicitly asks to speak with a person.",
+      "ARGUMENT RULE: contact_name is always required. You must send at least one of contact_phone and contact_email — you do not need to send both, but do not send neither.",
+      "ARGUMENT RULE: reason must be one of the 5 exact values listed below — map the actual flow situation to the closest one; do not invent another value.",
+      "ARGUMENT RULE: if the user mentions a preferred day, send it in preferred_days — accepts one day, multiple days separated by commas, or shortcuts such as 'weekdays'/'weekend'. If the user mentions a time range, map it to morning/midday/afternoon/evening in preferred_time_window. Neither is mandatory — if the user did not provide a preference, do not send them (or send 'any').",
+      "ARGUMENT RULE: iana_timezone is required and must be the same IANA timezone already determined for the user (the same one you would use for get_available_slots) — do not ask for it again if you already have it.",
+      "SOURCE OF TRUTH RULE: use 'errors' as the sole indicator that the request is incomplete or malformed — if it is null, the request is ready for the flow to escalate.",
+      "POST-EXECUTION RULE: after a successful execution (errors is null), inform the user that someone will contact them and close that branch of the conversation warmly — do not continue trying to resolve yourself what prompted the callback.",
+      "POST-EXECUTION RULE: if errors is not null, the data indicated in the message is missing or invalid — collect or correct it with the user and call the tool again before considering the request complete."
+    ],
+    "inputs": [
+      {
+        "name": "contact_name",
+        "required": true,
+        "description": "Full name of the contact as mentioned during the call."
+      },
+      {
+        "name": "contact_phone",
+        "required": false,
+        "description": "Contact's phone number in international format. At least one of contact_phone and contact_email must be provided. e.g. +573001234567"
+      },
+      {
+        "name": "contact_email",
+        "required": false,
+        "description": "Contact's email address. At least one of contact_phone and contact_email must be provided. e.g. maria@example.com"
+      },
+      {
+        "name": "reason",
+        "required": true,
+        "description": "Callback reason. One of: no_availability (no availability was found), booking_failed (the booking failed repeatedly), user_requested (the user asked to speak with a person), ambiguous_data (a piece of information remained ambiguous after several attempts), technical_error (technical error during the flow)."
+      },
+      {
+        "name": "context",
+        "required": false,
+        "description": "Short summary of what happened in the conversation, so the person calling does not do so blindly. e.g. 'No availability was found in the next 14 days'"
+      },
+      {
+        "name": "preferred_days",
+        "required": false,
+        "description": "Day or days when the user prefers to be called. Accepts one day, multiple days separated by commas, a list, or the shortcuts 'weekdays' / 'weekend' / 'any' (no preference). e.g. 'weekdays', 'monday,wednesday'"
+      },
+      {
+        "name": "preferred_time_window",
+        "required": false,
+        "description": "Time window when the user prefers to be called. One of: morning, midday, afternoon, evening, any."
+      },
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "Standard IANA timezone identifier for the user — the same one already determined for get_available_slots. Examples: 'America/Bogota', 'America/Sao_Paulo', 'Europe/Madrid', 'Asia/Tokyo'."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean value indicating whether the tool executed successfully."
+      },
+      {
+        "name": "contact_name",
+        "required": true,
+        "description": "Echo of the received name. null if the request was rejected."
+      },
+      {
+        "name": "contact_phone",
+        "required": true,
+        "description": "Echo of the received phone number."
+      },
+      {
+        "name": "contact_email",
+        "required": true,
+        "description": "Echo of the received email address."
+      },
+      {
+        "name": "reason",
+        "required": true,
+        "description": "Normalized echo of the reason (lowercase)."
+      },
+      {
+        "name": "context",
+        "required": true,
+        "description": "Echo of the received context."
+      },
+      {
+        "name": "preferred_days",
+        "required": true,
+        "description": "Normalized list of days (Monday through Sunday, in that order), with shortcuts already expanded. Empty array ([]) if no preference was provided or 'any' was provided."
+      },
+      {
+        "name": "preferred_time_window",
+        "required": true,
+        "description": "Normalized echo of the time window. null if no preference was provided or 'any' was provided."
+      },
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "Echo of the received timezone."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Explains why the request was rejected (missing or invalid data: contact_name, contact_phone/contact_email, reason, iana_timezone, preferred_days, or preferred_time_window). null when the request is ready to be escalated."
+      }
+    ]
+  },
+  {
+    "name": "time_now",
+    "description": "Authorized tool for getting the real current date and time in the given timezone. Its response is the flow's only authorized time reference.",
+    "notes": [
+      "MANDATORY EXECUTION TRIGGER: when a node declares EXECUTE: time_now, call it as the first action of the turn — imperative, no exception.",
+      "ABSOLUTE EXECUTION RULE: FORBIDDEN to deduce, estimate, or assume the current date or time from the model's knowledge, training, or conversational context. Do not speak or route before capturing the 'now' field.",
+      "ARGUMENT RULE: iana_timezone is an IANA continent/city identifier (e.g. America/Bogota, Europe/Madrid, America/Sao_Paulo). Send whatever the flow fixes; never use abbreviations (EST, COT, BRT).",
+      "SOURCE OF TRUTH RULE: use the 'now' field as the only authorized time reference. To normalize a relative date ('8 months ago', 'last year'), compute it from 'now'.",
+      "POST-EXECUTION RULE: if 'now' comes back null or 'errors' is not null, call the tool again before continuing."
+    ],
+    "inputs": [
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "IANA identifier of the timezone the current time is wanted in (continent/city). Examples: America/Bogota, Europe/Madrid, America/Sao_Paulo."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean: the query ran successfully."
+      },
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "Echo of the IANA timezone identifier used."
+      },
+      {
+        "name": "now",
+        "required": true,
+        "description": "Current date and time in the given timezone, ISO 8601 with offset. Example: 2026-08-28T18:18:28.935329-05:00. null on error."
+      },
+      {
+        "name": "calendar",
+        "required": false,
+        "description": "The next 21 days starting today in the given timezone, as 'YYYY-MM-DD Weekday' entries separated by commas (e.g. '2026-10-27 Tuesday, 2026-10-28 Wednesday'). Use it to resolve weekday names and relative days ('Wednesday', 'tomorrow') to a calendar date. null on error."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Error message if the query failed. null on success."
+      }
+    ]
+  },
+  {
+    "name": "calculate_bmi",
+    "description": "Authorized tool to calculate BMI; single source of truth for [imc].",
+    "notes": [
+      "MANDATORY EXECUTION: upon entering Q__SQ_CALCULATE_BMI.",
+      "ARGUMENTS: weight_kg (kg), height_cm (cm); convert if input is in lbs/ft.",
+      "RULE: do not compute manually nor confirm before capturing [imc].",
+      "SOURCE OF TRUTH: use [imc] only; never recalculate manually."
+    ],
+    "inputs": [
+      {
+        "name": "weight_kg",
+        "required": true,
+        "description": "Candidate's current weight in kilograms, from the captured weight slot."
+      },
+      {
+        "name": "height_cm",
+        "required": true,
+        "description": "Candidate's current height in centimeters, from the captured height slot."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean: the computation executed successfully."
+      },
+      {
+        "name": "imc",
+        "required": true,
+        "description": "Decimal BMI value. null if weight_kg or height_cm were invalid."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Error message when weight_kg or height_cm are invalid. null on success."
+      }
+    ]
+  },
+  {
+    "name": "get_available_slots",
+    "description": "Authorized availability; single source of truth for days and times.",
+    "notes": [
+      "ARGUMENTS: calendar_type is REQUIRED and is always 'FT' (the BabyNova calendar). The tool fails without it.",
+      "MANDATORY EXECUTION: upon entering S__SC_AVAIL/AM_RESCHED_AV and in any attempt to schedule/reschedule/see-more/retry.",
+      "ARGUMENTS: iana_timezone = 'America/Bogota' (fixed).",
+      "SOURCE OF TRUTH: use only available_slots with start_co/end_co and start_local/end_local.",
+      "PRESENTATION: speak with start_local/end_local; start_co/end_co are internal."
+    ],
+    "inputs": [
+      {
+        "name": "calendar_type",
+        "required": true,
+        "description": "Calendar to use. Always the literal 'FT'; the tool fails if it is missing."
+      },
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "IANA (continent/city) timezone identifier for the user. Fixed value for this agent: America/Bogota."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean: the query executed successfully. Does not by itself indicate availability — check available_slots."
+      },
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "Echo of the IANA identifier used to compute start_local/end_local."
+      },
+      {
+        "name": "available_slots",
+        "required": true,
+        "description": "Array of objects with available slots. Each object has start_co/end_co (Colombia time, ISO 8601) and start_local/end_local (contact's timezone, ISO 8601). Empty array ([]) when no availability."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Error message if the query failed. null when successful, even if available_slots is empty."
+      }
+    ]
+  },
+  {
+    "name": "book_appointment",
+    "description": "Authorized booking; creates the appointment from a valid slot.",
+    "notes": [
+      "ARGUMENTS: calendar_type is REQUIRED and is always 'FT' (the BabyNova calendar). The tool fails without it.",
+      "MANDATORY EXECUTION: upon entering S__SC_BOOK; requires prior get_available_slots.",
+      "ARGUMENTS: start_date = slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; iana_timezone = 'America/Bogota'; confirmed contact_name/email/phone.",
+      "SOURCE OF TRUTH: confirm only if success == true and event_id != null."
+    ],
+    "inputs": [
+      {
+        "name": "calendar_type",
+        "required": true,
+        "description": "Calendar to use. Always the literal 'FT'; the tool fails if it is missing."
+      },
+      {
+        "name": "start_date",
+        "required": true,
+        "description": "Start datetime in ISO 8601 with offset. Literal copy of start_co from the chosen slot in available_slots."
+      },
+      {
+        "name": "duration",
+        "required": true,
+        "description": "Appointment duration in minutes, sent as string. Fixed for this flow: <APPOINTMENT_DURATION_MINUTES>."
+      },
+      {
+        "name": "contact_name",
+        "required": true,
+        "description": "Contact's full name, already confirmed in the flow."
+      },
+      {
+        "name": "contact_email",
+        "required": true,
+        "description": "Contact's email in lowercase, already confirmed in the flow. Used to send the appointment confirmation."
+      },
+      {
+        "name": "contact_phone",
+        "required": true,
+        "description": "Contact's phone number in E.164 international format, already confirmed in the flow."
+      },
+      {
+        "name": "iana_timezone",
+        "required": true,
+        "description": "IANA timezone identifier of the contact; fixed value 'America/Bogota'."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean: the booking was created successfully."
+      },
+      {
+        "name": "reason",
+        "required": true,
+        "description": "Rejection reason when success is false: 'invalid_start_date', 'past_date', 'invalid_hour', 'creation_failed', 'slot_taken'. null when success is true."
+      },
+      {
+        "name": "event_id",
+        "required": true,
+        "description": "Identifier of the created event. null if booking was not completed."
+      },
+      {
+        "name": "event_link",
+        "required": true,
+        "description": "Calendar event link. null if booking was not completed."
+      },
+      {
+        "name": "meet_link",
+        "required": true,
+        "description": "Video-call link for the appointment. null if booking was not completed."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Technical error message. May be present with success == true if the appointment was created but email notification failed."
+      }
+    ]
+  },
+  {
+    "name": "find_appointment",
+    "description": "Authorized search for existing appointments.",
+    "notes": [
+      "ARGUMENTS: calendar_type is REQUIRED and is always 'FT' (the BabyNova calendar). The tool fails without it.",
+      "MANDATORY EXECUTION: when the contact requests to consult/verify appointment details.",
+      "ARGUMENTS: contact_name and/or calendar_phone/contact_email; optional iana_timezone.",
+      "SOURCE OF TRUTH: appointments; empty -> no records."
+    ],
+    "inputs": [
+      {
+        "name": "calendar_type",
+        "required": true,
+        "description": "Calendar to use. Always the literal 'FT'; the tool fails if it is missing."
+      },
+      {
+        "name": "contact_name",
+        "required": true,
+        "description": "Contact's full name to perform the search."
+      },
+      {
+        "name": "calendar_phone",
+        "required": false,
+        "description": "Contact's mobile phone to perform the search."
+      },
+      {
+        "name": "contact_email",
+        "required": false,
+        "description": "Contact's email to perform the search."
+      },
+      {
+        "name": "iana_timezone",
+        "required": false,
+        "description": "IANA timezone to display times for the found appointments. Default: America/Bogota."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean indicating whether the search completed."
+      },
+      {
+        "name": "appointments",
+        "required": true,
+        "description": "List of objects with information about found appointments (event_id, summary, start_time)."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Error message if the search failed."
+      }
+    ]
+  },
+  {
+    "name": "cancel_appointment",
+    "description": "Authorized cancellation of existing appointments.",
+    "notes": [
+      "ARGUMENTS: calendar_type is REQUIRED and is always 'FT' (the BabyNova calendar). The tool fails without it.",
+      "MANDATORY EXECUTION: with confirmed event_id (from find_appointment).",
+      "ARGUMENTS: exact event_id; optional iana_timezone.",
+      "SOURCE OF TRUTH: use success as the sole verdict."
+    ],
+    "inputs": [
+      {
+        "name": "calendar_type",
+        "required": true,
+        "description": "Calendar to use. Always the literal 'FT'; the tool fails if it is missing."
+      },
+      {
+        "name": "event_id",
+        "required": true,
+        "description": "Unique Google Calendar event identifier to cancel."
+      },
+      {
+        "name": "iana_timezone",
+        "required": false,
+        "description": "Contact's IANA timezone. Default: America/Bogota."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean indicating whether the cancellation was successful."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Error message if the cancellation failed."
+      }
+    ]
+  },
+  {
+    "name": "edit_appointment",
+    "description": "Authorized edit/reschedule of existing appointments.",
+    "notes": [
+      "ARGUMENTS: calendar_type is REQUIRED and is always 'FT' (the BabyNova calendar). The tool fails without it.",
+      "MANDATORY EXECUTION: when changing date/time/duration of a scheduled appointment.",
+      "ARGUMENTS: exact event_id; optional new_start_date (from availability), new_duration, and iana_timezone.",
+      "SOURCE OF TRUTH: use success as the verdict; message/new_start_time/new_duration are supportive."
+    ],
+    "inputs": [
+      {
+        "name": "calendar_type",
+        "required": true,
+        "description": "Calendar to use. Always the literal 'FT'; the tool fails if it is missing."
+      },
+      {
+        "name": "event_id",
+        "required": true,
+        "description": "Unique Google Calendar event identifier to modify."
+      },
+      {
+        "name": "new_start_date",
+        "required": false,
+        "description": "New datetime in ISO 8601 with offset. Required if the time is being changed."
+      },
+      {
+        "name": "new_duration",
+        "required": false,
+        "description": "New duration in minutes (as string). Required if duration is being changed."
+      },
+      {
+        "name": "iana_timezone",
+        "required": false,
+        "description": "Contact's IANA timezone. Default: America/Bogota."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean indicating whether the modification was successful."
+      },
+      {
+        "name": "message",
+        "required": false,
+        "description": "Confirmation message for the change performed."
+      },
+      {
+        "name": "new_start_time",
+        "required": false,
+        "description": "Formatted datetime if there was a time change."
+      },
+      {
+        "name": "new_duration",
+        "required": false,
+        "description": "New appointment duration in minutes if modified (sent as string)."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Error message if the modification failed."
+      }
+    ]
+  },
+  {
+    "name": "check_documentation",
+    "description": "Authorized documentary verification; single source of truth for [document_result/document_motive/document_norm].",
+    "notes": [
+      "MANDATORY EXECUTION: upon entering Q__SQ_CHECK_DOCUMENTATION.",
+      "ARGUMENTS: nationality = ISO 3166-1 alpha-3 (UPPERCASE); if nationality != 'COL' send document_type = normalized list.",
+      "SOURCE OF TRUTH: use only document_result/document_motive/document_norm.",
+      "RULE: do not issue a verdict without executing; keep the result and continue the flow."
+    ],
+    "inputs": [
+      {
+        "name": "nationality",
+        "required": true,
+        "description": "ISO 3166-1 alpha-3 code in uppercase. Examples: COL, VEN, ARG, USA, ECU, MEX, PER, BOL, BRA. Inferred from what the candidate said — never from accent nor phone."
+      },
+      {
+        "name": "document_type",
+        "required": false,
+        "description": "Array of document types. Only sent when nationality != 'COL'. Per-element values: cedula_ciudadania and ppt (approve); cedula_extranjeria, pasaporte, otro (reject). Approve if ANY array element is an approved type."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean: the verification executed successfully."
+      },
+      {
+        "name": "document_result",
+        "required": true,
+        "description": "Boolean: true if the candidate meets the documentary requirement, false otherwise."
+      },
+      {
+        "name": "document_motive",
+        "required": true,
+        "description": "Textual explanation of the verdict, in English (proper names of Colombian documents in Spanish). Example: \"Document not allowed ('pasaporte'). Cedula de Ciudadania or PPT is required for non-Colombians.\""
+      },
+      {
+        "name": "document_norm",
+        "required": true,
+        "description": "Array with the normalized type of each provided document, in order. Values: cedula_ciudadania, ppt, cedula_extranjeria, pasaporte, otro, desconocido. Empty array ([]) when not applicable (Colombian, invalid nationality, or missing document_type)."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Technical error message if the verification failed. null on success."
+      }
+    ]
+  },
+  {
+    "name": "surrogate_classification",
+    "description": "Authorized final classification; single source of truth for [classification_result].",
+    "notes": [
+      "MANDATORY EXECUTION: upon entering Q__SQ_RUN_CLASSIFICATION.",
+      "ARGUMENTS: send the slots exactly as captured; missing values -> empty string; bmi from calculate_bmi; documentation from check_documentation.",
+      "SOURCE OF TRUTH: use classification_result as the only decision.",
+      "RULE: if 'Inconclusive', capture the lack and retry."
+    ],
+    "inputs": [
+      {
+        "name": "age",
+        "required": false,
+        "description": "Candidate's age in years. Numeric when present."
+      },
+      {
+        "name": "city",
+        "required": false,
+        "description": "Candidate's city of residence in Colombia. Send the captured text when present. Must be one of: Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá, Sibaté, Otro."
+      },
+      {
+        "name": "eps",
+        "required": false,
+        "description": "Whether the candidate has active EPS in Colombia. Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent."
+      },
+      {
+        "name": "number_of_children",
+        "required": false,
+        "description": "Number of the candidate's biological children. Numeric when present."
+      },
+      {
+        "name": "last_birth_date",
+        "required": false,
+        "description": "Candidate's last delivery date, in YYYY-MM-DD (also accepts YYYY/MM/DD). Send empty when absent."
+      },
+      {
+        "name": "number_of_c_sections",
+        "required": false,
+        "description": "Number of the candidate's C-sections. Numeric when present. Use 0 if none."
+      },
+      {
+        "name": "abortions",
+        "required": false,
+        "description": "Whether the candidate has had prior abortions or pregnancy losses. Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent."
+      },
+      {
+        "name": "preeclampsia",
+        "required": false,
+        "description": "Whether the candidate has a history of preeclampsia. Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent."
+      },
+      {
+        "name": "bmi",
+        "required": false,
+        "description": "Body Mass Index calculated by calculate_bmi. Numeric when present — never manually estimated."
+      },
+      {
+        "name": "documentation",
+        "required": false,
+        "description": "Whether the candidate meets the documentation requirement (from check_documentation result, or fixed 'si' for Colombians). Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent."
+      },
+      {
+        "name": "drug_use",
+        "required": false,
+        "description": "Whether the candidate currently uses recreational drugs. Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Boolean indicating whether the classification executed successfully."
+      },
+      {
+        "name": "classification_result",
+        "required": true,
+        "description": "Final classification. Expected values: 'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)' (covers both under 18 and recent delivery, 12 months or less), 'Rejected (City)', 'Rejected (EPS)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (Drug Use)'."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Technical error message if the classification failed. null on success."
+      }
+    ]
+  }
+]

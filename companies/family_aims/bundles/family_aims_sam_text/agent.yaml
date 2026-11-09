@@ -1,0 +1,9 @@
+# Runtime settings. The compiler never writes or overwrites this file.
+tools: family_aims
+tool_route_suffixes: ["-ghl"]
+ghl:
+  path: /sam-text
+  token_envs: [GHL_TOKEN]
+  allowed_phones_env: FA_DEV_ALLOWED_PHONES
+  enforce_whitelist_env: FA_DEV_ENFORCE_PHONE_WHITELIST
+  debounce_seconds: 15

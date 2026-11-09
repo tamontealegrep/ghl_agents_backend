@@ -1,0 +1,68 @@
+[
+  {
+    "name": "contacto_ap",
+    "description": "Authorized tool to contact Patient Support; source of truth for [call_success].",
+    "notes": [
+      "MANDATORY EXECUTION: on entering TRIAGE_CONTACT_PATIENT_SUPPORT.",
+      "ARGUMENTS: identificacion, etapa_gestacional, motivo_consulta, sintomas_adicionales, tiene_recursos.",
+      "SOURCE OF TRUTH: use call_success as the only verdict."
+    ],
+    "inputs": [
+      {
+        "name": "identificacion",
+        "required": true,
+        "description": "Identificación del paciente."
+      },
+      {
+        "name": "etapa_gestacional",
+        "required": true,
+        "description": "Etapa gestacional actual."
+      },
+      {
+        "name": "motivo_consulta",
+        "required": true,
+        "description": "Motivo principal de la consulta."
+      },
+      {
+        "name": "sintomas_adicionales",
+        "required": true,
+        "description": "Síntomas adicionales reportados."
+      },
+      {
+        "name": "tiene_recursos",
+        "required": true,
+        "description": "Indica si la paciente tiene recursos para soporte (true/false)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "call_success",
+        "required": true,
+        "description": "Ejecución correcta del contacto (true/false)."
+      }
+    ]
+  },
+  {
+    "name": "citas_prioritarias",
+    "description": "Authorized tool to register a priority appointment request; source of truth for [priority_appointment_success].",
+    "notes": [
+      "MANDATORY EXECUTION: on entering TRIAGE_PRIORITY_APPOINTMENT.",
+      "ARGUMENTS: tipo_cita = [priority_appointment_type].",
+      "SOURCE OF TRUTH: use priority_appointment_success as the only verdict."
+    ],
+    "inputs": [
+      {
+        "name": "tipo_cita",
+        "required": true,
+        "description": "Tipo de cita prioritaria solicitada."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "priority_appointment_success",
+        "required": true,
+        "description": "Ejecución correcta del registro (true/false)."
+      }
+    ]
+  }
+]

@@ -1,0 +1,3 @@
+Vendored from the compiler's contract files by scripts/export_runtime.py.
+Do not edit by hand: change the compiler and re-export.
+content-sha256: 46fd726ab4cc58d7

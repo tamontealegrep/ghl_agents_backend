@@ -1,0 +1,64 @@
+{
+  "ghl": {
+    "base_url_env": "GHL_BASE_URL",
+    "default_base_url": "https://services.leadconnectorhq.com",
+    "version_env": "GHL_VERSION",
+    "default_version": "v3",
+    "conversation_search_limit": 1,
+    "message_history_page_size": 100
+  },
+  "runtime": {
+    "timeouts": {
+      "history_seconds": 60,
+      "conversation_search_seconds": 30,
+      "send_message_seconds": 30
+    }
+  },
+  "messaging": {
+    "default_send_type": "Live_Chat",
+    "channel_type_map": {
+      "SMS": "SMS",
+      "WHATSAPP": "WhatsApp",
+      "TYPE_WHATSAPP": "WhatsApp",
+      "IG": "IG",
+      "INSTAGRAM": "IG",
+      "EMAIL": "Email",
+      "FACEBOOK": "FB",
+      "GMB": "FB",
+      "LIVE_CHAT": "Live_Chat"
+    }
+  },
+  "inbound_type_map": {
+    "_note": "Incoming message.type (numeric or TYPE_ string) -> normalized channel name. Used to detect which channel an inbound webhook came in on. Confidence varies by entry: the numeric codes and the entries marked (confirmed) below were verified against real payloads or official GHL docs; the rest (mostly TYPE_ variants from the 2021/2023 API docs) are documented but never seen in a live payload here, kept as best-effort defaults.",
+    "1": "CALL",
+    "2": "SMS",
+    "5": "LIVE_CHAT",
+    "10": "VOICEMAIL",
+    "11": "FACEBOOK",
+    "18": "IG",
+    "19": "WHATSAPP",
+    "TYPE_CALL": "CALL",
+    "TYPE_SMS": "SMS",
+    "TYPE_EMAIL": "EMAIL",
+    "TYPE_FACEBOOK": "FACEBOOK",
+    "TYPE_GMB": "GMB",
+    "TYPE_INSTAGRAM": "IG",
+    "TYPE_WHATSAPP": "WHATSAPP",
+    "TYPE_ACTIVITY_APPOINTMENT": "ACTIVITY_APPOINTMENT",
+    "TYPE_ACTIVITY_CONTACT": "ACTIVITY_CONTACT",
+    "TYPE_ACTIVITY_INVOICE": "ACTIVITY_INVOICE",
+    "TYPE_ACTIVITY_OPPORTUNITY": "ACTIVITY_OPPORTUNITY",
+    "TYPE_ACTIVITY_PAYMENT": "ACTIVITY_PAYMENT",
+    "TYPE_WEBCHAT": "LIVE_CHAT",
+    "TYPE_CAMPAIGN_SMS": "SMS",
+    "TYPE_CAMPAIGN_CALL": "CALL",
+    "TYPE_CAMPAIGN_EMAIL": "EMAIL",
+    "TYPE_CAMPAIGN_VOICEMAIL": "VOICEMAIL",
+    "TYPE_CAMPAIGN_FACEBOOK": "FACEBOOK",
+    "TYPE_SMS_REVIEW_REQUEST": "SMS",
+    "TYPE_SMS_NO_SHOW_REQUEST": "SMS",
+    "TYPE_VOICEMAIL": "VOICEMAIL",
+    "TYPE_LIVE_CHAT": "LIVE_CHAT",
+    "InternalComment": "INTERNAL"
+  }
+}
