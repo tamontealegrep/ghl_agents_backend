@@ -72,9 +72,11 @@ class AgentRegistry:
             slug: Agent slug.
 
         Returns:
-            Absolute URL of the agent's tool mount on this same server.
+            Absolute URL of the tool mount on this same server: the company's
+            (``/agents/<company>/tools``) when ``COMPANY`` is set, else the agent's.
         """
-        return f"{self._settings.self_base_url}/agents/{slug}/tools"
+        owner = self._settings.company or slug
+        return f"{self._settings.self_base_url}/agents/{owner}/tools"
 
     def _build(self, slug: str) -> LoadedAgent:
         """Builds the graph from the bundle currently on disk, without caching.

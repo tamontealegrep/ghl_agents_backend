@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -57,7 +58,13 @@ def _ghl_config(bundle: AgentBundle) -> CompiledAgentGhlConfig | None:
     )
 
 
-def _mount_bundle(app: FastAPI, registry: AgentRegistry, bundle: AgentBundle, company: str | None = None) -> None:
+def _mount_bundle(
+    app: FastAPI,
+    registry: AgentRegistry,
+    bundle: AgentBundle,
+    company: str | None = None,
+    mounted_tools: set[Path] | None = None,
+) -> None:
     """Mounts one agent's tool plugin and channels, isolating its failures.
 
     A broken bundle is logged and skipped so it cannot take down the others.
@@ -66,13 +73,18 @@ def _mount_bundle(app: FastAPI, registry: AgentRegistry, bundle: AgentBundle, co
         app: Application to mount on.
         registry: Registry the channels load graphs from.
         bundle: Bundle to mount.
-        company: Company id. Webhooks go under ``/agents/<company>``; without it, under ``/agents/<slug>``.
+        company: Company id. Webhooks and tools go under ``/agents/<company>``; without it, under ``/agents/<slug>``.
+        mounted_tools: Tool folders already mounted for the company, so agents sharing a plugin mount it once.
     """
     prefix = f"/agents/{bundle.slug}"
     try:
-        tools_router = load_tool_router(bundle)
+        owner = company or bundle.slug
+        already = mounted_tools is not None and company is not None and bundle.tools_dir in mounted_tools
+        tools_router = None if already else load_tool_router(bundle)
         if tools_router is not None:
-            app.include_router(tools_router, prefix=f"{prefix}/tools", tags=[f"{bundle.slug}.tools"])
+            app.include_router(tools_router, prefix=f"/agents/{owner}/tools", tags=[f"{owner}.tools"])
+            if mounted_tools is not None:
+                mounted_tools.add(bundle.tools_dir)
         ghl_config = _ghl_config(bundle)
         if ghl_config is not None:
             app.include_router(
@@ -110,7 +122,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(routes.router, tags=["agents"])
     app.include_router(builtin_tools_router, prefix=BUILTIN_TOOLS_PREFIX, tags=["builtin-tools"])
     bundles = discover_bundles(settings.agents_dir)
+    mounted_tools: set[Path] = set()
     for bundle in bundles.values():
-        _mount_bundle(app, registry, bundle, settings.company)
+        _mount_bundle(app, registry, bundle, settings.company, mounted_tools)
     logger.info("Serving %d agent(s) from %s: %s", len(bundles), settings.agents_dir, ", ".join(bundles))
     return app

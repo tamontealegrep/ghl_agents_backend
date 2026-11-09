@@ -86,7 +86,9 @@ Herramientas (plugin `bundles/_tools/desk`): reservar, buscar, editar y cancelar
 
 Herramientas (plugin `bundles/_tools/surrogacy`): citas con Google (`*-google`) y con GHL (`*-ghl`), `check-documentation-sur`, `surrogate-classification`.
 
-**URL de los webhooks:** `/agents/<COMPANY>/<path del agent.yaml>`. `COMPANY` es el id de la empresa y se define en el `docker-compose.yml` (`family_aims`, `babynova`); sin `COMPANY`, el webhook queda en `/agents/<agente>/<path>`. `chat`, `reset` y las herramientas siguen en `/agents/<agente>/...`.
+**URL de los webhooks:** `/agents/<COMPANY>/<path del agent.yaml>`. `COMPANY` es el id de la empresa y se define en el `docker-compose.yml` (`family_aims`, `babynova`); sin `COMPANY`, el webhook queda en `/agents/<agente>/<path>`. `chat`, `reset` y `admin/reload` siguen en `/agents/<agente>/...`.
+
+**URL de las herramientas:** `/agents/<COMPANY>/tools/<herramienta>`, una sola vez por empresa (por ejemplo `POST /agents/family_aims/tools/get-available-slots-ghl` y `POST /agents/babynova/tools/get-available-slots-ghl`). Los agentes que comparten un plugin lo montan una vez. Sin `COMPANY`, quedan en `/agents/<agente>/tools/...`.
 
 ### Endpoints que tiene todo contenedor
 
@@ -112,7 +114,7 @@ Herramientas (plugin `bundles/_tools/surrogacy`): citas con Google (`*-google`) 
 | Secretos y valores por empresa | `companies/<empresa>/.env` |
 | Herramientas genéricas para todas las empresas | `src/agent_backend/builtin_tools/` (van en la imagen) |
 
-Ejemplo, Family Aims: `companies/family_aims/bundles/_tools/desk/api/v1/endpoints/book_appointment_ghl.py` define `POST /agents/<agente>/tools/book-appointment-ghl`. Para una herramienta nueva: crea su archivo, regístralo en `router.py` y reinicia el contenedor.
+Ejemplo, Family Aims: `companies/family_aims/bundles/_tools/desk/api/v1/endpoints/book_appointment_ghl.py` define `POST /agents/<COMPANY>/tools/book-appointment-ghl`. Para una herramienta nueva: crea su archivo, regístralo en `router.py` y reinicia el contenedor.
 
 ---
 
@@ -149,7 +151,7 @@ BN_DURATION_MINUTES_CONTROL=20
 Verifica qué calendarios detectó el contenedor (no devuelve ids ni credenciales):
 
 ```bash
-curl http://localhost:8012/agents/babynova_triage_obstetrico_text/tools/calendars
+curl http://localhost:8012/agents/babynova/tools/calendars
 ```
 
 **Reglas de cada calendario** (horario, almuerzo, prefijo del título y del asunto, nombre del agente y plantilla de correo en Family Aims) en `bundles/_tools/<plugin>/config/calendars.yaml`. Un calendario sin entrada usa la sección `default`, que hoy tiene **valores provisionales** (copian el horario de IVF y de FT respectivamente): revísalos antes de usarlo con pacientes. `IVF`, `SUR` y `FT` conservan sus reglas en código.
@@ -342,7 +344,7 @@ curl -X POST http://localhost:8011/agents/family_aims_sam_text/admin/reload \
        return {"mensaje": f"Hola, {body.nombre}"}
    ```
 
-   La variable se llama `router` y queda disponible en `/agents/<agente>/tools/saludar`. Los imports dentro de la carpeta deben ser relativos (`from .servicios import ...`). Las variables de entorno que lea el plugin van en el `.env`. Una carpeta `tools/` o `_tools/<plugin>` puede ser todo un paquete con subcarpetas, como los de Family Aims y BabyNova.
+   La variable se llama `router` y queda disponible en `/agents/<COMPANY>/tools/saludar`. Los imports dentro de la carpeta deben ser relativos (`from .servicios import ...`). Las variables de entorno que lea el plugin van en el `.env`. Una carpeta `tools/` o `_tools/<plugin>` puede ser todo un paquete con subcarpetas, como los de Family Aims y BabyNova.
 
 6. **Levanta:**
 

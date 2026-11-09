@@ -2,7 +2,8 @@
 
 Plugin contract: ``<bundle>/tools/__init__.py`` (or ``router.py``) exposes a
 module-level ``router``, a ``fastapi.APIRouter``. The backend mounts it at
-``/agents/<slug>/tools``, which is where that agent's compiled tool calls land.
+``/agents/<company>/tools`` (``/agents/<slug>/tools`` when ``COMPANY`` is unset), which is
+where the agents' compiled tool calls land.
 Relative imports inside the ``tools`` folder work as in any package.
 
 A company can keep code that several of its business units share in
