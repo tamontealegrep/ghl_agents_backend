@@ -2355,6 +2355,37 @@
         "eval": "code",
         "route": [
           {
+            "target": "Q__SQ_SYNC_CITY_RAW",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_SYNC_CITY_RAW",
+        "node_type": "action",
+        "goal": [
+          "Sync city_raw (the city exactly as the candidate wrote it) to the contact's GHL custom field."
+        ],
+        "do": [
+          "name = 'city_raw'",
+          "value = [q__city_raw]",
+          "contact_id = [contact.contact_id]",
+          "location_id = [contact.location_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "update_custom_field",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
             "target": "Q__SQ_FIND_MISSING",
             "condition_text": null,
             "is_mechanical": true,
