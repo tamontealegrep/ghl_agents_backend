@@ -1390,6 +1390,28 @@ def test_interpolate_slots_shows_unique_dates_when_no_slot_names_one_of_them():
     assert result == "🗓️ Martes 22 de septiembre\n └─ Mañana\n🗓️ Miércoles 23 de septiembre\n └─ Tarde"
 
 
+def test_interpolate_slots_names_the_date_when_only_one_date_is_on_offer_and_none_was_picked():
+    slots = {
+        "available_slots": [
+            _appointment("2026-09-22", "09:00"),
+            _appointment("2026-09-22", "10:00"),
+        ]
+    }
+    result = _interpolate_slots("[available_slots]", slots)
+    assert result == "🗓️ Martes 22 de septiembre\n └─ Mañana"
+
+
+def test_interpolate_slots_shows_the_times_of_the_only_date_once_it_was_picked():
+    slots = {
+        "day": "2026-09-22",
+        "available_slots": [
+            _appointment("2026-09-22", "09:00"),
+            _appointment("2026-09-22", "10:00"),
+        ],
+    }
+    assert _interpolate_slots("[available_slots]", slots) == "Mañana\n🕐 09:00 a 10:00"
+
+
 def test_interpolate_slots_filters_to_times_when_a_slot_names_the_exact_iso_date():
     slots = {
         "day": "2026-09-22",
@@ -1531,26 +1553,6 @@ def test_interpolate_slots_date_reference_slots_do_not_pick_a_day():
         result
         == "🗓️ Martes 27 de octubre\n └─ Mañana\n🗓️ Jueves 29 de octubre\n └─ Tarde\n🗓️ Viernes 30 de octubre\n └─ Mañana"
     )
-
-
-def test_interpolate_slots_appointment_list_skips_the_matching_date_when_only_one_date_is_offered():
-    """
-    When `get_available_slots` already returned only one day's worth of
-
-        slots, there's nothing to filter — go straight to times without needing
-            any other slot to name the date.
-
-        Returns:
-            None.
-    """
-    slots = {
-        "available_slots": [
-            _appointment("2026-09-22", "09:00"),
-            _appointment("2026-09-22", "10:00"),
-        ]
-    }
-    result = _interpolate_slots("[available_slots]", slots)
-    assert result == "Mañana\n🕐 09:00 a 10:00"
 
 
 def test_interpolate_slots_formats_dates_in_english_when_language_code_is_en():
@@ -2202,7 +2204,7 @@ def test_interpolate_slots_joins_consecutive_times_into_ranges():
         "15:00",
         "15:30",
     ]
-    slots = {"available_slots": [_appointment("2026-09-22", t) for t in times]}
+    slots = {"day": "2026-09-22", "available_slots": [_appointment("2026-09-22", t) for t in times]}
     assert (
         _interpolate_slots("[available_slots]", slots)
         == "Mañana\n🕐 07:00\n🕐 08:00\n🕐 09:00 a 11:30\n\nTarde\n🕐 13:00 a 15:30"
@@ -2297,7 +2299,7 @@ def test_mechanical_arg_bindings_turn_a_language_name_into_its_uppercase_code():
 
 def test_hours_are_grouped_under_each_part_of_the_day_with_ranges_in_the_language():
     times = ["07:00", "08:00", "09:20", "09:40", "10:00", "10:20", "10:40", "11:00", "13:00", "13:20"]
-    slots = {"available_slots": [_appointment("2026-11-09", t) for t in times]}
+    slots = {"day": "2026-11-09", "available_slots": [_appointment("2026-11-09", t) for t in times]}
     assert _interpolate_slots("[available_slots]", slots, "es") == (
         "Mañana\n🕐 07:00\n🕐 08:00\n🕐 09:20 a 11:00\n\nTarde\n🕐 13:00 a 13:20"
     )
@@ -2386,7 +2388,7 @@ def test_protect_lists_also_covers_the_new_day_and_part_of_day_blocks():
 
 
 def test_lists_follow_the_language_name_held_in_preferred_language():
-    slots = {"available_slots": [_appointment("2026-11-04", t) for t in ("09:00", "09:30", "14:00")]}
+    slots = {"day": "2026-11-04", "available_slots": [_appointment("2026-11-04", t) for t in ("09:00", "09:30", "14:00")]}
     assert (
         _interpolate_slots("[available_slots]", slots, "English")
         == "Morning\n🕐 09:00 to 09:30\n\nAfternoon\n🕐 14:00"

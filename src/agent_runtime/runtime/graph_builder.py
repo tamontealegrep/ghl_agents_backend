@@ -1117,11 +1117,9 @@ def _format_appointment_list(items: list[dict[str, Any]], slots: dict[str, Any],
         return "; ".join(parts_out)
 
     candidate_dates = {date_parts for date_parts, _ in dated_items}
-    selected_date = (
-        next(iter(candidate_dates))
-        if len(candidate_dates) == 1
-        else _find_selected_date(slots, candidate_dates)
-    )
+    # Even with a single date on offer the times are shown only once the contact has picked that day;
+    # before that the list must name the date, or "which day?" is asked about a list with no days in it.
+    selected_date = _find_selected_date(slots, candidate_dates)
 
     step = _slot_step_minutes(dated_items)
     if selected_date is not None:
