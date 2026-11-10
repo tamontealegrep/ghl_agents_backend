@@ -16,11 +16,20 @@ import httpx
 BUILTIN_TOOLS_PREFIX = "/builtin-tools"
 
 
+def _builtin_tool_names() -> frozenset[str]:
+    """Kebab-case names of the shared built-in tools (``calculate-bmi``, ``time-now``...)."""
+    from agent_backend.builtin_tools.router import router
+
+    return frozenset(route.path.lstrip("/") for route in router.routes if hasattr(route, "path"))
+
+
 def candidate_urls(url: str, route_suffixes: tuple[str, ...] = ()) -> list[str]:
     """Lists the URLs to try for a tool call, most likely first.
 
     Order: the agent's kebab-case route with each configured suffix, the plain
     kebab-case route, the snake_case route, then the shared built-in tool.
+    A built-in tool (``calculate_bmi``, ``time_now``...) never tries the suffixes:
+    only its plain kebab-case and snake_case routes, then the built-in one.
 
     Args:
         url: The ``{base_url}/{tool_name}`` URL the runtime requested.
@@ -32,7 +41,8 @@ def candidate_urls(url: str, route_suffixes: tuple[str, ...] = ()) -> list[str]:
     parts = urlsplit(url)
     head, _, tail = parts.path.rpartition("/")
     kebab = tail.replace("_", "-")
-    suffixed = [f"{head}/{kebab}{s}" for s in route_suffixes if not kebab.endswith(s)]
+    suffixes = () if kebab in _builtin_tool_names() else route_suffixes
+    suffixed = [f"{head}/{kebab}{s}" for s in suffixes if not kebab.endswith(s)]
     paths = [*suffixed, f"{head}/{kebab}", f"{head}/{tail}", f"{BUILTIN_TOOLS_PREFIX}/{kebab}"]
     return [urlunsplit((parts.scheme, parts.netloc, p, parts.query, parts.fragment)) for p in dict.fromkeys(paths)]
 

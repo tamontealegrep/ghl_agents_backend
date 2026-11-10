@@ -26,3 +26,12 @@ def test_suffix_already_present_is_not_doubled():
 def test_single_word_tool_has_no_duplicates():
     urls = candidate_urls("http://h:1/agents/sam/tools/echo")
     assert len(urls) == len(set(urls)) == 2
+
+
+def test_builtin_tools_skip_the_route_suffixes():
+    urls = candidate_urls("http://h:1/agents/bn/tools/calculate_bmi", ("-ghl", "-sur"))
+    assert urls == [
+        "http://h:1/agents/bn/tools/calculate-bmi",
+        "http://h:1/agents/bn/tools/calculate_bmi",
+        "http://h:1/builtin-tools/calculate-bmi",
+    ]
