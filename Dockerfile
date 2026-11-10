@@ -7,9 +7,12 @@
 # so edits show up without rebuilding. On Render nothing is mounted: what was baked runs.
 FROM python:3.12-slim AS base
 
+# A slow or flaky network at build time (Render) must not fail the build: long timeout, several retries.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DEFAULT_TIMEOUT=120 \
+    PIP_RETRIES=10
 
 WORKDIR /app
 
