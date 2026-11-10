@@ -144,6 +144,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.payload:
             payload.update(json.loads(args.payload))
         headers = {"Authorization": f"Bearer {env['ADMIN_TOKEN']}"} if env.get("ADMIN_TOKEN") else {}
+        if env.get("API_TOKEN"):
+            headers["X-API-Key"] = env["API_TOKEN"]
+        if env.get("WEBHOOK_TOKEN"):
+            headers["X-Webhook-Token"] = env["WEBHOOK_TOKEN"]
         print(f"{method} {root}{path}", file=sys.stderr)
         response = httpx.request(method, f"{root}{path}", json=payload if method != "GET" else None, headers=headers, timeout=120)
         print(f"HTTP {response.status_code}", file=sys.stderr)

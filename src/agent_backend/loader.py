@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 from langgraph.checkpoint.sqlite import SqliteSaver
 
+from agent_backend.auth import API_KEY_HEADER
 from agent_backend.bundle import AgentBundle, load_bundle
 from agent_backend.persistence.postgres import build_postgres_checkpointer, postgres_enabled
 from agent_backend.settings import Settings
@@ -111,7 +112,10 @@ class AgentRegistry:
             artifact,
             OpenAILLMClient(api_key=os.environ.get("OPENAI_API_KEY")),
             tools_base_url=self.tools_base_url(slug),
-            tool_http_client=ToolRoutingClient(route_suffixes=bundle.config.tool_route_suffixes),
+            tool_http_client=ToolRoutingClient(
+                route_suffixes=bundle.config.tool_route_suffixes,
+                headers={API_KEY_HEADER: self._settings.api_token} if self._settings.api_token else None,
+            ),
             checkpointer=checkpointer,
             say_callback=_say_callback,
             knowledge_base=knowledge_base,

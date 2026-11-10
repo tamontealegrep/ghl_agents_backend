@@ -11,6 +11,7 @@ from langgraph.types import Command
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
+from agent_backend.auth import require_api_token
 from agent_backend.loader import AgentRegistry, LoadedAgent, message_buffer
 from agent_backend.settings import Settings
 from agent_runtime.runtime.graph_builder import fresh_state
@@ -105,7 +106,7 @@ def _load_or_404(registry: AgentRegistry, slug: str) -> LoadedAgent:
 router = APIRouter(prefix="/agents/{slug}")
 
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/chat", response_model=ChatResponse, dependencies=[Depends(require_api_token)])
 async def chat(
     slug: str, req: ChatRequest, registry: Annotated[AgentRegistry, Depends(get_registry)]
 ) -> ChatResponse:

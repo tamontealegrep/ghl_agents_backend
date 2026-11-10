@@ -13,7 +13,7 @@ services:
       # Company id: webhooks are served at /agents/<COMPANY>/<path>.
       COMPANY: family_aims
     ports:
-      - "${HOST_PORT:-8011}:8010"
+      - "127.0.0.1:${HOST_PORT:-8011}:8010"
     volumes:
       - ./bundles:/app/bundles
       # Code shared by the company's business units (imported as `shared.tools...`).

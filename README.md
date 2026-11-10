@@ -39,7 +39,7 @@ cd companies/family_aims
 cp env.example .env
 ```
 
-Edita `.env` y completa al menos `OPENAI_API_KEY` y `ADMIN_TOKEN`, más las variables de la sección «Variables por empresa» (más abajo). Luego:
+Edita `.env` y completa al menos `OPENAI_API_KEY`, `ADMIN_TOKEN`, `API_TOKEN` y `WEBHOOK_TOKEN` (genera cada uno con `python -c "import secrets; print(secrets.token_urlsafe(32))"`), más las variables de la sección «Variables por empresa» (más abajo). Luego:
 
 ```bash
 docker compose up -d --build
@@ -96,6 +96,7 @@ Herramientas (plugin `bundles/_tools/surrogacy`): citas con Google (`*-google`) 
 |---|---|
 | `GET /health` | Estado y lista de agentes montados |
 | `POST /agents/{slug}/chat` | Conversación con un agente |
+| (puerto) | Docker publica en `127.0.0.1` (solo tu máquina); ngrok llega igual. Para exponerlo, cambia el compose y define los tres tokens |
 | `POST /agents/{slug}/reset` | Reinicia la sesión (pide `ADMIN_TOKEN` si está definido) |
 | `POST /agents/{slug}/admin/reload` | Recarga el flujo de un agente sin reiniciar el contenedor |
 | `/builtin-tools/...` | Herramientas genéricas incluidas en la imagen (`check-days-elapsed`, `callback-request`, etc.) |
@@ -211,6 +212,8 @@ Cada `env.example` ya lista las suyas. Resumen:
 |---|---|---|
 | `OPENAI_API_KEY` | todas | **Obligatoria.** Sin ella, `chat` y `admin/reload` responden 500 |
 | `ADMIN_TOKEN` | todas | Protege `reset` y `admin/reload`; sin valor quedan abiertos |
+| `API_TOKEN` | todas | Protege `chat`, las herramientas de la empresa y `/builtin-tools`. Se envía en `X-API-Key` (o `Authorization: Bearer`); el backend lo envía solo cuando un agente llama a sus herramientas. Sin valor quedan abiertas |
+| `WEBHOOK_TOKEN` | todas | Protege los webhooks de GHL. Se envía en la cabecera `X-Webhook-Token`: agrégala como cabecera personalizada en la acción de webhook de GHL. Sin valor quedan abiertos |
 | `DATABASE_URL` | todas | Postgres para las sesiones; vacío = un `sessions.db` por agente dentro de `bundles/` |
 | `GHL_LOCATION_ID` | todas | Id de la location (subcuenta) de GoHighLevel de la empresa, la dueña de `GHL_TOKEN`; está en la URL de la app (`.../location/<id>/...`). La necesitan las herramientas que consultan eventos, crean citas o resuelven contactos |
 | `GHL_TOKEN` | todas | **Un solo token de GoHighLevel por empresa**: webhooks, herramientas `-ghl` y herramientas genéricas |

@@ -5,11 +5,12 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from agent_backend import routes
+from agent_backend.auth import require_api_token, require_webhook_token, warn_about_open_endpoints
 from agent_backend.builtin_tools.router import router as builtin_tools_router
 from agent_backend.bundle import AgentBundle, discover_bundles
 from agent_backend.channels.ghl.client import ghl_client_config_for
@@ -82,7 +83,12 @@ def _mount_bundle(
         already = mounted_tools is not None and company is not None and bundle.tools_dir in mounted_tools
         tools_router = None if already else load_tool_router(bundle)
         if tools_router is not None:
-            app.include_router(tools_router, prefix=f"/agents/{owner}/tools", tags=[f"{owner}.tools"])
+            app.include_router(
+                tools_router,
+                prefix=f"/agents/{owner}/tools",
+                tags=[f"{owner}.tools"],
+                dependencies=[Depends(require_api_token)],
+            )
             if mounted_tools is not None:
                 mounted_tools.add(bundle.tools_dir)
         ghl_config = _ghl_config(bundle)
@@ -91,6 +97,7 @@ def _mount_bundle(
                 build_compiled_agent_router(ghl_config, registry),
                 prefix=f"/agents/{company}" if company else prefix,
                 tags=[f"{bundle.slug}.ghl"],
+                dependencies=[Depends(require_webhook_token)],
             )
     except Exception:
         logger.error("Bundle %r failed to mount and was skipped.", bundle.slug, exc_info=True)
@@ -120,7 +127,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"status": "ok", "agents": sorted(bundles)}
 
     app.include_router(routes.router, tags=["agents"])
-    app.include_router(builtin_tools_router, prefix=BUILTIN_TOOLS_PREFIX, tags=["builtin-tools"])
+    app.include_router(
+        builtin_tools_router,
+        prefix=BUILTIN_TOOLS_PREFIX,
+        tags=["builtin-tools"],
+        dependencies=[Depends(require_api_token)],
+    )
+    warn_about_open_endpoints(settings)
     bundles = discover_bundles(settings.agents_dir)
     mounted_tools: set[Path] = set()
     for bundle in bundles.values():

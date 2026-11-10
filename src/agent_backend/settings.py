@@ -33,6 +33,8 @@ class Settings:
     agents_dir: Path
     admin_token: str | None
     company: str | None = None
+    api_token: str | None = None
+    webhook_token: str | None = None
 
     @property
     def self_base_url(self) -> str:
@@ -62,6 +64,8 @@ class Settings:
             agents_dir=Path(env.get("AGENTS_DIR", "bundles")).resolve(),
             admin_token=env.get("ADMIN_TOKEN") or None,
             company=env.get("COMPANY") or None,
+            api_token=env.get("API_TOKEN") or None,
+            webhook_token=env.get("WEBHOOK_TOKEN") or None,
         )
 
 
