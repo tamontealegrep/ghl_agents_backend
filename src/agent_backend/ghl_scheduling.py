@@ -62,7 +62,7 @@ class GhlSchedulingHooks:
         get_settings: Returns the plugin settings: ``ghl_token``, ``ghl_location_id`` and anything the hooks need.
         resolve_calendar: ``(settings, calendar_type)`` -> calendar context or None. The context has ``key``,
             ``tool`` (``CalendarSettings``), ``booking`` (business-hour and title rules) and ``hours``
-            (``window(weekday, day)``, ``is_lunch(datetime)``, ``is_holiday(year, month, day)``).
+            (``window(weekday, day)``, ``is_lunch(start, end)``, ``is_holiday(year, month, day)``).
         unknown_calendar_message: ``(settings, calendar_type)`` -> error text for an unknown calendar.
         default_earliest: ``now`` -> first moment a slot may start when no minimum notice is configured.
         notify_booking: Optional ``async (settings, policy, *, contact_name, contact_phone, start_dt, timezone)``
@@ -171,7 +171,7 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
         end_min = local_end.hour * 60 + local_end.minute
         if start_min < h1 * 60 + m1 or end_min > h2 * 60 + m2:
             return False
-        return not cal.hours.is_lunch(local_start)
+        return not cal.hours.is_lunch(local_start, local_end)
 
     def duration_to_send(cal: Any, schedule: Schedule) -> Optional[int]:
         # When the duration comes from GHL itself there is nothing to ask for: GHL uses its default.

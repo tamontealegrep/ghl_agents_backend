@@ -74,7 +74,7 @@ Los dos contenedores pueden correr a la vez: usan proyectos de compose distintos
 | `family_aims_sam_text` | Texto (GoHighLevel) | `POST /agents/family_aims_sam_text/sam-text` (webhook) |
 | `family_aims_sam_en_voice`, `_es_voice`, `_pt_voice` | Voz | `POST /agents/<agente>/chat` |
 
-Herramientas (plugin `bundles/_tools/family_aims`): reservar, buscar, editar y cancelar citas, horarios disponibles, `check-visa`, `resolve-event-link-ghl` y `calendars`. Las de agenda que usan los agentes son las de **GoHighLevel**, con sufijo `-ghl` (`/agents/<agente>/tools/book-appointment-ghl`); sus variantes de **Google Calendar** se conservan con el sufijo `-google` (`book-appointment-google`) y ningún agente las usa.
+Herramientas (plugin `bundles/_tools/desk`): reservar, buscar, editar y cancelar citas, horarios disponibles, `check-visa`, `resolve-event-link-ghl` y `calendars`. Las de agenda que usan los agentes son las de **GoHighLevel**, con sufijo `-ghl` (`/agents/<agente>/tools/book-appointment-ghl`); sus variantes de **Google Calendar** se conservan con el sufijo `-google` (`book-appointment-google`) y ningún agente las usa.
 
 ### BabyNova — `companies/babynova`
 
@@ -82,9 +82,9 @@ Herramientas (plugin `bundles/_tools/family_aims`): reservar, buscar, editar y c
 |---|---|---|
 | `babynova_triage_obstetrico_text` | Texto (GoHighLevel) | `POST /agents/babynova_triage_obstetrico_text/triage-text` |
 | `babynova_surrogate_questions_text` | Texto (GoHighLevel) | `POST /agents/babynova_surrogate_questions_text/surrogate-questions-text` |
-| `babynova_surrogate_questions_text_v2`, `_voice` | Chat / voz | `POST /agents/<agente>/chat` |
+| `babynova_surrogate_questions_voice` | Chat / voz | `POST /agents/<agente>/chat` |
 
-Herramientas (plugin `bundles/_tools/babynova_surrogacy`): citas, `check-documentation-sur`, `surrogate-classification` y `-v2`.
+Herramientas (plugin `bundles/_tools/surrogacy`): citas, `check-documentation-sur`, `surrogate-classification`.
 
 ### Endpoints que tiene todo contenedor
 
@@ -110,7 +110,7 @@ Herramientas (plugin `bundles/_tools/babynova_surrogacy`): citas, `check-documen
 | Secretos y valores por empresa | `companies/<empresa>/.env` |
 | Herramientas genéricas para todas las empresas | `src/agent_backend/builtin_tools/` (van en la imagen) |
 
-Ejemplo, Family Aims: `companies/family_aims/bundles/_tools/family_aims/api/v1/endpoints/book_appointment_ghl.py` define `POST /agents/<agente>/tools/book-appointment-ghl`. Para una herramienta nueva: crea su archivo, regístralo en `router.py` y reinicia el contenedor.
+Ejemplo, Family Aims: `companies/family_aims/bundles/_tools/desk/api/v1/endpoints/book_appointment_ghl.py` define `POST /agents/<agente>/tools/book-appointment-ghl`. Para una herramienta nueva: crea su archivo, regístralo en `router.py` y reinicia el contenedor.
 
 ---
 
@@ -171,8 +171,8 @@ Hay tres niveles, de lo más general a lo más concreto:
 | Qué | Dónde se define |
 |---|---|
 | Disponibilidad real del calendario (horas abiertas, festivos, bloqueos) | En **GoHighLevel**, en el propio calendario. Es lo primero que se aplica a los horarios libres |
-| Horarios de **IVF** y **SUR** (Family Aims) | `bundles/_tools/family_aims/config/slots.yaml` (`policies.ivf` / `policies.sur`: ventana por día y almuerzo, y la lista de **festivos**). Las reglas para *agendar* están en código: `services/booking_ivf.py` y `booking_sur.py` |
-| Horarios de **FT** (BabyNova) | `bundles/_tools/babynova_surrogacy/config/slots.yaml` (`windows`, `lunch_break` y `holidays`; el sábado admite «primera semana del mes»). Las reglas para *agendar* están en código: `services/booking.py` (`is_valid_business_hour`) |
+| Horarios de **IVF** y **SUR** (Family Aims) | `bundles/_tools/desk/config/slots.yaml` (`policies.ivf` / `policies.sur`: ventana por día y almuerzo, y la lista de **festivos**). Las reglas para *agendar* están en código: `services/booking_ivf.py` y `booking_sur.py` |
+| Horarios de **FT** (BabyNova) | `bundles/_tools/surrogacy/config/slots.yaml` (`windows`, `lunch_break` y `holidays`; el sábado admite «primera semana del mes»). Las reglas para *agendar* están en código: `services/booking.py` (`is_valid_business_hour`) |
 | Horarios de **cualquier otro calendario** | `bundles/_tools/<plugin>/config/calendars.yaml`: sección `default` y una entrada por calendario (`hours`, `lunch_break`, títulos) |
 
 Los números de día son `0 = domingo ... 6 = sábado`, la hora es de Bogotá y cada ventana es `[hora_ini, min_ini, hora_fin, min_fin]`. Para IVF, SUR y FT, el horario que se *ofrece* (`slots.yaml`) y el que se *acepta al agendar* (código) no son idénticos: los de agendar son más amplios.
@@ -193,7 +193,7 @@ router = build_ghl_scheduling_router(GhlSchedulingHooks(
 ))
 ```
 
-BabyNova las tiene montadas junto a las de Google, y sus tres agentes con agenda (`babynova_surrogate_questions_text`, `_text_v2` y `_voice`) **ya usan las de GHL** gracias a `tool_route_suffixes: ["-ghl", "-sur"]` en su `agent.yaml` (la ruta `-ghl` se prueba primero; `-sur` sigue sirviendo a las demás herramientas). Para volver a Google basta con quitar `"-ghl"` y reiniciar. Con GHL no hay enlace RSVP (`event_link` llega vacío) y la invitación por correo al paciente ya no la envía Google Calendar: depende de las notificaciones del calendario o de los flujos de GHL. Family Aims conserva por ahora sus propias herramientas `-ghl`, con la misma configuración; moverlas al código compartido queda pendiente.
+BabyNova las tiene montadas junto a las de Google, y sus tres agentes con agenda (`babynova_surrogate_questions_text` y `_voice`) **ya usan las de GHL** gracias a `tool_route_suffixes: ["-ghl", "-sur"]` en su `agent.yaml` (la ruta `-ghl` se prueba primero; `-sur` sigue sirviendo a las demás herramientas). Para volver a Google basta con quitar `"-ghl"` y reiniciar. Con GHL no hay enlace RSVP (`event_link` llega vacío) y la invitación por correo al paciente ya no la envía Google Calendar: depende de las notificaciones del calendario o de los flujos de GHL. Family Aims conserva por ahora sus propias herramientas `-ghl`, con la misma configuración; moverlas al código compartido queda pendiente.
 
 **Variables vacías = se leen de GHL.** Si `<PREFIJO>_DURATION_MINUTES_<CLAVE>`, `..._PRE_BUFFER_MINUTES_...`, `..._POST_BUFFER_MINUTES_...`, `..._MIN_NOTICE_MINUTES_...` o `..._DATE_RANGE_DAYS_...` están vacías, las herramientas `-ghl` las toman del calendario de GHL (`slotDuration`, `preBuffer`, `slotBuffer`, `allowBookingAfter`, `allowBookingFor`; se guardan 5 minutos en memoria). Un valor escrito en el `.env` siempre manda. En BabyNova ocurre así; en Family Aims las variables traen valores por defecto (buffer posterior de 10 minutos), así que no se leen de GHL.
 
@@ -225,6 +225,22 @@ Cada `env.example` ya lista las suyas. Resumen:
 
 ## 3b. Desarrollo y pruebas a mano
 
+### Chat en terminal con un agente (TUI)
+
+`scripts/agent_chat_tui.py` es el sucesor de `compiled_agent_tui.py`: chatea con cualquier agente de `companies/<empresa>/bundles/` usando OpenAI real, y muestra turno a turno la respuesta, el estado interno y cada llamada a herramienta. Mantiene el mismo aspecto y los mismos comandos (`/help`, `/history`, `/traces`, `/state`, `/slots`, `/contact`, `/input`, `/log-llm`, `/log-http`, `/log-tools`, `/save`, `/new`, `/back`, `/exit`).
+
+```bash
+D:/trabajo/agents_refactor/backend/.venv/Scripts/python.exe D:/trabajo/agents_refactor/backend/scripts/agent_chat_tui.py
+```
+
+Opciones: `--company`, `--agent`, `--list`, `--session-file`, `--initial-slots`, `--log-llm`, `--log-http`, `--log-tools` y `--contact-name/-email/-phone/-language`. Necesita las dependencias opcionales (`pip install -e ".[tui]"`).
+
+- **No hace falta servidor:** el agente corre en el mismo proceso y las herramientas se ejecutan contra la app de la empresa en memoria, con el `.env` de esa empresa (token de GHL, calendarios, Gmail...). **Agendar o cancelar en una prueba cambia el calendario real.**
+- **Estado compartido:** la conversación vive en `<bundle>/sessions.db` (el mismo archivo que usa el backend sin Postgres), así que puedes seguirla por HTTP con el mismo `thread_id`. El historial de `/history` es un registro aparte en `backend/tui_sessions/`.
+- **Descripción de las variables de entrada** (`/input`): se lee de las definiciones del compilador si existe `compiler/definitions` junto al backend (o `AGENT_DEFINITIONS_DIR`); si no, los campos `contact.*` se detectan escaneando el grafo.
+
+### Otros scripts
+
 Dos scripts (en `backend/scripts/`) leen el `.env` de una empresa y sirven para probar sin armar peticiones a mano. Corren en **tu máquina**, no en el contenedor; las variables de la sección «Development and testing» del `.env` solo las usan ellos.
 
 ```bash
@@ -241,7 +257,7 @@ python scripts/dev_tunnel.py --company family_aims
 
 | Variable | Uso |
 |---|---|
-| `SEND_REQUEST_DEFAULT_TARGET` | A dónde apunta `send_request` si no pasas `--target`: `local`, `ngrok` o `render` (vacío = `local`; un despliegue remoto nunca es el destino silencioso) |
+| `SEND_REQUEST_DEFAULT_TARGET` | A dónde apunta `send_request` si no pasas `--target`: `local` (`python -m agent_backend`, usa `PORT`), `docker` (el contenedor, usa `HOST_PORT`), `ngrok` o `render` (vacío = `local`; un despliegue remoto nunca es el destino silencioso) |
 | `HOST`, `PORT` | Dónde escucha `python -m agent_backend` sin Docker, y a dónde apunta el destino `local` |
 | `RENDER_BASE_URL` | URL del despliegue en Render (destino `render`) |
 | `NGROK_BASE_URL` / `NGROK_DOMAIN` | URL del túnel (destino `ngrok`) y dominio reservado que abre `dev_tunnel.py` |

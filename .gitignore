@@ -24,3 +24,6 @@ __pycache__/
 /TESTING.md
 /DESIGN_PATTERNS.md
 /STATUS.yaml
+
+# Conversation logs of scripts/agent_chat_tui.py
+/tui_sessions/

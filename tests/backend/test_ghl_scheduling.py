@@ -20,8 +20,8 @@ class Hours:
     def window(self, weekday, day):
         return (7, 0, 17, 0) if 1 <= weekday <= 5 else None
 
-    def is_lunch(self, moment):
-        return 12 <= moment.hour < 13
+    def is_lunch(self, start, end):
+        return start.hour * 60 + start.minute < 13 * 60 and end.hour * 60 + end.minute > 12 * 60
 
     def is_holiday(self, year, month, day):
         return False
@@ -232,10 +232,11 @@ def test_duration_is_not_sent_when_it_comes_from_ghl_and_is_sent_when_it_is_in_t
 
 def test_slots_outside_opening_hours_or_in_lunch_are_dropped(world):
     d = day()
-    world.free = [at(d, 6, 30), at(d, 9), at(d, 12, 10), at(d, 17), at(day(6), 9)]
+    # 11:30-12:00 ends when lunch starts (offered); 11:40-12:10 overlaps it (dropped); 12:50-13:20 overlaps its end.
+    world.free = [at(d, 6, 30), at(d, 9), at(d, 11, 30), at(d, 11, 40), at(d, 12, 10), at(d, 12, 50), at(d, 13), at(d, 17), at(day(6), 9)]
     world.env["XX_POST_BUFFER_MINUTES_FT"] = "0"
     body = world.client.post("/get-available-slots-ghl", json={"calendar_type": "FT"}).json()
-    assert starts(body) == ["09:00"]
+    assert starts(body) == ["09:00", "11:30", "13:00"]
 
 
 def test_interval_from_the_env_thins_the_slots(world):
