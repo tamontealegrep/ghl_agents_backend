@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 try:
     # Silence Pydantic alias warnings for our validated payload model
     from pydantic._internal._generate_schema import UnsupportedFieldAttributeWarning
+
     warnings.filterwarnings("ignore", category=UnsupportedFieldAttributeWarning)
 except Exception:
     pass
@@ -15,14 +16,13 @@ from agent_backend.channels.ghl.text import normalize_language
 
 
 class GhlAgentRequest(BaseModel):
-    """
-Base request shape for any agent triggered by a GHL workflow webhook.
+    """Base request shape for any agent triggered by a GHL workflow webhook.
 
     The GHL webhook payload is the same for every agent regardless of which
         conversational flow consumes it, so this normalization lives here once.
         Agent-specific request models should subclass this instead of
         redefining the fields/validators.
-"""
+    """
 
     model_config = ConfigDict(populate_by_name=True, extra="allow")
 
@@ -33,7 +33,9 @@ Base request shape for any agent triggered by a GHL workflow webhook.
     message: str | dict[str, Any] | None = Field(None, description="The user's message")
     channel: str | None = Field(None, description="Origin channel inferred from GHL")
     contact: dict[str, Any] | None = Field(None, description="Full contact object from GHL")
-    chat_history: list[dict[str, Any]] = Field(default_factory=list, alias="chatHistory", description="Optional chat history")
+    chat_history: list[dict[str, Any]] = Field(
+        default_factory=list, alias="chatHistory", description="Optional chat history"
+    )
     webhook_url: str | None = Field(None, alias="webhookUrl", description="Webhook URL to send the response")
 
     @model_validator(mode="before")
@@ -49,12 +51,16 @@ Base request shape for any agent triggered by a GHL workflow webhook.
         msg_obj = normalized.get("message") or {}
 
         # 1. Prioridad Absoluta: Identificadores Raíz
-        normalized["contactId"] = normalized.get("contact_id") or normalized.get("contactId") or custom_data.get("contact_id")
-        normalized["locationId"] = location.get("id") or custom_data.get("location_id") or normalized.get("locationId")
+        normalized["contactId"] = (
+            normalized.get("contact_id") or normalized.get("contactId") or custom_data.get("contact_id")
+        )
+        normalized["locationId"] = (
+            location.get("id") or custom_data.get("location_id") or normalized.get("locationId")
+        )
 
         # 2. Mensaje y Canal (Prioridad absoluta al message.type numérico como Source of Truth)
         msg_type = msg_obj.get("type") if isinstance(msg_obj, dict) else None
-        
+
         normalized["channel"] = (
             GHL_INBOUND_TYPE_MAP.get(msg_type)
             or normalized.get("channel")
@@ -70,9 +76,15 @@ Base request shape for any agent triggered by a GHL workflow webhook.
         # 3. Datos de contacto (Extraídos de la raíz del nuevo payload)
         # Reconstruimos el objeto 'contact' para que sea uniforme para el agente
         contact_obj = dict(normalized.get("contact") or {})
-        contact_obj["name"] = normalized.get("full_name") or contact_obj.get("name") or custom_data.get("contact_full_name")
-        contact_obj["email"] = normalized.get("email") or contact_obj.get("email") or custom_data.get("contact_email")
-        contact_obj["phone"] = normalized.get("phone") or contact_obj.get("phone") or custom_data.get("contact_phone")
+        contact_obj["name"] = (
+            normalized.get("full_name") or contact_obj.get("name") or custom_data.get("contact_full_name")
+        )
+        contact_obj["email"] = (
+            normalized.get("email") or contact_obj.get("email") or custom_data.get("contact_email")
+        )
+        contact_obj["phone"] = (
+            normalized.get("phone") or contact_obj.get("phone") or custom_data.get("contact_phone")
+        )
         contact_obj["first_name"] = (
             normalized.get("first_name")
             or contact_obj.get("first_name")
@@ -106,9 +118,8 @@ Base request shape for any agent triggered by a GHL workflow webhook.
 
         # 4. IDs de Sesión/Workflow (Fallbacks)
         if not normalized.get("conversationId"):
-            normalized["conversationId"] = (
-                custom_data.get("conversation_id")
-                or trigger_data.get("conversationId") 
+            normalized["conversationId"] = custom_data.get("conversation_id") or trigger_data.get(
+                "conversationId"
             )
 
         if not normalized.get("messageId"):

@@ -25,4 +25,12 @@ def test_get_calendar_lists_today_first_with_weekday_names():
     entries = get_calendar("America/Bogota", days=7).split(", ")
     assert len(entries) == 7
     assert entries[0].split(" ")[0] <= entries[1].split(" ")[0]
-    assert entries[0].split(" ")[1] in {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
+    assert entries[0].split(" ")[1] in {
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    }

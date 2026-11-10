@@ -40,6 +40,7 @@ from ....services.slot_rules import earliest_start, load_busy
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 @router.post("/book-appointment-ghl", response_model=BookAppointmentResponse)
 async def book_appointment_ghl(req: BookAppointmentRequest):
     settings = get_settings()
@@ -47,7 +48,9 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
 
     cal = resolve_calendar(settings, req.calendar_type)
     if cal is None:
-        return BookAppointmentResponse(success=False, errors=unknown_calendar_message(settings, req.calendar_type))
+        return BookAppointmentResponse(
+            success=False, errors=unknown_calendar_message(settings, req.calendar_type)
+        )
     calendar_type, tool, policy, env_suffix = cal.key, cal.tool, cal.booking, cal.key
 
     try:
@@ -56,28 +59,43 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
         try:
             start_dt = engine.parse_start_date(req.start_date)
         except ValueError:
-            return BookAppointmentResponse(success=False, reason="invalid_start_date", errors="start_date is not a valid ISO 8601 date")
+            return BookAppointmentResponse(
+                success=False, reason="invalid_start_date", errors="start_date is not a valid ISO 8601 date"
+            )
 
         # Duración tomada desde .env (no del request) como se solicitó
         duration_minutes = int(tool.duration_minutes)
         end_dt = engine.compute_end_date(start_dt, duration_minutes)
 
         if not engine.is_future(start_dt, now):
-            return BookAppointmentResponse(success=False, reason="past_date", errors="The date cannot be in the past")
+            return BookAppointmentResponse(
+                success=False, reason="past_date", errors="The date cannot be in the past"
+            )
 
-        weekday = engine.get_weekday_in_tz(start_dt, "America/Bogota") if hasattr(engine, "get_weekday_in_tz") else None
-        hour = engine.get_hour_in_tz(start_dt, "America/Bogota") if hasattr(engine, "get_hour_in_tz") else None
+        weekday = (
+            engine.get_weekday_in_tz(start_dt, "America/Bogota")
+            if hasattr(engine, "get_weekday_in_tz")
+            else None
+        )
+        hour = (
+            engine.get_hour_in_tz(start_dt, "America/Bogota") if hasattr(engine, "get_hour_in_tz") else None
+        )
         if weekday is None or hour is None:
             # Keep parity with Google endpoint utils
             from agent_backend.timezones import get_hour_in_tz, get_weekday_in_tz
+
             weekday = get_weekday_in_tz(start_dt, "America/Bogota")
             hour = get_hour_in_tz(start_dt, "America/Bogota")
         minute = start_dt.astimezone(ZoneInfo("America/Bogota")).minute
         if not policy.is_valid_business_hour(weekday, hour, minute):
-            return BookAppointmentResponse(success=False, reason="invalid_hour", errors="The requested time is outside business hours")
+            return BookAppointmentResponse(
+                success=False, reason="invalid_hour", errors="The requested time is outside business hours"
+            )
 
         if not engine.is_valid_email(req.contact_email):
-            return BookAppointmentResponse(success=False, reason="invalid_email", errors="The contact email is not valid")
+            return BookAppointmentResponse(
+                success=False, reason="invalid_email", errors="The contact email is not valid"
+            )
 
         contact_email = engine.normalize_email(req.contact_email)
         contact_name = engine.format_contact_name(req.contact_name)
@@ -91,18 +109,31 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
         if not settings.ghl_location_id:
             return BookAppointmentResponse(success=False, errors="Missing GHL_LOCATION_ID in environment")
         if not tool.ghl_calendar_id:
-            return BookAppointmentResponse(success=False, errors=f"Missing FA_GHL_CALENDAR_ID_{env_suffix} in environment")
+            return BookAppointmentResponse(
+                success=False, errors=f"Missing FA_GHL_CALENDAR_ID_{env_suffix} in environment"
+            )
 
         # Minimum notice and date range of the calendar (same rules as get-available-slots-ghl)
         if start_dt < earliest_start(now, tool):
-            return BookAppointmentResponse(success=False, reason="invalid_hour", errors="The requested time does not meet the minimum advance notice")
-        if start_dt.astimezone(ZoneInfo("America/Bogota")).date() > (now.astimezone(ZoneInfo("America/Bogota")) + timedelta(days=tool.date_range_days)).date():
-            return BookAppointmentResponse(success=False, reason="invalid_hour", errors="The requested date is beyond the booking window")
+            return BookAppointmentResponse(
+                success=False,
+                reason="invalid_hour",
+                errors="The requested time does not meet the minimum advance notice",
+            )
+        if (
+            start_dt.astimezone(ZoneInfo("America/Bogota")).date()
+            > (now.astimezone(ZoneInfo("America/Bogota")) + timedelta(days=tool.date_range_days)).date()
+        ):
+            return BookAppointmentResponse(
+                success=False, reason="invalid_hour", errors="The requested date is beyond the booking window"
+            )
 
         # Festivos (misma lista que usa el cálculo de slots)
         local_day = start_dt.astimezone(ZoneInfo("America/Bogota"))
         if engine_slots.is_holiday(local_day.year, local_day.month, local_day.day):
-            return BookAppointmentResponse(success=False, reason="invalid_hour", errors="The requested date is a holiday")
+            return BookAppointmentResponse(
+                success=False, reason="invalid_hour", errors="The requested date is a holiday"
+            )
 
         # Disponibilidad real: el inicio debe ser uno de los free-slots de GHL
         try:
@@ -116,18 +147,29 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
             )
         except Exception as exc:
             logger.warning("GHL free-slots check failed: %s", exc)
-            return BookAppointmentResponse(success=False, reason="creation_failed", errors=f"Could not verify availability in GHL: {exc}")
+            return BookAppointmentResponse(
+                success=False, reason="creation_failed", errors=f"Could not verify availability in GHL: {exc}"
+            )
         free_starts = {datetime.fromisoformat(s.replace("Z", "+00:00")) for s in free_slots}
         if start_dt not in free_starts:
-            return BookAppointmentResponse(success=False, reason="slot_taken", errors="That time is no longer available")
+            return BookAppointmentResponse(
+                success=False, reason="slot_taken", errors="That time is no longer available"
+            )
 
         # Existing appointments block their own time plus the pre/post buffers of the calendar.
         busy = await load_busy(
-            ghl_list_events, settings, tool,
-            start_dt - timedelta(minutes=tool.post_buffer_minutes), end_dt + timedelta(minutes=tool.pre_buffer_minutes),
+            ghl_list_events,
+            settings,
+            tool,
+            start_dt - timedelta(minutes=tool.post_buffer_minutes),
+            end_dt + timedelta(minutes=tool.pre_buffer_minutes),
         )
-        if busy and conflicts_with_busy(start_dt, end_dt, busy, tool.pre_buffer_minutes, tool.post_buffer_minutes):
-            return BookAppointmentResponse(success=False, reason="slot_taken", errors="That time is no longer available")
+        if busy and conflicts_with_busy(
+            start_dt, end_dt, busy, tool.pre_buffer_minutes, tool.post_buffer_minutes
+        ):
+            return BookAppointmentResponse(
+                success=False, reason="slot_taken", errors="That time is no longer available"
+            )
 
         # Pre-chequeo B (no bloqueante): consultar eventos en GHL en el rango exacto.
         # Si hay resultados, igual dejamos que GHL valide en create_appointment,
@@ -154,7 +196,9 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
         contact_obj = upsert.get("contact") or {}
         contact_id = contact_obj.get("id")
         if not contact_id:
-            return BookAppointmentResponse(success=False, reason="creation_failed", errors="Failed to resolve/create the contact in GHL")
+            return BookAppointmentResponse(
+                success=False, reason="creation_failed", errors="Failed to resolve/create the contact in GHL"
+            )
 
         # Crear la cita en GHL
         title = f"Family Aims ({policy.EVENT_SUMMARY_TAG}) and {contact_name}"
@@ -173,6 +217,7 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
         except Exception as exc:
             # Intentamos distinguir si es por conflicto/validación y exponer el mensaje real de GHL
             import httpx
+
             if isinstance(exc, httpx.HTTPStatusError) and exc.response is not None:
                 status = exc.response.status_code
                 err_text = None
@@ -190,7 +235,9 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
                         msg = f"{msg}. GHL: {err_text}"
                     return BookAppointmentResponse(success=False, reason="slot_taken", errors=msg)
                 # Otros errores devuelven el status y mensaje bruto
-                return BookAppointmentResponse(success=False, reason="creation_failed", errors=f"GHL error {status}: {err_text}")
+                return BookAppointmentResponse(
+                    success=False, reason="creation_failed", errors=f"GHL error {status}: {err_text}"
+                )
             # Error no HTTP
             return BookAppointmentResponse(success=False, reason="creation_failed", errors=str(exc))
 
@@ -201,14 +248,23 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
         # Intentar obtener el enlace del evento en Google Calendar (htmlLink)
         event_link = None
         try:
-            if meet_link and tool.google_client_id and tool.google_client_secret and tool.google_refresh_token and tool.calendar_id:
+            if (
+                meet_link
+                and tool.google_client_id
+                and tool.google_client_secret
+                and tool.google_refresh_token
+                and tool.calendar_id
+            ):
                 from agent_backend.google_calendar import (
                     find_synced_google_event,
                 )
                 from agent_backend.google_calendar import (
                     get_access_token as google_get_access_token,
                 )
-                gcal_token = await google_get_access_token(tool.google_client_id, tool.google_client_secret, tool.google_refresh_token)
+
+                gcal_token = await google_get_access_token(
+                    tool.google_client_id, tool.google_client_secret, tool.google_refresh_token
+                )
                 if gcal_token:
                     synced = await find_synced_google_event(
                         access_token=gcal_token,
@@ -231,14 +287,23 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
                             if m:
                                 meet_link = m
             # Fallback: si no hay meet_link, intenta resolver por ventana temporal y título
-            if not event_link and tool.google_client_id and tool.google_client_secret and tool.google_refresh_token and tool.calendar_id:
+            if (
+                not event_link
+                and tool.google_client_id
+                and tool.google_client_secret
+                and tool.google_refresh_token
+                and tool.calendar_id
+            ):
                 from agent_backend.google_calendar import (
                     get_access_token as google_get_access_token,
                 )
                 from agent_backend.google_calendar import (
                     list_events as gcal_list_events,
                 )
-                gcal_token = await google_get_access_token(tool.google_client_id, tool.google_client_secret, tool.google_refresh_token)
+
+                gcal_token = await google_get_access_token(
+                    tool.google_client_id, tool.google_client_secret, tool.google_refresh_token
+                )
                 if gcal_token:
                     events = await gcal_list_events(
                         access_token=gcal_token,
@@ -266,7 +331,11 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
                                 exact_start.append(ev)
                         except Exception:
                             continue
-                    picked = exact_start[0] if len(exact_start) == 1 else (candidates[0] if len(candidates) == 1 else None)
+                    picked = (
+                        exact_start[0]
+                        if len(exact_start) == 1
+                        else (candidates[0] if len(candidates) == 1 else None)
+                    )
                     if isinstance(picked, dict):
                         event_link = picked.get("htmlLink")
                         # También extrae Meet si GHL aún no lo tiene
@@ -297,23 +366,50 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
                 logger.warning("Could not fetch the Meet link; booking continues without it.", exc_info=True)
 
         if not event_id:
-            return BookAppointmentResponse(success=False, reason="creation_failed", errors="Failed to create the appointment. The booking was not completed")
+            return BookAppointmentResponse(
+                success=False,
+                reason="creation_failed",
+                errors="Failed to create the appointment. The booking was not completed",
+            )
 
         notify_error = await notify_booking(
-            settings, calendar=calendar_type, contact_name=contact_name, contact_email=contact_email,
-            contact_phone=contact_phone, start_dt=start_dt, timezone=client_tz, event_link=event_link, meet_link=meet_link,
+            settings,
+            calendar=calendar_type,
+            contact_name=contact_name,
+            contact_email=contact_email,
+            contact_phone=contact_phone,
+            start_dt=start_dt,
+            timezone=client_tz,
+            event_link=event_link,
+            meet_link=meet_link,
         )
 
         if policy.EMAIL_TEMPLATE_PREFIX is None:  # this calendar sends no confirmation email
-            return BookAppointmentResponse(success=True, event_id=event_id, event_link=event_link, meet_link=meet_link, errors=notify_error)
+            return BookAppointmentResponse(
+                success=True,
+                event_id=event_id,
+                event_link=event_link,
+                meet_link=meet_link,
+                errors=notify_error,
+            )
 
         # Enviar correo igual que en Google Calendar
         try:
-            if not (gmail.google_client_id and gmail.google_client_secret and gmail.google_refresh_token and gmail.sender_email):
-                raise RuntimeError("Missing Gmail credentials (FA_GOOGLE_CLIENT_ID_GMAIL / FA_GMAIL_SENDER_EMAIL, etc.) in environment")
+            if not (
+                gmail.google_client_id
+                and gmail.google_client_secret
+                and gmail.google_refresh_token
+                and gmail.sender_email
+            ):
+                raise RuntimeError(
+                    "Missing Gmail credentials (FA_GOOGLE_CLIENT_ID_GMAIL / FA_GMAIL_SENDER_EMAIL, etc.) in environment"
+                )
 
             from agent_backend.google_calendar import get_access_token as google_get_access_token
-            gmail_token = await google_get_access_token(gmail.google_client_id, gmail.google_client_secret, gmail.google_refresh_token)
+
+            gmail_token = await google_get_access_token(
+                gmail.google_client_id, gmail.google_client_secret, gmail.google_refresh_token
+            )
             local_start = start_dt.astimezone(ZoneInfo(client_tz))
             html_body = render_email_template(
                 f"{policy.EMAIL_TEMPLATE_PREFIX}_{language.lower()}",
@@ -324,14 +420,23 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
                 meet_link=meet_link or "",
                 event_link=event_link or "",
             )
-            await send_email(gmail_token, gmail.sender_email, contact_email, engine.EMAIL_SUBJECTS[language], html_body)
+            await send_email(
+                gmail_token, gmail.sender_email, contact_email, engine.EMAIL_SUBJECTS[language], html_body
+            )
         except Exception as email_error:
             return BookAppointmentResponse(
-                success=True, event_id=event_id, event_link=event_link, meet_link=meet_link,
-                errors=join_errors(f"The appointment was created but email notification failed: {email_error}", notify_error),
+                success=True,
+                event_id=event_id,
+                event_link=event_link,
+                meet_link=meet_link,
+                errors=join_errors(
+                    f"The appointment was created but email notification failed: {email_error}", notify_error
+                ),
             )
 
-        return BookAppointmentResponse(success=True, event_id=event_id, event_link=event_link, meet_link=meet_link, errors=notify_error)
+        return BookAppointmentResponse(
+            success=True, event_id=event_id, event_link=event_link, meet_link=meet_link, errors=notify_error
+        )
 
     except Exception as e:
         return BookAppointmentResponse(success=False, errors=str(e))

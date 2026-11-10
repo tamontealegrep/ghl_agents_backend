@@ -71,6 +71,7 @@ def test_children_out_of_range_is_rejected(valid, children):
 
 # --- 4.1 Tiempo desde el ultimo parto -------------------------------------
 
+
 def test_c_section_less_than_18_months_ago_is_rejected(valid):
     valid["last_birth_date"] = _months_ago(17)
     valid["birth_type"] = "csection"
@@ -113,13 +114,17 @@ def test_missing_last_birth_date_is_inconclusive(valid):
 
 # --- 4.2 Cesareas ----------------------------------------------------------
 
-@pytest.mark.parametrize("count,expected", [("0", "Approved"), ("2", "Approved"), ("3", "Rejected (C-Sections)")])
+
+@pytest.mark.parametrize(
+    "count,expected", [("0", "Approved"), ("2", "Approved"), ("3", "Rejected (C-Sections)")]
+)
 def test_c_section_count(valid, count, expected):
     valid["number_of_c_sections"] = count
     assert classify(valid) == expected
 
 
 # --- 4.3 Abortos -----------------------------------------------------------
+
 
 def test_abortion_history_does_not_reject(valid):
     valid["abortions"] = "si"
@@ -133,12 +138,14 @@ def test_unknown_abortion_answer_is_inconclusive(valid):
 
 # --- 4.4 Preeclampsia ------------------------------------------------------
 
+
 def test_preeclampsia_history_is_rejected(valid):
     valid["preeclampsia"] = "si"
     assert classify(valid) == "Rejected (Preeclampsia)"
 
 
 # --- Resto de criterios ----------------------------------------------------
+
 
 @pytest.mark.parametrize("bmi", ["18.4", "30"])
 def test_bmi_out_of_range_is_rejected(valid, bmi):
@@ -194,7 +201,10 @@ def test_missing_birth_type_is_reported_only_for_recent_births(valid):
 
 
 def test_eligibility_reason_names_the_missing_field():
-    assert eligibility_fields("Inconclusive", "last_birth_date") == ("inconclusive", "missing_data (last_birth_date)")
+    assert eligibility_fields("Inconclusive", "last_birth_date") == (
+        "inconclusive",
+        "missing_data (last_birth_date)",
+    )
 
 
 def test_eps_is_ignored(valid):

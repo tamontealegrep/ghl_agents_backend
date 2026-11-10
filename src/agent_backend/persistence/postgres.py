@@ -1,33 +1,32 @@
-"""
-Postgres wiring for the compiled-agent pipeline: the LangGraph
+"""Postgres wiring for the compiled-agent pipeline: the LangGraph
 
-    checkpointer (conversation replay state), a small `conversations` table we
-    own ourselves, and the closing-message sweep that reads it.
+checkpointer (conversation replay state), a small `conversations` table we
+own ourselves, and the closing-message sweep that reads it.
 
-    Why a separate table when the checkpointer already persists everything:
-    LangGraph's own `checkpoints`/`checkpoint_blobs` tables are internal replay
-    plumbing, not a queryable business table. `checkpoints.checkpoint` (JSONB)
-    only inlines primitive channel values (plain str/int/float/bool) -- our
-    `current_state`/`last_user_message`/`last_message_at` land there, but
-    `slots` (which holds `preferred_language`), `history`, and `contact` are
-    dicts/lists, so LangGraph pops them out and stores them separately in
-    `checkpoint_blobs.blob` as msgpack-encoded bytes (see `put()` in
-    `langgraph/checkpoint/postgres/__init__.py`) -- not plain SQL-queryable
-    JSON. There's also no column anywhere for *which agent* a thread belongs
-    to; a checkpointer is generic across any graph that uses it.
+Why a separate table when the checkpointer already persists everything:
+LangGraph's own `checkpoints`/`checkpoint_blobs` tables are internal replay
+plumbing, not a queryable business table. `checkpoints.checkpoint` (JSONB)
+only inlines primitive channel values (plain str/int/float/bool) -- our
+`current_state`/`last_user_message`/`last_message_at` land there, but
+`slots` (which holds `preferred_language`), `history`, and `contact` are
+dicts/lists, so LangGraph pops them out and stores them separately in
+`checkpoint_blobs.blob` as msgpack-encoded bytes (see `put()` in
+`langgraph/checkpoint/postgres/__init__.py`) -- not plain SQL-queryable
+JSON. There's also no column anywhere for *which agent* a thread belongs
+to; a checkpointer is generic across any graph that uses it.
 
-    `conversations` is a thin, denormalized, query-friendly mirror -- one row
-    per thread_id, upserted after each turn -- for anything you'd want to ask
-    with plain SQL (which agent, what language, is this contact idle, what did
-    they last say) without touching msgpack blobs. Shared by every compiled
-    agent (see compiled_runner/ghl_endpoint.py) -- `agent_slug` plus
-    `slots_summary` being a schemaless JSONB, not fixed columns per business
-    field, is what lets one table serve agents with completely different slot
-    vocabularies (family_aims_sam_text's `vi__treat` vs. some future agent's
-    own fields) without a migration per agent. It's also the durable source
-    `find_conversations_needing_closing_message` sweeps -- durable specifically
-    because in-memory timers (like the debounce in ghl_endpoint.py) don't
-    survive a process restart, and this one has to survive ~24h.
+`conversations` is a thin, denormalized, query-friendly mirror -- one row
+per thread_id, upserted after each turn -- for anything you'd want to ask
+with plain SQL (which agent, what language, is this contact idle, what did
+they last say) without touching msgpack blobs. Shared by every compiled
+agent (see compiled_runner/ghl_endpoint.py) -- `agent_slug` plus
+`slots_summary` being a schemaless JSONB, not fixed columns per business
+field, is what lets one table serve agents with completely different slot
+vocabularies (family_aims_sam_text's `vi__treat` vs. some future agent's
+own fields) without a migration per agent. It's also the durable source
+`find_conversations_needing_closing_message` sweeps -- durable specifically
+because in-memory timers (like the debounce in ghl_endpoint.py) don't
+survive a process restart, and this one has to survive ~24h.
 """
 
 from __future__ import annotations
@@ -371,7 +370,9 @@ def find_conversations_needing_closing_message(agent_slug: str, lookback_days: f
         return []
 
 
-def claim_conversations_needing_closing_message(agent_slug: str, lookback_days: float, limit: int = 200) -> list[dict[str, Any]]:
+def claim_conversations_needing_closing_message(
+    agent_slug: str, lookback_days: float, limit: int = 200
+) -> list[dict[str, Any]]:
     """Atomically claims contacts due a closing message to avoid duplicate sends across processes.
 
     Uses a CTE to first select the latest thread per (contact_id, location_id)
@@ -464,7 +465,10 @@ def reset_closing_message_claim(agent_slug: str, location_id: str, contact_id: s
 
         logging.getLogger(__name__).warning(
             "[%s:%s:%s] Failed to reset closing message claim (non-fatal).",
-            agent_slug, location_id, contact_id, exc_info=True
+            agent_slug,
+            location_id,
+            contact_id,
+            exc_info=True,
         )
 
 
@@ -491,5 +495,8 @@ def mark_closing_message_sent(agent_slug: str, location_id: str, contact_id: str
 
         logging.getLogger(__name__).warning(
             "[%s:%s:%s] Failed to mark closing message sent (non-fatal).",
-            agent_slug, location_id, contact_id, exc_info=True
+            agent_slug,
+            location_id,
+            contact_id,
+            exc_info=True,
         )

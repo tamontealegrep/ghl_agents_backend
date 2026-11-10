@@ -72,7 +72,9 @@ class GmailConfig:
 
 class Settings:
     def __init__(self) -> None:
-        self.calendars: dict[str, ToolConfig] = load_calendars("FA", BUILTIN_CALENDARS, post_buffer_minutes=DEFAULT_POST_BUFFER_MINUTES)
+        self.calendars: dict[str, ToolConfig] = load_calendars(
+            "FA", BUILTIN_CALENDARS, post_buffer_minutes=DEFAULT_POST_BUFFER_MINUTES
+        )
         self.ghl_token = os.getenv("GHL_TOKEN", "")
         self.ghl_location_id = os.getenv("GHL_LOCATION_ID", "")
         # Optional internal addresses (comma-separated) told about every booking; empty = no notification.

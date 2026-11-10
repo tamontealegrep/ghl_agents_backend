@@ -30,7 +30,9 @@ GHL_CALENDAR = {
 
 def tool(**env) -> CalendarSettings:
     env = {f"BN_{k}_FT": v for k, v in env.items()}
-    return load_calendar_settings("BN", "FT", read_unset_from_ghl=True, environ={"BN_GHL_CALENDAR_ID_FT": "cal1", **env})
+    return load_calendar_settings(
+        "BN", "FT", read_unset_from_ghl=True, environ={"BN_GHL_CALENDAR_ID_FT": "cal1", **env}
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -44,14 +46,29 @@ def test_units_are_converted_to_minutes_and_days():
     assert to_minutes(1, "days") == 1440
     assert to_minutes(1, None) == 1
     assert to_minutes(None, "mins") is None and to_minutes(5, "fortnights") is None
-    assert to_days(2, "weeks") == 14 and to_days(1, "months") == 30 and to_days(36, "hours") == 2 and to_days(0, "days") == 0
+    assert (
+        to_days(2, "weeks") == 14
+        and to_days(1, "months") == 30
+        and to_days(36, "hours") == 2
+        and to_days(0, "days") == 0
+    )
 
 
 def test_empty_variables_take_their_value_from_the_ghl_calendar():
     schedule = schedule_from_calendar(GHL_CALENDAR, tool())
-    assert (schedule.duration_minutes, schedule.pre_buffer_minutes, schedule.post_buffer_minutes) == (30, 0, 15)
+    assert (schedule.duration_minutes, schedule.pre_buffer_minutes, schedule.post_buffer_minutes) == (
+        30,
+        0,
+        15,
+    )
     assert (schedule.min_notice_minutes, schedule.date_range_days) == (0, 14)
-    assert schedule.from_ghl == {"duration_minutes", "pre_buffer_minutes", "post_buffer_minutes", "min_notice_minutes", "date_range_days"}
+    assert schedule.from_ghl == {
+        "duration_minutes",
+        "pre_buffer_minutes",
+        "post_buffer_minutes",
+        "min_notice_minutes",
+        "date_range_days",
+    }
 
 
 def test_a_value_in_the_env_wins_over_ghl():
@@ -71,8 +88,18 @@ def test_a_booking_window_of_zero_means_no_limit_and_keeps_the_fallback():
 
 
 def test_min_notice_can_be_hours_days_or_weeks():
-    assert schedule_from_calendar({**GHL_CALENDAR, "allowBookingAfter": 2, "allowBookingAfterUnit": "hours"}, tool()).min_notice_minutes == 120
-    assert schedule_from_calendar({**GHL_CALENDAR, "allowBookingAfter": 1, "allowBookingAfterUnit": "weeks"}, tool()).min_notice_minutes == 10080
+    assert (
+        schedule_from_calendar(
+            {**GHL_CALENDAR, "allowBookingAfter": 2, "allowBookingAfterUnit": "hours"}, tool()
+        ).min_notice_minutes
+        == 120
+    )
+    assert (
+        schedule_from_calendar(
+            {**GHL_CALENDAR, "allowBookingAfter": 1, "allowBookingAfterUnit": "weeks"}, tool()
+        ).min_notice_minutes
+        == 10080
+    )
 
 
 def test_without_empty_variables_ghl_is_not_even_called():
@@ -82,7 +109,9 @@ def test_without_empty_variables_ghl_is_not_even_called():
         calls.append(args)
         return {"calendar": GHL_CALENDAR}
 
-    fixed = load_calendar_settings("BN", "FT", environ={"BN_GHL_CALENDAR_ID_FT": "c"})  # nothing marked for GHL
+    fixed = load_calendar_settings(
+        "BN", "FT", environ={"BN_GHL_CALENDAR_ID_FT": "c"}
+    )  # nothing marked for GHL
     schedule = asyncio.run(resolve_schedule(fixed, "token", get_calendar=fetch))
     assert calls == [] and schedule.post_buffer_minutes == 0
 

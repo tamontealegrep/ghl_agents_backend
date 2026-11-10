@@ -16,17 +16,17 @@ client = TestClient(app)
 
 def _next_business_datetime_iso(hour: int = 9, minute: int = 0) -> str:
     """
-Próximo día hábil (lunes a viernes) a la hora dada, en Bogotá — válido
+    Próximo día hábil (lunes a viernes) a la hora dada, en Bogotá — válido
 
-    para las ventanas horarias de ambos tools (ivf y sur).
+        para las ventanas horarias de ambos tools (ivf y sur).
 
-    Parameters:
-        hour: Description.
-        minute: Description.
+        Parameters:
+            hour: Description.
+            minute: Description.
 
-    Returns:
-        The result.
-"""
+        Returns:
+            The result.
+    """
     now = datetime.now(ZoneInfo("America/Bogota"))
     candidate = (now + timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
     while candidate.weekday() >= 5 or candidate <= now:
@@ -106,7 +106,11 @@ async def _fake_get_free_busy_busy(*args, **kwargs):
 
 
 async def _fake_create_event(*args, **kwargs):
-    return {"id": "evt123", "htmlLink": "https://calendar.google.com/event?eid=abc", "hangoutLink": "https://meet.google.com/xyz-abcd"}
+    return {
+        "id": "evt123",
+        "htmlLink": "https://calendar.google.com/event?eid=abc",
+        "hangoutLink": "https://meet.google.com/xyz-abcd",
+    }
 
 
 async def _fake_create_event_no_id(*args, **kwargs):

@@ -14,7 +14,9 @@ WEBHOOK = "/agents/babynova/surrogate-questions-text"
 
 
 def _client(**tokens):
-    settings = Settings(host="127.0.0.1", port=8010, agents_dir=BUNDLES, admin_token=None, company="babynova", **tokens)
+    settings = Settings(
+        host="127.0.0.1", port=8010, agents_dir=BUNDLES, admin_token=None, company="babynova", **tokens
+    )
     return TestClient(create_app(settings))
 
 

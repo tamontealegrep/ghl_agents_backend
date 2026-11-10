@@ -157,7 +157,9 @@ def load_bundle(root: Path) -> AgentBundle:
         ValueError: If ``agent.yaml`` is not valid for ``AgentConfig``.
     """
     if not (root / GRAPH_FILE).is_file():
-        raise FileNotFoundError(f"No compiled agent at {root / GRAPH_FILE}; run the compiler's bundle command.")
+        raise FileNotFoundError(
+            f"No compiled agent at {root / GRAPH_FILE}; run the compiler's bundle command."
+        )
     config_path = root / CONFIG_FILE
     raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) if config_path.is_file() else None
     try:

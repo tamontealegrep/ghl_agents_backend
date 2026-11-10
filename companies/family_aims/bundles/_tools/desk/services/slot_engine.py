@@ -137,11 +137,12 @@ def compute_available_slots(
             end_min = slot_end.hour * 60 + slot_end.minute
 
             if not lunch_break_fn(start_min, end_min):
-                overlaps = any(slot_start < ev_end and slot_end > ev_start for ev_start, ev_end in busy_events)
+                overlaps = any(
+                    slot_start < ev_end and slot_end > ev_start for ev_start, ev_end in busy_events
+                )
                 if not overlaps and slot_start >= min_advance_instant:
                     result.append(_format_slot(slot_start, slot_end, user_tz))
 
             cursor = cursor + timedelta(minutes=interval_minutes)
 
     return result
-

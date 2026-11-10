@@ -92,6 +92,7 @@ def test_foreigner_with_unknown_document_type_is_rejected_as_desconocido():
 # documentos dados es un tipo valido.
 # ---------------------------------------------------------------------------
 
+
 def test_multiple_documents_as_comma_separated_string_approves_if_any_is_valid():
     result = check_documentation("VEN", "cedula_extranjeria,ppt")
     assert result["approved"] is True
@@ -167,4 +168,3 @@ def test_accepts_the_four_documented_input_shapes(document_type):
     result = check_documentation("VEN", document_type)
     assert result["approved"] is True
     assert "cedula_ciudadania" in result["normalized_documents"]
-

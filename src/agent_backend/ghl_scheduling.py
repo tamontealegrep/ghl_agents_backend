@@ -175,7 +175,11 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
 
     def duration_to_send(cal: Any, schedule: Schedule) -> int | None:
         # When the duration comes from GHL itself there is nothing to ask for: GHL uses its default.
-        return None if "duration_minutes" in cal.tool.read_from_ghl and "duration_minutes" in schedule.from_ghl else schedule.duration_minutes
+        return (
+            None
+            if "duration_minutes" in cal.tool.read_from_ghl and "duration_minutes" in schedule.from_ghl
+            else schedule.duration_minutes
+        )
 
     # ------------------------------------------------------------------ slots
     @router.post("/get-available-slots-ghl", response_model=SlotsResponse)
@@ -192,7 +196,9 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
             tool = cal.tool
             schedule = await resolve_schedule(tool, settings.ghl_token)
             if "date_range_days" not in schedule.from_ghl and schedule.date_range_days > GHL_MAX_RANGE_DAYS:
-                return fail(f"{hooks.prefix}_DATE_RANGE_DAYS_{cal.key} is {schedule.date_range_days}; GoHighLevel free-slots accepts at most {GHL_MAX_RANGE_DAYS} days")
+                return fail(
+                    f"{hooks.prefix}_DATE_RANGE_DAYS_{cal.key} is {schedule.date_range_days}; GoHighLevel free-slots accepts at most {GHL_MAX_RANGE_DAYS} days"
+                )
 
             now = datetime.now(UTC)
             earliest = earliest_start(now, schedule)
@@ -200,29 +206,44 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
             duration = timedelta(minutes=schedule.duration_minutes)
 
             free = await ghl.get_available_slots(
-                settings.ghl_token, tool.ghl_calendar_id, earliest, end_date, hooks.business_tz,
+                settings.ghl_token,
+                tool.ghl_calendar_id,
+                earliest,
+                end_date,
+                hooks.business_tz,
                 duration_minutes=duration_to_send(cal, schedule),
             )
             starts = [datetime.fromisoformat(iso.replace("Z", "+00:00")) for iso in free]
             starts = [s for s in starts if s >= earliest and in_hours(cal, s, s + duration)]
 
             if schedule.pre_buffer_minutes or schedule.post_buffer_minutes:
-                busy = await load_busy(ghl.list_events, settings, tool, earliest - timedelta(days=1), end_date + timedelta(days=1))
+                busy = await load_busy(
+                    ghl.list_events,
+                    settings,
+                    tool,
+                    earliest - timedelta(days=1),
+                    end_date + timedelta(days=1),
+                )
                 if busy:
                     starts = [
-                        s for s in starts
-                        if not conflicts_with_busy(s, s + duration, busy, schedule.pre_buffer_minutes, schedule.post_buffer_minutes)
+                        s
+                        for s in starts
+                        if not conflicts_with_busy(
+                            s, s + duration, busy, schedule.pre_buffer_minutes, schedule.post_buffer_minutes
+                        )
                     ]
 
             slots = []
             for start in thin_by_interval(starts, schedule.interval_minutes):
                 end = start + duration
-                slots.append(Slot(
-                    start_co=start.astimezone(tz).isoformat(),
-                    end_co=end.astimezone(tz).isoformat(),
-                    start_local=start.astimezone(ZoneInfo(user_tz)).isoformat(),
-                    end_local=end.astimezone(ZoneInfo(user_tz)).isoformat(),
-                ))
+                slots.append(
+                    Slot(
+                        start_co=start.astimezone(tz).isoformat(),
+                        end_co=end.astimezone(tz).isoformat(),
+                        start_local=start.astimezone(ZoneInfo(user_tz)).isoformat(),
+                        end_local=end.astimezone(ZoneInfo(user_tz)).isoformat(),
+                    )
+                )
             return SlotsResponse(success=True, iana_timezone=user_tz, available_slots=slots, errors=None)
         except Exception as exc:
             return fail(str(exc))
@@ -269,8 +290,12 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
             # GHL decides what is free: the start must be one of its free slots.
             try:
                 free = await ghl.get_available_slots(
-                    settings.ghl_token, tool.ghl_calendar_id, start_dt - timedelta(hours=12), end_dt + timedelta(hours=12),
-                    hooks.business_tz, duration_minutes=duration_to_send(cal, schedule),
+                    settings.ghl_token,
+                    tool.ghl_calendar_id,
+                    start_dt - timedelta(hours=12),
+                    end_dt + timedelta(hours=12),
+                    hooks.business_tz,
+                    duration_minutes=duration_to_send(cal, schedule),
                 )
             except Exception as exc:
                 logger.warning("GHL free-slots check failed: %s", exc)
@@ -280,15 +305,23 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
 
             # Existing appointments block their own time plus the pre/post buffers.
             busy = await load_busy(
-                ghl.list_events, settings, tool,
-                start_dt - timedelta(minutes=schedule.post_buffer_minutes), end_dt + timedelta(minutes=schedule.pre_buffer_minutes),
+                ghl.list_events,
+                settings,
+                tool,
+                start_dt - timedelta(minutes=schedule.post_buffer_minutes),
+                end_dt + timedelta(minutes=schedule.pre_buffer_minutes),
             )
-            if busy and conflicts_with_busy(start_dt, end_dt, busy, schedule.pre_buffer_minutes, schedule.post_buffer_minutes):
+            if busy and conflicts_with_busy(
+                start_dt, end_dt, busy, schedule.pre_buffer_minutes, schedule.post_buffer_minutes
+            ):
                 return fail("That time is no longer available", "slot_taken")
 
             upsert = await ghl.upsert_contact(
-                settings.ghl_token, settings.ghl_location_id,
-                email=contact_email or None, phone=contact_phone or None, name=contact_name or None,
+                settings.ghl_token,
+                settings.ghl_location_id,
+                email=contact_email or None,
+                phone=contact_phone or None,
+                name=contact_name or None,
             )
             contact_id = (upsert.get("contact") or {}).get("id")
             if not contact_id:
@@ -297,9 +330,15 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
             title = f"{policy.EVENT_TITLE_PREFIX}{policy.TITLE_SEPARATOR}{contact_name}{policy.TITLE_SEPARATOR}{contact_phone}"
             try:
                 created = await ghl.create_appointment(
-                    access_token=settings.ghl_token, calendar_id=tool.ghl_calendar_id, location_id=settings.ghl_location_id,
-                    contact_id=contact_id, start_dt=start_dt, end_dt=end_dt, title=title,
-                    appointment_status="confirmed", to_notify=False,
+                    access_token=settings.ghl_token,
+                    calendar_id=tool.ghl_calendar_id,
+                    location_id=settings.ghl_location_id,
+                    contact_id=contact_id,
+                    start_dt=start_dt,
+                    end_dt=end_dt,
+                    title=title,
+                    appointment_status="confirmed",
+                    to_notify=False,
                 )
             except httpx.HTTPStatusError as exc:
                 status = exc.response.status_code if exc.response is not None else 0
@@ -308,22 +347,33 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
                 except Exception:
                     detail = exc.response.text if exc.response is not None else None
                 if status == 400:
-                    return fail("That time is no longer available" + (f". GHL: {detail}" if detail else ""), "slot_taken")
+                    return fail(
+                        "That time is no longer available" + (f". GHL: {detail}" if detail else ""),
+                        "slot_taken",
+                    )
                 return fail(f"GHL error {status}: {detail}", "creation_failed")
 
             appointment = ghl.extract_appointment(created)
             event_id = appointment.get("id")
             if not event_id:
-                return fail("Failed to create the appointment. The booking was not completed", "creation_failed")
+                return fail(
+                    "Failed to create the appointment. The booking was not completed", "creation_failed"
+                )
             meet_link = ghl.get_meet_link(created)
 
             notify_error = None
             if hooks.notify_booking:
                 notify_error = await hooks.notify_booking(
-                    settings, policy, contact_name=contact_name, contact_phone=contact_phone,
-                    start_dt=start_dt, timezone=(req.iana_timezone or hooks.business_tz).strip(),
+                    settings,
+                    policy,
+                    contact_name=contact_name,
+                    contact_phone=contact_phone,
+                    start_dt=start_dt,
+                    timezone=(req.iana_timezone or hooks.business_tz).strip(),
                 )
-            return BookAppointmentResponse(success=True, event_id=event_id, event_link=None, meet_link=meet_link, errors=notify_error)
+            return BookAppointmentResponse(
+                success=True, event_id=event_id, event_link=None, meet_link=meet_link, errors=notify_error
+            )
         except Exception as exc:
             return fail(str(exc))
 
@@ -350,20 +400,31 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
             time_min = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)
             contact_id = None
             if email or phone:
-                upsert = await ghl.upsert_contact(settings.ghl_token, settings.ghl_location_id, email=email or None, phone=phone or None, name=name or None)
+                upsert = await ghl.upsert_contact(
+                    settings.ghl_token,
+                    settings.ghl_location_id,
+                    email=email or None,
+                    phone=phone or None,
+                    name=name or None,
+                )
                 contact_id = (upsert.get("contact") or {}).get("id")
             data = await ghl.list_events(
-                access_token=settings.ghl_token, location_id=settings.ghl_location_id, calendar_id=cal.tool.ghl_calendar_id,
-                start_dt=time_min, end_dt=time_min + timedelta(days=36),
+                access_token=settings.ghl_token,
+                location_id=settings.ghl_location_id,
+                calendar_id=cal.tool.ghl_calendar_id,
+                start_dt=time_min,
+                end_dt=time_min + timedelta(days=36),
             )
             keywords = [w for w in name.lower().split() if len(w) > 2]
             found = []
-            for event in (data.get("events", []) if isinstance(data, dict) else []):
+            for event in data.get("events", []) if isinstance(data, dict) else []:
                 if str(event.get("appointmentStatus", event.get("status", ""))).lower() == "cancelled":
                     continue
-                title = (event.get("title") or "")
+                title = event.get("title") or ""
                 lowered = title.lower()
-                same_contact = bool(contact_id) and (event.get("contactId") or event.get("contact_id")) == contact_id
+                same_contact = (
+                    bool(contact_id) and (event.get("contactId") or event.get("contact_id")) == contact_id
+                )
                 by_title = (
                     (bool(keywords) and all(k in lowered for k in keywords))
                     or (bool(email) and email in lowered)
@@ -373,7 +434,11 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
                 if not (same_contact or by_title) or not raw_start:
                     continue
                 start = datetime.fromisoformat(str(raw_start).replace("Z", "+00:00")).astimezone(client_tz)
-                found.append(AppointmentInfo(event_id=event.get("id", ""), summary=title, start_time=hooks.format_start(start)))
+                found.append(
+                    AppointmentInfo(
+                        event_id=event.get("id", ""), summary=title, start_time=hooks.format_start(start)
+                    )
+                )
             if found:
                 return FindAppointmentResponse(success=True, appointments=found)
             return fail(f"No appointments found for {name or email or phone} in the next month.")
@@ -408,28 +473,44 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
                     return fail("The requested new time is outside business hours")
                 if start_dt < earliest_start(now, schedule):
                     return fail("The requested new time does not meet the minimum advance notice")
-                minutes = policy.parse_duration_minutes(req.new_duration, schedule.duration_minutes) if req.new_duration else schedule.duration_minutes
+                minutes = (
+                    policy.parse_duration_minutes(req.new_duration, schedule.duration_minutes)
+                    if req.new_duration
+                    else schedule.duration_minutes
+                )
                 applied_duration = str(minutes)
                 end_dt = start_dt + timedelta(minutes=minutes)
                 busy = await load_busy(
-                    ghl.list_events, settings, tool,
-                    start_dt - timedelta(minutes=schedule.post_buffer_minutes), end_dt + timedelta(minutes=schedule.pre_buffer_minutes),
+                    ghl.list_events,
+                    settings,
+                    tool,
+                    start_dt - timedelta(minutes=schedule.post_buffer_minutes),
+                    end_dt + timedelta(minutes=schedule.pre_buffer_minutes),
                     exclude_event_id=req.event_id,
                 )
-                if busy and conflicts_with_busy(start_dt, end_dt, busy, schedule.pre_buffer_minutes, schedule.post_buffer_minutes):
+                if busy and conflicts_with_busy(
+                    start_dt, end_dt, busy, schedule.pre_buffer_minutes, schedule.post_buffer_minutes
+                ):
                     return fail("The requested new time is already taken by another appointment.")
 
             updated = await ghl.update_appointment(
-                access_token=settings.ghl_token, appointment_id=req.event_id, start_dt=start_dt, end_dt=end_dt,
+                access_token=settings.ghl_token,
+                appointment_id=req.event_id,
+                start_dt=start_dt,
+                end_dt=end_dt,
             )
             if not isinstance(updated, dict):
                 return fail("Could not update the event. Please verify the event_id.")
 
             message, shown = "The appointment has been successfully updated.", None
             if start_dt:
-                shown = hooks.format_start(start_dt.astimezone(ZoneInfo((req.iana_timezone or hooks.business_tz).strip())))
+                shown = hooks.format_start(
+                    start_dt.astimezone(ZoneInfo((req.iana_timezone or hooks.business_tz).strip()))
+                )
                 message = f"The appointment has been rescheduled to {shown}."
-            return EditAppointmentResponse(success=True, message=message, new_start_time=shown, new_duration=applied_duration)
+            return EditAppointmentResponse(
+                success=True, message=message, new_start_time=shown, new_duration=applied_duration
+            )
         except Exception as exc:
             return fail(str(exc))
 
@@ -441,8 +522,12 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
             if error:
                 return CancelAppointmentResponse(success=False, errors=error)
             if await ghl.delete_appointment(settings.ghl_token, req.event_id):
-                return CancelAppointmentResponse(success=True, message="The appointment has been successfully canceled.")
-            return CancelAppointmentResponse(success=False, errors="Could not delete the event. Please verify the event_id.")
+                return CancelAppointmentResponse(
+                    success=True, message="The appointment has been successfully canceled."
+                )
+            return CancelAppointmentResponse(
+                success=False, errors="Could not delete the event. Please verify the event_id."
+            )
         except Exception as exc:
             return CancelAppointmentResponse(success=False, errors=str(exc))
 

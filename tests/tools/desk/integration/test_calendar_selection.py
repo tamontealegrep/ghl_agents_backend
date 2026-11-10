@@ -5,8 +5,8 @@ from zoneinfo import ZoneInfo
 
 from desk.api.v1.endpoints import book_appointment_ghl as book_endpoint
 from desk.api.v1.endpoints import book_appointment_google as google_book_endpoint
-from desk.core import config as calendars_endpoint
 from desk.api.v1.endpoints import get_available_slots_ghl as slots_endpoint
+from desk.core import config as calendars_endpoint
 from desk.core.config import ToolConfig
 from fastapi.testclient import TestClient
 
@@ -130,7 +130,11 @@ def test_new_calendar_without_email_template_books_without_sending_email(monkeyp
         return []
 
     async def _create(*args, **kwargs):
-        return {"id": "evt1", "htmlLink": "https://example.com/e", "hangoutLink": "https://meet.example.com/x"}
+        return {
+            "id": "evt1",
+            "htmlLink": "https://example.com/e",
+            "hangoutLink": "https://meet.example.com/x",
+        }
 
     monkeypatch.setattr(google_book_endpoint, "get_settings", lambda: _GoogleSettings())
     monkeypatch.setattr(google_book_endpoint, "get_access_token", _token)
@@ -176,7 +180,11 @@ def _book_with_notification(monkeypatch, notification_email, send):
         return []
 
     async def _create(*args, **kwargs):
-        return {"id": "evt1", "htmlLink": "https://example.com/e", "hangoutLink": "https://meet.example.com/x"}
+        return {
+            "id": "evt1",
+            "htmlLink": "https://example.com/e",
+            "hangoutLink": "https://meet.example.com/x",
+        }
 
     monkeypatch.setattr(google_book_endpoint, "get_settings", lambda: _Settings2())
     monkeypatch.setattr(google_book_endpoint, "get_access_token", _token)

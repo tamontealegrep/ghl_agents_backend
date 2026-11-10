@@ -144,7 +144,9 @@ async def chat(
         )
     else:
         if not req.message:
-            raise HTTPException(status_code=422, detail="message is required to continue an existing session.")
+            raise HTTPException(
+                status_code=422, detail="message is required to continue an existing session."
+            )
         result = await run_in_threadpool(agent.graph.invoke, Command(resume=req.message), config)
 
     interrupts = result.get("__interrupt__")
@@ -158,9 +160,7 @@ async def chat(
 
 
 @router.post("/reset", dependencies=[Depends(require_admin)])
-async def reset(
-    slug: str, thread_id: str, registry: Annotated[AgentRegistry, Depends(get_registry)]
-) -> dict:
+async def reset(slug: str, thread_id: str, registry: Annotated[AgentRegistry, Depends(get_registry)]) -> dict:
     """Wipes one thread's checkpoint so the next chat starts a new session.
 
     Args:

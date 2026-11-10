@@ -13,9 +13,8 @@ from agent_backend.channels.ghl.client import (
 
 @dataclass(frozen=True)
 class CompiledAgentGhlConfig:
+    """Everything that differs from one compiled agent's GHL endpoint to another.
     """
-Everything that differs from one compiled agent's GHL endpoint to another.
-"""
 
     slug: str
     """Must match a folder under compiled_agents/."""
@@ -141,7 +140,7 @@ def _strip_reset_marker(message: str) -> tuple[str, bool]:
     stripped = message.lstrip()
     for marker in _RESET_MARKERS:
         if stripped.startswith(marker):
-            return stripped[len(marker):].strip(), True
+            return stripped[len(marker) :].strip(), True
     return message, False
 
 

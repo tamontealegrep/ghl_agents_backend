@@ -160,7 +160,9 @@ def available_keys(settings: Any) -> list[str]:
     return list(settings.calendars)
 
 
-def resolve_calendar(settings: Any, calendar_type: str | None, config: Mapping[str, Any] | None = None) -> CalendarContext | None:
+def resolve_calendar(
+    settings: Any, calendar_type: str | None, config: Mapping[str, Any] | None = None
+) -> CalendarContext | None:
     """Finds a calendar by the ``calendar_type`` a tool call sent.
 
     Args:

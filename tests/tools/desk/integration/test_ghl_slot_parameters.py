@@ -122,14 +122,21 @@ def test_pre_buffer_keeps_free_time_before_an_existing_appointment(monkeypatch):
 
 def test_without_buffers_the_events_are_not_even_requested(monkeypatch):
     day = _day()
-    body, seen = _slots(monkeypatch, {}, [_at(day, 9), _at(day, 9, 30)], [_event(_at(day, 9), _at(day, 9, 30))])
+    body, seen = _slots(
+        monkeypatch, {}, [_at(day, 9), _at(day, 9, 30)], [_event(_at(day, 9), _at(day, 9, 30))]
+    )
     assert _starts(body) == ["09:00", "09:30"]
     assert seen["events_calls"] == 0
 
 
 def test_if_ghl_events_cannot_be_read_the_slots_are_offered_unfiltered(monkeypatch):
     day = _day()
-    body, _ = _slots(monkeypatch, {"post_buffer_minutes": 10}, [_at(day, 9), _at(day, 9, 30)], events_error=RuntimeError("boom"))
+    body, _ = _slots(
+        monkeypatch,
+        {"post_buffer_minutes": 10},
+        [_at(day, 9), _at(day, 9, 30)],
+        events_error=RuntimeError("boom"),
+    )
     assert body["success"] is True and _starts(body) == ["09:00", "09:30"]
 
 
@@ -233,7 +240,10 @@ def test_booking_beyond_the_date_range_is_refused(monkeypatch):
 def test_rescheduling_ignores_the_event_itself_but_not_the_buffers_of_others(monkeypatch):
     day = _day()
     new_start = _at(day, 9, 30)
-    events = [_event(_at(day, 9, 0), _at(day, 9, 30), event_id="other"), _event(_at(day, 14, 0), _at(day, 14, 30), event_id="mine")]
+    events = [
+        _event(_at(day, 9, 0), _at(day, 9, 30), event_id="other"),
+        _event(_at(day, 14, 0), _at(day, 14, 30), event_id="mine"),
+    ]
 
     async def _events(**kwargs):
         return {"events": events}
@@ -243,7 +253,12 @@ def test_rescheduling_ignores_the_event_itself_but_not_the_buffers_of_others(mon
 
     body = client.post(
         "/api/v1/edit-appointment-ghl",
-        json={"calendar_type": "IVF", "event_id": "mine", "new_start_date": new_start.isoformat(), "new_duration": "30"},
+        json={
+            "calendar_type": "IVF",
+            "event_id": "mine",
+            "new_start_date": new_start.isoformat(),
+            "new_duration": "30",
+        },
     ).json()
 
     assert body["success"] is False and "already taken" in body["errors"]

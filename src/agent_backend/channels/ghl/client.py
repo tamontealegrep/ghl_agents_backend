@@ -210,7 +210,9 @@ async def search_conversation_async(
             response.raise_for_status()
             conversations = response.json().get("conversations", [])
             if conversations:
-                active_logger.info("Found %s conversation(s) for contact_id=%s", len(conversations), contact_id)
+                active_logger.info(
+                    "Found %s conversation(s) for contact_id=%s", len(conversations), contact_id
+                )
                 return conversations[0].get("id")
         except Exception as exc:
             active_logger.error("Error searching conversation: %s", exc)
@@ -223,8 +225,7 @@ async def search_conversation_channel_async(
     config: GhlClientConfig,
     logger: logging.Logger | None = None,
 ) -> str | None:
-    """
-    Channel (normalized, e.g. 'WHATSAPP') of the contact's most recent conversation, read from its
+    """Channel (normalized, e.g. 'WHATSAPP') of the contact's most recent conversation, read from its
     lastMessageType, or None when there is no conversation or its last message is not on a
     channel a reply can be sent through.
     """

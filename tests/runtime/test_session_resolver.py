@@ -1,6 +1,7 @@
 """
 Unit tests for agent_runtime.runtime.session_resolver — new/continuing/stale resolution.
 """
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta

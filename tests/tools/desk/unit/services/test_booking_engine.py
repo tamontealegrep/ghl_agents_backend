@@ -8,6 +8,7 @@ from desk.services import booking_engine as engine
 # parse_start_date
 # ---------------------------------------------------------------------------
 
+
 def test_parse_start_date_preserves_explicit_offset():
     dt = engine.parse_start_date("2026-08-28T09:00:00-05:00")
     assert dt.utcoffset() == timedelta(hours=-5)
@@ -28,6 +29,7 @@ def test_parse_start_date_invalid_raises_value_error():
 # parse_duration_minutes
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("raw,expected", [("20", 20), ("45", 45), ("20abc", 20), ("  30  ", 30)])
 def test_parse_duration_minutes_valid(raw, expected):
     assert engine.parse_duration_minutes(raw) == expected
@@ -45,6 +47,7 @@ def test_parse_duration_minutes_custom_default():
 # ---------------------------------------------------------------------------
 # compute_end_date / is_future
 # ---------------------------------------------------------------------------
+
 
 def test_compute_end_date_adds_duration():
     start = datetime(2026, 8, 28, 9, 0, tzinfo=ZoneInfo("America/Bogota"))
@@ -68,6 +71,7 @@ def test_is_future_false_for_past_date():
 # format_contact_name
 # ---------------------------------------------------------------------------
 
+
 def test_format_contact_name_trims_collapses_and_titlecases():
     assert engine.format_contact_name("  maria   PEREZ gomez  ") == "Maria Perez Gomez"
 
@@ -79,6 +83,7 @@ def test_format_contact_name_single_word():
 # ---------------------------------------------------------------------------
 # email
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("email", ["Maria@Correo.com", "  ana.perez@dominio.co  "])
 def test_is_valid_email_accepts_well_formed_addresses(email):
@@ -98,6 +103,7 @@ def test_normalize_email_trims_and_lowercases():
 # language
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("raw,expected", [("es", "ES"), ("ES", "ES"), ("pt", "PT"), ("PT", "PT")])
 def test_normalize_language_recognizes_es_and_pt(raw, expected):
     assert engine.normalize_language(raw) == expected
@@ -111,6 +117,7 @@ def test_normalize_language_defaults_to_english(raw):
 # ---------------------------------------------------------------------------
 # format_event_description
 # ---------------------------------------------------------------------------
+
 
 def test_format_event_description_includes_contact_info():
     text = engine.format_event_description("Maria Perez", "maria@correo.com", "+573001234567")

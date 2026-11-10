@@ -87,7 +87,9 @@ def open_tunnel(domain: str, port: int, kill_existing: bool) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--company", required=True, help="Folder under companies/.")
     parser.add_argument("--env-file", type=Path, help="Explicit .env file (overrides the company's).")
     args = parser.parse_args(argv)
@@ -108,7 +110,9 @@ def main(argv: list[str] | None = None) -> int:
     server_env = {**env, "AGENTS_DIR": str(bundles), "HOST": host, "PORT": str(port)}
 
     print(f"Starting the {args.company} backend on http://{host}:{port} ...")
-    server = subprocess.Popen([sys.executable, "-m", "agent_backend"], cwd=devenv.BACKEND_ROOT, env=server_env)
+    server = subprocess.Popen(
+        [sys.executable, "-m", "agent_backend"], cwd=devenv.BACKEND_ROOT, env=server_env
+    )
     try:
         if not wait_for_port(probe, port):
             print("ERROR: the backend did not answer in time.", file=sys.stderr)

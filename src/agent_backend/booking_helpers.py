@@ -6,7 +6,13 @@ import re
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-__all__ = ["compute_end_date", "format_contact_name", "is_future", "parse_duration_minutes", "parse_start_date"]
+__all__ = [
+    "compute_end_date",
+    "format_contact_name",
+    "is_future",
+    "parse_duration_minutes",
+    "parse_start_date",
+]
 
 _LEADING_INT_RE = re.compile(r"^\s*(-?\d+)")
 

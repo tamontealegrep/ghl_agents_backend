@@ -98,4 +98,6 @@ def warn_about_open_endpoints(settings: Settings) -> None:
         ("ADMIN_TOKEN", settings.admin_token),
     ):
         if not value:
-            logger.warning("%s is not set: the routes it protects are open to anyone who can reach this port.", name)
+            logger.warning(
+                "%s is not set: the routes it protects are open to anyone who can reach this port.", name
+            )

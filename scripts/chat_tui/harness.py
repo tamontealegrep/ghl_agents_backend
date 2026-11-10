@@ -13,7 +13,7 @@ try:
     import httpx
     from rich.panel import Panel
 except ImportError as exc:  # pragma: no cover - only without the optional dependencies
-    raise SystemExit(f"Missing dependency ({exc.name}). Install it with: pip install -e \".[tui]\"") from exc
+    raise SystemExit(f'Missing dependency ({exc.name}). Install it with: pip install -e ".[tui]"') from exc
 
 from .common import BACKEND_ROOT, COMPANIES_DIR, OUTBOUND_ANSWERED_SEED_LINE, SESSIONS_DB, console
 from .models import AgentRef, ChatTurnResult, ToolTrace
@@ -32,7 +32,11 @@ def discover_agents(company: str | None = None, companies_dir: Path = COMPANIES_
         The bundles that have a ``graph.json``, sorted by company and slug (``_tools`` folders are skipped).
     """
     found: list[AgentRef] = []
-    for company_dir in sorted(p for p in companies_dir.iterdir() if p.is_dir() and not p.name.startswith("_")) if companies_dir.exists() else []:
+    for company_dir in (
+        sorted(p for p in companies_dir.iterdir() if p.is_dir() and not p.name.startswith("_"))
+        if companies_dir.exists()
+        else []
+    ):
         if company and company_dir.name != company:
             continue
         bundles = company_dir / "bundles"
@@ -94,10 +98,20 @@ class TracingLLMClient:
         """
         if self.enabled:
             console.print(Panel(prompt, title="LLM Prompt (extract_structured)", border_style="blue"))
-            console.print(Panel(json.dumps(json_schema, indent=2, ensure_ascii=False), title="Schema", border_style="blue"))
+            console.print(
+                Panel(
+                    json.dumps(json_schema, indent=2, ensure_ascii=False), title="Schema", border_style="blue"
+                )
+            )
         result = self.real_client.extract_structured(prompt, json_schema)
         if self.enabled:
-            console.print(Panel(json.dumps(result, indent=2, ensure_ascii=False), title="LLM Response (JSON)", border_style="blue"))
+            console.print(
+                Panel(
+                    json.dumps(result, indent=2, ensure_ascii=False),
+                    title="LLM Response (JSON)",
+                    border_style="blue",
+                )
+            )
         return result
 
 
@@ -108,7 +122,9 @@ class TracingToolClient(httpx.Client):
     retried on the other candidate routes, the way the backend does it (``agent_backend.tool_client``).
     """
 
-    def __init__(self, *, trace_sink: list[ToolTrace], local_client: Any, route_suffixes: tuple[str, ...]) -> None:
+    def __init__(
+        self, *, trace_sink: list[ToolTrace], local_client: Any, route_suffixes: tuple[str, ...]
+    ) -> None:
         super().__init__()
         self._trace_sink = trace_sink
         self._local_client = local_client
@@ -158,7 +174,12 @@ class TracingToolClient(httpx.Client):
         except ValueError:
             parsed = response.text
         self._trace_sink.append(
-            ToolTrace(tool_name=used.rstrip("/").rsplit("/", 1)[-1], args=dict(body_out or {}), status_code=response.status_code, response_body=parsed)
+            ToolTrace(
+                tool_name=used.rstrip("/").rsplit("/", 1)[-1],
+                args=dict(body_out or {}),
+                status_code=response.status_code,
+                response_body=parsed,
+            )
         )
         return response
 
@@ -214,7 +235,12 @@ class AgentHarness:
 
         checkpointer = SqliteSaver(sqlite3.connect(str(agent.root / SESSIONS_DB), check_same_thread=False))
 
-        settings = Settings(host="127.0.0.1", port=int(os.environ.get("PORT") or 8010), agents_dir=agent.root.parent, admin_token=None)
+        settings = Settings(
+            host="127.0.0.1",
+            port=int(os.environ.get("PORT") or 8010),
+            agents_dir=agent.root.parent,
+            admin_token=None,
+        )
         self.tools_base_url = f"{settings.self_base_url}/agents/{agent.slug}/tools"
         self.tracing_http_client = TracingToolClient(
             trace_sink=self._trace_buffer,
@@ -223,10 +249,16 @@ class AgentHarness:
         )
         self.tracing_http_client.enabled = log_http
 
-        self.tracing_llm_client = TracingLLMClient(llm_client or OpenAILLMClient(api_key=os.environ.get("OPENAI_API_KEY")))
+        self.tracing_llm_client = TracingLLMClient(
+            llm_client or OpenAILLMClient(api_key=os.environ.get("OPENAI_API_KEY"))
+        )
         self.tracing_llm_client.enabled = log_llm
 
-        knowledge_base = MarkdownKnowledgeBase.from_file(bundle.knowledge_path) if bundle.knowledge_path.is_file() else None
+        knowledge_base = (
+            MarkdownKnowledgeBase.from_file(bundle.knowledge_path)
+            if bundle.knowledge_path.is_file()
+            else None
+        )
         self.graph = build_graph(
             self.artifact,
             self.tracing_llm_client,
@@ -247,7 +279,10 @@ class AgentHarness:
             Sorted slot names.
         """
         names: set[str] = set()
-        sources = [*(getattr(self.artifact.graph, "nodes", []) or []), *(getattr(self.artifact.global_router, "handlers", []) or [])]
+        sources = [
+            *(getattr(self.artifact.graph, "nodes", []) or []),
+            *(getattr(self.artifact.global_router, "handlers", []) or []),
+        ]
         for item in sources:
             for capture in getattr(item, "capture", []) or []:
                 try:
@@ -277,7 +312,10 @@ class AgentHarness:
                 return []
             data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
             return [
-                {"name": str(item.get("name", "")).strip(), "description": str(item.get("description", "")).strip()}
+                {
+                    "name": str(item.get("name", "")).strip(),
+                    "description": str(item.get("description", "")).strip(),
+                }
                 for item in data.get("input_variables", []) or []
                 if str(item.get("name", "")).strip()
             ]
@@ -293,7 +331,11 @@ class AgentHarness:
         Returns:
             Sorted field names without the ``contact.`` prefix.
         """
-        fields = {item["name"].split(".", 1)[1] for item in self.discover_input_variables() if item["name"].startswith("contact.")}
+        fields = {
+            item["name"].split(".", 1)[1]
+            for item in self.discover_input_variables()
+            if item["name"].startswith("contact.")
+        }
         if fields:
             return sorted(fields)
 
@@ -344,7 +386,9 @@ class AgentHarness:
                 seed_last_user_message=opening_message or "",
             )
         else:
-            state = fresh_state(self.artifact, contact=self.contact, seed_history=[OUTBOUND_ANSWERED_SEED_LINE])
+            state = fresh_state(
+                self.artifact, contact=self.contact, seed_history=[OUTBOUND_ANSWERED_SEED_LINE]
+            )
         if initial_slots:
             state["slots"].update(initial_slots)
         return self._finish(thread_id, self.graph.invoke(state, config))
@@ -375,7 +419,9 @@ class AgentHarness:
             result = self.graph.invoke(fresh_state(self.artifact, contact=self.contact), config)
         else:
             if not message:
-                raise RuntimeError("Este thread ya tiene una conversacion en curso -- se necesita un mensaje.")
+                raise RuntimeError(
+                    "Este thread ya tiene una conversacion en curso -- se necesita un mensaje."
+                )
             result = self.graph.invoke(Command(resume=message), config)
         return self._finish(thread_id, result)
 

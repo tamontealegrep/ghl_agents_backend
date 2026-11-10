@@ -12,14 +12,22 @@ from ....services.slot_engine import compute_available_slots, compute_end_date, 
 
 router = APIRouter()
 
+
 @router.post("/get-available-slots-google", response_model=SlotsResponse)
 async def get_available_slots_google(req: SlotsRequest):
     settings = get_settings()
-    user_tz = req.iana_timezone.strip() if req.iana_timezone and req.iana_timezone.strip() else "America/Bogota"
-    
+    user_tz = (
+        req.iana_timezone.strip() if req.iana_timezone and req.iana_timezone.strip() else "America/Bogota"
+    )
+
     cal = resolve_calendar(settings, req.calendar_type)
     if cal is None:
-        return SlotsResponse(success=False, iana_timezone=user_tz, available_slots=[], errors=unknown_calendar_message(settings, req.calendar_type))
+        return SlotsResponse(
+            success=False,
+            iana_timezone=user_tz,
+            available_slots=[],
+            errors=unknown_calendar_message(settings, req.calendar_type),
+        )
     tool, policy, env_suffix = cal.tool, cal.slots, cal.key
 
     try:
@@ -27,7 +35,9 @@ async def get_available_slots_google(req: SlotsRequest):
 
         if not (tool.google_client_id and tool.google_client_secret and tool.google_refresh_token):
             return SlotsResponse(
-                success=False, iana_timezone=user_tz, available_slots=[],
+                success=False,
+                iana_timezone=user_tz,
+                available_slots=[],
                 errors=f"Missing GOOGLE_CLIENT_ID_{env_suffix} / GOOGLE_CLIENT_SECRET_{env_suffix} / GOOGLE_REFRESH_TOKEN_{env_suffix} in environment",
             )
 
@@ -35,7 +45,12 @@ async def get_available_slots_google(req: SlotsRequest):
             tool.google_client_id, tool.google_client_secret, tool.google_refresh_token
         )
         if not access_token:
-            return SlotsResponse(success=False, iana_timezone=user_tz, available_slots=[], errors="Failed to obtain access token")
+            return SlotsResponse(
+                success=False,
+                iana_timezone=user_tz,
+                available_slots=[],
+                errors="Failed to obtain access token",
+            )
 
         start_date = compute_start_date(now)
         end_date = compute_end_date(start_date, tool.date_range_days, policy.closing_hour)

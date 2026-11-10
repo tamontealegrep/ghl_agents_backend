@@ -9,7 +9,9 @@ BUNDLES = Path(__file__).resolve().parents[2] / "companies" / "babynova" / "bund
 
 
 def _paths(company):
-    app = create_app(Settings(host="127.0.0.1", port=8010, agents_dir=BUNDLES, admin_token=None, company=company))
+    app = create_app(
+        Settings(host="127.0.0.1", port=8010, agents_dir=BUNDLES, admin_token=None, company=company)
+    )
     return {route.path for route in app.routes if hasattr(route, "path")}
 
 

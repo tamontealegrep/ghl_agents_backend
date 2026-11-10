@@ -41,16 +41,31 @@ async def get_available_slots_ghl(req: SlotsRequest):
 
     cal = resolve_calendar(settings, req.calendar_type)
     if cal is None:
-        return SlotsResponse(success=False, iana_timezone=user_tz, available_slots=[], errors=unknown_calendar_message(settings, req.calendar_type))
+        return SlotsResponse(
+            success=False,
+            iana_timezone=user_tz,
+            available_slots=[],
+            errors=unknown_calendar_message(settings, req.calendar_type),
+        )
     tool, policy, env_suffix = cal.tool, cal.slots, cal.key
 
     try:
         now = datetime.now(ZoneInfo("UTC"))
 
         if not settings.ghl_token:
-            return SlotsResponse(success=False, iana_timezone=user_tz, available_slots=[], errors="Missing GHL_TOKEN in environment")
+            return SlotsResponse(
+                success=False,
+                iana_timezone=user_tz,
+                available_slots=[],
+                errors="Missing GHL_TOKEN in environment",
+            )
         if not tool.ghl_calendar_id:
-            return SlotsResponse(success=False, iana_timezone=user_tz, available_slots=[], errors=f"Missing FA_GHL_CALENDAR_ID_{env_suffix} in environment")
+            return SlotsResponse(
+                success=False,
+                iana_timezone=user_tz,
+                available_slots=[],
+                errors=f"Missing FA_GHL_CALENDAR_ID_{env_suffix} in environment",
+            )
 
         too_long = range_error(tool, f"FA_DATE_RANGE_DAYS_{env_suffix}")
         if too_long:
@@ -74,15 +89,26 @@ async def get_available_slots_ghl(req: SlotsRequest):
             return SlotsResponse(success=False, iana_timezone=user_tz, available_slots=[], errors=str(exc))
 
         starts = [datetime.fromisoformat(iso.replace("Z", "+00:00")) for iso in free_slots]
-        starts = [s for s in starts if s >= earliest and _meets_policy(s, s + timedelta(minutes=duration), policy)]
+        starts = [
+            s for s in starts if s >= earliest and _meets_policy(s, s + timedelta(minutes=duration), policy)
+        ]
 
         # Buffers: an existing appointment blocks its own time plus the pre/post buffers.
         if tool.pre_buffer_minutes or tool.post_buffer_minutes:
-            busy = await load_busy(ghl_list_events, settings, tool, earliest - timedelta(days=1), end_date + timedelta(days=1))
+            busy = await load_busy(
+                ghl_list_events, settings, tool, earliest - timedelta(days=1), end_date + timedelta(days=1)
+            )
             if busy:
                 starts = [
-                    s for s in starts
-                    if not conflicts_with_busy(s, s + timedelta(minutes=duration), busy, tool.pre_buffer_minutes, tool.post_buffer_minutes)
+                    s
+                    for s in starts
+                    if not conflicts_with_busy(
+                        s,
+                        s + timedelta(minutes=duration),
+                        busy,
+                        tool.pre_buffer_minutes,
+                        tool.post_buffer_minutes,
+                    )
                 ]
 
         result = []

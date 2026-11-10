@@ -19,15 +19,26 @@ _NATIONALITY_RE = re.compile(r"^[A-Z]{3}$")
 
 _DOCUMENT_ALIASES = {
     "cedula_ciudadania": [
-        "cedula_ciudadania", "cedula de ciudadania", "cedula ciudadania",
-        "c.c", "cc", "cedula de ciudadana",
+        "cedula_ciudadania",
+        "cedula de ciudadania",
+        "cedula ciudadania",
+        "c.c",
+        "cc",
+        "cedula de ciudadana",
     ],
     "cedula_extranjeria": [
-        "cedula_extranjeria", "cedula de extranjeria", "cedula de extrangeria",
-        "cedula extranjeria", "cedula extrangeria", "c.e", "ce",
+        "cedula_extranjeria",
+        "cedula de extranjeria",
+        "cedula de extrangeria",
+        "cedula extranjeria",
+        "cedula extrangeria",
+        "c.e",
+        "ce",
     ],
     "ppt": [
-        "ppt", "permiso de proteccion temporal", "permiso proteccion temporal",
+        "ppt",
+        "permiso de proteccion temporal",
+        "permiso proteccion temporal",
     ],
     "pasaporte": ["pasaporte", "passport", "pass"],
     "otro": ["otro"],
@@ -45,14 +56,13 @@ _APPROVED_REASONS = {
 
 
 def _split_document_types(raw: str | list[str] | None) -> list[str]:
-    """Normaliza el input (string separado por comas, 'y' o 'and', o lista) a una lista de strings sin vacios.
-    """
+    """Normaliza el input (string separado por comas, 'y' o 'and', o lista) a una lista de strings sin vacios."""
     if raw is None:
         return []
-    
+
     # Separadores comunes en lenguaje natural
     pattern = re.compile(r",\s*|\s+y\s+|\s+and\s+", re.IGNORECASE)
-    
+
     if isinstance(raw, list):
         items = []
         for item in raw:
@@ -67,8 +77,7 @@ def _split_document_types(raw: str | list[str] | None) -> list[str]:
 
 
 def _resolve_document_type(document_type: str) -> str | None:
-    """Busca el tipo canonico de un documento entre sus alias conocidos, o None si no se reconoce.
-    """
+    """Busca el tipo canonico de un documento entre sus alias conocidos, o None si no se reconoce."""
     doc_clean = document_type.lower()
     for tipo, variaciones in _DOCUMENT_ALIASES.items():
         if doc_clean in variaciones:
@@ -76,9 +85,10 @@ def _resolve_document_type(document_type: str) -> str | None:
     return None
 
 
-def check_documentation(raw_nationality: str | None, raw_document_type: str | list[str] | None) -> dict[str, bool | str | list[str]]:
-    """Valida nacionalidad + tipo(s) de documento y devuelve {approved, reason, normalized_documents}.
-    """
+def check_documentation(
+    raw_nationality: str | None, raw_document_type: str | list[str] | None
+) -> dict[str, bool | str | list[str]]:
+    """Valida nacionalidad + tipo(s) de documento y devuelve {approved, reason, normalized_documents}."""
     nationality = (raw_nationality or "").strip().upper()
 
     if not _NATIONALITY_RE.match(nationality):
@@ -93,7 +103,11 @@ def check_documentation(raw_nationality: str | None, raw_document_type: str | li
 
     document_types = _split_document_types(raw_document_type)
     if not document_types:
-        return {"approved": False, "reason": "Missing document type for foreign nationality", "normalized_documents": []}
+        return {
+            "approved": False,
+            "reason": "Missing document type for foreign nationality",
+            "normalized_documents": [],
+        }
 
     normalized_documents = []
     approved_type = None

@@ -27,7 +27,9 @@ async def find_appointment_ghl(req: FindAppointmentRequest):
     target_email = (req.contact_email or "").strip().lower()
     cal = resolve_calendar(settings, req.calendar_type) if (req.calendar_type or "").strip() else None
     if cal is None:
-        return FindAppointmentResponse(success=False, errors=unknown_calendar_message(settings, req.calendar_type))
+        return FindAppointmentResponse(
+            success=False, errors=unknown_calendar_message(settings, req.calendar_type)
+        )
     requested_cal = cal.key
 
     if not target_person and not target_email:
@@ -44,7 +46,9 @@ async def find_appointment_ghl(req: FindAppointmentRequest):
         if not settings.ghl_location_id:
             return FindAppointmentResponse(success=False, errors="Missing GHL_LOCATION_ID in environment")
         if not tool.ghl_calendar_id:
-            return FindAppointmentResponse(success=False, errors=f"Missing FA_GHL_CALENDAR_ID_{requested_cal} in environment")
+            return FindAppointmentResponse(
+                success=False, errors=f"Missing FA_GHL_CALENDAR_ID_{requested_cal} in environment"
+            )
 
         # Resolver contacto en GHL para intentar filtrar por contact_id
         upsert = await ghl_upsert_contact(
@@ -77,7 +81,9 @@ async def find_appointment_ghl(req: FindAppointmentRequest):
                 match = True
             else:
                 content = title.lower()
-                name_match = (tname and tname in content) or (tkeywords and all(kw in content for kw in tkeywords))
+                name_match = (tname and tname in content) or (
+                    tkeywords and all(kw in content for kw in tkeywords)
+                )
                 email_match = target_email and (target_email in content)
                 match = name_match or email_match
 
@@ -105,7 +111,9 @@ async def find_appointment_ghl(req: FindAppointmentRequest):
             return FindAppointmentResponse(success=True, appointments=found)
 
         target_search = target_person or target_email
-        return FindAppointmentResponse(success=False, errors=f"No appointments found for {target_search} in the next month.")
+        return FindAppointmentResponse(
+            success=False, errors=f"No appointments found for {target_search} in the next month."
+        )
 
     except Exception as e:
         return FindAppointmentResponse(success=False, errors=str(e))

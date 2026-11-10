@@ -28,8 +28,19 @@ from ..utils.parsing import (
 )
 
 ALLOWED_CITIES = {
-    "BOGOTA", "SOACHA", "ZIPAQUIRA", "CHIA", "MOSQUERA", "FUNZA", "CAJICA",
-    "MADRID", "LA CALERA", "CALERA", "COTA", "FACATATIVA", "SIBATE",
+    "BOGOTA",
+    "SOACHA",
+    "ZIPAQUIRA",
+    "CHIA",
+    "MOSQUERA",
+    "FUNZA",
+    "CAJICA",
+    "MADRID",
+    "LA CALERA",
+    "CALERA",
+    "COTA",
+    "FACATATIVA",
+    "SIBATE",
 }
 
 MIN_AGE = 18
@@ -139,19 +150,27 @@ def classify_surrogate_detailed(data: dict[str, Any], today: date | None = None)
         return "Rejected (City)", None
 
     # 3. Numero de hijos
-    children = parse_float(data.get("number_of_children")) if is_present(data.get("number_of_children")) else None
+    children = (
+        parse_float(data.get("number_of_children")) if is_present(data.get("number_of_children")) else None
+    )
     if children is None:
         return "Inconclusive", "number_of_children"
     if children < MIN_CHILDREN or children > MAX_CHILDREN:
         return "Rejected (Children)", None
 
     # 4. Ultimo parto (fecha y tipo de parto)
-    birth_verdict, birth_missing = _check_last_birth(data.get("last_birth_date"), data.get("birth_type"), today)
+    birth_verdict, birth_missing = _check_last_birth(
+        data.get("last_birth_date"), data.get("birth_type"), today
+    )
     if birth_verdict is not None:
         return birth_verdict, birth_missing
 
     # 5. Numero de cesareas
-    c_sections = parse_float(data.get("number_of_c_sections")) if is_present(data.get("number_of_c_sections")) else None
+    c_sections = (
+        parse_float(data.get("number_of_c_sections"))
+        if is_present(data.get("number_of_c_sections"))
+        else None
+    )
     if c_sections is None:
         return "Inconclusive", "number_of_c_sections"
     if c_sections > MAX_C_SECTIONS:

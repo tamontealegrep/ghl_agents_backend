@@ -26,7 +26,9 @@ async def find_appointment_google(req: FindAppointmentRequest):
     target_email = req.contact_email.strip().lower()
     cal = resolve_calendar(settings, req.calendar_type) if (req.calendar_type or "").strip() else None
     if cal is None:
-        return FindAppointmentResponse(success=False, errors=unknown_calendar_message(settings, req.calendar_type))
+        return FindAppointmentResponse(
+            success=False, errors=unknown_calendar_message(settings, req.calendar_type)
+        )
 
     if not target_person and not target_email:
         return FindAppointmentResponse(success=False, errors="You must provide the person's name or email")
@@ -42,7 +44,9 @@ async def find_appointment_google(req: FindAppointmentRequest):
         found_appointments = []
         target_lower = target_person.lower()
         # Palabras clave del nombre (ignorando conectores comunes)
-        target_keywords = [w for w in target_lower.split() if len(w) > 2 and w not in ("family", "aims", "and")]
+        target_keywords = [
+            w for w in target_lower.split() if len(w) > 2 and w not in ("family", "aims", "and")
+        ]
 
         for cal_type, config in calendars:
             if not (config.google_client_id and config.google_client_secret and config.google_refresh_token):
@@ -66,19 +70,19 @@ async def find_appointment_google(req: FindAppointmentRequest):
                 summary = event.get("summary", "")
                 description = event.get("description", "")
                 attendees = event.get("attendees", [])
-                
+
                 if "Family Aims" not in summary:
                     continue
 
                 content_to_search = (summary + " " + description).lower()
-                
+
                 # Name-based search
                 name_match = False
                 if target_person:
                     name_match = (target_lower in content_to_search) or (
                         all(kw in content_to_search for kw in target_keywords) if target_keywords else False
                     )
-                
+
                 # Email-based search (in content or attendees list)
                 email_match = False
                 if target_email:
@@ -89,7 +93,7 @@ async def find_appointment_google(req: FindAppointmentRequest):
                 if name_match or email_match:
                     start_raw = event["start"].get("dateTime", event["start"].get("date"))
                     start_dt = parse_iso(start_raw).astimezone(ZoneInfo(client_tz))
-                    
+
                     # Force English formatting for tool output
                     formatted_date = date_formatting.format_full_date(start_dt, "EN")
                     formatted_time = date_formatting.format_booking_time(start_dt, "EN")

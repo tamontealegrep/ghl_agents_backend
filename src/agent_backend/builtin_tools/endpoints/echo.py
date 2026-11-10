@@ -26,6 +26,7 @@ def _allowed_phones() -> set[str]:
     raw = os.getenv("ECHO_ALLOWED_PHONES", "")
     return {number.strip() for number in raw.split(",") if number.strip()}
 
+
 def _resolve_ghl_token() -> str:
     token = next((v for v in (os.getenv(env, "").strip() for env in DEFAULT_TOKEN_ENVS) if v), "")
 
@@ -187,22 +188,26 @@ def echo(payload: dict[str, Any]):
         if not ghl_token:
             raise HTTPException(
                 status_code=500,
-                detail=(
-                    "GHL_TOKEN is missing in environment or not defined in app.py"
-                ),
+                detail=("GHL_TOKEN is missing in environment or not defined in app.py"),
             )
 
         # Usar GhlAgentRequest para normalizar la entrada
         req = GhlAgentRequest(**payload)
-        
+
         contact_id = req.contact_id
         location_id = req.location_id
         incoming_text = req.message
         channel = normalize_channel(req.channel)
-        
+
         # Extraer teléfono para el filtro
         contact_obj = req.contact or {}
-        phone = str(contact_obj.get("phone") or "").replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+        phone = (
+            str(contact_obj.get("phone") or "")
+            .replace(" ", "")
+            .replace("-", "")
+            .replace("(", "")
+            .replace(")", "")
+        )
 
         _append_trace(
             "extracted_fields",
@@ -262,7 +267,11 @@ def echo(payload: dict[str, Any]):
                 "type_param": type_param,
             },
         )
-        messages = _get_messages(conversation_id, limit=10, type_param=type_param) if type_param else _get_messages(conversation_id, limit=10, type_param=None)
+        messages = (
+            _get_messages(conversation_id, limit=10, type_param=type_param)
+            if type_param
+            else _get_messages(conversation_id, limit=10, type_param=None)
+        )
         inbound_messages = [message for message in messages if message.get("direction") == "inbound"]
 
         _append_trace(

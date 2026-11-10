@@ -86,4 +86,3 @@ def test_check_documentation_missing_fields_defaults_to_empty():
     assert body["success"] is True
     assert body["approved"] is False
     assert "Format error" in body["reason"]
-

@@ -53,7 +53,9 @@ def mocked_google_calendar(monkeypatch):
 
 
 def test_available_slots_ivf_endpoint_success_shape(mocked_google_calendar):
-    response = client.post("/api/v1/get-available-slots-google", json={"iana_timezone": "America/Bogota", "calendar_type": "IVF"})
+    response = client.post(
+        "/api/v1/get-available-slots-google", json={"iana_timezone": "America/Bogota", "calendar_type": "IVF"}
+    )
     assert response.status_code == 200
 
     body = response.json()

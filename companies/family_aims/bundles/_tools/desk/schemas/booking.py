@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, Field
 
 
@@ -29,7 +28,9 @@ class BookAppointmentResponse(BaseModel):
 class FindAppointmentRequest(BaseModel):
     contact_name: str = Field(default="", examples=["John Doe"])
     contact_email: str = Field(default="", examples=["john@example.com"])
-    calendar_type: str = Field(examples=["IVF"], description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'")
+    calendar_type: str = Field(
+        examples=["IVF"], description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'"
+    )
     iana_timezone: str = Field(default="America/Bogota", examples=["America/Bogota"])
     language: str = Field(default="ES", examples=["ES", "EN", "PT"])
 
@@ -49,7 +50,9 @@ class FindAppointmentResponse(BaseModel):
 
 class CancelAppointmentRequest(BaseModel):
     event_id: str = Field(examples=["_60q30c1060o30e1g60o30hc160o30jbi60o30h9g60o30c1g60o3..."])
-    calendar_type: str = Field(examples=["IVF"], description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'")
+    calendar_type: str = Field(
+        examples=["IVF"], description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'"
+    )
     iana_timezone: str = Field(default="America/Bogota", examples=["America/Bogota"])
 
 
@@ -61,7 +64,9 @@ class CancelAppointmentResponse(BaseModel):
 
 class EditAppointmentRequest(BaseModel):
     event_id: str = Field(examples=["_60q30c1060o30e1g60o30hc160o30jbi60o30h9g60o30c1g60o3..."])
-    calendar_type: str = Field(examples=["IVF"], description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'")
+    calendar_type: str = Field(
+        examples=["IVF"], description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'"
+    )
     new_start_date: str | None = Field(default=None, examples=["2026-08-28T10:00:00-05:00"])
     new_duration: str | None = Field(default=None, examples=["30"])
     iana_timezone: str = Field(default="America/Bogota", examples=["America/Bogota"])

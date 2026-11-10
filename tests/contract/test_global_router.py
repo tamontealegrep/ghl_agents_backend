@@ -57,13 +57,13 @@ def test_render_global_router_emits_handler_nodes():
 
 def test_render_global_router_handler_carries_trigger():
     """
-A runtime's global-router matching needs the trigger phrases to check
+    A runtime's global-router matching needs the trigger phrases to check
 
-    an incoming reply against — GraphNode must carry them.
+        an incoming reply against — GraphNode must carry them.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     spec = build_minimal_agent_spec(handlers=[_handler("H_REPEAT", trigger=["repeat that", "say again"])])
     router = render_global_router(spec)
     assert router.handlers[0].trigger == ["repeat that", "say again"]
@@ -107,14 +107,14 @@ def test_handler_node_route_is_mechanical_via_dynamic_resume():
 
 def test_matching_trigger_mid_flow_resumes_at_original_current_state():
     """
-A message matches a HandlerModel.trigger mid-flow, and afterward the
+    A message matches a HandlerModel.trigger mid-flow, and afterward the
 
-    session resumes at the `current_state` that was active before the
-        handler fired.
+        session resumes at the `current_state` that was active before the
+            handler fired.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     spec = build_minimal_agent_spec(
         states=[build_message_state(state_id="ASKING_NAME", route=["GO_TO: CLOSE"])],
         handlers=[

@@ -49,14 +49,14 @@ from tests.contract.conftest import (
 
 def _build_artifact(spec) -> RuntimeArtifact:
     """
-Compile `spec`, round-trip it through JSON, and return the reloaded artifact.
+    Compile `spec`, round-trip it through JSON, and return the reloaded artifact.
 
-    Parameters:
-        spec: Description.
+        Parameters:
+            spec: Description.
 
-    Returns:
-        The result.
-"""
+        Returns:
+            The result.
+    """
     artifact = render_runtime_artifact(spec)
     json_text = json.dumps(artifact.to_dict())
     return runtime_artifact_from_dict(json.loads(json_text))
@@ -64,13 +64,13 @@ Compile `spec`, round-trip it through JSON, and return the reloaded artifact.
 
 class _FakeLLMClient:
     """
-Canned responses queued in the order the test expects them to be consumed.
+    Canned responses queued in the order the test expects them to be consumed.
 
-    The two-stage global router (2026-09-17) makes up to two `complete()`
-        calls per check: Stage 1 (`router_stage1_replies`, CONTINUE/INTERRUPT)
-        always runs; Stage 2 (`router_replies`, candidate index/NONE) only runs
-        when Stage 1 says INTERRUPT.
-"""
+        The two-stage global router (2026-09-17) makes up to two `complete()`
+            calls per check: Stage 1 (`router_stage1_replies`, CONTINUE/INTERRUPT)
+            always runs; Stage 2 (`router_replies`, candidate index/NONE) only runs
+            when Stage 1 says INTERRUPT.
+    """
 
     def __init__(self):
         self.router_stage1_replies: list[str] = []

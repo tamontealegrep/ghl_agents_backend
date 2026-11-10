@@ -31,7 +31,7 @@ def get_day_window_hours(weekday: int, day: int) -> tuple[int, int, int, int] | 
         window = entry.get("window")
         if not window:
             return None
-        
+
         # Calcula si es la 1Âª, 2Âª, 3Âª, 4Âª o 5Âª semana (ocurrencia del dÃ­a en el mes)
         nth_week = (day - 1) // 7 + 1
         if nth_week not in weeks:
@@ -152,17 +152,25 @@ def compute_available_slots(
             slot_start = cursor
             slot_end = slot_start + timedelta(minutes=duration_minutes)
 
-            blocked = conflicts_with_busy(slot_start, slot_end, busy_events, pre_buffer_minutes, post_buffer_minutes)
+            blocked = conflicts_with_busy(
+                slot_start, slot_end, busy_events, pre_buffer_minutes, post_buffer_minutes
+            )
             lunch = (lunch_fn or is_lunch_break)(slot_start, slot_end)
-            enough_notice = slot_start >= earliest if earliest is not None else valid_advance(slot_start, processing_day_key)
+            enough_notice = (
+                slot_start >= earliest
+                if earliest is not None
+                else valid_advance(slot_start, processing_day_key)
+            )
 
             if not blocked and not lunch and enough_notice:
-                result_slots.append(Slot(
-                    start_co=format_iso_with_offset(slot_start, BUSINESS_TZ),
-                    end_co=format_iso_with_offset(slot_end, BUSINESS_TZ),
-                    start_local=format_iso_with_offset(slot_start, user_tz),
-                    end_local=format_iso_with_offset(slot_end, user_tz),
-                ))
+                result_slots.append(
+                    Slot(
+                        start_co=format_iso_with_offset(slot_start, BUSINESS_TZ),
+                        end_co=format_iso_with_offset(slot_end, BUSINESS_TZ),
+                        start_local=format_iso_with_offset(slot_start, user_tz),
+                        end_local=format_iso_with_offset(slot_end, user_tz),
+                    )
+                )
 
             cursor = cursor + timedelta(minutes=step)
 

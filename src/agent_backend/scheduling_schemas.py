@@ -9,7 +9,9 @@ _CALENDAR = "Required. Calendar key (see GET /calendars), e.g. 'FT'. A call with
 
 
 class SlotsRequest(BaseModel):
-    iana_timezone: str = Field(default=DEFAULT_TZ, examples=["America/Bogota"], description="User timezone, e.g. 'America/Bogota'.")
+    iana_timezone: str = Field(
+        default=DEFAULT_TZ, examples=["America/Bogota"], description="User timezone, e.g. 'America/Bogota'."
+    )
     calendar_type: str | None = Field(default=None, examples=["FT"], description=_CALENDAR)
 
 

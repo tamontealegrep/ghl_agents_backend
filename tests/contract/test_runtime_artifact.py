@@ -202,17 +202,17 @@ _profiles_dir_required = pytest.mark.skipif(
 @_profiles_dir_required
 def test_every_real_channel_profile_has_a_policy_mapping():
     """
-Guards the exact failure this mapping exists to prevent: a new
+    Guards the exact failure this mapping exists to prevent: a new
 
-    `profiles/channels/*.yaml` added without a matching entry in
-        `POLICY_SECTIONS_BY_CHANNEL` would otherwise silently degrade — no
-        error, just fewer policy lines than the new channel's own sections
-        declare. This test fails loudly instead, at the moment the profile is
-        added, not months later against a real compiled agent.
+        `profiles/channels/*.yaml` added without a matching entry in
+            `POLICY_SECTIONS_BY_CHANNEL` would otherwise silently degrade — no
+            error, just fewer policy lines than the new channel's own sections
+            declare. This test fails loudly instead, at the moment the profile is
+            added, not months later against a real compiled agent.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     profile_names = {p.stem for p in _CHANNEL_PROFILES_DIR.glob("*.yaml")}
     assert profile_names, "No profiles/channels/*.yaml found — check _CHANNEL_PROFILES_DIR."
     missing = profile_names - set(POLICY_SECTIONS_BY_CHANNEL)
@@ -222,20 +222,22 @@ Guards the exact failure this mapping exists to prevent: a new
 @_profiles_dir_required
 def test_channel_mapping_only_uses_sections_the_real_profile_declares():
     """
-Cross-checks each `ChannelPolicyMapping` against the real channel
+    Cross-checks each `ChannelPolicyMapping` against the real channel
 
-    profile's own declared `policy_sections` — catches a typo'd or
-        stale section name in the mapping (e.g. referencing a section a
-        profile used to have) that `_flatten_policy_sections` would otherwise
-        swallow silently (`get_section` returns `[]` for an unknown name,
-        it never raises).
+        profile's own declared `policy_sections` — catches a typo'd or
+            stale section name in the mapping (e.g. referencing a section a
+            profile used to have) that `_flatten_policy_sections` would otherwise
+            swallow silently (`get_section` returns `[]` for an unknown name,
+            it never raises).
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     for profile_path in _CHANNEL_PROFILES_DIR.glob("*.yaml"):
         channel_name = profile_path.stem
-        declared = {s["name"] for s in yaml.safe_load(profile_path.read_text(encoding="utf-8"))["policy_sections"]}
+        declared = {
+            s["name"] for s in yaml.safe_load(profile_path.read_text(encoding="utf-8"))["policy_sections"]
+        }
         mapping = POLICY_SECTIONS_BY_CHANNEL[channel_name]
         used = set(mapping.say_sections) | set(mapping.judgment_sections)
         unknown = used - declared

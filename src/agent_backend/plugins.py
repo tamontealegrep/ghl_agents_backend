@@ -51,7 +51,9 @@ def _import_plugin(bundle: AgentBundle) -> ModuleType:
     Raises:
         ImportError: If the folder has no entrypoint or cannot be imported.
     """
-    entry = next((bundle.tools_dir / name for name in _ENTRYPOINTS if (bundle.tools_dir / name).is_file()), None)
+    entry = next(
+        (bundle.tools_dir / name for name in _ENTRYPOINTS if (bundle.tools_dir / name).is_file()), None
+    )
     if entry is None:
         raise ImportError(f"{bundle.tools_dir} needs one of {', '.join(_ENTRYPOINTS)}")
 
@@ -59,7 +61,9 @@ def _import_plugin(bundle: AgentBundle) -> ModuleType:
     for loaded in [m for m in sys.modules if m == name or m.startswith(f"{name}.")]:
         del sys.modules[loaded]
 
-    spec = importlib.util.spec_from_file_location(name, entry, submodule_search_locations=[str(bundle.tools_dir)])
+    spec = importlib.util.spec_from_file_location(
+        name, entry, submodule_search_locations=[str(bundle.tools_dir)]
+    )
     if spec is None or spec.loader is None:
         raise ImportError(f"Cannot import tool plugin from {entry}")
     module = importlib.util.module_from_spec(spec)

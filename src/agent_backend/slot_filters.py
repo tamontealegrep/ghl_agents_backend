@@ -69,7 +69,13 @@ def parse_busy(events: Iterable[Mapping[str, Any]]) -> list[Busy]:
     return busy
 
 
-def conflicts_with_busy(start: datetime, end: datetime, busy: Iterable[Busy], pre_buffer_minutes: int = 0, post_buffer_minutes: int = 0) -> bool:
+def conflicts_with_busy(
+    start: datetime,
+    end: datetime,
+    busy: Iterable[Busy],
+    pre_buffer_minutes: int = 0,
+    post_buffer_minutes: int = 0,
+) -> bool:
     """Tells whether a slot overlaps an existing appointment together with its buffers.
 
     Every existing appointment blocks its own time plus ``pre_buffer_minutes`` before it
@@ -112,7 +118,11 @@ def drop_conflicting(
     """
     busy = list(busy)
     length = timedelta(minutes=duration_minutes)
-    return [s for s in starts if not conflicts_with_busy(s, s + length, busy, pre_buffer_minutes, post_buffer_minutes)]
+    return [
+        s
+        for s in starts
+        if not conflicts_with_busy(s, s + length, busy, pre_buffer_minutes, post_buffer_minutes)
+    ]
 
 
 def drop_before(starts: Iterable[datetime], earliest: datetime) -> list[datetime]:

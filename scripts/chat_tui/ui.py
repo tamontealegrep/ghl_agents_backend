@@ -11,7 +11,7 @@ try:
     from rich.panel import Panel
     from rich.table import Table
 except ImportError as exc:  # pragma: no cover - only without the optional dependencies
-    raise SystemExit(f"Missing dependency ({exc.name}). Install it with: pip install -e \".[tui]\"") from exc
+    raise SystemExit(f'Missing dependency ({exc.name}). Install it with: pip install -e ".[tui]"') from exc
 
 from .common import STYLE, console
 from .harness import AgentHarness, _dumps
@@ -27,7 +27,13 @@ def render_history(state: SessionState) -> None:
         return
     for item in state.history:
         inbound = item.get("direction") == "inbound"
-        console.print(Panel.fit(str(item.get("body", "")), title="User" if inbound else state.agent_slug, border_style="green" if inbound else "magenta"))
+        console.print(
+            Panel.fit(
+                str(item.get("body", "")),
+                title="User" if inbound else state.agent_slug,
+                border_style="green" if inbound else "magenta",
+            )
+        )
 
 
 def render_traces(traces: list[ToolTrace]) -> None:
@@ -81,9 +87,13 @@ def render_chat_header(state: SessionState, session_file: Path) -> None:
     console.print(f"[bold cyan]{state.agent_slug}[/bold cyan] -- agente de {state.agent.company} (backend)")
     console.print(f"Sesion: {session_file}")
     console.print(f"thread_id={state.thread_id}")
-    console.print(f"Habla primero: {'el agente (saliente/voz)' if state.first_speaker == 'agent' else 'el usuario (entrante/texto)'}")
+    console.print(
+        f"Habla primero: {'el agente (saliente/voz)' if state.first_speaker == 'agent' else 'el usuario (entrante/texto)'}"
+    )
     on, off = "[green]ON[/green]", "[red]OFF[/red]"
-    console.print(f"Logs: LLM={on if state.log_llm else off}, HTTP={on if state.log_http else off}, TOOLS={on if state.log_tools else off}")
+    console.print(
+        f"Logs: LLM={on if state.log_llm else off}, HTTP={on if state.log_http else off}, TOOLS={on if state.log_tools else off}"
+    )
     if state.initial_slots:
         console.print(f"Slots iniciales: {json.dumps(state.initial_slots, ensure_ascii=False)}")
     if state.contact:
@@ -176,7 +186,11 @@ def _edit_contact_interactive(harness: AgentHarness, state: SessionState, sessio
     while True:
         choices = []
         for key in sorted(discovered.union(state.contact.keys())):
-            label = f"contact.{key} (actual: {state.contact[key]!r})" if key in state.contact else f"contact.{key} (sin valor)"
+            label = (
+                f"contact.{key} (actual: {state.contact[key]!r})"
+                if key in state.contact
+                else f"contact.{key} (sin valor)"
+            )
             choices.append(questionary.Choice(label, value=("field", key)))
         choices.append(questionary.Choice("Agregar campo nuevo…", value=("add-new", None)))
         choices.append(questionary.Choice("Terminar", value=("done", None)))
@@ -200,7 +214,9 @@ def _edit_contact_interactive(harness: AgentHarness, state: SessionState, sessio
             if not key:
                 continue
             if key == "__custom__":
-                key = questionary.text("Nombre del campo (solo la parte despues de contact.):", style=STYLE).ask()
+                key = questionary.text(
+                    "Nombre del campo (solo la parte despues de contact.):", style=STYLE
+                ).ask()
                 if not key:
                     continue
                 discovered.add(key)
@@ -234,7 +250,9 @@ def _edit_contact_interactive(harness: AgentHarness, state: SessionState, sessio
             _set_contact_field(harness, state, key, None if language == "__clear__" else language)
         else:
             current = state.contact.get(key)
-            value = questionary.text("Valor (texto):", default=str(current) if current is not None else "", style=STYLE).ask()
+            value = questionary.text(
+                "Valor (texto):", default=str(current) if current is not None else "", style=STYLE
+            ).ask()
             if value is None:
                 continue
             _set_contact_field(harness, state, key, value)
@@ -245,7 +263,9 @@ def _edit_contact_interactive(harness: AgentHarness, state: SessionState, sessio
 def _show_input_vars(harness: AgentHarness, state: SessionState) -> None:
     variables = harness.discover_input_variables()
     if not variables:
-        console.print("[yellow]Este agente no declara input_variables.yaml o no tiene variables de entrada.[/yellow]")
+        console.print(
+            "[yellow]Este agente no declara input_variables.yaml o no tiene variables de entrada.[/yellow]"
+        )
         return
     table = Table(title="Variables de entrada (input_variables.yaml)")
     table.add_column("Variable", style="cyan", no_wrap=True)
@@ -253,14 +273,22 @@ def _show_input_vars(harness: AgentHarness, state: SessionState) -> None:
     table.add_column("Descripcion", style="dim")
     for item in variables:
         name = item.get("name", "")
-        current = state.contact.get(name.split(".", 1)[1]) if name.startswith("contact.") else state.initial_slots.get(name)
+        current = (
+            state.contact.get(name.split(".", 1)[1])
+            if name.startswith("contact.")
+            else state.initial_slots.get(name)
+        )
         shown = json.dumps(current, ensure_ascii=False) if not isinstance(current, str) else current
         table.add_row(name, str(shown) if shown is not None else "(sin valor)", item.get("description", ""))
     console.print(table)
 
 
 def _edit_input_vars_interactive(harness: AgentHarness, state: SessionState, session_file: Path) -> None:
-    others = [it["name"] for it in harness.discover_input_variables() if it.get("name") and not it["name"].startswith("contact.")]
+    others = [
+        it["name"]
+        for it in harness.discover_input_variables()
+        if it.get("name") and not it["name"].startswith("contact.")
+    ]
     while True:
         choice = questionary.select(
             "Variables de entrada — que quieres editar?",
@@ -279,7 +307,9 @@ def _edit_input_vars_interactive(harness: AgentHarness, state: SessionState, ses
             _edit_slots_interactive(harness, state, session_file, extra_candidates=others)
 
 
-def _edit_slots_interactive(harness: AgentHarness, state: SessionState, session_file: Path, extra_candidates: list[str] | None = None) -> None:
+def _edit_slots_interactive(
+    harness: AgentHarness, state: SessionState, session_file: Path, extra_candidates: list[str] | None = None
+) -> None:
     """Interactive editor of the initial slots (JSON or plain text values; an empty value is null).
 
     Args:
@@ -308,11 +338,17 @@ def _edit_slots_interactive(harness: AgentHarness, state: SessionState, session_
         if choice in (None, "done"):
             break
         if choice == "set":
-            key = questionary.autocomplete("Nombre del slot (puedes escribir uno nuevo):", choices=names, style=STYLE).ask()
+            key = questionary.autocomplete(
+                "Nombre del slot (puedes escribir uno nuevo):", choices=names, style=STYLE
+            ).ask()
             if not key:
                 continue
             current = state.initial_slots.get(key)
-            raw = questionary.text("Valor (JSON o texto; vacío= null):", default=json.dumps(current, ensure_ascii=False) if current is not None else "", style=STYLE).ask()
+            raw = questionary.text(
+                "Valor (JSON o texto; vacío= null):",
+                default=json.dumps(current, ensure_ascii=False) if current is not None else "",
+                style=STYLE,
+            ).ask()
             value = _parse_slot_input(raw if raw is not None else "")
             state.initial_slots[key] = value
             if key not in names:
@@ -322,14 +358,20 @@ def _edit_slots_interactive(harness: AgentHarness, state: SessionState, session_
             if not state.initial_slots:
                 console.print("[yellow]No hay slots iniciales para eliminar.[/yellow]")
                 continue
-            key = questionary.select("Elige el slot a eliminar:", choices=sorted(state.initial_slots.keys()), style=STYLE).ask()
+            key = questionary.select(
+                "Elige el slot a eliminar:", choices=sorted(state.initial_slots.keys()), style=STYLE
+            ).ask()
             if key:
                 state.initial_slots.pop(key, None)
                 console.print(f"[cyan]Slot eliminado:[/cyan] {key}")
 
     save_session(state, session_file)
     if snapshot:
-        wants_restart = questionary.confirm("La conversacion ya inició. ¿Reiniciar ahora (/new) para aplicar los slots iniciales?", default=False, style=STYLE).ask()
+        wants_restart = questionary.confirm(
+            "La conversacion ya inició. ¿Reiniciar ahora (/new) para aplicar los slots iniciales?",
+            default=False,
+            style=STYLE,
+        ).ask()
         if wants_restart:
             _restart_thread(state)
             run_first_turn(harness, state, session_file)
@@ -342,7 +384,9 @@ def _restart_thread(state: SessionState) -> None:
     console.print(f"[cyan]Conversacion nueva. thread_id={state.thread_id}[/cyan]")
 
 
-def handle_chat_command(raw_text: str, state: SessionState, session_file: Path, harness: AgentHarness) -> bool:
+def handle_chat_command(
+    raw_text: str, state: SessionState, session_file: Path, harness: AgentHarness
+) -> bool:
     """Runs a ``/command``.
 
     Args:
@@ -395,7 +439,9 @@ def handle_chat_command(raw_text: str, state: SessionState, session_file: Path, 
         console.print(f"[cyan]Log de trafico HTTP {'encendido' if state.log_http else 'apagado'}[/cyan]")
     elif command == "/log-tools":
         state.log_tools = not state.log_tools
-        console.print(f"[cyan]Log de tools (vista automatica) {'encendido' if state.log_tools else 'apagado'}[/cyan]")
+        console.print(
+            f"[cyan]Log de tools (vista automatica) {'encendido' if state.log_tools else 'apagado'}[/cyan]"
+        )
     elif command == "/save":
         save_session(state, session_file)
         console.print(f"[cyan]Sesion guardada en {session_file}[/cyan]")
@@ -441,7 +487,11 @@ def run_first_turn(harness: AgentHarness, state: SessionState, session_file: Pat
     except Exception:
         contact_fields = []
     if contact_fields and not state.contact:
-        if questionary.confirm(f"Detecte {len(contact_fields)} posibles campos de contacto. ¿Quieres configurarlos ahora?", default=False, style=STYLE).ask():
+        if questionary.confirm(
+            f"Detecte {len(contact_fields)} posibles campos de contacto. ¿Quieres configurarlos ahora?",
+            default=False,
+            style=STYLE,
+        ).ask():
             _edit_contact_interactive(harness, state, session_file)
             render_chat_header(state, session_file)
 
@@ -450,7 +500,11 @@ def run_first_turn(harness: AgentHarness, state: SessionState, session_file: Pat
     except Exception:
         candidates = []
     if candidates and not state.initial_slots:
-        if questionary.confirm(f"Detecte {len(candidates)} posibles slots del grafo. ¿Quieres configurarlos ahora?", default=False, style=STYLE).ask():
+        if questionary.confirm(
+            f"Detecte {len(candidates)} posibles slots del grafo. ¿Quieres configurarlos ahora?",
+            default=False,
+            style=STYLE,
+        ).ask():
             _edit_slots_interactive(harness, state, session_file)
             render_chat_header(state, session_file)
 
@@ -460,7 +514,9 @@ def run_first_turn(harness: AgentHarness, state: SessionState, session_file: Pat
             opening_message = console.input("\n[bold green]Primer mensaje (usuario)> [/bold green]").strip()
             if not opening_message:
                 continue
-            if opening_message.startswith("/") and handle_chat_command(opening_message, state, session_file, harness):
+            if opening_message.startswith("/") and handle_chat_command(
+                opening_message, state, session_file, harness
+            ):
                 render_chat_header(state, session_file)
                 continue
             console.print(Panel.fit(opening_message, title="User", border_style="green"))
@@ -468,7 +524,9 @@ def run_first_turn(harness: AgentHarness, state: SessionState, session_file: Pat
             break
 
     try:
-        result = harness.start(state.thread_id, state.first_speaker, opening_message, initial_slots=state.initial_slots)
+        result = harness.start(
+            state.thread_id, state.first_speaker, opening_message, initial_slots=state.initial_slots
+        )
     except Exception as exc:
         console.print(Panel.fit(str(exc), title="Error", border_style="red"))
         return

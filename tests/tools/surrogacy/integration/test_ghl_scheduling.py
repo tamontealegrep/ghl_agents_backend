@@ -92,7 +92,13 @@ def _starts(body):
 
 def test_the_ghl_tools_are_mounted_next_to_the_google_ones():
     paths = {p.removeprefix("/api/v1/") for p in app.openapi()["paths"]}
-    for tool in ("get-available-slots", "book-appointment", "find-appointment", "edit-appointment", "cancel-appointment"):
+    for tool in (
+        "get-available-slots",
+        "book-appointment",
+        "find-appointment",
+        "edit-appointment",
+        "cancel-appointment",
+    ):
         assert f"{tool}-ghl" in paths and f"{tool}-google" in paths
 
 
@@ -127,8 +133,13 @@ def test_booking_titles_the_appointment_and_notifies_the_team(ghl):
 
     body = client.post(
         "/api/v1/book-appointment-ghl",
-        json={"calendar_type": "FT", "start_date": start.isoformat(), "contact_name": "ana gomez",
-              "contact_email": "ana@gmail.com", "contact_phone": "+573000000000"},
+        json={
+            "calendar_type": "FT",
+            "start_date": start.isoformat(),
+            "contact_name": "ana gomez",
+            "contact_email": "ana@gmail.com",
+            "contact_phone": "+573000000000",
+        },
     ).json()
 
     assert body["success"] is True and body["event_id"] == "evt1" and body["errors"] is None
@@ -143,6 +154,12 @@ def test_booking_outside_the_ft_booking_hours_is_rejected(ghl):
     ghl["free"] = [start]
     body = client.post(
         "/api/v1/book-appointment-ghl",
-        json={"calendar_type": "FT", "start_date": start.isoformat(), "contact_name": "Ana", "contact_email": "a@gmail.com", "contact_phone": "1"},
+        json={
+            "calendar_type": "FT",
+            "start_date": start.isoformat(),
+            "contact_name": "Ana",
+            "contact_email": "a@gmail.com",
+            "contact_phone": "1",
+        },
     ).json()
     assert body["success"] is False and body["reason"] == "invalid_hour"

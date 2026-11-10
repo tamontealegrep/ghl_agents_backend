@@ -67,7 +67,6 @@ def is_valid_email(raw_email: str) -> bool:
 
 
 def normalize_language(raw_language: str) -> str:
-    """ES o PT si vienen explícitos; cualquier otra cosa cae a inglés (igual que el JS original, que solo distinguía ES vs "todo lo demás").
-    """
+    """ES o PT si vienen explícitos; cualquier otra cosa cae a inglés (igual que el JS original, que solo distinguía ES vs "todo lo demás")."""
     lang = (raw_language or "").strip().upper()
     return lang if lang in ("ES", "PT") else "EN"

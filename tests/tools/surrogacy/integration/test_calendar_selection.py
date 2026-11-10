@@ -27,7 +27,9 @@ class _Settings:
     gmail = _Gmail()
     calendars = {
         "FT": CalendarSettings("ft-id", "ft-sec", "ft-ref", "ft@cal", ""),
-        "CONTROL": CalendarSettings("c-id", "c-sec", "c-ref", "control@cal", "", duration_minutes=20, date_range_days=7),
+        "CONTROL": CalendarSettings(
+            "c-id", "c-sec", "c-ref", "control@cal", "", duration_minutes=20, date_range_days=7
+        ),
         "SIN_CREDENCIALES": CalendarSettings("", "", "", "", ""),
     }
 
@@ -72,7 +74,12 @@ def test_every_scheduling_tool_fails_when_calendar_type_is_missing(monkeypatch):
     _use(monkeypatch, slots_endpoint, book_endpoint, cancel_endpoint, edit_endpoint, find_endpoint)
     payloads = {
         "get-available-slots-google": {},
-        "book-appointment-google": {"start_date": "2030-01-07T15:00:00Z", "contact_name": "Ana", "contact_email": "a@b.co", "contact_phone": "1"},
+        "book-appointment-google": {
+            "start_date": "2030-01-07T15:00:00Z",
+            "contact_name": "Ana",
+            "contact_email": "a@b.co",
+            "contact_phone": "1",
+        },
         "cancel-appointment-google": {"event_id": "e"},
         "edit-appointment-google": {"event_id": "e"},
         "find-appointment-google": {"contact_name": "Ana"},
@@ -89,7 +96,12 @@ def test_every_scheduling_tool_rejects_an_unknown_calendar_with_the_valid_keys(m
     _use(monkeypatch, slots_endpoint, book_endpoint, cancel_endpoint, edit_endpoint, find_endpoint)
     payloads = {
         "get-available-slots-google": {},
-        "book-appointment-google": {"start_date": "2030-01-07T15:00:00Z", "contact_name": "Ana", "contact_email": "a@b.co", "contact_phone": "1"},
+        "book-appointment-google": {
+            "start_date": "2030-01-07T15:00:00Z",
+            "contact_name": "Ana",
+            "contact_email": "a@b.co",
+            "contact_phone": "1",
+        },
         "cancel-appointment-google": {"event_id": "e"},
         "edit-appointment-google": {"event_id": "e"},
         "find-appointment-google": {"contact_name": "Ana"},
@@ -126,7 +138,9 @@ def test_cancel_and_find_use_the_requested_calendar(monkeypatch):
 def test_calendar_without_credentials_names_the_variables_to_define(monkeypatch):
     _use(monkeypatch, slots_endpoint)
 
-    body = client.post("/api/v1/get-available-slots-google", json={"calendar_type": "sin_credenciales"}).json()
+    body = client.post(
+        "/api/v1/get-available-slots-google", json={"calendar_type": "sin_credenciales"}
+    ).json()
 
     assert body["success"] is False
     assert "BN_GOOGLE_CLIENT_ID_SIN_CREDENCIALES" in body["errors"]
@@ -173,5 +187,7 @@ def test_booking_in_a_new_calendar_uses_its_hours_title_and_notifies_the_team(mo
     assert sent and sent[0][0] == "team@example.org" and sent[0][1].startswith("CONTROL - ")
 
     # The default hours end at 18:00: 19:00 is rejected for this calendar.
-    late = client.post("/api/v1/book-appointment-google", json={**payload, "start_date": _monday_at(19)}).json()
+    late = client.post(
+        "/api/v1/book-appointment-google", json={**payload, "start_date": _monday_at(19)}
+    ).json()
     assert late["reason"] == "invalid_hour"

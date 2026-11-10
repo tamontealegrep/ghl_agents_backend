@@ -17,13 +17,16 @@ from ....services.slot_rules import earliest_start, load_busy
 
 router = APIRouter()
 
+
 @router.post("/edit-appointment-ghl", response_model=EditAppointmentResponse)
 async def edit_appointment_ghl(req: EditAppointmentRequest):
     settings = get_settings()
 
     cal = resolve_calendar(settings, req.calendar_type)
     if cal is None:
-        return EditAppointmentResponse(success=False, errors=unknown_calendar_message(settings, req.calendar_type))
+        return EditAppointmentResponse(
+            success=False, errors=unknown_calendar_message(settings, req.calendar_type)
+        )
     tool, policy = cal.tool, cal.booking
 
     try:
@@ -43,7 +46,9 @@ async def edit_appointment_ghl(req: EditAppointmentRequest):
             try:
                 start_dt = engine.parse_start_date(req.new_start_date)
             except ValueError:
-                return EditAppointmentResponse(success=False, errors="new_start_date is not a valid ISO 8601 date")
+                return EditAppointmentResponse(
+                    success=False, errors="new_start_date is not a valid ISO 8601 date"
+                )
 
             if not engine.is_future(start_dt, now):
                 return EditAppointmentResponse(success=False, errors="The new date cannot be in the past")
@@ -52,25 +57,41 @@ async def edit_appointment_ghl(req: EditAppointmentRequest):
             hour = get_hour_in_tz(start_dt, "America/Bogota")
             minute = start_dt.astimezone(ZoneInfo("America/Bogota")).minute
             if not policy.is_valid_business_hour(weekday, hour, minute):
-                return EditAppointmentResponse(success=False, errors="The requested new time is outside business hours")
+                return EditAppointmentResponse(
+                    success=False, errors="The requested new time is outside business hours"
+                )
 
             # Duración: usar la enviada o la del .env si no viene
-            duration_int = engine.parse_duration_minutes(applied_duration) if applied_duration else int(tool.duration_minutes)
+            duration_int = (
+                engine.parse_duration_minutes(applied_duration)
+                if applied_duration
+                else int(tool.duration_minutes)
+            )
             applied_duration = str(duration_int)
             end_dt = engine.compute_end_date(start_dt, duration_int)
 
             if start_dt < earliest_start(now, tool):
-                return EditAppointmentResponse(success=False, errors="The requested new time does not meet the minimum advance notice")
+                return EditAppointmentResponse(
+                    success=False, errors="The requested new time does not meet the minimum advance notice"
+                )
 
             # Validate against the calendar's other appointments and their buffers (excluding this event)
             if tool.ghl_calendar_id:
                 busy = await load_busy(
-                    ghl_list_events, settings, tool,
-                    start_dt - timedelta(minutes=tool.post_buffer_minutes), end_dt + timedelta(minutes=tool.pre_buffer_minutes),
+                    ghl_list_events,
+                    settings,
+                    tool,
+                    start_dt - timedelta(minutes=tool.post_buffer_minutes),
+                    end_dt + timedelta(minutes=tool.pre_buffer_minutes),
                     exclude_event_id=req.event_id,
                 )
-                if busy and conflicts_with_busy(start_dt, end_dt, busy, tool.pre_buffer_minutes, tool.post_buffer_minutes):
-                    return EditAppointmentResponse(success=False, errors="The requested new time is already taken by another appointment.")
+                if busy and conflicts_with_busy(
+                    start_dt, end_dt, busy, tool.pre_buffer_minutes, tool.post_buffer_minutes
+                ):
+                    return EditAppointmentResponse(
+                        success=False,
+                        errors="The requested new time is already taken by another appointment.",
+                    )
 
         # 2) Actualizar en GHL
         updated = await ghl_update_appointment(
@@ -80,7 +101,9 @@ async def edit_appointment_ghl(req: EditAppointmentRequest):
             end_dt=end_dt,
         )
         if not isinstance(updated, dict):
-            return EditAppointmentResponse(success=False, errors="Could not update the event. Please verify the event_id.")
+            return EditAppointmentResponse(
+                success=False, errors="Could not update the event. Please verify the event_id."
+            )
 
         # 3) Formato de respuesta
         local_tz = req.iana_timezone or "America/Bogota"

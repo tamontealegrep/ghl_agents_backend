@@ -53,7 +53,9 @@ def _plain_hours(key: str, raw: Mapping[Any, Any]) -> dict[int, Window]:
     hours: dict[int, Window] = {}
     for weekday, window in (raw or {}).items():
         if not (isinstance(window, (list, tuple)) and len(window) == 4):
-            raise ValueError(f"calendars.yaml: hours for {key}, weekday {weekday} must be [start_h, start_m, end_h, end_m]")
+            raise ValueError(
+                f"calendars.yaml: hours for {key}, weekday {weekday} must be [start_h, start_m, end_h, end_m]"
+            )
         hours[int(weekday)] = tuple(window)  # type: ignore[assignment]
     return hours
 
@@ -168,7 +170,9 @@ class ConfiguredSlots:
         Returns:
             The free slots.
         """
-        return slot_calculator.compute_available_slots(window_fn=self._window, lunch_fn=self._is_lunch, **kwargs)
+        return slot_calculator.compute_available_slots(
+            window_fn=self._window, lunch_fn=self._is_lunch, **kwargs
+        )
 
 
 class FtHours:
@@ -210,7 +214,9 @@ def available_keys(settings: Any) -> list[str]:
     return list(settings.calendars)
 
 
-def resolve_calendar(settings: Any, calendar_type: str | None, config: Mapping[str, Any] | None = None) -> CalendarContext | None:
+def resolve_calendar(
+    settings: Any, calendar_type: str | None, config: Mapping[str, Any] | None = None
+) -> CalendarContext | None:
     """Finds a calendar by the ``calendar_type`` a tool call sent.
 
     Args:

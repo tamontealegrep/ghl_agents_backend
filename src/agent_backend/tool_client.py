@@ -45,7 +45,9 @@ def candidate_urls(url: str, route_suffixes: tuple[str, ...] = ()) -> list[str]:
     suffixes = () if kebab in _builtin_tool_names() else route_suffixes
     suffixed = [f"{head}/{kebab}{s}" for s in suffixes if not kebab.endswith(s)]
     paths = [*suffixed, f"{head}/{kebab}", f"{BUILTIN_TOOLS_PREFIX}/{kebab}"]
-    return [urlunsplit((parts.scheme, parts.netloc, p, parts.query, parts.fragment)) for p in dict.fromkeys(paths)]
+    return [
+        urlunsplit((parts.scheme, parts.netloc, p, parts.query, parts.fragment)) for p in dict.fromkeys(paths)
+    ]
 
 
 class ToolRoutingClient(httpx.Client):
@@ -79,7 +81,11 @@ class ToolRoutingClient(httpx.Client):
             The first non-404 response, or the first response if all were 404.
         """
         requested = str(url)
-        candidates = [self._resolved[requested]] if requested in self._resolved else candidate_urls(requested, self._route_suffixes)
+        candidates = (
+            [self._resolved[requested]]
+            if requested in self._resolved
+            else candidate_urls(requested, self._route_suffixes)
+        )
 
         first_response: httpx.Response | None = None
         for candidate in candidates:

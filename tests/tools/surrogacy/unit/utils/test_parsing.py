@@ -7,6 +7,7 @@ from surrogacy.utils.parsing import is_present, normalize, parse_boolean, parse_
 # normalize
 # ---------------------------------------------------------------------------
 
+
 def test_normalize_strips_accents_and_uppercases():
     assert normalize("bogotÃ¡") == "BOGOTA"
 
@@ -23,6 +24,7 @@ def test_normalize_none_returns_empty_string():
 # is_present
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("value", [None, "", "   "])
 def test_is_present_false_for_missing_values(value):
     assert is_present(value) is False
@@ -36,6 +38,7 @@ def test_is_present_true_for_falsy_but_present_values(value):
 # ---------------------------------------------------------------------------
 # parse_boolean
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("value", [True, "true", "TRUE", "1", "si", "SI", "yes"])
 def test_parse_boolean_true_variants(value):
@@ -56,6 +59,7 @@ def test_parse_boolean_unrecognized_returns_none(value):
 # parse_float
 # ---------------------------------------------------------------------------
 
+
 def test_parse_float_valid_numeric_string():
     assert parse_float("22.5") == 22.5
 
@@ -71,6 +75,7 @@ def test_parse_float_none_returns_none():
 # ---------------------------------------------------------------------------
 # parse_flexible_date
 # ---------------------------------------------------------------------------
+
 
 def test_parse_flexible_date_year_first_format():
     assert parse_flexible_date("2023/01/15") == date(2023, 1, 15)
@@ -99,4 +104,3 @@ def test_parse_flexible_date_none_returns_none():
 def test_parse_flexible_date_accepts_python_date_instance():
     d = date(2023, 1, 15)
     assert parse_flexible_date(d) == d
-

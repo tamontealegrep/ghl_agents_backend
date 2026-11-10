@@ -21,9 +21,13 @@ async def cancel_appointment_ghl(req: CancelAppointmentRequest):
     try:
         success = await ghl_delete_appointment(settings.ghl_token, req.event_id)
         if success:
-            return CancelAppointmentResponse(success=True, message="The appointment has been successfully canceled.")
+            return CancelAppointmentResponse(
+                success=True, message="The appointment has been successfully canceled."
+            )
         else:
-            return CancelAppointmentResponse(success=False, errors="Could not delete the event. Please verify the event_id.")
+            return CancelAppointmentResponse(
+                success=False, errors="Could not delete the event. Please verify the event_id."
+            )
 
     except Exception as e:
         return CancelAppointmentResponse(success=False, errors=str(e))

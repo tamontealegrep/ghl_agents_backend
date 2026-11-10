@@ -62,9 +62,13 @@ def test_ghl_slots_outside_the_window_the_lunch_break_and_holidays_are_dropped(m
 
     monkeypatch.setattr(endpoint, "get_settings", lambda: _FakeSettings())
     monkeypatch.setattr(endpoint, "ghl_get_available_slots", _fake_free_slots)
-    monkeypatch.setattr(endpoint, "is_holiday", lambda y, m, d: (y, m, d) == (holiday.year, holiday.month, holiday.day))
+    monkeypatch.setattr(
+        endpoint, "is_holiday", lambda y, m, d: (y, m, d) == (holiday.year, holiday.month, holiday.day)
+    )
 
-    response = client.post("/api/v1/get-available-slots-ghl", json={"iana_timezone": "America/Bogota", "calendar_type": "IVF"})
+    response = client.post(
+        "/api/v1/get-available-slots-ghl", json={"iana_timezone": "America/Bogota", "calendar_type": "IVF"}
+    )
 
     assert response.status_code == 200
     starts = [slot["start_co"] for slot in response.json()["available_slots"]]

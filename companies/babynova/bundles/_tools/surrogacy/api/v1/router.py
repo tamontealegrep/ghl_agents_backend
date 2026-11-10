@@ -30,4 +30,3 @@ api_router.include_router(health.router, tags=["health"])
 # Para agregar un endpoint nuevo:
 #   1. crear tools.surrogacy/api/v1/endpoints/mi_endpoint.py con su APIRouter
 #   2. importarlo arriba y aÃ±adir: api_router.include_router(mi_endpoint.router, tags=["mi_endpoint"])
-

@@ -13,7 +13,10 @@ def test_candidates_try_agent_routes_before_builtin():
 
 def test_configured_suffix_is_tried_first():
     urls = candidate_urls("http://h:1/agents/fa/tools/book_appointment", ("-ghl",))
-    assert urls[:2] == ["http://h:1/agents/fa/tools/book-appointment-ghl", "http://h:1/agents/fa/tools/book-appointment"]
+    assert urls[:2] == [
+        "http://h:1/agents/fa/tools/book-appointment-ghl",
+        "http://h:1/agents/fa/tools/book-appointment",
+    ]
 
 
 def test_suffix_already_present_is_not_doubled():

@@ -31,13 +31,13 @@ def _respect_filter_off_by_default(monkeypatch):
 
 class _FakeLLMClient:
     """
-Replies consumed in order — one per `complete()` call. The two-stage
+    Replies consumed in order — one per `complete()` call. The two-stage
 
-    router (2026-09-17) makes up to two calls per `match_global_router`
-        invocation (Stage 1: CONTINUE/INTERRUPT, Stage 2: candidate index/NONE,
-        only reached when Stage 1 says INTERRUPT), so a single fixed reply no
-        longer models every caller.
-"""
+        router (2026-09-17) makes up to two calls per `match_global_router`
+            invocation (Stage 1: CONTINUE/INTERRUPT, Stage 2: candidate index/NONE,
+            only reached when Stage 1 says INTERRUPT), so a single fixed reply no
+            longer models every caller.
+    """
 
     def __init__(self, replies: list[str]):
         self.replies = list(replies)
@@ -61,22 +61,25 @@ def _ctx(
     slots: dict | None = None,
 ) -> LLMContext:
     """
-Build the `LLMContext` `match_global_router`/`handle_global_router_match` now take
+    Build the `LLMContext` `match_global_router`/`handle_global_router_match` now take
 
-    (2026-09-17) — every runtime LLM decision shares this one type instead of each call
-        site's own hand-picked parameter list.
+        (2026-09-17) — every runtime LLM decision shares this one type instead of each call
+            site's own hand-picked parameter list.
 
-    Parameters:
-        last_user_message: Description.
-        pending_question: Description.
-        history: Description.
-        slots: Description.
+        Parameters:
+            last_user_message: Description.
+            pending_question: Description.
+            history: Description.
+            slots: Description.
 
-    Returns:
-        The result.
-"""
+        Returns:
+            The result.
+    """
     return LLMContext(
-        slots=slots or {}, history=history or [], last_user_message=last_user_message, pending_question=pending_question
+        slots=slots or {},
+        history=history or [],
+        last_user_message=last_user_message,
+        pending_question=pending_question,
     )
 
 
@@ -108,11 +111,11 @@ def test_no_candidates_returns_none_without_calling_the_model():
 
 def test_stage_one_continue_returns_none_without_a_second_call():
     """
-The common case: one call, not two.
+    The common case: one call, not two.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(replies=["CONTINUE"])
     router = GlobalRouterDefinition(handlers=[_handler_node()], faqs=[])
     assert match_global_router(client, router, _ctx("my name is Alex")) is None
@@ -145,13 +148,17 @@ def test_language_change_handler_is_prioritized_before_faq_and_continuation():
     client = _FakeLLMClient(replies=["LANGUAGE_CHANGE"])
 
     # Rule-based detection triggers on "no hablo ingles"
-    match = match_global_router(client, router, _ctx("no hablo ingles", pending_question="Can you travel to Bogotá?"))
+    match = match_global_router(
+        client, router, _ctx("no hablo ingles", pending_question="Can you travel to Bogotá?")
+    )
     assert match is not None
     assert match[0] == "handler"
 
     # LLM fallback path when message is not rule-matched
     client2 = _FakeLLMClient(replies=["LANGUAGE_CHANGE"])
-    match2 = match_global_router(client2, router, _ctx("unrecognized phrase", pending_question="Can you travel to Bogotá?"))
+    match2 = match_global_router(
+        client2, router, _ctx("unrecognized phrase", pending_question="Can you travel to Bogotá?")
+    )
     assert match2 is not None
     assert len(client2.prompts) == 1
     assert "LANGUAGE PRIORITY" in client2.prompts[0]
@@ -183,20 +190,20 @@ def test_pending_question_is_omitted_from_both_stage_prompts_when_not_given():
 
 def test_pending_question_is_included_in_both_stage_prompts_when_given():
     """
-Regression test: without the pending question's own text, the model
+    Regression test: without the pending question's own text, the model
 
-    has nothing to judge "is this clearly answering it" against — it can
-        only compare the reply to candidate phrases in isolation, which
-        reliably over-matches a short, on-topic answer against a semantically
-        related trigger (confirmed on real content: "soy venezolana" answering
-        a nationality question was matched to an unrelated "soy extranjero"
-        FAQ). This only checks the prompt carries the context through; the
-        actual judgment call is the model's, exercised live against real
-        content, not unit-testable with a fake client.
+        has nothing to judge "is this clearly answering it" against — it can
+            only compare the reply to candidate phrases in isolation, which
+            reliably over-matches a short, on-topic answer against a semantically
+            related trigger (confirmed on real content: "soy venezolana" answering
+            a nationality question was matched to an unrelated "soy extranjero"
+            FAQ). This only checks the prompt carries the context through; the
+            actual judgment call is the model's, exercised live against real
+            content, not unit-testable with a fake client.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(replies=["INTERRUPT", "NONE"])
     router = GlobalRouterDefinition(handlers=[_handler_node()], faqs=[])
     match_global_router(client, router, _ctx("soy venezolana", pending_question="¿Cuál es tu nacionalidad?"))
@@ -206,20 +213,20 @@ Regression test: without the pending question's own text, the model
 
 def test_stage_one_prompt_warns_against_treating_a_bare_short_reply_as_an_interrupt():
     """
-Regression test: even with the pending question grounding above, a
+    Regression test: even with the pending question grounding above, a
 
-    bare "no" answering "¿Tienes idea de qué trata la gestación subrogada?"
-        was still matched 6/6 live runs against handler H_NO_INT (triggers on
-        "no me interesa", "no quiero continuar") — a single word is inherently
-        ambiguous between "no [I don't know]" and "no [I'm not interested]", and
-        no real trigger phrase in this agent's content is itself a bare single
-        word, so a short reply should essentially never be judged an interrupt.
-        Fixed with an explicit rule in Stage 1; only checks the prompt carries
-        it, same caveat as above.
+        bare "no" answering "¿Tienes idea de qué trata la gestación subrogada?"
+            was still matched 6/6 live runs against handler H_NO_INT (triggers on
+            "no me interesa", "no quiero continuar") — a single word is inherently
+            ambiguous between "no [I don't know]" and "no [I'm not interested]", and
+            no real trigger phrase in this agent's content is itself a bare single
+            word, so a short reply should essentially never be judged an interrupt.
+            Fixed with an explicit rule in Stage 1; only checks the prompt carries
+            it, same caveat as above.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(replies=["CONTINUE"])
     router = GlobalRouterDefinition(handlers=[_handler_node()], faqs=[])
     match_global_router(client, router, _ctx("no sé"))
@@ -228,15 +235,15 @@ Regression test: even with the pending question grounding above, a
 
 def test_history_is_included_in_both_stage_prompts():
     """
-Requested directly, 2026-09-17 — a bare `pending_question` alone
+    Requested directly, 2026-09-17 — a bare `pending_question` alone
 
-    isn't enough context in every case; recent turns let the model see a
-        reply continuing a topic raised a couple of turns back, not just the
-        single most recent question.
+        isn't enough context in every case; recent turns let the model see a
+            reply continuing a topic raised a couple of turns back, not just the
+            single most recent question.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(replies=["INTERRUPT", "NONE"])
     router = GlobalRouterDefinition(handlers=[_handler_node()], faqs=[])
     history = ["agent: ¿Cuál es tu nacionalidad?", "user: soy de Chile"]
@@ -247,14 +254,14 @@ Requested directly, 2026-09-17 — a bare `pending_question` alone
 
 def test_slots_are_included_in_both_stage_prompts():
     """
-`ctx.slots` (2026-09-17) — the router previously never saw known slot
+    `ctx.slots` (2026-09-17) — the router previously never saw known slot
 
-    values at all, unlike almost every other runtime LLM decision; sharing
-        one `LLMContext` type closes that gap for free.
+        values at all, unlike almost every other runtime LLM decision; sharing
+            one `LLMContext` type closes that gap for free.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(replies=["INTERRUPT", "NONE"])
     router = GlobalRouterDefinition(handlers=[_handler_node()], faqs=[])
     match_global_router(client, router, _ctx("algo mas", slots={"nationality": "chilena"}))
@@ -264,15 +271,15 @@ def test_slots_are_included_in_both_stage_prompts():
 
 def test_uses_the_deterministic_default_temperature():
     """
-A routing match/no-match is a factual judgment call, not creative
+    A routing match/no-match is a factual judgment call, not creative
 
-    writing — relies on `complete()`'s new default (`temperature=0.0`,
-        2026-09-17) rather than requesting one explicitly, since every caller
-        but `render_say`'s SAY paraphrasing wants exactly that default.
+        writing — relies on `complete()`'s new default (`temperature=0.0`,
+            2026-09-17) rather than requesting one explicitly, since every caller
+            but `render_say`'s SAY paraphrasing wants exactly that default.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(replies=["CONTINUE"])
     router = GlobalRouterDefinition(handlers=[_handler_node()], faqs=[])
     match_global_router(client, router, _ctx("whatever"))
@@ -306,7 +313,10 @@ def test_handler_match_calls_on_say_with_the_node_and_its_say_lines():
     seen = []
     match = ("handler", _handler_node(say=["Sure, repeating now."]))
     handle_global_router_match(
-        match, _ctx(""), resolve_edges=lambda edges, ctx: None, on_say=lambda n, say: seen.append((n.node_id, say))
+        match,
+        _ctx(""),
+        resolve_edges=lambda edges, ctx: None,
+        on_say=lambda n, say: seen.append((n.node_id, say)),
     )
     assert seen == [("H_REPEAT", ["Sure, repeating now."])]
 
@@ -322,16 +332,19 @@ def test_handler_match_resolves_route_via_injected_resolve_edges():
 
 def test_handler_match_uses_the_matched_handler_s_own_goal_and_do_for_resolve_edges():
     """
-The `ctx` passed to `resolve_edges` for a matched handler must carry
+    The `ctx` passed to `resolve_edges` for a matched handler must carry
 
-    THAT handler's own `goal`/`do` (2026-09-17) — not the originating
-        question node's, which `handle_global_router_match` never even sees.
+        THAT handler's own `goal`/`do` (2026-09-17) — not the originating
+            question node's, which `handle_global_router_match` never even sees.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     route_edges = [GraphEdge(target="OTHER_STATE", condition_text=None, is_mechanical=True)]
-    match = ("handler", _handler_node(route=route_edges, goal=["Handle a repeat request."], do=["Say it again."]))
+    match = (
+        "handler",
+        _handler_node(route=route_edges, goal=["Handle a repeat request."], do=["Say it again."]),
+    )
     seen_ctx = {}
 
     def resolve_edges(edges, ctx):
@@ -339,7 +352,9 @@ The `ctx` passed to `resolve_edges` for a matched handler must carry
         seen_ctx["do"] = ctx.do
         return "OTHER_STATE"
 
-    handle_global_router_match(match, _ctx("", pending_question="original question"), resolve_edges=resolve_edges)
+    handle_global_router_match(
+        match, _ctx("", pending_question="original question"), resolve_edges=resolve_edges
+    )
     assert seen_ctx == {"goal": ["Handle a repeat request."], "do": ["Say it again."]}
 
 
@@ -347,7 +362,9 @@ def test_handler_match_falls_back_to_fallback_edges_when_route_resolves_to_none(
     fallback_edges = [GraphEdge(target="FALLBACK_STATE", condition_text=None, is_mechanical=True)]
     match = ("handler", _handler_node(route=[], fallback=fallback_edges))
     target = handle_global_router_match(
-        match, _ctx(""), resolve_edges=lambda edges, ctx: "FALLBACK_STATE" if edges is fallback_edges else None
+        match,
+        _ctx(""),
+        resolve_edges=lambda edges, ctx: "FALLBACK_STATE" if edges is fallback_edges else None,
     )
     assert target == "FALLBACK_STATE"
 
@@ -381,7 +398,9 @@ def test_on_say_not_called_when_say_is_empty():
 
 def test_has_unanswered_side_question_true_for_yes_reply():
     client = _FakeLLMClient(["YES"])
-    assert has_unanswered_side_question(client, _ctx("Soy pareja heterosexual. ¿Eso afecta el proceso?")) is True
+    assert (
+        has_unanswered_side_question(client, _ctx("Soy pareja heterosexual. ¿Eso afecta el proceso?")) is True
+    )
 
 
 def test_has_unanswered_side_question_false_for_no_reply():
@@ -410,9 +429,7 @@ def test_has_unanswered_side_question_detects_question_without_marks():
 
 def test_has_unanswered_side_question_prompt_includes_pending_question_and_exclusions():
     client = _FakeLLMClient(["NO"])
-    has_unanswered_side_question(
-        client, _ctx("¿yo? soy de Colombia", pending_question="¿De dónde eres?")
-    )
+    has_unanswered_side_question(client, _ctx("¿yo? soy de Colombia", pending_question="¿De dónde eres?"))
     assert "¿De dónde eres?" in client.prompts[0]
     assert "even if phrased as a question" in client.prompts[0]
 
@@ -430,7 +447,9 @@ def test_language_switch_by_content_still_checks_faqs():
     slots = {"preferred_language": "English"}
 
     match = match_global_router(
-        client, router, _ctx("quiero saber mas del metodo ropa", slots=slots, pending_question="IVF or surrogacy?")
+        client,
+        router,
+        _ctx("quiero saber mas del metodo ropa", slots=slots, pending_question="IVF or surrogacy?"),
     )
 
     assert slots["preferred_language"] == "Spanish"
@@ -485,11 +504,30 @@ def test_handler_model_accepts_disabled_in_and_rejects_blank_entries():
 
     from agent_runtime.dsl.schemas import HandlerModel
 
-    handler = HandlerModel(type="decision", wait="no", fallback=["GO_TO: SC__SC_S"], handler_id="H_X", trigger=["x"], disabled_in=["SC"])
+    handler = HandlerModel(
+        type="decision",
+        wait="no",
+        fallback=["GO_TO: SC__SC_S"],
+        handler_id="H_X",
+        trigger=["x"],
+        disabled_in=["SC"],
+    )
     assert handler.disabled_in == ["SC"]
-    assert HandlerModel(type="decision", wait="no", fallback=["GO_TO: SC__SC_S"], handler_id="H_X", trigger=["x"]).disabled_in == []
+    assert (
+        HandlerModel(
+            type="decision", wait="no", fallback=["GO_TO: SC__SC_S"], handler_id="H_X", trigger=["x"]
+        ).disabled_in
+        == []
+    )
     with pytest.raises(ValueError):
-        HandlerModel(type="decision", wait="no", fallback=["GO_TO: SC__SC_S"], handler_id="H_X", trigger=["x"], disabled_in=[" "])
+        HandlerModel(
+            type="decision",
+            wait="no",
+            fallback=["GO_TO: SC__SC_S"],
+            handler_id="H_X",
+            trigger=["x"],
+            disabled_in=[" "],
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -510,10 +548,14 @@ def test_language_detection_by_rules_is_the_default(monkeypatch):
 
 def test_an_explicit_language_request_is_caught_by_rules_without_the_model(monkeypatch):
     monkeypatch.delenv("GLOBAL_ROUTER_LANGUAGE_DETECTION", raising=False)
-    router = GlobalRouterDefinition(handlers=[_handler_node("H_LANG_CHANGE", trigger=["hablame en español"])], faqs=[])
+    router = GlobalRouterDefinition(
+        handlers=[_handler_node("H_LANG_CHANGE", trigger=["hablame en español"])], faqs=[]
+    )
     client = _FakeLLMClient(replies=[])
     match = match_global_router(
-        client, router, _ctx("háblame en español por favor", slots={"preferred_language": "English"}, pending_question="?")
+        client,
+        router,
+        _ctx("háblame en español por favor", slots={"preferred_language": "English"}, pending_question="?"),
     )
     assert match is not None and match[1].node_id == "H_LANG_REASK"
     assert client.prompts == []
@@ -521,10 +563,14 @@ def test_an_explicit_language_request_is_caught_by_rules_without_the_model(monke
 
 def test_in_model_mode_the_model_decides_an_explicit_language_request(monkeypatch):
     monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGE_DETECTION", "true")
-    router = GlobalRouterDefinition(handlers=[_handler_node("H_LANG_CHANGE", trigger=["hablame en español"])], faqs=[])
+    router = GlobalRouterDefinition(
+        handlers=[_handler_node("H_LANG_CHANGE", trigger=["hablame en español"])], faqs=[]
+    )
     client = _FakeLLMClient(replies=["LANGUAGE_CHANGE: Spanish"])
     slots = {"preferred_language": "English"}
-    match = match_global_router(client, router, _ctx("quiero que me hables en español", slots=slots, pending_question="?"))
+    match = match_global_router(
+        client, router, _ctx("quiero que me hables en español", slots=slots, pending_question="?")
+    )
     assert len(client.prompts) == 1
     assert slots["preferred_language"] == "Spanish"
     assert match is not None and match[1].node_id == "H_LANG_REASK"
@@ -534,8 +580,20 @@ def test_bare_yes_and_no_replies_in_english_and_portuguese_continue_without_the_
     client = _FakeLLMClient(replies=["INTERRUPT"])
     router = GlobalRouterDefinition(handlers=[_handler_node()], faqs=[])
     replies = (
-        "yes please", "Yeah, sure", "no thanks", "of course", "sounds good", "go ahead", "absolutely",
-        "sim, claro", "Não", "com certeza", "tudo bem", "pode ser", "Obrigada", "isso mesmo",
+        "yes please",
+        "Yeah, sure",
+        "no thanks",
+        "of course",
+        "sounds good",
+        "go ahead",
+        "absolutely",
+        "sim, claro",
+        "Não",
+        "com certeza",
+        "tudo bem",
+        "pode ser",
+        "Obrigada",
+        "isso mesmo",
     )
     for reply in replies:
         assert match_global_router(client, router, _ctx(reply)) is None, reply
@@ -560,7 +618,9 @@ def test_a_disrespectful_reply_gets_the_respect_reminder_and_skips_the_router(mo
     client = _FakeLLMClient(replies=["DISRESPECTFUL"])
     router = GlobalRouterDefinition(handlers=[_handler_node()], faqs=[])
 
-    match = match_global_router(client, router, _ctx("ustedes son unos inútiles de mierda", pending_question="Name?"))
+    match = match_global_router(
+        client, router, _ctx("ustedes son unos inútiles de mierda", pending_question="Name?")
+    )
 
     assert match is not None and match[0] == "handler" and match[1].node_id == "H_RESPECT"
     assert match[1].say and match[1].route == []
@@ -570,7 +630,12 @@ def test_a_disrespectful_reply_gets_the_respect_reminder_and_skips_the_router(mo
 def test_a_disrespectful_reply_goes_to_the_agents_own_abuse_handler_when_it_has_one(monkeypatch):
     monkeypatch.setenv("GLOBAL_ROUTER_RESPECT_FILTER", "true")
     client = _FakeLLMClient(replies=["DISRESPECTFUL"])
-    safety = _handler_node("H_SAFETY", trigger=["insults"], say=[], route=[GraphEdge(target="SM__SM_S", condition_text=None, is_mechanical=True)])
+    safety = _handler_node(
+        "H_SAFETY",
+        trigger=["insults"],
+        say=[],
+        route=[GraphEdge(target="SM__SM_S", condition_text=None, is_mechanical=True)],
+    )
     router = GlobalRouterDefinition(handlers=[_handler_node(), safety], faqs=[])
 
     match = match_global_router(client, router, _ctx("eres un idiota", pending_question="Name?"))
@@ -636,26 +701,38 @@ def test_the_respect_filter_can_be_switched_off(monkeypatch):
 
 def test_a_reply_in_another_language_is_processed_not_discarded(monkeypatch):
     monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGE_DETECTION", "true")
-    router = GlobalRouterDefinition(handlers=[_handler_node("H_LANG_CHANGE", trigger=["hablame en español"])], faqs=[])
+    router = GlobalRouterDefinition(
+        handlers=[_handler_node("H_LANG_CHANGE", trigger=["hablame en español"])], faqs=[]
+    )
     client = _FakeLLMClient(replies=["LANGUAGE_CHANGE_ANSWER: Spanish"])
     slots = {"preferred_language": "English"}
-    match = match_global_router(client, router, _ctx("donde atienden?", slots=slots, pending_question="Any questions?"))
+    match = match_global_router(
+        client, router, _ctx("donde atienden?", slots=slots, pending_question="Any questions?")
+    )
     assert match is None
     assert slots["preferred_language"] == "Spanish"
 
 
 def test_the_prompt_reserves_plain_language_change_for_requests(monkeypatch):
     monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGE_DETECTION", "true")
-    router = GlobalRouterDefinition(handlers=[_handler_node("H_LANG_CHANGE", trigger=["hablame en español"])], faqs=[])
+    router = GlobalRouterDefinition(
+        handlers=[_handler_node("H_LANG_CHANGE", trigger=["hablame en español"])], faqs=[]
+    )
     client = _FakeLLMClient(replies=["CONTINUE"])
-    match_global_router(client, router, _ctx("hola", slots={"preferred_language": "English"}, pending_question="?"))
+    match_global_router(
+        client, router, _ctx("hola", slots={"preferred_language": "English"}, pending_question="?")
+    )
     assert "reply LANGUAGE_CHANGE_ANSWER: <LanguageName>" in client.prompts[0]
 
 
 def test_a_language_request_is_still_a_language_change_not_content():
-    router = GlobalRouterDefinition(handlers=[_handler_node("H_LANG_CHANGE", trigger=["hablame en ingles"])], faqs=[])
+    router = GlobalRouterDefinition(
+        handlers=[_handler_node("H_LANG_CHANGE", trigger=["hablame en ingles"])], faqs=[]
+    )
     client = _FakeLLMClient(replies=["LANGUAGE_CHANGE: English"])
     slots = {"preferred_language": "Spanish"}
-    match = match_global_router(client, router, _ctx("¿puedes hablar en inglés?", slots=slots, pending_question="¿Alguna duda?"))
+    match = match_global_router(
+        client, router, _ctx("¿puedes hablar en inglés?", slots=slots, pending_question="¿Alguna duda?")
+    )
     assert slots["preferred_language"] == "English"
     assert match is not None and match[1].node_id == "H_LANG_REASK"

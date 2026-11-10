@@ -9,13 +9,16 @@ from ....services.calendars import resolve_calendar, unknown_calendar_message
 
 router = APIRouter()
 
+
 @router.post("/resolve-event-link-ghl", response_model=ResolveEventLinkResponse)
 async def resolve_event_link_ghl(req: ResolveEventLinkRequest):
     settings = get_settings()
 
     cal = resolve_calendar(settings, req.calendar_type)
     if cal is None:
-        return ResolveEventLinkResponse(success=False, errors=unknown_calendar_message(settings, req.calendar_type))
+        return ResolveEventLinkResponse(
+            success=False, errors=unknown_calendar_message(settings, req.calendar_type)
+        )
     calendar_type, tool = cal.key, cal.tool
 
     try:
@@ -29,8 +32,15 @@ async def resolve_event_link_ghl(req: ResolveEventLinkRequest):
         end_dt = engine.compute_end_date(start_dt, duration_minutes)
 
         # Validate Google Calendar credentials
-        if not (tool.google_client_id and tool.google_client_secret and tool.google_refresh_token and tool.calendar_id):
-            return ResolveEventLinkResponse(success=False, errors=f"Missing Google Calendar credentials for {calendar_type}")
+        if not (
+            tool.google_client_id
+            and tool.google_client_secret
+            and tool.google_refresh_token
+            and tool.calendar_id
+        ):
+            return ResolveEventLinkResponse(
+                success=False, errors=f"Missing Google Calendar credentials for {calendar_type}"
+            )
 
         from agent_backend.google_calendar import (
             find_synced_google_event,
@@ -42,9 +52,13 @@ async def resolve_event_link_ghl(req: ResolveEventLinkRequest):
             list_events as gcal_list_events,
         )
 
-        gcal_token = await google_get_access_token(tool.google_client_id, tool.google_client_secret, tool.google_refresh_token)
+        gcal_token = await google_get_access_token(
+            tool.google_client_id, tool.google_client_secret, tool.google_refresh_token
+        )
         if not gcal_token:
-            return ResolveEventLinkResponse(success=False, errors="Failed to obtain Google Calendar access token")
+            return ResolveEventLinkResponse(
+                success=False, errors="Failed to obtain Google Calendar access token"
+            )
 
         # Strategy 1: by Meet link when provided
         if req.meet_link:
@@ -94,7 +108,9 @@ async def resolve_event_link_ghl(req: ResolveEventLinkRequest):
         if isinstance(picked, dict):
             return ResolveEventLinkResponse(success=True, event_link=picked.get("htmlLink"))
 
-        return ResolveEventLinkResponse(success=False, errors="Event link not found yet — try again in a few seconds")
+        return ResolveEventLinkResponse(
+            success=False, errors="Event link not found yet — try again in a few seconds"
+        )
 
     except Exception as e:
         return ResolveEventLinkResponse(success=False, errors=str(e))

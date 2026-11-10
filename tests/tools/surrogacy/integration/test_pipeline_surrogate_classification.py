@@ -9,10 +9,18 @@ URL = "/api/v1/surrogate-classification"
 
 def _payload(**overrides):
     payload = {
-        "age": "28", "city": "Bogota", "nationality": "COL", "number_of_children": "2",
-        "last_birth_date": "2020-01-15", "number_of_c_sections": "1",
-        "abortions": "no", "preeclampsia": "no", "bmi": "22.5",
-        "document_type": "cedula_ciudadania", "drug_use": "no", "availability": "si",
+        "age": "28",
+        "city": "Bogota",
+        "nationality": "COL",
+        "number_of_children": "2",
+        "last_birth_date": "2020-01-15",
+        "number_of_c_sections": "1",
+        "abortions": "no",
+        "preeclampsia": "no",
+        "bmi": "22.5",
+        "document_type": "cedula_ciudadania",
+        "drug_use": "no",
+        "availability": "si",
     }
     payload.update(overrides)
     return payload

@@ -23,7 +23,20 @@ logger = logging.getLogger(__name__)
 __all__ = ["Schedule", "clear_cache", "resolve_schedule", "schedule_from_calendar", "to_days", "to_minutes"]
 
 CACHE_SECONDS = 300
-_MINUTES_PER_UNIT = {"min": 1, "mins": 1, "minute": 1, "minutes": 1, "hour": 60, "hours": 60, "day": 1440, "days": 1440, "week": 10080, "weeks": 10080, "month": 43200, "months": 43200}
+_MINUTES_PER_UNIT = {
+    "min": 1,
+    "mins": 1,
+    "minute": 1,
+    "minutes": 1,
+    "hour": 60,
+    "hours": 60,
+    "day": 1440,
+    "days": 1440,
+    "week": 10080,
+    "weeks": 10080,
+    "month": 43200,
+    "months": 43200,
+}
 _cache: dict[str, tuple[float, Mapping[str, Any]]] = {}
 
 
@@ -95,10 +108,14 @@ def schedule_from_calendar(calendar: Mapping[str, Any], tool: CalendarSettings) 
         "duration_minutes": to_minutes(calendar.get("slotDuration"), calendar.get("slotDurationUnit")),
         "pre_buffer_minutes": to_minutes(calendar.get("preBuffer") or 0, calendar.get("preBufferUnit")),
         "post_buffer_minutes": to_minutes(calendar.get("slotBuffer") or 0, calendar.get("slotBufferUnit")),
-        "min_notice_minutes": to_minutes(calendar.get("allowBookingAfter") or 0, calendar.get("allowBookingAfterUnit")),
-        "date_range_days": to_days(calendar.get("allowBookingFor"), calendar.get("allowBookingForUnit")) or None,  # 0 = no limit
+        "min_notice_minutes": to_minutes(
+            calendar.get("allowBookingAfter") or 0, calendar.get("allowBookingAfterUnit")
+        ),
+        "date_range_days": to_days(calendar.get("allowBookingFor"), calendar.get("allowBookingForUnit"))
+        or None,  # 0 = no limit
     }
     taken = {name for name in wanted if found.get(name) is not None}
+
     def pick(name: str) -> int:
         value = found[name] if name in taken else getattr(tool, name)
         return int(value or 0)
@@ -147,7 +164,9 @@ async def resolve_schedule(
     try:
         data = await fetch(token, tool.ghl_calendar_id)
     except Exception as exc:
-        logger.warning("Could not read the GHL calendar settings; using the .env values and defaults: %s", exc)
+        logger.warning(
+            "Could not read the GHL calendar settings; using the .env values and defaults: %s", exc
+        )
         return schedule_from_calendar({}, tool)
     calendar = data.get("calendar", data) if isinstance(data, Mapping) else {}
     _cache[tool.ghl_calendar_id] = (time.monotonic(), calendar)

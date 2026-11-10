@@ -1,4 +1,5 @@
 """Google Calendar REST helpers (OAuth token, events, free/busy) shared by every company."""
+
 import asyncio
 from datetime import datetime, timedelta
 from typing import Any
@@ -10,8 +11,7 @@ from agent_backend.timezones import parse_iso
 
 
 async def get_access_token(client_id: str, client_secret: str, refresh_token: str) -> str | None:
-    """Intercambia el refresh token por un access token de Google OAuth.
-    """
+    """Intercambia el refresh token por un access token de Google OAuth."""
     async with httpx.AsyncClient(timeout=20) as client:
         resp = await client.post(
             "https://oauth2.googleapis.com/token",
@@ -30,8 +30,7 @@ async def get_access_token(client_id: str, client_secret: str, refresh_token: st
 async def get_free_busy(
     access_token: str, calendar_id: str, time_min: datetime, time_max: datetime
 ) -> list[tuple[datetime, datetime]]:
-    """Consulta los intervalos ocupados del calendario en Google Calendar dentro del rango dado.
-    """
+    """Consulta los intervalos ocupados del calendario en Google Calendar dentro del rango dado."""
     async with httpx.AsyncClient(timeout=20) as client:
         resp = await client.post(
             "https://www.googleapis.com/calendar/v3/freeBusy",
@@ -63,8 +62,7 @@ async def create_event(
     attendee_email: str,
     request_id: str,
 ) -> dict:
-    """Crea un evento en Google Calendar con videollamada de Google Meet y notifica al asistente (sendUpdates=all).
-    """
+    """Crea un evento en Google Calendar con videollamada de Google Meet y notifica al asistente (sendUpdates=all)."""
     async with httpx.AsyncClient(timeout=20) as client:
         resp = await client.post(
             f"https://www.googleapis.com/calendar/v3/calendars/{quote(calendar_id, safe='')}/events",
@@ -95,11 +93,10 @@ async def create_event(
 async def list_events(
     access_token: str, calendar_id: str, time_min: datetime, time_max: datetime, query: str | None = None
 ) -> list[dict]:
-    """Lista eventos en el calendario dado dentro del rango de tiempo, manejando paginación.
-    """
+    """Lista eventos en el calendario dado dentro del rango de tiempo, manejando paginación."""
     events = []
     page_token = None
-    
+
     async with httpx.AsyncClient(timeout=20) as client:
         while True:
             params: dict[str, Any] = {
@@ -125,17 +122,16 @@ async def list_events(
             resp.raise_for_status()
             data = resp.json()
             events.extend(data.get("items", []))
-            
+
             page_token = data.get("nextPageToken")
             if not page_token:
                 break
-                
+
     return events
 
 
 async def delete_event(access_token: str, calendar_id: str, event_id: str) -> bool:
-    """Elimina un evento del calendario.
-    """
+    """Elimina un evento del calendario."""
     async with httpx.AsyncClient(timeout=20) as client:
         resp = await client.delete(
             f"https://www.googleapis.com/calendar/v3/calendars/{quote(calendar_id, safe='')}/events/{event_id}",
@@ -158,8 +154,7 @@ async def update_event(
     summary: str | None = None,
     description: str | None = None,
 ) -> dict:
-    """Actualiza parcialmente un evento en Google Calendar (PATCH).
-    """
+    """Actualiza parcialmente un evento en Google Calendar (PATCH)."""
     body: dict[str, Any] = {}
     if summary:
         body["summary"] = summary
@@ -182,6 +177,7 @@ async def update_event(
         )
         resp.raise_for_status()
         return resp.json()
+
 
 def normalize_meet_url(value: str | None) -> str | None:
     """Normaliza enlaces de Meet para compararlos sin query parameters."""
@@ -209,8 +205,7 @@ async def find_synced_google_event(
     meet_link: str,
     attempts: int = 4,
 ) -> dict | None:
-    """
-    Busca el evento sincronizado desde GHL.
+    """Busca el evento sincronizado desde GHL.
 
     No crea ni modifica eventos.
     Compara el enlace de Meet y el instante de inicio.
@@ -248,26 +243,20 @@ async def find_synced_google_event(
                 continue
 
             try:
-                event_start_dt = datetime.fromisoformat(
-                    event_start.replace("Z", "+00:00")
-                )
+                event_start_dt = datetime.fromisoformat(event_start.replace("Z", "+00:00"))
             except ValueError:
                 continue
 
             if event_start_dt != start_dt:
                 continue
 
-            meeting_urls = {
-                normalize_meet_url(event.get("hangoutLink"))
-            }
+            meeting_urls = {normalize_meet_url(event.get("hangoutLink"))}
 
             conference_data = event.get("conferenceData") or {}
 
             for entry in conference_data.get("entryPoints") or []:
                 if entry.get("entryPointType") == "video":
-                    meeting_urls.add(
-                        normalize_meet_url(entry.get("uri"))
-                    )
+                    meeting_urls.add(normalize_meet_url(entry.get("uri")))
 
             if expected_meet in meeting_urls:
                 matches.append(event)

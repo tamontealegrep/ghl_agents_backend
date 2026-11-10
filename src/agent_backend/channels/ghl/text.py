@@ -23,9 +23,20 @@ def normalize_text(value: Any) -> str:
 # so "Español"/"espanol" and "Português"/"portugues" share one entry each
 # instead of needing both spellings listed.
 _LANGUAGE_ALIASES = {
-    "en": "en", "eng": "en", "english": "en", "ingles": "en",
-    "es": "es", "esp": "es", "spa": "es", "spanish": "es", "espanol": "es", "castellano": "es",
-    "pt": "pt", "por": "pt", "portuguese": "pt", "portugues": "pt",
+    "en": "en",
+    "eng": "en",
+    "english": "en",
+    "ingles": "en",
+    "es": "es",
+    "esp": "es",
+    "spa": "es",
+    "spanish": "es",
+    "espanol": "es",
+    "castellano": "es",
+    "pt": "pt",
+    "por": "pt",
+    "portuguese": "pt",
+    "portugues": "pt",
 }
 
 
@@ -80,4 +91,4 @@ def preview_text(value: str, limit: int = 120) -> str:
     compact = " ".join(value.split())
     if len(compact) <= limit:
         return compact
-    return f"{compact[:limit - 3]}..."
+    return f"{compact[: limit - 3]}..."

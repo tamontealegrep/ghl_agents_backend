@@ -66,24 +66,24 @@ def _ctx(
     contact: dict | None = None,
 ) -> LLMContext:
     """
-Build the `LLMContext` every runtime LLM decision call now takes (2026-09-17)
+    Build the `LLMContext` every runtime LLM decision call now takes (2026-09-17)
 
-    instead of its own hand-picked parameter list. Passes `slots` through by
-        reference (not a copy) — tests that mutate a slot via `_apply_store_line`/
-        `_apply_conditional_mutations` assert on the same dict they built.
+        instead of its own hand-picked parameter list. Passes `slots` through by
+            reference (not a copy) — tests that mutate a slot via `_apply_store_line`/
+            `_apply_conditional_mutations` assert on the same dict they built.
 
-    Parameters:
-        slots: Description.
-        history: Description.
-        last_user_message: Description.
-        goal: Description.
-        do: Description.
-        pending_question: Description.
-        contact: Description.
+        Parameters:
+            slots: Description.
+            history: Description.
+            last_user_message: Description.
+            goal: Description.
+            do: Description.
+            pending_question: Description.
+            contact: Description.
 
-    Returns:
-        The result.
-"""
+        Returns:
+            The result.
+    """
     return LLMContext(
         slots=slots if slots is not None else {},
         history=history or [],
@@ -161,14 +161,14 @@ def test_store_unquoted_prose_delegates_to_llm():
 
 def test_store_unquoted_prose_prompt_includes_history():
     """
-`_llm_compute_store_value` (2026-09-17) — one more decision call
+    `_llm_compute_store_value` (2026-09-17) — one more decision call
 
-    migrated onto the shared `LLMContext`, closing a gap it previously had
-        alongside `_llm_extract_capture`'s: no visibility into recent turns.
+        migrated onto the shared `LLMContext`, closing a gap it previously had
+            alongside `_llm_extract_capture`'s: no visibility into recent turns.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(reply="America/Bogota")
     history = ["agent: ¿En qué ciudad estás?", "user: Bogota"]
     _apply_store_line(
@@ -217,18 +217,18 @@ def test_mechanical_arg_binding_splits_multiple_assignments_in_one_line():
 
 def test_mechanical_arg_binding_resolves_a_dot_field_access_on_a_captured_object():
     """
-Regression test, found live: `AM_DO_CANCEL`'s real DO line —
+    Regression test, found live: `AM_DO_CANCEL`'s real DO line —
 
-    `"event_id = [app].event_id"` (`[app]` is a captured appointment
-        *object*, `[app] = [appointments][0]`) — used to be chopped by the old
-        period-only split into `"event_id = [app]"` + `"event_id"`, so the
-        first segment mechanically bound `event_id` to the *entire* `[app]`
-        dict instead of its `event_id` field. A dot immediately followed by an
-        identifier (no space) must stay part of the same segment.
+        `"event_id = [app].event_id"` (`[app]` is a captured appointment
+            *object*, `[app] = [appointments][0]`) — used to be chopped by the old
+            period-only split into `"event_id = [app]"` + `"event_id"`, so the
+            first segment mechanically bound `event_id` to the *entire* `[app]`
+            dict instead of its `event_id` field. A dot immediately followed by an
+            identifier (no space) must stay part of the same segment.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     bindings = _extract_mechanical_arg_bindings(
         ["event_id = [app].event_id", "calendar_type = [app].calendar_type"],
         {"app": {"event_id": "evt_real_id_123", "calendar_type": "SUR"}},
@@ -238,27 +238,27 @@ Regression test, found live: `AM_DO_CANCEL`'s real DO line —
 
 def test_mechanical_arg_binding_defers_dot_access_on_a_non_object_slot_to_the_llm():
     """
-A `[slot].field` reference against a slot that isn't (yet) a dict
+    A `[slot].field` reference against a slot that isn't (yet) a dict
 
-    (e.g. `[app]` still `None` before the lookup ran) must never crash or
-        guess — it stays unresolved, same as any other unresolvable RHS.
+        (e.g. `[app]` still `None` before the lookup ran) must never crash or
+            guess — it stays unresolved, same as any other unresolvable RHS.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     bindings = _extract_mechanical_arg_bindings(["event_id = [app].event_id"], {"app": None})
     assert bindings == {}
 
 
 def test_mechanical_arg_binding_still_splits_a_trailing_sentence_period():
     """
-The split fix must not stop splitting genuine sentence-ending
+    The split fix must not stop splitting genuine sentence-ending
 
-    periods — only ones immediately followed by an identifier character.
+        periods — only ones immediately followed by an identifier character.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     bindings = _extract_mechanical_arg_bindings(
         ["calendar_type = 'BOTH'."],
         {},
@@ -268,32 +268,34 @@ The split fix must not stop splitting genuine sentence-ending
 
 def test_mechanical_arg_binding_skips_a_described_transformation():
     """
-A DO line describing a transform, not a bare copy, is left for the
+    A DO line describing a transform, not a bare copy, is left for the
 
-    LLM fallback — the mechanical pass never guesses at it.
+        LLM fallback — the mechanical pass never guesses at it.
 
-    Returns:
-        None.
-"""
-    bindings = _extract_mechanical_arg_bindings(["language = the contact's language written in uppercase"], {"preferred_language": "es"})
+        Returns:
+            None.
+    """
+    bindings = _extract_mechanical_arg_bindings(
+        ["language = the contact's language written in uppercase"], {"preferred_language": "es"}
+    )
     assert bindings == {}
 
 
 def test_mechanical_arg_binding_skips_the_nationality_derivation_line():
     """
-Regression test: `check_visa`'s real DO line used to be a bare copy
+    Regression test: `check_visa`'s real DO line used to be a bare copy
 
-    (`nationalities = [nat]`), which sent the lead's raw wording (e.g.
-        "venezolana", a demonym, not a country name) straight to the tool — the
-        real backend's country table only matches a country name or ISO
-        alpha-3 code, so every unrecognized demonym silently resolved as
-        "requires visa". Now shaped as a described derivation, which the
-        mechanical pass must leave for the LLM fallback rather than bind
-        `[nat]`'s raw value verbatim.
+        (`nationalities = [nat]`), which sent the lead's raw wording (e.g.
+            "venezolana", a demonym, not a country name) straight to the tool — the
+            real backend's country table only matches a country name or ISO
+            alpha-3 code, so every unrecognized demonym silently resolved as
+            "requires visa". Now shaped as a described derivation, which the
+            mechanical pass must leave for the LLM fallback rather than bind
+            `[nat]`'s raw value verbatim.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     bindings = _extract_mechanical_arg_bindings(
         ["nationalities = the country name or ISO 3166-1 alpha-3 code for [nat]"], {"nat": "venezolana"}
     )
@@ -332,23 +334,24 @@ def test_bind_tool_inputs_uses_mechanical_do_binding_when_no_exact_slot():
 
 def test_bind_tool_inputs_coerces_a_mechanically_bound_value_to_its_contract_type():
     """
-Regression test, found live: `book_appointment`'s `duration` input is
+    Regression test, found live: `book_appointment`'s `duration` input is
 
-    declared `type_expr: "str"` in its real contract, bound mechanically from
-        `<APPOINTMENT_DURATION_MINUTES>` — a compile-time constant `initial_slots()`
-        coerces to a real Python `int` — via the DO line `"duration = <APPOINTMENT_
-        DURATION_MINUTES>"`. The mechanical pass copied the raw int straight
-        through with no type check at all, so the backend received a JSON
-        integer where its Pydantic schema required a string and rejected the
-        call with HTTP 422. Unlike the LLM-fallback path (JSON-schema-typed by
-        construction), mechanical binding needs this coercion explicitly.
+        declared `type_expr: "str"` in its real contract, bound mechanically from
+            `<APPOINTMENT_DURATION_MINUTES>` — a compile-time constant `initial_slots()`
+            coerces to a real Python `int` — via the DO line `"duration = <APPOINTMENT_
+            DURATION_MINUTES>"`. The mechanical pass copied the raw int straight
+            through with no type check at all, so the backend received a JSON
+            integer where its Pydantic schema required a string and rejected the
+            call with HTTP 422. Unlike the LLM-fallback path (JSON-schema-typed by
+            construction), mechanical binding needs this coercion explicitly.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     fields = [ToolContractField(name="duration", required=True, description="d", type_expr="str")]
     bound = _bind_tool_inputs(
-        fields, _ctx({"APPOINTMENT_DURATION_MINUTES": 30}, do=["duration = <APPOINTMENT_DURATION_MINUTES>."]),
+        fields,
+        _ctx({"APPOINTMENT_DURATION_MINUTES": 30}, do=["duration = <APPOINTMENT_DURATION_MINUTES>."]),
         _FakeLLMClient(),
     )
     assert bound == {"duration": "30"}
@@ -364,7 +367,10 @@ def test_bind_tool_inputs_falls_back_to_one_batched_llm_call():
         fields,
         _ctx(
             {},
-            do=["start_date = the literal start_co field of the chosen slot.", "duration = the requested minutes."],
+            do=[
+                "start_date = the literal start_co field of the chosen slot.",
+                "duration = the requested minutes.",
+            ],
         ),
         client,
     )
@@ -374,18 +380,18 @@ def test_bind_tool_inputs_falls_back_to_one_batched_llm_call():
 
 def test_bind_tool_inputs_llm_fallback_includes_the_field_s_own_contract_description():
     """
-Regression test: the DO line's own wording is often vague about the
+    Regression test: the DO line's own wording is often vague about the
 
-    target *format* ("the country name or code for [nat]") — the field's
-        own contract description/examples (e.g. "'USA', 'China, India'") is
-        what actually tells the model what that format looks like. Missing
-        this was a real, measured reliability gap: without it, deriving a
-        country form from a reported nationality (e.g. "venezolana" -> "VEN")
-        sometimes just echoed the raw captured wording back unchanged.
+        target *format* ("the country name or code for [nat]") — the field's
+            own contract description/examples (e.g. "'USA', 'China, India'") is
+            what actually tells the model what that format looks like. Missing
+            this was a real, measured reliability gap: without it, deriving a
+            country form from a reported nationality (e.g. "venezolana" -> "VEN")
+            sometimes just echoed the raw captured wording back unchanged.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     fields = [
         ToolContractField(
             name="nationalities",
@@ -426,17 +432,17 @@ def test_bind_tool_inputs_omits_unresolved_optional_field_without_calling_llm():
 
 def test_bind_tool_inputs_tries_llm_fallback_for_optional_field_named_in_do():
     """
-2026-09-21 regression: `find_appointment`'s `contact_name`/`contact_email`
+    2026-09-21 regression: `find_appointment`'s `contact_name`/`contact_email`
 
-    are optional, bound via `"contact_name = [name] ?? {{contact.name}}"` — a
-        compound RHS the mechanical pass can't resolve. Before this, an optional
-        field with an unresolved DO line was silently dropped, never even tried
-        against the LLM fallback — the author's explicit DO instruction for it was
-        just ignored, and the tool call went out missing the argument entirely.
+        are optional, bound via `"contact_name = [name] ?? {{contact.name}}"` — a
+            compound RHS the mechanical pass can't resolve. Before this, an optional
+            field with an unresolved DO line was silently dropped, never even tried
+            against the LLM fallback — the author's explicit DO instruction for it was
+            just ignored, and the tool call went out missing the argument entirely.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     fields = [
         ToolContractField(name="calendar_type", required=True, description="d"),
         ToolContractField(name="contact_name", required=False, description="d"),
@@ -444,7 +450,11 @@ def test_bind_tool_inputs_tries_llm_fallback_for_optional_field_named_in_do():
     client = _FakeLLMClient(structured_reply={"contact_name": "Ana Gomez"})
     bound = _bind_tool_inputs(
         fields,
-        _ctx({"calendar_type": "IVF"}, do=["contact_name = [name] ?? {{contact.name}}"], contact={"name": "Ana Gomez"}),
+        _ctx(
+            {"calendar_type": "IVF"},
+            do=["contact_name = [name] ?? {{contact.name}}"],
+            contact={"name": "Ana Gomez"},
+        ),
         client,
     )
     assert bound == {"calendar_type": "IVF", "contact_name": "Ana Gomez"}
@@ -453,15 +463,15 @@ def test_bind_tool_inputs_tries_llm_fallback_for_optional_field_named_in_do():
 
 def test_bind_tool_inputs_drops_unresolvable_optional_field_from_llm_fallback():
     """
-An optional field the LLM genuinely can't resolve comes back as an
+    An optional field the LLM genuinely can't resolve comes back as an
 
-    explicit `None` (the JSON schema requires *a* value) — dropped here,
-        same as if it had never reached the LLM fallback at all, rather than
-        sent on as a literal `null` a plain `str`-typed backend field may reject.
+        explicit `None` (the JSON schema requires *a* value) — dropped here,
+            same as if it had never reached the LLM fallback at all, rather than
+            sent on as a literal `null` a plain `str`-typed backend field may reject.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     fields = [
         ToolContractField(name="calendar_type", required=True, description="d"),
         ToolContractField(name="contact_email", required=False, description="d"),
@@ -514,11 +524,17 @@ def test_matches_scheduling_state_id_true_for_scheduling_states():
 
 
 def test_store_copies_a_contact_field_mechanically():
-    ctx = _ctx({}, contact={"name": " Laura Gómez ", "email": "", "phone": "{{contact.phone}}", "service": "null"})
+    ctx = _ctx(
+        {}, contact={"name": " Laura Gómez ", "email": "", "phone": "{{contact.phone}}", "service": "null"}
+    )
     for field in ("name", "email", "phone", "service", "missing"):
         _apply_store_line("[crm_" + field + "] = {{contact." + field + "}}", ctx, _FakeLLMClient())
     assert ctx.slots == {
-        "crm_name": "Laura Gómez", "crm_email": None, "crm_phone": None, "crm_service": None, "crm_missing": None,
+        "crm_name": "Laura Gómez",
+        "crm_email": None,
+        "crm_phone": None,
+        "crm_service": None,
+        "crm_missing": None,
     }
 
 
@@ -548,7 +564,14 @@ def test_store_replaces_slots_written_inside_a_quoted_text():
 
 def test_store_language_name_maps_codes_and_names_and_defaults_to_english():
     ctx = _ctx({"code": "es"})
-    for code, expected in (("es", "Spanish"), ("pt", "Portuguese"), ("EN", "English"), ("Spanish", "Spanish"), (None, "English"), ("fr", "English")):
+    for code, expected in (
+        ("es", "Spanish"),
+        ("pt", "Portuguese"),
+        ("EN", "English"),
+        ("Spanish", "Spanish"),
+        (None, "English"),
+        ("fr", "English"),
+    ):
         ctx.slots["code"] = code
         _apply_store_line("[preferred_language] = LANGUAGE_NAME [code]", ctx, _FakeLLMClient())
         assert ctx.slots["preferred_language"] == expected
@@ -585,17 +608,17 @@ def test_matches_scheduling_state_id_false_for_other_states():
 
 def test_resolve_edges_evaluates_matches_condition_mechanically():
     """
-Regression test: `_EVAL_BUILTINS` used to be `{"len": len}` only —
+    Regression test: `_EVAL_BUILTINS` used to be `{"len": len}` only —
 
-    a condition_parser-classified-as-mechanical `MATCHES` edge (real
-        content: `[document_number] MATCHES numeric_string_without_spaces_
-        or_punctuation`) raised NameError inside `eval()`, silently swallowed
-        by resolve_edges's `except Exception: continue`, so the edge could
-        never actually match at runtime despite being classified as "code".
+        a condition_parser-classified-as-mechanical `MATCHES` edge (real
+            content: `[document_number] MATCHES numeric_string_without_spaces_
+            or_punctuation`) raised NameError inside `eval()`, silently swallowed
+            by resolve_edges's `except Exception: continue`, so the edge could
+            never actually match at runtime despite being classified as "code".
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     resolve_edges = _make_resolve_edges(_FakeLLMClient())
     edges = [
         GraphEdge(
@@ -625,14 +648,14 @@ def test_resolve_edges_matches_condition_no_match_falls_through():
 
 def test_resolve_edges_llm_prompt_includes_history():
     """
-`_llm_pick_condition` (2026-09-17) — migrated onto the shared
+    `_llm_pick_condition` (2026-09-17) — migrated onto the shared
 
-    `LLMContext`, which now threads `history` through even for non-question
-        nodes (`_make_router_fn`'s dispatch previously dropped it entirely).
+        `LLMContext`, which now threads `history` through even for non-question
+            nodes (`_make_router_fn`'s dispatch previously dropped it entirely).
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(reply="0")
     resolve_edges = _make_resolve_edges(client)
     edges = [GraphEdge(target="VALID", condition_text="the user confirmed", is_mechanical=False)]
@@ -649,14 +672,14 @@ def test_store_null_reset():
 
 def test_store_self_referential_increment():
     """
-The DSL's own documented `[x] = [x] + 1` form (NUMERIC_AND_RETRY_
+    The DSL's own documented `[x] = [x] + 1` form (NUMERIC_AND_RETRY_
 
-    COUNTER_SEMANTICS) — distinct from the `increment [x] by 1` phrase
-        above, and the one real agent content actually uses.
+        COUNTER_SEMANTICS) — distinct from the `increment [x] by 1` phrase
+            above, and the one real agent content actually uses.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     slots = {"tz_try": 1}
     _apply_store_line("[tz_try] = [tz_try] + 1", _ctx(slots), _FakeLLMClient())
     assert slots["tz_try"] == 2
@@ -684,13 +707,13 @@ def test_store_self_referential_decrement():
 
 def test_conditional_mutations_never_calls_llm_without_a_bracket_reference():
     """
-A narrative DO line with no `[slot]` reference is not a mutation at
+    A narrative DO line with no `[slot]` reference is not a mutation at
 
-    all — left untouched, same as `_apply_store_line`'s existing no-op.
+        all — left untouched, same as `_apply_store_line`'s existing no-op.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient()  # extract_structured raises if called
     slots = {"svc": None}
     _apply_conditional_mutations(
@@ -702,13 +725,13 @@ A narrative DO line with no `[slot]` reference is not a mutation at
 
 def test_conditional_mutations_skips_lines_already_recognized_as_assignments():
     """
-A plain `[x] = 1` line is `_apply_store_line`'s own job — it must
+    A plain `[x] = 1` line is `_apply_store_line`'s own job — it must
 
-    not also be dragged into the conditional LLM call's target-slot set.
+        not also be dragged into the conditional LLM call's target-slot set.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(structured_reply={"svc": {"applies": True, "value": "surrogacy"}})
     slots = {"svc_try": 0, "svc": None}
     _apply_conditional_mutations(
@@ -724,17 +747,19 @@ A plain `[x] = 1` line is `_apply_store_line`'s own job — it must
 
 def test_conditional_mutations_resolves_free_text_intent_via_llm():
     """
-The motivating case: a mechanical parser can never match "quiero
+    The motivating case: a mechanical parser can never match "quiero
 
-    alguien que lleve a mi bebé" to 'surrogacy' — only an LLM call can.
+        alguien que lleve a mi bebé" to 'surrogacy' — only an LLM call can.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(structured_reply={"svc": {"applies": True, "value": "surrogacy"}})
     slots = {"svc": None}
     _apply_conditional_mutations(
-        ["If [svc] is still NULL, infer it from the user's latest message using the approved service labels."],
+        [
+            "If [svc] is still NULL, infer it from the user's latest message using the approved service labels."
+        ],
         _ctx(
             slots,
             goal=["Validate that the service was captured and route to classification."],
@@ -748,17 +773,17 @@ The motivating case: a mechanical parser can never match "quiero
 
 def test_conditional_mutations_gates_independently_per_slot_within_one_line():
     """
-SC_FIX's real shape: one DO line bundles three independent per-slot
+    SC_FIX's real shape: one DO line bundles three independent per-slot
 
-    conditions ("the name, X; the phone, Y; the email, Z"), not one shared
-        condition — only the slot whose own condition actually fired may
-        change; the others, including the non-scalar `available_slots` (a
-        list), must be left completely untouched even though they're named on
-        the very same line.
+        conditions ("the name, X; the phone, Y; the email, Z"), not one shared
+            condition — only the slot whose own condition actually fired may
+            change; the others, including the non-scalar `available_slots` (a
+            list), must be left completely untouched even though they're named on
+            the very same line.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(
         structured_reply={
             "c_name": {"applies": False, "value": None},
@@ -777,14 +802,14 @@ SC_FIX's real shape: one DO line bundles three independent per-slot
 
 def test_conditional_mutations_batches_multiple_lines_into_one_call():
     """
-Several DO lines, resolved together against one user message — never
+    Several DO lines, resolved together against one user message — never
 
-    one LLM call per line. The line whose condition didn't fire (including
-        the non-scalar `available_slots`, a list) is left completely untouched.
+        one LLM call per line. The line whose condition didn't fire (including
+            the non-scalar `available_slots`, a list) is left completely untouched.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(
         structured_reply={
             "c_name": {"applies": True, "value": "Alex"},
@@ -795,8 +820,14 @@ Several DO lines, resolved together against one user message — never
             "available_slots": {"applies": False, "value": None},
         }
     )
-    slots = {"c_name": "Old Name", "c_phone": "+15551234567", "c_email": "alex@example.com",
-              "day": "2026-06-04", "slot": "09:00", "available_slots": ["09:00"]}
+    slots = {
+        "c_name": "Old Name",
+        "c_phone": "+15551234567",
+        "c_email": "alex@example.com",
+        "day": "2026-06-04",
+        "slot": "09:00",
+        "available_slots": ["09:00"],
+    }
     _apply_conditional_mutations(
         [
             "If the correction is the name, update [c_name]; the phone, [c_phone]; the email, [c_email].",
@@ -812,13 +843,13 @@ Several DO lines, resolved together against one user message — never
 
 def test_conditional_mutations_applies_null_returned_by_llm():
     """
-An instruction that says to clear a slot must actually reset it —
+    An instruction that says to clear a slot must actually reset it —
 
-    a returned `null` is a real value here, not "no update".
+        a returned `null` is a real value here, not "no update".
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(
         structured_reply={
             "day": {"applies": True, "value": None},
@@ -837,13 +868,13 @@ An instruction that says to clear a slot must actually reset it —
 
 def test_conditional_mutations_ignores_slot_whose_gate_is_false():
     """
-A slot whose `applies` gate is false must never be written, regardless
+    A slot whose `applies` gate is false must never be written, regardless
 
-    of what junk sits in its `value` field.
+        of what junk sits in its `value` field.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(structured_reply={"svc": {"applies": False, "value": "ivf"}})
     slots = {"svc": None}
     _apply_conditional_mutations(
@@ -863,26 +894,28 @@ def test_conditional_mutations_noop_when_only_recognized_assignments_present():
 
 def test_conditional_mutations_never_touches_slots_named_only_in_a_comparison_line():
     """
-Regression test: SC_DEC_D's real DO line — "Compare [day] only against
+    Regression test: SC_DEC_D's real DO line — "Compare [day] only against
 
-    the start_local dates in [available_slots]. Do not accept approximate,
-        inferred, or unlisted days." — exists purely as context for a sibling
-        `eval: "llm"` ROUTE condition, not an instruction to change [day]/
-        [available_slots]. Fed to _apply_conditional_mutations anyway (it
-        references brackets and isn't a recognized assignment), the LLM
-        fallback obliged and overwrote available_slots (a list of real
-        appointment objects) with an arbitrary string — corrupting state a
-        sibling node then rendered straight into a user-facing message. Must
-        never even reach the LLM: client raises if extract_structured is
-        called.
+        the start_local dates in [available_slots]. Do not accept approximate,
+            inferred, or unlisted days." — exists purely as context for a sibling
+            `eval: "llm"` ROUTE condition, not an instruction to change [day]/
+            [available_slots]. Fed to _apply_conditional_mutations anyway (it
+            references brackets and isn't a recognized assignment), the LLM
+            fallback obliged and overwrote available_slots (a list of real
+            appointment objects) with an arbitrary string — corrupting state a
+            sibling node then rendered straight into a user-facing message. Must
+            never even reach the LLM: client raises if extract_structured is
+            called.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient()  # extract_structured raises if called
     slots = {"day": None, "available_slots": [{"start_local": "09:00", "end_local": "09:30"}]}
     _apply_conditional_mutations(
-        ["Compare [day] only against the start_local dates in [available_slots]. Do not accept approximate, inferred, or unlisted days."],
+        [
+            "Compare [day] only against the start_local dates in [available_slots]. Do not accept approximate, inferred, or unlisted days."
+        ],
         _ctx(slots, last_user_message="el 22"),
         client,
     )
@@ -893,15 +926,15 @@ Regression test: SC_DEC_D's real DO line — "Compare [day] only against
 
 def test_conditional_mutations_prompt_includes_history():
     """
-`_apply_conditional_mutations` (2026-09-17) — migrated onto the shared
+    `_apply_conditional_mutations` (2026-09-17) — migrated onto the shared
 
-    `LLMContext`; previously the one node-scoped decision call that still
-        lacked `history` after `_llm_extract_capture` and `match_global_router`
-        already had it.
+        `LLMContext`; previously the one node-scoped decision call that still
+            lacked `history` after `_llm_extract_capture` and `match_global_router`
+            already had it.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(structured_reply={"svc": {"applies": True, "value": "surrogacy"}})
     slots = {"svc": None}
     history = ["agent: ¿Qué servicio buscas?", "user: no sé todavía"]
@@ -938,16 +971,16 @@ def _build_node_fn(node: GraphNode, llm_client: _FakeLLMClient):
 
 def test_decision_node_do_increments_retry_counter():
     """
-Regression test: `DO` used to be fed to the LLM only as route-
+    Regression test: `DO` used to be fed to the LLM only as route-
 
-    decision context and never applied to `slots`, so every retry counter
-        silently never incremented in the compiled LangGraph runtime — see
-        DESIGN_PATTERNS.md. `[x_try] = [x_try] + 1` lives in `DO`, never
-        `STORE`, across the real agent corpus.
+        decision context and never applied to `slots`, so every retry counter
+            silently never incremented in the compiled LangGraph runtime — see
+            DESIGN_PATTERNS.md. `[x_try] = [x_try] + 1` lives in `DO`, never
+            `STORE`, across the real agent corpus.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     node = _decision_node(do=["[tz_try] = [tz_try] + 1"])
     node_fn = _build_node_fn(node, _FakeLLMClient())
     result = node_fn({"slots": {"tz_try": 2}, "current_state": "", "last_user_message": ""})
@@ -963,15 +996,15 @@ def test_decision_node_do_resets_slot_to_null():
 
 def test_registration_node_do_and_store_duplicate_not_double_applied():
     """
-Real content often repeats the same assignment in both `DO` and
+    Real content often repeats the same assignment in both `DO` and
 
-    `STORE` on `registration` nodes — the `DO` pass must skip a line
-        already present in `STORE` so it isn't (mechanically or via an LLM
-        call) applied twice.
+        `STORE` on `registration` nodes — the `DO` pass must skip a line
+            already present in `STORE` so it isn't (mechanically or via an LLM
+            call) applied twice.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     node = GraphNode(
         node_id="REG",
         node_type="registration",
@@ -987,37 +1020,43 @@ Real content often repeats the same assignment in both `DO` and
 
 def test_decision_node_do_resolves_conditional_line_via_llm():
     """
-Live-piloting regression: `opening.yaml`'s `OP_DEC` has
+    Live-piloting regression: `opening.yaml`'s `OP_DEC` has
 
-    `"If [svc] is still NULL, infer it from the user's latest message."` in
-        its DO block — a real second-chance inference, previously a total
-        no-op (didn't match `[slot] = value`, so `_apply_store_line` silently
-        dropped it), now resolved via the same batched-LLM-call path.
+        `"If [svc] is still NULL, infer it from the user's latest message."` in
+            its DO block — a real second-chance inference, previously a total
+            no-op (didn't match `[slot] = value`, so `_apply_store_line` silently
+            dropped it), now resolved via the same batched-LLM-call path.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     node = _decision_node(
-        do=["If [svc] is still NULL, infer it from the user's latest message using the approved service labels."]
+        do=[
+            "If [svc] is still NULL, infer it from the user's latest message using the approved service labels."
+        ]
     )
     client = _FakeLLMClient(structured_reply={"svc": {"applies": True, "value": "surrogacy"}})
     node_fn = _build_node_fn(node, client)
     result = node_fn(
-        {"slots": {"svc": None}, "current_state": "", "last_user_message": "quiero alguien que lleve a mi bebé"}
+        {
+            "slots": {"svc": None},
+            "current_state": "",
+            "last_user_message": "quiero alguien que lleve a mi bebé",
+        }
     )
     assert result["slots"]["svc"] == "surrogacy"
 
 
 def test_registration_node_store_resolves_conditional_line_via_llm():
     """
-Live-piloting regression: `scheduling.yaml`'s `SC_FIX` exists purely
+    Live-piloting regression: `scheduling.yaml`'s `SC_FIX` exists purely
 
-    to apply a name/phone/email/date correction and did nothing — its DO
-        lines were conditional prose, never a recognized STORE assignment.
+        to apply a name/phone/email/date correction and did nothing — its DO
+            lines were conditional prose, never a recognized STORE assignment.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     node = GraphNode(
         node_id="SC_FIX",
         node_type="registration",
@@ -1034,7 +1073,12 @@ Live-piloting regression: `scheduling.yaml`'s `SC_FIX` exists purely
     node_fn = _build_node_fn(node, client)
     result = node_fn(
         {
-            "slots": {"c_name": "Alex", "c_phone": "+15551234567", "c_email": "alex@example.com", "success": True},
+            "slots": {
+                "c_name": "Alex",
+                "c_phone": "+15551234567",
+                "c_email": "alex@example.com",
+                "success": True,
+            },
             "current_state": "",
             "last_user_message": "mi nombre está mal, es Alex Nuevo",
         }
@@ -1045,15 +1089,15 @@ Live-piloting regression: `scheduling.yaml`'s `SC_FIX` exists purely
 
 def test_action_node_do_lines_excluded_from_conditional_mutations():
     """
-`action` node DO lines are entirely owned by `_bind_tool_inputs` —
+    `action` node DO lines are entirely owned by `_bind_tool_inputs` —
 
-    a tool-argument hint like `nationalities = [nat]` must never also be
-        treated as a conditional slot mutation, or every tool call would fire
-        an extra, unnecessary LLM call.
+        a tool-argument hint like `nationalities = [nat]` must never also be
+            treated as a conditional slot mutation, or every tool call would fire
+            an extra, unnecessary LLM call.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     node = GraphNode(node_id="RUN", node_type="action", do=["Send nationalities = [nat]."], execute=None)
     client = _FakeLLMClient()  # extract_structured raises if called
     node_fn = _build_node_fn(node, client)
@@ -1064,27 +1108,29 @@ def test_action_node_do_lines_excluded_from_conditional_mutations():
 
 def test_eval_llm_decision_node_do_lines_excluded_from_conditional_mutations():
     """
-Regression test, found live: SC_DEC_S's real DO line — "Map [slot] to
+    Regression test, found live: SC_DEC_S's real DO line — "Map [slot] to
 
-    the exact object in [available_slots]. It is valid only if that object
-        has start_co and end_co." — isn't a compare/validate/check/ensure/
-        verify/confirm-prefixed line, so the narrower verb-list guard
-        (`_is_comparison_only_line`) let it through. The model "applied" it,
-        nulling out `available_slots` (a list of real appointment objects) and
-        silently derailing a real booking into objections. Every real `eval:
-        "llm"` decision node's DO lines in this agent are validation prose for
-        its own route judgment, never a mutation instruction — checking the
-        node's own `eval` field is the structural fix a verb blacklist can
-        never be complete enough to replace.
+        the exact object in [available_slots]. It is valid only if that object
+            has start_co and end_co." — isn't a compare/validate/check/ensure/
+            verify/confirm-prefixed line, so the narrower verb-list guard
+            (`_is_comparison_only_line`) let it through. The model "applied" it,
+            nulling out `available_slots` (a list of real appointment objects) and
+            silently derailing a real booking into objections. Every real `eval:
+            "llm"` decision node's DO lines in this agent are validation prose for
+            its own route judgment, never a mutation instruction — checking the
+            node's own `eval` field is the structural fix a verb blacklist can
+            never be complete enough to replace.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     node = GraphNode(
         node_id="SC_DEC_S",
         node_type="decision",
         eval="llm",
-        do=["Map [slot] to the exact object in [available_slots]. It is valid only if that object has start_co and end_co."],
+        do=[
+            "Map [slot] to the exact object in [available_slots]. It is valid only if that object has start_co and end_co."
+        ],
     )
     client = _FakeLLMClient()  # extract_structured raises if called
     node_fn = _build_node_fn(node, client)
@@ -1096,17 +1142,17 @@ Regression test, found live: SC_DEC_S's real DO line — "Map [slot] to
 
 def test_eval_llm_exclusion_applies_to_any_node_type_not_only_decision():
     """
-`eval` is a route-evaluation property of any node type, not
+    `eval` is a route-evaluation property of any node type, not
 
-    decision-exclusive — real content has `eval: "llm"` on `registration`
-        (`AM_INIT`) and `question` (`AM_ASK_NAME`) nodes too. The first version
-        of this fix only checked `node_type == "decision"`, leaving those node
-        types exposed to the exact same corruption if a future validation-only
-        DO line ever landed on one of them.
+        decision-exclusive — real content has `eval: "llm"` on `registration`
+            (`AM_INIT`) and `question` (`AM_ASK_NAME`) nodes too. The first version
+            of this fix only checked `node_type == "decision"`, leaving those node
+            types exposed to the exact same corruption if a future validation-only
+            DO line ever landed on one of them.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     node = GraphNode(
         node_id="AM_INIT",
         node_type="registration",
@@ -1155,16 +1201,16 @@ def test_render_say_interpolates_slots_before_sending_to_llm():
 
 def test_render_say_never_caches_across_repeated_calls():
     """
-Regression test: the old cache keyed on (node_id, language_code, raw
+    Regression test: the old cache keyed on (node_id, language_code, raw
 
-    text) meant the exact same node re-rendered on a retry loop always
-        returned the identical text — which is precisely the case where the
-        scripted-repeat feel was most noticeable (a fallback re-asking the same
-        pending question). Each render is now its own LLM call.
+        text) meant the exact same node re-rendered on a retry loop always
+            returned the identical text — which is precisely the case where the
+            scripted-repeat feel was most noticeable (a fallback re-asking the same
+            pending question). Each render is now its own LLM call.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(reply="Rephrased.")
     render_say = _make_render_say(client)
     render_say("SAME_NODE", ["Same question?"], False, "es", {})
@@ -1181,17 +1227,17 @@ def test_render_say_falls_back_to_raw_when_llm_returns_empty():
 
 def test_render_say_prompt_forbids_a_meta_commentary_preamble():
     """
-Regression test: live-testing occasionally caught the model prefacing
+    Regression test: live-testing occasionally caught the model prefacing
 
-    a paraphrase with something like "Claro, aquí tienes una versión más
-        conversacional del mensaje:" instead of just the rephrased text — a
-        real, user-visible defect. Only checks the prompt carries the explicit
-        rule against it; the model's actual compliance is a live-testing
-        concern, not something a fake-client unit test can assert on.
+        a paraphrase with something like "Claro, aquí tienes una versión más
+            conversacional del mensaje:" instead of just the rephrased text — a
+            real, user-visible defect. Only checks the prompt carries the explicit
+            rule against it; the model's actual compliance is a live-testing
+            concern, not something a fake-client unit test can assert on.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(reply="Hola, ¿cómo estás?")
     render_say = _make_render_say(client)
     render_say("N", ["Hola."], False, "es", {})
@@ -1200,16 +1246,16 @@ Regression test: live-testing occasionally caught the model prefacing
 
 def test_render_say_requests_a_non_deterministic_temperature():
     """
-`complete()` now defaults to `temperature=0.0` (2026-09-17) — correct
+    `complete()` now defaults to `temperature=0.0` (2026-09-17) — correct
 
-    for every other caller's factual judgment call, but wrong here: a
-        paraphrase at temperature 0 tends toward the single most-likely
-        rewording, defeating the point of the 2026-09-16 naturalization fix.
-        This is the one caller that must opt out of the new default.
+        for every other caller's factual judgment call, but wrong here: a
+            paraphrase at temperature 0 tends toward the single most-likely
+            rewording, defeating the point of the 2026-09-16 naturalization fix.
+            This is the one caller that must opt out of the new default.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(reply="Buenas, ¿qué tal?")
     render_say = _make_render_say(client)
     render_say("N", ["Hola?"], False, "es", {})
@@ -1246,17 +1292,23 @@ def test_apply_store_line_pick_resolves_the_start_co_of_the_day_and_time_in_star
         "day": "2026-10-30",
         "slot": "21:00",
     }
-    _apply_store_line("[start_date] = PICK [available_slots].start_co AT [day] [slot]", _ctx(slots), _FakeLLMClient())
+    _apply_store_line(
+        "[start_date] = PICK [available_slots].start_co AT [day] [slot]", _ctx(slots), _FakeLLMClient()
+    )
     assert slots["start_date"] == "2026-10-30T09:00:00-05:00"
 
 
 def test_apply_store_line_pick_is_empty_when_nothing_matches_exactly():
     slots = {
-        "available_slots": [{"start_co": "2026-10-30T09:00:00-05:00", "start_local": "2026-10-30T21:00:00+07:00"}],
+        "available_slots": [
+            {"start_co": "2026-10-30T09:00:00-05:00", "start_local": "2026-10-30T21:00:00+07:00"}
+        ],
         "day": "2026-10-30",
         "slot": "21:10",
     }
-    _apply_store_line("[start_date] = PICK [available_slots].start_co AT [day] [slot]", _ctx(slots), _FakeLLMClient())
+    _apply_store_line(
+        "[start_date] = PICK [available_slots].start_co AT [day] [slot]", _ctx(slots), _FakeLLMClient()
+    )
     assert slots["start_date"] is None
 
 
@@ -1279,16 +1331,16 @@ def test_interpolate_slots_leaves_none_valued_slot_as_bracket_token():
 
 def test_interpolate_slots_formats_list_of_appointment_dicts_without_a_parseable_date_as_the_old_raw_dump():
     """
-Safety net, not the common case: real `[available_slots]` objects always
+    Safety net, not the common case: real `[available_slots]` objects always
 
-    carry a full ISO `start_local`/`start_co` (`"2026-09-22T09:00:00-05:00"`) —
-        a bare time with no date part is a shape `_format_appointment_list` can't
-        apply its day/time logic to at all, so it falls back to the pre-2026-09-17
-        raw dump rather than silently showing nothing.
+        carry a full ISO `start_local`/`start_co` (`"2026-09-22T09:00:00-05:00"`) —
+            a bare time with no date part is a shape `_format_appointment_list` can't
+            apply its day/time logic to at all, so it falls back to the pre-2026-09-17
+            raw dump rather than silently showing nothing.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     slots = {
         "slots_list": [
             {"start_local": "09:00", "end_local": "09:30"},
@@ -1319,14 +1371,14 @@ def _appointment(date: str, time: str) -> dict:
 
 def test_interpolate_slots_shows_unique_dates_when_no_slot_names_one_of_them():
     """
-SC_DAYS's shape: [available_slots] interpolated before [day] is ever
+    SC_DAYS's shape: [available_slots] interpolated before [day] is ever
 
-    captured — no other slot could possibly name one of the dates, so the
-        only sensible display is the list of distinct days on offer.
+        captured — no other slot could possibly name one of the dates, so the
+            only sensible display is the list of distinct days on offer.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     slots = {
         "available_slots": [
             _appointment("2026-09-22", "09:00"),
@@ -1353,14 +1405,14 @@ def test_interpolate_slots_filters_to_times_when_a_slot_names_the_exact_iso_date
 
 def test_interpolate_slots_filters_to_times_via_day_of_month_heuristic_when_unambiguous():
     """
-SC_HOURS's real shape: [day] is `free_text`-captured ("el 22"), never
+    SC_HOURS's real shape: [day] is `free_text`-captured ("el 22"), never
 
-    guaranteed to be an ISO date — the fallback must still find it, as long
-        as the day-of-month it names is unambiguous among the dates on offer.
+        guaranteed to be an ISO date — the fallback must still find it, as long
+            as the day-of-month it names is unambiguous among the dates on offer.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     slots = {
         "day": "el 22, por favor",
         "available_slots": [
@@ -1374,17 +1426,17 @@ SC_HOURS's real shape: [day] is `free_text`-captured ("el 22"), never
 
 def test_interpolate_slots_day_of_month_heuristic_never_misfires_on_an_unrelated_number():
     """
-A retry counter or phone-number slot must never accidentally filter
+    A retry counter or phone-number slot must never accidentally filter
 
-    the list — the heuristic only fires when a candidate slot's number
-        uniquely identifies one date; here "22" doesn't appear standalone in
-        any slot at all (the phone number is one contiguous digit run, matched
-        by `\b\d{1,2}\b` never crossing into it), so this must fall through
-        to showing every distinct date, not a wrong single-day filter.
+        the list — the heuristic only fires when a candidate slot's number
+            uniquely identifies one date; here "22" doesn't appear standalone in
+            any slot at all (the phone number is one contiguous digit run, matched
+            by `\b\d{1,2}\b` never crossing into it), so this must fall through
+            to showing every distinct date, not a wrong single-day filter.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     slots = {
         "c_phone": "+15551234522",
         "svc_try": 3,
@@ -1399,21 +1451,21 @@ A retry counter or phone-number slot must never accidentally filter
 
 def test_interpolate_slots_day_of_month_heuristic_never_misfires_on_a_compile_time_constant():
     """
-Regression test, found live: `PROCESS_DURATION_MONTHS` (a compile-time
+    Regression test, found live: `PROCESS_DURATION_MONTHS` (a compile-time
 
-    constant, value `"24"`) was picked up by the day-of-month heuristic as if
-        the user had already chosen the 24th — before `[day]` was ever asked —
-        because one of the dates on offer happened to fall on the 24th too.
-        SC_DAYS's very first display silently filtered down to just that one
-        day's times instead of showing every date. A constant never represents
-        something the user said, so it must never be treated as a candidate
-        match, regardless of its value; the fix is name-based (constants are
-        UPPER_SNAKE_CASE, real slots are lower_snake_case, an existing hard DSL
-        rule), not specific to this one constant.
+        constant, value `"24"`) was picked up by the day-of-month heuristic as if
+            the user had already chosen the 24th — before `[day]` was ever asked —
+            because one of the dates on offer happened to fall on the 24th too.
+            SC_DAYS's very first display silently filtered down to just that one
+            day's times instead of showing every date. A constant never represents
+            something the user said, so it must never be treated as a candidate
+            match, regardless of its value; the fix is name-based (constants are
+            UPPER_SNAKE_CASE, real slots are lower_snake_case, an existing hard DSL
+            rule), not specific to this one constant.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     slots = {
         "PROCESS_DURATION_MONTHS": "24",
         "c_phone": "+573001234567",
@@ -1438,13 +1490,13 @@ Regression test, found live: `PROCESS_DURATION_MONTHS` (a compile-time
 
 def test_interpolate_slots_day_of_month_heuristic_skips_ambiguous_matches():
     """
-Two different offered dates share day-of-month 22 (a 22nd next month) —
+    Two different offered dates share day-of-month 22 (a 22nd next month) —
 
-    a bare "22" can't disambiguate between them, so this must not guess.
+        a bare "22" can't disambiguate between them, so this must not guess.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     slots = {
         "day": "22",
         "available_slots": [
@@ -1458,13 +1510,13 @@ Two different offered dates share day-of-month 22 (a 22nd next month) —
 
 def test_interpolate_slots_date_reference_slots_do_not_pick_a_day():
     """
-A `now` timestamp and a `calendar` list of dates are references, not the
+    A `now` timestamp and a `calendar` list of dates are references, not the
 
-    day the contact chose, so the day list must still show the dates on offer.
+        day the contact chose, so the day list must still show the dates on offer.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     slots = {
         "now": "2026-10-27T10:56:57-06:00",
         "calendar": "2026-10-27 Tuesday, 2026-10-28 Wednesday, 2026-10-29 Thursday, 2026-10-30 Friday",
@@ -1475,19 +1527,22 @@ A `now` timestamp and a `calendar` list of dates are references, not the
         ],
     }
     result = _interpolate_slots("[available_slots]", slots)
-    assert result == "🗓️ Martes 27 de octubre\n └─ Mañana\n🗓️ Jueves 29 de octubre\n └─ Tarde\n🗓️ Viernes 30 de octubre\n └─ Mañana"
+    assert (
+        result
+        == "🗓️ Martes 27 de octubre\n └─ Mañana\n🗓️ Jueves 29 de octubre\n └─ Tarde\n🗓️ Viernes 30 de octubre\n └─ Mañana"
+    )
 
 
 def test_interpolate_slots_appointment_list_skips_the_matching_date_when_only_one_date_is_offered():
     """
-When `get_available_slots` already returned only one day's worth of
+    When `get_available_slots` already returned only one day's worth of
 
-    slots, there's nothing to filter — go straight to times without needing
-        any other slot to name the date.
+        slots, there's nothing to filter — go straight to times without needing
+            any other slot to name the date.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     slots = {
         "available_slots": [
             _appointment("2026-09-22", "09:00"),
@@ -1511,18 +1566,18 @@ def test_interpolate_slots_formats_dates_in_english_when_language_code_is_en():
 
 def test_interpolate_slots_substitutes_a_constant_reference():
     """
-Regression test: `<AGENT_NAME>`/`<COMPANY_NAME>`-style constant
+    Regression test: `<AGENT_NAME>`/`<COMPANY_NAME>`-style constant
 
-    references (`initial_slots()` already seeds every `RuntimeArtifact.
-        constants` entry into `slots` under its exact uppercase name) showed
-        up literally, unresolved, in every real conversation this whole
-        session — `_interpolate_slots` only ever matched `[lower_snake]`
-        slot references, never `<UPPER_SNAKE>` constant ones, even though the
-        value was one dict lookup away the entire time.
+        references (`initial_slots()` already seeds every `RuntimeArtifact.
+            constants` entry into `slots` under its exact uppercase name) showed
+            up literally, unresolved, in every real conversation this whole
+            session — `_interpolate_slots` only ever matched `[lower_snake]`
+            slot references, never `<UPPER_SNAKE>` constant ones, even though the
+            value was one dict lookup away the entire time.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     assert _interpolate_slots("Soy <AGENT_NAME>.", {"AGENT_NAME": "Sam"}) == "Soy Sam."
 
 
@@ -1597,7 +1652,9 @@ def test_capture_json_schema_marks_every_slot_required():
 def test_llm_extract_capture_omits_history_block_when_not_given():
     client = _FakeLLMClient(structured_reply={"profile": "couple"})
     _llm_extract_capture(
-        client, [("profile", "str")], _ctx(goal=["Goal."], last_user_message="en pareja", pending_question="Ask?")
+        client,
+        [("profile", "str")],
+        _ctx(goal=["Goal."], last_user_message="en pareja", pending_question="Ask?"),
     )
     assert "Recent conversation" not in client.structured_prompts[0]
 
@@ -1616,20 +1673,22 @@ def test_llm_extract_capture_includes_history_when_given():
 
 def test_llm_extract_capture_includes_known_slots():
     """
-The gap found live while designing the `[available_slots]` day/time
+    The gap found live while designing the `[available_slots]` day/time
 
-    display fix: without `slots`, a `free_text` capture of `[day]` (e.g. the
-        user says "el 22") has no way to normalize against the real dates
-        actually on offer in `[available_slots]` — it can only echo the user's
-        raw wording back.
+        display fix: without `slots`, a `free_text` capture of `[day]` (e.g. the
+            user says "el 22") has no way to normalize against the real dates
+            actually on offer in `[available_slots]` — it can only echo the user's
+            raw wording back.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     client = _FakeLLMClient(structured_reply={"day": "2026-09-22"})
     slots = {"available_slots": [{"start_local": "2026-09-22T09:00:00-05:00"}]}
     _llm_extract_capture(
-        client, [("day", "str")], _ctx(slots, last_user_message="el 22", pending_question="¿Qué día prefieres?")
+        client,
+        [("day", "str")],
+        _ctx(slots, last_user_message="el 22", pending_question="¿Qué día prefieres?"),
     )
     prompt = client.structured_prompts[0]
     assert "2026-09-22T09:00:00-05:00" in prompt
@@ -1703,7 +1762,9 @@ def test_sync_language_change_swallows_tool_failure():
     def boom(**kw):
         raise RuntimeError("ghl down")
 
-    _sync_language_change("English", {"preferred_language": "Spanish"}, {"contact_id": "c1"}, {"update_custom_field": boom})
+    _sync_language_change(
+        "English", {"preferred_language": "Spanish"}, {"contact_id": "c1"}, {"update_custom_field": boom}
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -1774,16 +1835,15 @@ def test_match_in_leaves_an_empty_slot_untouched():
     assert slots["city"] is None
 
 
-
 def test_interpolate_slots_fills_contact_placeholders_and_keeps_missing_ones():
     """
-`{{contact.field}}` is filled from the session's CRM contact, like `[slot]`.
+    `{{contact.field}}` is filled from the session's CRM contact, like `[slot]`.
 
-    A field the contact lacks stays as written instead of being blanked.
+        A field the contact lacks stays as written instead of being blanked.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     text = "Hola {{contact.name}}, escribimos a {{ contact.email }} o {{contact.phone}}"
 
     result = _interpolate_slots(text, {}, contact={"name": "Tomas", "email": "t@x.co", "phone": None})
@@ -1793,13 +1853,13 @@ def test_interpolate_slots_fills_contact_placeholders_and_keeps_missing_ones():
 
 def test_render_say_keeps_contact_values_out_of_the_paraphrase():
     """
-The paraphrasing model never sees the contact's real name, only a token,
+    The paraphrasing model never sees the contact's real name, only a token,
 
-    so it cannot rewrite it (e.g. add an accent); the real value is restored after.
+        so it cannot rewrite it (e.g. add an accent); the real value is restored after.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     prompts = []
 
     class _AccentAddingLLM:
@@ -1809,7 +1869,14 @@ The paraphrasing model never sees the contact's real name, only a token,
 
     render_say = _make_render_say(_AccentAddingLLM())
 
-    result = render_say("OP_ASK_WHO", ["Hola {{contact.first_name}}, soy Sofia."], False, "Spanish", {}, contact={"first_name": "Tomas"})
+    result = render_say(
+        "OP_ASK_WHO",
+        ["Hola {{contact.first_name}}, soy Sofia."],
+        False,
+        "Spanish",
+        {},
+        contact={"first_name": "Tomas"},
+    )
 
     assert result == "Qué tal Tomas, soy Sofía."
     assert "Tomas" not in prompts[0] and "<CONTACT_FIRST_NAME>" in prompts[0]
@@ -1837,13 +1904,13 @@ def _failing_tool(**kwargs):
 
 def test_action_node_that_captures_nothing_survives_a_tool_failure():
     """
-A fire-and-forget tool call (a CRM sync) has no result to route on, so its
+    A fire-and-forget tool call (a CRM sync) has no result to route on, so its
 
-    failure must not end the conversation.
+        failure must not end the conversation.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     node = GraphNode(node_id="SYNC", node_type="action", execute="sync", capture=[])
 
     result = _action_node_fn(node, _failing_tool)({"slots": {}, "current_state": "", "last_user_message": ""})
@@ -1853,11 +1920,11 @@ A fire-and-forget tool call (a CRM sync) has no result to route on, so its
 
 def test_action_node_that_captures_a_result_still_raises_on_a_tool_failure():
     """
-A node that routes on the tool's result cannot continue without it.
+    A node that routes on the tool's result cannot continue without it.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     import pytest
 
     from agent_runtime.runtime.tool_executor import ToolExecutionError
@@ -1870,13 +1937,13 @@ A node that routes on the tool's result cannot continue without it.
 
 def test_action_capture_takes_the_longest_matching_result_key_for_a_namespaced_slot():
     """
-`q__eligibility_result` ends with both `result` and `eligibility_result`:
+    `q__eligibility_result` ends with both `result` and `eligibility_result`:
 
-    each namespaced slot must get its own key's value, not the shorter key's.
+        each namespaced slot must get its own key's value, not the shorter key's.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     node = GraphNode(
         node_id="RUN",
         node_type="action",
@@ -1884,9 +1951,9 @@ def test_action_capture_takes_the_longest_matching_result_key_for_a_namespaced_s
         capture=[("q__result", "string"), ("q__eligibility_result", "string")],
     )
 
-    result = _action_node_fn(node, lambda **kwargs: {"result": "Rejected (Age)", "eligibility_result": "rejected"})(
-        {"slots": {}, "current_state": "", "last_user_message": ""}
-    )
+    result = _action_node_fn(
+        node, lambda **kwargs: {"result": "Rejected (Age)", "eligibility_result": "rejected"}
+    )({"slots": {}, "current_state": "", "last_user_message": ""})
 
     assert result["slots"]["q__result"] == "Rejected (Age)"
     assert result["slots"]["q__eligibility_result"] == "rejected"
@@ -1909,7 +1976,9 @@ def test_resolve_edges_llm_condition_before_an_unconditional_default_still_gets_
     client = _FakeLLMClient(reply="0")
     resolve_edges = _make_resolve_edges(client)
     edges = [
-        GraphEdge(target="SWITCH_LANGUAGE", condition_text="the message is clearly English", is_mechanical=False),
+        GraphEdge(
+            target="SWITCH_LANGUAGE", condition_text="the message is clearly English", is_mechanical=False
+        ),
         GraphEdge(target="GREET", condition_text=None, is_mechanical=False),
     ]
     assert resolve_edges(edges, _ctx({})) == "SWITCH_LANGUAGE"
@@ -1920,7 +1989,9 @@ def test_resolve_edges_unconditional_default_wins_when_no_llm_condition_applies(
     client = _FakeLLMClient(reply="NONE")
     resolve_edges = _make_resolve_edges(client)
     edges = [
-        GraphEdge(target="SWITCH_LANGUAGE", condition_text="the message is clearly English", is_mechanical=False),
+        GraphEdge(
+            target="SWITCH_LANGUAGE", condition_text="the message is clearly English", is_mechanical=False
+        ),
         GraphEdge(target="GREET", condition_text=None, is_mechanical=False),
     ]
     assert resolve_edges(edges, _ctx({})) == "GREET"
@@ -1980,7 +2051,9 @@ def test_render_say_discards_a_rewording_that_changes_a_time():
     assert render_say("N", ["Time: 04:00"], False, "es", {}) == "Hora: 04:00"
 
 
-_CALENDAR = "2026-10-27 Tuesday{n}2026-10-28 Wednesday{n}2026-10-29 Thursday{n}2026-10-30 Friday{n}2026-10-31 Saturday{n}2026-11-01 Sunday{n}2026-11-02 Monday{n}2026-11-03 Tuesday{n}2026-11-04 Wednesday{n}2026-11-05 Thursday".format(n=chr(10))
+_CALENDAR = "2026-10-27 Tuesday{n}2026-10-28 Wednesday{n}2026-10-29 Thursday{n}2026-10-30 Friday{n}2026-10-31 Saturday{n}2026-11-01 Sunday{n}2026-11-02 Monday{n}2026-11-03 Tuesday{n}2026-11-04 Wednesday{n}2026-11-05 Thursday".format(
+    n=chr(10)
+)
 _OFFERED = [{"start_local": f"2026-{d}T09:00:00-05:00"} for d in ("10-30", "11-03", "11-04", "11-05")]
 
 
@@ -2075,7 +2148,11 @@ def test_correct_contact_email_leaves_everything_else_alone():
         ({"sc__c_email": None}, capture, "es otra@gmail.com"),
         ({"other": "x"}, capture, "es otra@gmail.com"),
         ({"sc__c_email": "ana@gmail.com"}, [("sc__c_email", "email")], "es otra@gmail.com"),
-        ({"sc__c_email": "ana@gmail.com"}, [("sc__ok", "Literal[yes, no]"), ("sc__fix", "free_text")], "es otra@gmail.com"),
+        (
+            {"sc__c_email": "ana@gmail.com"},
+            [("sc__ok", "Literal[yes, no]"), ("sc__fix", "free_text")],
+            "es otra@gmail.com",
+        ),
     ):
         before = dict(slots)
         assert _correct_contact_email(slots, cap, reply) is None
@@ -2083,8 +2160,18 @@ def test_correct_contact_email_leaves_everything_else_alone():
 
 
 def test_interpolate_slots_lists_booked_appointments_soonest_first_in_the_contacts_language():
-    later = {"event_id": "b", "summary": "Consulta", "start_time": "2026-11-05T14:30:00-05:00", "calendar_type": "IVF"}
-    sooner = {"event_id": "a", "summary": "Consulta", "start_time": "2026-11-03T10:00:00-05:00", "calendar_type": "IVF"}
+    later = {
+        "event_id": "b",
+        "summary": "Consulta",
+        "start_time": "2026-11-05T14:30:00-05:00",
+        "calendar_type": "IVF",
+    }
+    sooner = {
+        "event_id": "a",
+        "summary": "Consulta",
+        "start_time": "2026-11-03T10:00:00-05:00",
+        "calendar_type": "IVF",
+    }
     assert _interpolate_slots("[appointments]", {"appointments": [later, sooner]}, "es") == (
         "1. 📅 martes 3 de noviembre de 2026 🕐 10:00\n2. 📅 jueves 5 de noviembre de 2026 🕐 14:30"
     )
@@ -2092,18 +2179,41 @@ def test_interpolate_slots_lists_booked_appointments_soonest_first_in_the_contac
 
 
 def test_interpolate_slots_formats_a_booked_appointment_kept_as_json_text():
-    text = '{"event_id":"a","summary":"Consulta","start_time":"2026-11-03T10:00:00-05:00","calendar_type":"IVF"}'
+    text = (
+        '{"event_id":"a","summary":"Consulta","start_time":"2026-11-03T10:00:00-05:00","calendar_type":"IVF"}'
+    )
     assert _interpolate_slots("[app]", {"app": text}, "es") == "📅 martes 3 de noviembre de 2026 🕐 10:00"
 
 
 def test_interpolate_slots_joins_consecutive_times_into_ranges():
-    times = ["07:00", "08:00", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30"]
+    times = [
+        "07:00",
+        "08:00",
+        "09:00",
+        "09:30",
+        "10:00",
+        "10:30",
+        "11:00",
+        "11:30",
+        "13:00",
+        "13:30",
+        "14:00",
+        "14:30",
+        "15:00",
+        "15:30",
+    ]
     slots = {"available_slots": [_appointment("2026-09-22", t) for t in times]}
-    assert _interpolate_slots("[available_slots]", slots) == "Mañana\n🕐 07:00\n🕐 08:00\n🕐 09:00 a 11:30\n\nTarde\n🕐 13:00 a 15:30"
+    assert (
+        _interpolate_slots("[available_slots]", slots)
+        == "Mañana\n🕐 07:00\n🕐 08:00\n🕐 09:00 a 11:30\n\nTarde\n🕐 13:00 a 15:30"
+    )
 
 
 def test_interpolate_slots_names_every_part_of_the_day_with_availability():
-    slots = {"available_slots": [_appointment("2026-11-03", t) for t in ("04:00", "07:00", "14:00", "20:00")] + [_appointment("2026-11-04", "09:00")]}
+    slots = {
+        "available_slots": [_appointment("2026-11-03", t) for t in ("04:00", "07:00", "14:00", "20:00")]
+        + [_appointment("2026-11-04", "09:00")]
+    }
     assert _interpolate_slots("[available_slots]", slots, "es") == (
         "🗓️ Martes 3 de noviembre\n └─ Madrugada · Mañana · Tarde · Noche\n🗓️ Miércoles 4 de noviembre\n └─ Mañana"
     )
@@ -2158,11 +2268,18 @@ def test_render_say_falls_back_to_a_plain_translation_before_the_template_langua
 
         def complete(self, prompt, *, temperature=0.0):
             self.prompts.append(prompt)
-            return "¿Podrías decirme la hora? Gracias." if len(self.prompts) < 3 else "Lo siento, no entendí esa hora."
+            return (
+                "¿Podrías decirme la hora? Gracias."
+                if len(self.prompts) < 3
+                else "Lo siento, no entendí esa hora."
+            )
 
     client = _Client()
     render_say = _make_render_say(client)
-    assert render_say("N", ["Sorry, I didn't understand that time."], False, "es", {}) == "Lo siento, no entendí esa hora."
+    assert (
+        render_say("N", ["Sorry, I didn't understand that time."], False, "es", {})
+        == "Lo siento, no entendí esa hora."
+    )
     assert client.prompts[2].startswith("Translate this agent message")
 
 
@@ -2171,7 +2288,9 @@ def test_mechanical_arg_bindings_turn_a_language_name_into_its_uppercase_code():
 
     line = "duration = 30. language = [preferred_language] in uppercase ('EN', 'ES', or 'PT'). iana_timezone = [user_timezone]."
     for name, code in (("English", "EN"), ("Spanish", "ES"), ("Portuguese", "PT")):
-        bound = _extract_mechanical_arg_bindings([line], {"preferred_language": name, "user_timezone": "America/Bogota"})
+        bound = _extract_mechanical_arg_bindings(
+            [line], {"preferred_language": name, "user_timezone": "America/Bogota"}
+        )
         assert bound["language"] == code
     assert "language" not in _extract_mechanical_arg_bindings([line], {})
 
@@ -2187,7 +2306,11 @@ def test_hours_are_grouped_under_each_part_of_the_day_with_ranges_in_the_languag
 
 def test_location_label_asks_for_country_and_city_in_the_conversation_language():
     client = _FakeLLMClient("'Spain - Seville'\n")
-    slots = {"user_location": "spian, sevila", "user_timezone": "Europe/Madrid", "preferred_language": "English"}
+    slots = {
+        "user_location": "spian, sevila",
+        "user_timezone": "Europe/Madrid",
+        "preferred_language": "English",
+    }
     _apply_store_line("[location_label] = LOCATION_LABEL [user_location]", _ctx(slots), client)
     assert slots["location_label"] == "Spain - Seville"
     assert "'spian, sevila'" in client.prompts[0] and "in English" in client.prompts[0]
@@ -2264,8 +2387,14 @@ def test_protect_lists_also_covers_the_new_day_and_part_of_day_blocks():
 
 def test_lists_follow_the_language_name_held_in_preferred_language():
     slots = {"available_slots": [_appointment("2026-11-04", t) for t in ("09:00", "09:30", "14:00")]}
-    assert _interpolate_slots("[available_slots]", slots, "English") == "Morning\n🕐 09:00 to 09:30\n\nAfternoon\n🕐 14:00"
-    assert _interpolate_slots("[available_slots]", slots, "Portuguese") == "Manhã\n🕐 09:00 a 09:30\n\nTarde\n🕐 14:00"
+    assert (
+        _interpolate_slots("[available_slots]", slots, "English")
+        == "Morning\n🕐 09:00 to 09:30\n\nAfternoon\n🕐 14:00"
+    )
+    assert (
+        _interpolate_slots("[available_slots]", slots, "Portuguese")
+        == "Manhã\n🕐 09:00 a 09:30\n\nTarde\n🕐 14:00"
+    )
 
 
 def test_session_history_keeps_ten_lines_but_prompts_show_the_last_five():

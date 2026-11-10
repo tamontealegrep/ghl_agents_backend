@@ -51,7 +51,12 @@ def test_gmail_sender_variables_are_not_calendars():
 
 
 def test_empty_values_and_other_variables_are_ignored():
-    env = {"BN_GHL_CALENDAR_ID_E": "", "BN_GHL_LOCATION_ID": "x", "GHL_CALENDAR_ID_Z": "1", "BNX_GHL_CALENDAR_ID_Y": "1"}
+    env = {
+        "BN_GHL_CALENDAR_ID_E": "",
+        "BN_GHL_LOCATION_ID": "x",
+        "GHL_CALENDAR_ID_Z": "1",
+        "BNX_GHL_CALENDAR_ID_Y": "1",
+    }
     assert discover_calendar_keys("BN", env) == []
 
 
@@ -71,7 +76,12 @@ def test_calendar_settings_read_every_variable_and_apply_defaults():
     s = load_calendar_settings("BN", "X", post_buffer_minutes=10, environ=env)
     assert (s.google_client_id, s.google_client_secret, s.google_refresh_token) == ("cid", "sec", "ref")
     assert (s.calendar_id, s.ghl_calendar_id) == ("cal@g", "ghl1")
-    assert (s.duration_minutes, s.interval_minutes, s.pre_buffer_minutes, s.post_buffer_minutes) == (45, 0, 0, 10)
+    assert (s.duration_minutes, s.interval_minutes, s.pre_buffer_minutes, s.post_buffer_minutes) == (
+        45,
+        0,
+        0,
+        10,
+    )
     assert (s.min_notice_minutes, s.date_range_days) == (None, 14)
 
 
@@ -88,7 +98,9 @@ def test_non_numeric_duration_names_the_variable():
 
 def test_load_calendars_returns_builtin_and_discovered_with_per_key_defaults():
     env = {"BN_GHL_CALENDAR_ID_CONTROL": "c1"}
-    calendars = load_calendars("BN", ("FT",), post_buffer_minutes=10, calendar_id_defaults={"ft": "primary"}, environ=env)
+    calendars = load_calendars(
+        "BN", ("FT",), post_buffer_minutes=10, calendar_id_defaults={"ft": "primary"}, environ=env
+    )
     assert list(calendars) == ["FT", "CONTROL"]
     assert calendars["FT"].calendar_id == "primary" and calendars["CONTROL"].calendar_id == ""
     assert calendars["CONTROL"].post_buffer_minutes == 10 and calendars["CONTROL"].ghl_calendar_id == "c1"
@@ -110,7 +122,9 @@ def test_scheduling_parameters_are_read_per_calendar():
 
 def test_min_notice_stays_none_when_unset_or_empty_and_zero_is_a_real_value():
     assert load_calendar_settings("FA", "X", environ={}).min_notice_minutes is None
-    assert load_calendar_settings("FA", "X", environ={"FA_MIN_NOTICE_MINUTES_X": " "}).min_notice_minutes is None
+    assert (
+        load_calendar_settings("FA", "X", environ={"FA_MIN_NOTICE_MINUTES_X": " "}).min_notice_minutes is None
+    )
     assert load_calendar_settings("FA", "X", environ={"FA_MIN_NOTICE_MINUTES_X": "0"}).min_notice_minutes == 0
 
 

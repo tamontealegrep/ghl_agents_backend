@@ -4,13 +4,13 @@ from agent_runtime.targets.langgraph.graph_renderer import GraphEdge, GraphNode
 
 def test_lm_resume_dynamic_goto_uses_resume_state():
     """
-LM_RESUME routes via GO_TO: [resume_state]. The dynamic target must
+    LM_RESUME routes via GO_TO: [resume_state]. The dynamic target must
 
-    resolve to the state id provided in the slots (previous active state).
+        resolve to the state id provided in the slots (previous active state).
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
 
     resume_target_id = "VI__VI_ASK_KNOW_SINGLE"
     target_node = GraphNode(node_id=resume_target_id, node_type="question")
@@ -28,10 +28,12 @@ LM_RESUME routes via GO_TO: [resume_state]. The dynamic target must
     )
 
     # Provide resume_state in slots (captured at LM_INIT before entering LM__)
-    state = {"slots": {"resume_state": resume_target_id}, "current_state": "LM__LM_RESUME", "last_user_message": "", "history": []}
+    state = {
+        "slots": {"resume_state": resume_target_id},
+        "current_state": "LM__LM_RESUME",
+        "last_user_message": "",
+        "history": [],
+    }
 
     target = router_fn(state)
     assert target == resume_target_id
-
-
-    

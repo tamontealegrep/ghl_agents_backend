@@ -64,4 +64,7 @@ def test_admin_routes_require_token_when_configured(settings, agents_dir):
     make_bundle(agents_dir, "a")
     with TestClient(create_app(replace(settings, admin_token="s3cret"))) as client:
         assert client.post("/agents/a/admin/reload").status_code == 401
-        assert client.post("/agents/a/admin/reload", headers={"Authorization": "Bearer wrong"}).status_code == 401
+        assert (
+            client.post("/agents/a/admin/reload", headers={"Authorization": "Bearer wrong"}).status_code
+            == 401
+        )

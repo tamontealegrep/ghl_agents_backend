@@ -1,5 +1,3 @@
-
-
 from desk.services import slots_ivf, slots_sur
 from desk.services.slot_engine import (
     compute_available_slots,
@@ -16,6 +14,7 @@ BOGOTA = "America/Bogota"
 # ---------------------------------------------------------------------------
 # compute_start_date — regla de anticipacion (code_01)
 # ---------------------------------------------------------------------------
+
 
 def test_compute_start_date_regular_weekday_adds_two_days():
     # Miercoles 2026-08-26 -> Viernes 2026-08-28
@@ -46,6 +45,7 @@ def test_compute_start_date_sunday_lands_on_tuesday():
 # ---------------------------------------------------------------------------
 # compute_end_date — date_range_days dias despues, retrocede a viernes si cae fin de semana
 # ---------------------------------------------------------------------------
+
 
 def test_compute_end_date_ivf_always_closes_at_5pm():
     start = build_business_instant(2026, 9, 1, 7, 0, BOGOTA)  # +14 dias = 2026-09-15 (martes)
@@ -85,6 +85,7 @@ def test_compute_end_date_respects_configured_date_range_days():
 # is_holiday
 # ---------------------------------------------------------------------------
 
+
 def test_is_holiday_known_date():
     assert is_holiday(2026, 1, 1) is True
 
@@ -97,16 +98,23 @@ def test_is_holiday_regular_date():
 # compute_available_slots — un solo dia (viernes), politica IVF, sin ocupados
 # ---------------------------------------------------------------------------
 
+
 def test_compute_available_slots_single_friday_ivf_excludes_lunch():
     now = build_business_instant(2026, 8, 20, 6, 0, BOGOTA)  # jueves, lejos en el pasado
     start = build_business_instant(2026, 8, 28, 0, 0, BOGOTA)  # viernes
     end = build_business_instant(2026, 8, 28, 23, 59, BOGOTA)
 
     slots = compute_available_slots(
-        start_date=start, end_date=end, now_utc=now,
-        duration_minutes=30, interval_minutes=30, min_advance_minutes=60,
-        user_tz=BOGOTA, busy_events=[],
-        day_window_fn=slots_ivf.day_window, lunch_break_fn=slots_ivf.lunch_break,
+        start_date=start,
+        end_date=end,
+        now_utc=now,
+        duration_minutes=30,
+        interval_minutes=30,
+        min_advance_minutes=60,
+        user_tz=BOGOTA,
+        busy_events=[],
+        day_window_fn=slots_ivf.day_window,
+        lunch_break_fn=slots_ivf.lunch_break,
     )
 
     assert len(slots) == 17
@@ -126,10 +134,16 @@ def test_compute_available_slots_excludes_holiday():
     end = build_business_instant(2026, 8, 17, 23, 59, BOGOTA)
 
     slots = compute_available_slots(
-        start_date=start, end_date=end, now_utc=now,
-        duration_minutes=30, interval_minutes=30, min_advance_minutes=60,
-        user_tz=BOGOTA, busy_events=[],
-        day_window_fn=slots_ivf.day_window, lunch_break_fn=slots_ivf.lunch_break,
+        start_date=start,
+        end_date=end,
+        now_utc=now,
+        duration_minutes=30,
+        interval_minutes=30,
+        min_advance_minutes=60,
+        user_tz=BOGOTA,
+        busy_events=[],
+        day_window_fn=slots_ivf.day_window,
+        lunch_break_fn=slots_ivf.lunch_break,
     )
     assert slots == []
 
@@ -142,10 +156,16 @@ def test_compute_available_slots_excludes_slot_overlapping_busy_event():
     busy_end = build_business_instant(2026, 8, 28, 9, 30, BOGOTA)
 
     slots = compute_available_slots(
-        start_date=start, end_date=end, now_utc=now,
-        duration_minutes=30, interval_minutes=30, min_advance_minutes=60,
-        user_tz=BOGOTA, busy_events=[(busy_start, busy_end)],
-        day_window_fn=slots_ivf.day_window, lunch_break_fn=slots_ivf.lunch_break,
+        start_date=start,
+        end_date=end,
+        now_utc=now,
+        duration_minutes=30,
+        interval_minutes=30,
+        min_advance_minutes=60,
+        user_tz=BOGOTA,
+        busy_events=[(busy_start, busy_end)],
+        day_window_fn=slots_ivf.day_window,
+        lunch_break_fn=slots_ivf.lunch_break,
     )
     starts = [s.start_co for s in slots]
     assert "2026-08-28T09:00:00-05:00" not in starts
@@ -160,10 +180,16 @@ def test_compute_available_slots_respects_min_advance_notice():
     now = build_business_instant(2026, 8, 28, 8, 30, BOGOTA)  # 30 min antes de las 09:00
 
     slots = compute_available_slots(
-        start_date=start, end_date=end, now_utc=now,
-        duration_minutes=30, interval_minutes=30, min_advance_minutes=60,
-        user_tz=BOGOTA, busy_events=[],
-        day_window_fn=slots_ivf.day_window, lunch_break_fn=slots_ivf.lunch_break,
+        start_date=start,
+        end_date=end,
+        now_utc=now,
+        duration_minutes=30,
+        interval_minutes=30,
+        min_advance_minutes=60,
+        user_tz=BOGOTA,
+        busy_events=[],
+        day_window_fn=slots_ivf.day_window,
+        lunch_break_fn=slots_ivf.lunch_break,
     )
     starts = [s.start_co for s in slots]
     assert "2026-08-28T09:00:00-05:00" not in starts
@@ -176,10 +202,16 @@ def test_compute_available_slots_start_local_reflects_user_timezone():
     end = build_business_instant(2026, 8, 28, 23, 59, BOGOTA)
 
     slots = compute_available_slots(
-        start_date=start, end_date=end, now_utc=now,
-        duration_minutes=30, interval_minutes=30, min_advance_minutes=60,
-        user_tz="America/New_York", busy_events=[],
-        day_window_fn=slots_ivf.day_window, lunch_break_fn=slots_ivf.lunch_break,
+        start_date=start,
+        end_date=end,
+        now_utc=now,
+        duration_minutes=30,
+        interval_minutes=30,
+        min_advance_minutes=60,
+        user_tz="America/New_York",
+        busy_events=[],
+        day_window_fn=slots_ivf.day_window,
+        lunch_break_fn=slots_ivf.lunch_break,
     )
     # 07:30 Bogota (-05:00) == 08:30 New York (-04:00, horario de verano en agosto)
     assert slots[0].start_local == "2026-08-28T08:30:00-04:00"

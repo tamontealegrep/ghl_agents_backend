@@ -33,7 +33,7 @@ import questionary
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import devenv
-from chat_tui.common import (  # noqa: F401  (re-exported for the tests)
+from chat_tui.common import (
     BACKEND_ROOT,
     COMPANIES_DIR,
     STYLE,
@@ -81,7 +81,12 @@ def choose_agent(agents: list[AgentRef]) -> AgentRef:
 
 def _contact_from_args(args: argparse.Namespace) -> dict[str, Any]:
     """Builds the session's ``contact`` dict (CRM fields ``{{contact.X}}`` resolves against) from the ``--contact-*`` flags."""
-    contact = {"name": args.contact_name, "email": args.contact_email, "phone": args.contact_phone, "language": args.contact_language}
+    contact = {
+        "name": args.contact_name,
+        "email": args.contact_email,
+        "phone": args.contact_phone,
+        "language": args.contact_language,
+    }
     return {k: v for k, v in contact.items() if v is not None}
 
 
@@ -99,7 +104,9 @@ def load_company_environment(agent: AgentRef) -> None:
 def run_launcher(args: argparse.Namespace) -> int:
     agents = discover_agents(args.company)
     if not agents:
-        console.print(f"[red]No se encontro ningun agente bajo {COMPANIES_DIR}[/red] (se espera companies/<empresa>/bundles/<slug>/graph.json).")
+        console.print(
+            f"[red]No se encontro ningun agente bajo {COMPANIES_DIR}[/red] (se espera companies/<empresa>/bundles/<slug>/graph.json)."
+        )
         return 1
 
     while True:
@@ -107,7 +114,9 @@ def run_launcher(args: argparse.Namespace) -> int:
             if args.agent:
                 matches = [a for a in agents if a.slug == args.agent]
                 if not matches:
-                    console.print(f"[red]Agente desconocido: {args.agent!r}. Disponibles: {[a.slug for a in agents]}[/red]")
+                    console.print(
+                        f"[red]Agente desconocido: {args.agent!r}. Disponibles: {[a.slug for a in agents]}[/red]"
+                    )
                     return 1
                 agent = matches[0]
             else:
@@ -140,19 +149,39 @@ def run_launcher(args: argparse.Namespace) -> int:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="TUI para probar cualquier agente bajo companies/<empresa>/bundles/")
+    parser = argparse.ArgumentParser(
+        description="TUI para probar cualquier agente bajo companies/<empresa>/bundles/"
+    )
     parser.add_argument("--company", help="Solo los agentes de esta empresa (carpeta bajo companies/).")
-    parser.add_argument("--agent", help="Slug del agente a abrir directo (ver --list). Si se omite, muestra el selector.")
+    parser.add_argument(
+        "--agent", help="Slug del agente a abrir directo (ver --list). Si se omite, muestra el selector."
+    )
     parser.add_argument("--session-file", help="Ruta del JSON de sesion a retomar/guardar")
     parser.add_argument("--list", action="store_true", help="Lista los agentes disponibles y sale")
-    parser.add_argument("--initial-slots", help="JSON string con slots iniciales (ej. '{\"name\": \"Tomas\"}')")
-    parser.add_argument("--log-llm", action="store_true", help="Habilita el log de LLM (prompts/respuestas) por defecto")
-    parser.add_argument("--log-http", action="store_true", help="Habilita el log de trafico HTTP (tool calls) por defecto")
-    parser.add_argument("--log-tools", action="store_true", help="Muestra por defecto las tool calls al final de cada turno")
-    parser.add_argument("--contact-name", help="Simula un contacto ya conocido por el CRM -- nombre (resuelve {{contact.name}}).")
-    parser.add_argument("--contact-email", help="Simula un contacto ya conocido -- email (resuelve {{contact.email}}).")
-    parser.add_argument("--contact-phone", help="Simula un contacto ya conocido -- telefono (resuelve {{contact.phone}}).")
-    parser.add_argument("--contact-language", help="Simula un contacto ya conocido -- idioma preferido (resuelve {{contact.language}}).")
+    parser.add_argument("--initial-slots", help='JSON string con slots iniciales (ej. \'{"name": "Tomas"}\')')
+    parser.add_argument(
+        "--log-llm", action="store_true", help="Habilita el log de LLM (prompts/respuestas) por defecto"
+    )
+    parser.add_argument(
+        "--log-http", action="store_true", help="Habilita el log de trafico HTTP (tool calls) por defecto"
+    )
+    parser.add_argument(
+        "--log-tools", action="store_true", help="Muestra por defecto las tool calls al final de cada turno"
+    )
+    parser.add_argument(
+        "--contact-name",
+        help="Simula un contacto ya conocido por el CRM -- nombre (resuelve {{contact.name}}).",
+    )
+    parser.add_argument(
+        "--contact-email", help="Simula un contacto ya conocido -- email (resuelve {{contact.email}})."
+    )
+    parser.add_argument(
+        "--contact-phone", help="Simula un contacto ya conocido -- telefono (resuelve {{contact.phone}})."
+    )
+    parser.add_argument(
+        "--contact-language",
+        help="Simula un contacto ya conocido -- idioma preferido (resuelve {{contact.language}}).",
+    )
     return parser.parse_args(argv)
 
 

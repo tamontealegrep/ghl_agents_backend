@@ -49,7 +49,10 @@ def _ctx(slots, goal=None, do=None):
 
 
 def _big_list():
-    return [{"start_local": f"2026-11-04T09:{i:02d}:00", "start_co": f"2026-11-04T09:{i:02d}:00-05:00"} for i in range(60)]
+    return [
+        {"start_local": f"2026-11-04T09:{i:02d}:00", "start_co": f"2026-11-04T09:{i:02d}:00-05:00"}
+        for i in range(60)
+    ]
 
 
 def test_block_leaves_out_a_large_slot_the_prompt_does_not_name():
@@ -61,13 +64,21 @@ def test_block_leaves_out_a_large_slot_the_prompt_does_not_name():
 
 
 def test_block_keeps_a_large_slot_named_in_the_mentions():
-    block = _ctx({"sc__available_slots": _big_list()}).block("IF [sc__available_slots] has a match -> GO_TO: X")
+    block = _ctx({"sc__available_slots": _big_list()}).block(
+        "IF [sc__available_slots] has a match -> GO_TO: X"
+    )
     assert "2026-11-04T09:30:00" in block
 
 
 def test_block_keeps_a_large_slot_named_in_the_goal_or_do():
-    assert "2026-11-04T09:30:00" in _ctx({"sc__available_slots": _big_list()}, goal=["use [sc__available_slots]"]).block()
-    assert "2026-11-04T09:30:00" in _ctx({"sc__available_slots": _big_list()}, do=["read sc__available_slots"]).block()
+    assert (
+        "2026-11-04T09:30:00"
+        in _ctx({"sc__available_slots": _big_list()}, goal=["use [sc__available_slots]"]).block()
+    )
+    assert (
+        "2026-11-04T09:30:00"
+        in _ctx({"sc__available_slots": _big_list()}, do=["read sc__available_slots"]).block()
+    )
 
 
 def test_block_keeps_small_slots_whole():
@@ -76,8 +87,12 @@ def test_block_keeps_small_slots_whole():
 
 def _slot_objects():
     return [
-        {"start_co": f"2026-11-04T09:{i:02d}:00-05:00", "end_co": f"2026-11-04T09:{i:02d}:30-05:00",
-         "start_local": f"2026-11-04T09:{i:02d}:00-05:00", "end_local": f"2026-11-04T09:{i:02d}:30-05:00"}
+        {
+            "start_co": f"2026-11-04T09:{i:02d}:00-05:00",
+            "end_co": f"2026-11-04T09:{i:02d}:30-05:00",
+            "start_local": f"2026-11-04T09:{i:02d}:00-05:00",
+            "end_local": f"2026-11-04T09:{i:02d}:30-05:00",
+        }
         for i in range(30)
     ]
 

@@ -2,7 +2,13 @@
 
 from tests.tools.apps import desk_app as app
 
-SCHEDULING = ("get-available-slots", "book-appointment", "find-appointment", "edit-appointment", "cancel-appointment")
+SCHEDULING = (
+    "get-available-slots",
+    "book-appointment",
+    "find-appointment",
+    "edit-appointment",
+    "cancel-appointment",
+)
 
 
 def _paths() -> set[str]:

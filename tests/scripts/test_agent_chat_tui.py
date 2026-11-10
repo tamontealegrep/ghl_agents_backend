@@ -35,7 +35,10 @@ def family_aims(tmp_path, monkeypatch):
 def test_agents_are_discovered_per_company_skipping_tool_folders():
     everything = tui.discover_agents()
     slugs = {(a.company, a.slug) for a in everything}
-    assert ("family_aims", "family_aims_sam_text") in slugs and ("babynova", "babynova_triage_obstetrico_text") in slugs
+    assert ("family_aims", "family_aims_sam_text") in slugs and (
+        "babynova",
+        "babynova_triage_obstetrico_text",
+    ) in slugs
     assert not any(a.slug.startswith("_") for a in everything)
     assert {a.company for a in tui.discover_agents("babynova")} == {"babynova"}
     assert tui.discover_agents("nope") == []
@@ -55,7 +58,12 @@ def test_session_round_trip_keeps_everything(tmp_path, family_aims):
 
     loaded = tui.load_session(file, list(family_aims.values()))
 
-    assert (loaded.thread_id, loaded.first_speaker, loaded.initial_slots, loaded.contact) == (state.thread_id, "user", {"a": 1}, {"name": "Ana"})
+    assert (loaded.thread_id, loaded.first_speaker, loaded.initial_slots, loaded.contact) == (
+        state.thread_id,
+        "user",
+        {"a": 1},
+        {"name": "Ana"},
+    )
     assert loaded.agent is family_aims["family_aims_sam_text"] and loaded.history[0]["body"] == "hola"
     assert (loaded.log_llm, loaded.log_http, loaded.log_tools) == (True, True, True)
 
@@ -74,7 +82,10 @@ def test_session_files_default_to_a_timestamped_log(tmp_path, monkeypatch):
     assert tui.resolve_session_file("agent_x", str(tmp_path / "mine.json")) == tmp_path / "mine.json"
 
 
-@pytest.mark.parametrize(("raw", "expected"), [("", None), ("  ", None), ("true", True), ("12", 12), ('{"a": 1}', {"a": 1}), ("hola", "hola")])
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [("", None), ("  ", None), ("true", True), ("12", 12), ('{"a": 1}', {"a": 1}), ("hola", "hola")],
+)
 def test_slot_values_are_json_when_possible(raw, expected):
     assert tui._parse_slot_input(raw) == expected
 
@@ -87,7 +98,9 @@ def test_the_harness_discovers_slots_and_contact_fields_from_the_graph(family_ai
 
 
 def test_a_turn_runs_the_real_graph_and_leaves_a_checkpoint(family_aims):
-    harness = tui.AgentHarness(family_aims["family_aims_sam_text"], contact={"name": "Ana", "language": "es"}, llm_client=FakeLLM())
+    harness = tui.AgentHarness(
+        family_aims["family_aims_sam_text"], contact={"name": "Ana", "language": "es"}, llm_client=FakeLLM()
+    )
     assert harness.state_snapshot("t1") == {}
 
     first = harness.start("t1", "user", "hola")
@@ -112,7 +125,9 @@ def test_initial_slots_are_preset_before_the_graph_runs(family_aims):
 def test_tool_calls_are_recorded_and_fall_back_across_routes(family_aims):
     harness = tui.AgentHarness(family_aims["family_aims_sam_text"], llm_client=FakeLLM())
 
-    response = harness.tracing_http_client.post(f"{harness.tools_base_url}/check_visa", json={"nationalities": "USA"})
+    response = harness.tracing_http_client.post(
+        f"{harness.tools_base_url}/check_visa", json={"nationalities": "USA"}
+    )
 
     assert response.status_code == 200  # check-visa-ghl answered 404, check-visa answered
     trace = harness._trace_buffer[-1]
@@ -129,7 +144,11 @@ def test_http_logging_prints_request_and_response_only_when_enabled(family_aims)
     with tui.console.capture() as loud:
         harness.tracing_http_client.post(url, json={"nationalities": "USA"})
     assert quiet.get() == ""
-    assert "HTTP Request Body" in loud.get() and "HTTP Response Body" in loud.get() and "nationalities" in loud.get()
+    assert (
+        "HTTP Request Body" in loud.get()
+        and "HTTP Response Body" in loud.get()
+        and "nationalities" in loud.get()
+    )
 
 
 def test_llm_logging_prints_prompts_only_when_enabled():
@@ -152,15 +171,27 @@ def test_commands_toggle_logs_and_clear_things(tmp_path, family_aims):
 
     with tui.console.capture():
         assert tui.handle_chat_command("/log-tools", state, file, harness) and state.log_tools is True
-        assert tui.handle_chat_command("/log-llm", state, file, harness) and harness.tracing_llm_client.enabled is True
-        assert tui.handle_chat_command("/log-http", state, file, harness) and harness.tracing_http_client.enabled is True
+        assert (
+            tui.handle_chat_command("/log-llm", state, file, harness)
+            and harness.tracing_llm_client.enabled is True
+        )
+        assert (
+            tui.handle_chat_command("/log-http", state, file, harness)
+            and harness.tracing_http_client.enabled is True
+        )
         assert tui.handle_chat_command("/slots-clear", state, file, harness) and state.initial_slots == {}
         assert tui.handle_chat_command("/contact-clear", state, file, harness) and state.contact == {}
         assert tui.handle_chat_command("/save", state, file, harness) and file.exists()
         assert tui.handle_chat_command("/HELP", state, file, harness)
-        assert tui.handle_chat_command("/traces", state, file, harness) and tui.handle_chat_command("/history", state, file, harness)
-        assert tui.handle_chat_command("/state", state, file, harness) and tui.handle_chat_command("/slots", state, file, harness)
-        assert tui.handle_chat_command("/input", state, file, harness) and tui.handle_chat_command("/contact", state, file, harness)
+        assert tui.handle_chat_command("/traces", state, file, harness) and tui.handle_chat_command(
+            "/history", state, file, harness
+        )
+        assert tui.handle_chat_command("/state", state, file, harness) and tui.handle_chat_command(
+            "/slots", state, file, harness
+        )
+        assert tui.handle_chat_command("/input", state, file, harness) and tui.handle_chat_command(
+            "/contact", state, file, harness
+        )
         assert tui.handle_chat_command("/no-existe", state, file, harness) is False
         with pytest.raises(tui.ReturnToLauncher):
             tui.handle_chat_command("/back", state, file, harness)
@@ -176,7 +207,12 @@ def test_traces_and_history_are_rendered():
         tui.render_traces([tui.ToolTrace("book-appointment-ghl", {"a": 1}, 200, {"success": True})])
         tui.render_traces([])
     text = out.get()
-    assert "User" in text and "slug_x" in text and "Tool 1: book-appointment-ghl" in text and "Sin tool calls" in text
+    assert (
+        "User" in text
+        and "slug_x" in text
+        and "Tool 1: book-appointment-ghl" in text
+        and "Sin tool calls" in text
+    )
 
 
 def test_contact_flags_build_the_simulated_contact():

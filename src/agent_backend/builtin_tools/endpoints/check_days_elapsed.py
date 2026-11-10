@@ -20,11 +20,15 @@ async def check_days_elapsed_endpoint(req: CheckDaysElapsedRequest):
         try:
             input_date = parse_ymd_date(raw_date)
         except ValueError:
-            return CheckDaysElapsedResponse(success=True, errors="Invalid format, expected YYYY-MM-DD or YYYY/MM/DD")
+            return CheckDaysElapsedResponse(
+                success=True, errors="Invalid format, expected YYYY-MM-DD or YYYY/MM/DD"
+            )
 
         days_threshold = parse_days_threshold(req.days)
         if days_threshold is None:
-            return CheckDaysElapsedResponse(success=True, errors="The number of days must be an integer greater than 0")
+            return CheckDaysElapsedResponse(
+                success=True, errors="The number of days must be an integer greater than 0"
+            )
 
         today = datetime.now(ZoneInfo("UTC")).date()
         elapsed, days_elapsed = check_days_elapsed(input_date, today, days_threshold)

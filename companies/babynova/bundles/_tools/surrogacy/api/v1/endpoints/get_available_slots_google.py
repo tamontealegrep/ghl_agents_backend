@@ -20,7 +20,12 @@ async def get_available_slots(req: SlotsRequest):
 
     cal = resolve_calendar(settings, req.calendar_type)
     if cal is None:
-        return SlotsResponse(success=False, iana_timezone=user_tz, available_slots=[], errors=unknown_calendar_message(settings, req.calendar_type))
+        return SlotsResponse(
+            success=False,
+            iana_timezone=user_tz,
+            available_slots=[],
+            errors=unknown_calendar_message(settings, req.calendar_type),
+        )
     tool = cal.tool
 
     try:
@@ -28,14 +33,21 @@ async def get_available_slots(req: SlotsRequest):
 
         if not (tool.google_client_id and tool.google_client_secret and tool.google_refresh_token):
             return SlotsResponse(
-                success=False, iana_timezone=user_tz, available_slots=[],
+                success=False,
+                iana_timezone=user_tz,
+                available_slots=[],
                 errors=f"Missing BN_GOOGLE_CLIENT_ID_{cal.key} / BN_GOOGLE_CLIENT_SECRET_{cal.key} / BN_GOOGLE_REFRESH_TOKEN_{cal.key} in environment",
             )
         access_token = await get_access_token(
             tool.google_client_id, tool.google_client_secret, tool.google_refresh_token
         )
         if not access_token:
-            return SlotsResponse(success=False, iana_timezone=user_tz, available_slots=[], errors="Failed to obtain access token")
+            return SlotsResponse(
+                success=False,
+                iana_timezone=user_tz,
+                available_slots=[],
+                errors="Failed to obtain access token",
+            )
 
         range_end = add_days(now, tool.date_range_days)
         busy_events = await get_free_busy(access_token, tool.calendar_id, now, range_end)
@@ -56,4 +68,3 @@ async def get_available_slots(req: SlotsRequest):
 
     except Exception as e:
         return SlotsResponse(success=False, iana_timezone=user_tz, available_slots=[], errors=str(e))
-

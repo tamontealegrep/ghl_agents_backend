@@ -33,7 +33,9 @@ router = build_ghl_scheduling_router(
         # resolved at call time so tests (and reloads) can replace them
         get_settings=lambda: get_settings(),
         resolve_calendar=lambda settings, calendar_type: resolve_calendar(settings, calendar_type),
-        unknown_calendar_message=lambda settings, calendar_type: unknown_calendar_message(settings, calendar_type),
+        unknown_calendar_message=lambda settings, calendar_type: unknown_calendar_message(
+            settings, calendar_type
+        ),
         default_earliest=_default_earliest,
         notify_booking=lambda *args, **kwargs: notify_booking(*args, **kwargs),
         format_start=_format_start,

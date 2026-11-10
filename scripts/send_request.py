@@ -101,27 +101,46 @@ def find_operation(openapi: dict[str, Any], slug: str, tool: str, method: str | 
         ValueError: The operation does not exist; the message lists what does.
     """
     wanted = {f"{slug}/{tool}", f"{slug}/tools/{tool}"}
-    matches = [(p, m) for s, t, m, p in list_operations(openapi) if f"{s}/{t}" in wanted and (method is None or m == method.upper())]
+    matches = [
+        (p, m)
+        for s, t, m, p in list_operations(openapi)
+        if f"{s}/{t}" in wanted and (method is None or m == method.upper())
+    ]
     if not matches:
-        available = ", ".join(sorted({f"{s}/{t}" for s, t, _, _ in list_operations(openapi) if s == slug})) or "(agent not found)"
+        available = (
+            ", ".join(sorted({f"{s}/{t}" for s, t, _, _ in list_operations(openapi) if s == slug}))
+            or "(agent not found)"
+        )
         raise ValueError(f"No operation /agents/{slug}/{tool}. Available: {available}")
     matches.sort(key=lambda pm: pm[1] != "POST")
     return matches[0]
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--company", help="Folder under companies/ whose .env is read.")
     parser.add_argument("--env-file", type=Path, help="Explicit .env file (overrides --company).")
-    parser.add_argument("--target", choices=devenv.TARGETS, help="Where the backend runs (default SEND_REQUEST_DEFAULT_TARGET, else local).")
+    parser.add_argument(
+        "--target",
+        choices=devenv.TARGETS,
+        help="Where the backend runs (default SEND_REQUEST_DEFAULT_TARGET, else local).",
+    )
     parser.add_argument("--base-url", help="Explicit base URL (overrides --target).")
     parser.add_argument("--agent", help="Agent folder name.")
-    parser.add_argument("--tool", help="Tool name (tools/ prefix optional) or `chat`, `reset`, `admin/reload`.")
+    parser.add_argument(
+        "--tool", help="Tool name (tools/ prefix optional) or `chat`, `reset`, `admin/reload`."
+    )
     parser.add_argument("--method", help="HTTP method (default: POST when it exists).")
     parser.add_argument("--payload", help="JSON body.")
     parser.add_argument("--payload-file", type=Path, help="File with the JSON body.")
-    parser.add_argument("--list", action="store_true", help="List the agents and operations of the target and exit.")
-    parser.add_argument("--show-default", action="store_true", help="Print the default payload of the operation and exit.")
+    parser.add_argument(
+        "--list", action="store_true", help="List the agents and operations of the target and exit."
+    )
+    parser.add_argument(
+        "--show-default", action="store_true", help="Print the default payload of the operation and exit."
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -149,7 +168,9 @@ def main(argv: list[str] | None = None) -> int:
         if env.get("WEBHOOK_TOKEN"):
             headers["X-Webhook-Token"] = env["WEBHOOK_TOKEN"]
         print(f"{method} {root}{path}", file=sys.stderr)
-        response = httpx.request(method, f"{root}{path}", json=payload if method != "GET" else None, headers=headers, timeout=120)
+        response = httpx.request(
+            method, f"{root}{path}", json=payload if method != "GET" else None, headers=headers, timeout=120
+        )
         print(f"HTTP {response.status_code}", file=sys.stderr)
         try:
             print(json.dumps(response.json(), indent=2, ensure_ascii=False))

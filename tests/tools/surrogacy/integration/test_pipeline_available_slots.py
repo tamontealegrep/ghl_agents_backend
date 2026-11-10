@@ -51,7 +51,9 @@ def mocked_google_calendar(monkeypatch):
 
 
 def test_available_slots_endpoint_success_shape(mocked_google_calendar):
-    response = client.post("/api/v1/get-available-slots-google", json={"iana_timezone": "America/Bogota", "calendar_type": "FT"})
+    response = client.post(
+        "/api/v1/get-available-slots-google", json={"iana_timezone": "America/Bogota", "calendar_type": "FT"}
+    )
     assert response.status_code == 200
 
     body = response.json()
@@ -94,4 +96,3 @@ def test_available_slots_endpoint_fails_gracefully_when_google_api_errors(monkey
     body = response.json()
     assert body["success"] is False
     assert "Google API unreachable" in body["errors"]
-

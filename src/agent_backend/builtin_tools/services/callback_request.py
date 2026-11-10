@@ -1,13 +1,12 @@
-"""
-Module.
+"""Module.
 
-    Reglas de negocio puras para validar y normalizar una solicitud de callback
-    (llamada de vuelta). No sabe nada de HTTP, no envía correos ni crea eventos
-    de calendario — eso queda a cargo de una acción del flujo GHL que consuma
-    esta salida ya normalizada, ya que el mecanismo de notificación es
-    específico de cada cliente (credencial de Gmail, contact center, etc.) y
-    esta herramienta vive en tools.utils, sin lógica ni credencial de un
-    cliente en particular.
+Reglas de negocio puras para validar y normalizar una solicitud de callback
+(llamada de vuelta). No sabe nada de HTTP, no envía correos ni crea eventos
+de calendario — eso queda a cargo de una acción del flujo GHL que consuma
+esta salida ya normalizada, ya que el mecanismo de notificación es
+específico de cada cliente (credencial de Gmail, contact center, etc.) y
+esta herramienta vive en tools.utils, sin lógica ni credencial de un
+cliente en particular.
 """
 
 from typing import Any, TypeGuard
@@ -27,8 +26,7 @@ def _is_present(val: Any) -> TypeGuard[str]:
 
 
 def _split_list(raw: str | list[str] | None) -> list[str]:
-    """Normalize input (comma-separated string or list) to a non-empty, lowercased list of strings.
-    """
+    """Normalize input (comma-separated string or list) to a non-empty, lowercased list of strings."""
     if raw is None:
         return []
     items = raw if isinstance(raw, list) else str(raw).split(",")

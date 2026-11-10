@@ -1,6 +1,7 @@
 """
 Unit tests for agent_runtime.targets.langgraph.condition_parser — route/fallback classification.
 """
+
 from __future__ import annotations
 
 from agent_runtime.targets.langgraph.condition_parser import classify_rule
@@ -67,9 +68,7 @@ def test_len_is_code():
 
 
 def test_and_chain_is_code():
-    result = classify_rule(
-        "IF [knows] == 'no' AND [treat] == 'ivf_conventional' -> GO_TO: VI_EXPLAIN_CONV"
-    )
+    result = classify_rule("IF [knows] == 'no' AND [treat] == 'ivf_conventional' -> GO_TO: VI_EXPLAIN_CONV")
     assert result.eval_class == "code"
 
 
@@ -81,9 +80,7 @@ def test_or_chain_is_code():
 
 
 def test_parenthesized_mixed_and_or_is_code():
-    result = classify_rule(
-        "IF ([a] != 'x' AND [a] != 'y') AND ([b] != 'x' AND [b] != 'y') -> GO_TO: AM_FIND"
-    )
+    result = classify_rule("IF ([a] != 'x' AND [a] != 'y') AND ([b] != 'x' AND [b] != 'y') -> GO_TO: AM_FIND")
     assert result.eval_class == "code"
 
 
@@ -101,11 +98,11 @@ def test_registered_matches_predicate_is_code():
 
 def test_code_result_exposes_python_expression():
     """
-Needed by the LangGraph emitter to generate the real guard.
+    Needed by the LangGraph emitter to generate the real guard.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     result = classify_rule("IF [num] IS NOT NULL -> GO_TO: CB_HAS_TZ")
     assert result.python_expression == "num is not None"
 
@@ -122,22 +119,22 @@ def test_unconditional_goto_has_no_python_expression():
 
 def test_bracketed_slot_alone_is_code():
     """
-A bracketed boolean-typed slot used as the whole condition is mechanical.
+    A bracketed boolean-typed slot used as the whole condition is mechanical.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     result = classify_rule("IF [confirmed] -> GO_TO: NEXT")
     assert result.eval_class == "code"
 
 
 def test_mixed_and_or_uses_python_precedence_and_is_code():
     """
-AND binds tighter than OR in real Python — no ambiguity, no parens required.
+    AND binds tighter than OR in real Python — no ambiguity, no parens required.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     result = classify_rule("IF [a] == 'x' AND [b] == 'y' OR [c] == 'z' -> GO_TO: STATE")
     assert result.eval_class == "code"
 
@@ -180,22 +177,20 @@ def test_bare_flag_identifier_is_llm():
 
 
 def test_natural_language_condition_is_llm():
-    result = classify_rule(
-        "IF the user's latest message sounds frustrated -> GO_TO: HANDOFF"
-    )
+    result = classify_rule("IF the user's latest message sounds frustrated -> GO_TO: HANDOFF")
     assert result.eval_class == "llm"
 
 
 def test_dot_length_is_mechanical():
     """
-`[slot].length` translates to `len(slot)` — both "len" and "_matches"
+    `[slot].length` translates to `len(slot)` — both "len" and "_matches"
 
-    are the only allowed Call names, and this is real-content syntax
-        (e.g. `[appointments].length > 1`), not raw attribute access.
+        are the only allowed Call names, and this is real-content syntax
+            (e.g. `[appointments].length > 1`), not raw attribute access.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     result = classify_rule("IF [appointments].length > 1 -> GO_TO: AM_PICK_ONE")
     assert result.eval_class == "code"
     assert result.python_expression == "len(appointments) > 1"

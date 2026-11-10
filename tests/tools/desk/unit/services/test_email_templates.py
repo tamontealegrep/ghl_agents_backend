@@ -14,8 +14,12 @@ VARS = dict(
 @pytest.mark.parametrize(
     "template_name",
     [
-        "book_appointment_ivf_es", "book_appointment_ivf_en", "book_appointment_ivf_pt",
-        "book_appointment_sur_es", "book_appointment_sur_en", "book_appointment_sur_pt",
+        "book_appointment_ivf_es",
+        "book_appointment_ivf_en",
+        "book_appointment_ivf_pt",
+        "book_appointment_sur_es",
+        "book_appointment_sur_en",
+        "book_appointment_sur_pt",
     ],
 )
 def test_render_email_template_substitutes_all_variables(template_name):

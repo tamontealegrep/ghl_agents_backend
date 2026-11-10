@@ -9,8 +9,7 @@ from typing import Any
 
 
 def normalize(val: Any) -> str:
-    """Quita acentos, pasa a mayúsculas y recorta espacios.
-    """
+    """Quita acentos, pasa a mayúsculas y recorta espacios."""
     if val is None:
         return ""
     s = unicodedata.normalize("NFD", str(val))
@@ -19,8 +18,7 @@ def normalize(val: Any) -> str:
 
 
 def is_present(val: Any) -> bool:
-    """Indica si el valor no es None y no es una cadena vacía tras recortar espacios.
-    """
+    """Indica si el valor no es None y no es una cadena vacía tras recortar espacios."""
     return val is not None and str(val).strip() != ""
 
 
@@ -53,8 +51,7 @@ def parse_float(val: Any) -> float | None:
 
 
 def parse_flexible_date(val: Any) -> date | None:
-    """Parser flexible de fechas (YYYY/MM/DD, DD/MM/YYYY, ISO).
-    """
+    """Parser flexible de fechas (YYYY/MM/DD, DD/MM/YYYY, ISO)."""
     if val is None:
         return None
     if isinstance(val, datetime):

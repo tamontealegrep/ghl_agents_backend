@@ -83,7 +83,9 @@ def test_unknown_message_lists_valid_keys():
 
 
 def test_new_calendar_uses_default_rules_with_its_key_as_tag():
-    cal = resolve_calendar(_Settings(consulta=_tool("id1")), "consulta", {"default": {"hours": IVF_HOURS}, "calendars": {}})
+    cal = resolve_calendar(
+        _Settings(consulta=_tool("id1")), "consulta", {"default": {"hours": IVF_HOURS}, "calendars": {}}
+    )
     assert cal.tool.ghl_calendar_id == "id1"
     assert cal.booking.EVENT_SUMMARY_TAG == "CONSULTA"
     assert cal.booking.EMAIL_TEMPLATE_PREFIX is None
@@ -93,7 +95,9 @@ def test_new_calendar_uses_default_rules_with_its_key_as_tag():
 def test_new_calendar_entry_overrides_default_fields_only():
     config = {
         "default": {"agent_name": "Base", "hours": IVF_HOURS},
-        "calendars": {"Consulta": {"agent_name": "Ana", "email_template_prefix": "book_x", "hours": {3: [8, 0, 10, 0]}}},
+        "calendars": {
+            "Consulta": {"agent_name": "Ana", "email_template_prefix": "book_x", "hours": {3: [8, 0, 10, 0]}}
+        },
     }
     cal = resolve_calendar(_Settings(consulta=_tool()), "CONSULTA", config)
     assert (cal.booking.AGENT_NAME, cal.booking.EMAIL_TEMPLATE_PREFIX) == ("Ana", "book_x")
@@ -120,9 +124,9 @@ def test_configured_booking_matches_reference_for_every_minute_of_the_week(hours
     for weekday in range(7):
         for hour in range(24):
             for minute in (0, 1, 30, 59):
-                assert configured.is_valid_business_hour(weekday, hour, minute) == reference.is_valid_business_hour(
+                assert configured.is_valid_business_hour(
                     weekday, hour, minute
-                ), (weekday, hour, minute)
+                ) == reference.is_valid_business_hour(weekday, hour, minute), (weekday, hour, minute)
 
 
 @pytest.mark.parametrize("policy_name, reference", [("ivf", slots_ivf), ("sur", slots_sur)])
@@ -136,4 +140,6 @@ def test_configured_slots_match_reference(policy_name, reference):
         if configured.day_window(weekday):  # on closed days the legacy fallback differs per calendar
             assert configured.closing_hour(weekday) == reference.closing_hour(weekday)
     for start_min in range(0, 24 * 60, 15):
-        assert configured.lunch_break(start_min, start_min + 30) == reference.lunch_break(start_min, start_min + 30)
+        assert configured.lunch_break(start_min, start_min + 30) == reference.lunch_break(
+            start_min, start_min + 30
+        )

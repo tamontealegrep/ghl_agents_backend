@@ -1,15 +1,14 @@
-"""
-Generic GHL webhook -> compiled LangGraph agent -> GHL reply endpoint.
+"""Generic GHL webhook -> compiled LangGraph agent -> GHL reply endpoint.
 
-    Every compiled agent wired to a real GHL webhook needs the exact same
-    plumbing (202 immediately, per-thread debounce, session resolution with
-    the terminal-state fix, run_in_threadpool for the graph.invoke() deadlock,
-    idempotency by execution_id, reply via send_ghl_message_async, mirror the
-    turn into `conversations`). Only the agent identity, phone allowlist, and
-    debounce window differ -- see family_aims_sam_text/endpoint.py's own
-    docstring for the diagnosis behind each of the fixes baked in here. One
-    agent's endpoint module is now just a `CompiledAgentGhlConfig` plus a call
-    to `build_compiled_agent_router` instead of duplicating this file.
+Every compiled agent wired to a real GHL webhook needs the exact same
+plumbing (202 immediately, per-thread debounce, session resolution with
+the terminal-state fix, run_in_threadpool for the graph.invoke() deadlock,
+idempotency by execution_id, reply via send_ghl_message_async, mirror the
+turn into `conversations`). Only the agent identity, phone allowlist, and
+debounce window differ -- see family_aims_sam_text/endpoint.py's own
+docstring for the diagnosis behind each of the fixes baked in here. One
+agent's endpoint module is now just a `CompiledAgentGhlConfig` plus a call
+to `build_compiled_agent_router` instead of duplicating this file.
 """
 
 from __future__ import annotations
@@ -49,15 +48,13 @@ from agent_runtime.runtime.session_resolver import resolve_session
 
 @dataclass
 class _PendingTurn:
+    """Text accumulated for one thread_id, waiting out the debounce window.
     """
-Text accumulated for one thread_id, waiting out the debounce window.
-"""
 
     execution_ids: list[str] = field(default_factory=list)
     message_parts: list[str] = field(default_factory=list)
     last_request: GhlAgentRequest | None = None
     flush_task: asyncio.Task | None = None
-
 
 
 async def resolve_reply_channel(
@@ -66,8 +63,7 @@ async def resolve_reply_channel(
     config: GhlClientConfig,
     logger: logging.Logger,
 ) -> str | None:
-    """
-    The channel a reply goes out through. A payload without message.type (the one a workflow
+    """The channel a reply goes out through. A payload without message.type (the one a workflow
     sends when the contact is created by their first message) carries no channel, and a reply
     with none falls to the default Live_Chat. Order: the payload, the last channel seen on this
     thread, the contact's conversation in GHL, then a WhatsApp attribution medium. When none is
@@ -81,11 +77,15 @@ async def resolve_reply_channel(
     if not usable(channel):
         channel = remembered
     if not usable(channel) and request.location_id:
-        channel = await search_conversation_channel_async(request.contact_id, request.location_id, config, logger)
+        channel = await search_conversation_channel_async(
+            request.contact_id, request.location_id, config, logger
+        )
     if not usable(channel):
         contact = request.contact or {}
         sources = (contact.get("lastAttributionSource"), contact.get("attributionSource"))
-        if any(isinstance(src, dict) and normalize_channel(src.get("medium")) == "WHATSAPP" for src in sources):
+        if any(
+            isinstance(src, dict) and normalize_channel(src.get("medium")) == "WHATSAPP" for src in sources
+        ):
             channel = "WHATSAPP"
     return channel if usable(channel) else request.channel
 
@@ -109,9 +109,16 @@ def build_compiled_agent_router(cfg: CompiledAgentGhlConfig, registry: AgentRegi
     known_channels: dict[str, str] = {}
 
     async def _resolve_channel(request: GhlAgentRequest, thread_id: str, execution_id: str) -> str | None:
-        channel = await resolve_reply_channel(request, known_channels.get(thread_id), cfg.ghl_client_config(), logger)
+        channel = await resolve_reply_channel(
+            request, known_channels.get(thread_id), cfg.ghl_client_config(), logger
+        )
         if normalize_channel(channel) and normalize_channel(request.channel) != normalize_channel(channel):
-            logger.info("[%s] Payload had no usable channel (%r); replying through %s.", execution_id, request.channel, channel)
+            logger.info(
+                "[%s] Payload had no usable channel (%r); replying through %s.",
+                execution_id,
+                request.channel,
+                channel,
+            )
         if channel and normalize_channel(channel) in cfg.ghl_client_config().channel_type_map:
             known_channels[thread_id] = channel
         return channel
@@ -206,7 +213,12 @@ def build_compiled_agent_router(cfg: CompiledAgentGhlConfig, registry: AgentRegi
         combined_message = "\n".join(turn.message_parts).strip()
         combined_message, reset_requested = _strip_reset_marker(combined_message)
         execution_id = turn.execution_ids[-1]
-        logger.info("[%s] Combined inbound length=%s part_count=%s", execution_id, len(combined_message), len(turn.message_parts))
+        logger.info(
+            "[%s] Combined inbound length=%s part_count=%s",
+            execution_id,
+            len(combined_message),
+            len(turn.message_parts),
+        )
         if len(turn.execution_ids) > 1:
             logger.info(
                 "[%s] Flushing %s buffered message(s) for thread=%s after %ss of inactivity.",

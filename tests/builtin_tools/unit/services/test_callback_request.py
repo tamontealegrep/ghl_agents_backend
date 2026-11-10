@@ -57,7 +57,14 @@ def test_missing_both_phone_and_email_is_rejected():
 
 @pytest.mark.parametrize(
     "reason",
-    ["no_availability", "booking_failed", "user_requested", "ambiguous_data", "technical_error", "NO_AVAILABILITY"],
+    [
+        "no_availability",
+        "booking_failed",
+        "user_requested",
+        "ambiguous_data",
+        "technical_error",
+        "NO_AVAILABILITY",
+    ],
 )
 def test_valid_reasons_are_accepted_case_insensitive(reason):
     result = _call(raw_reason=reason)

@@ -11,6 +11,8 @@ async def time_now(req: TimeNowRequest):
     tz = req.iana_timezone.strip() if req.iana_timezone and req.iana_timezone.strip() else "UTC"
     try:
         now = get_current_time(tz)
-        return TimeNowResponse(success=True, iana_timezone=tz, now=now, calendar=get_calendar(tz), errors=None)
+        return TimeNowResponse(
+            success=True, iana_timezone=tz, now=now, calendar=get_calendar(tz), errors=None
+        )
     except Exception as e:
         return TimeNowResponse(success=False, iana_timezone=tz, now=None, errors=str(e))

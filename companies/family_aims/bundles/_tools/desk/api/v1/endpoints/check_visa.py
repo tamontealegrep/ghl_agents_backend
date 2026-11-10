@@ -6,6 +6,7 @@ from ....services.visa_checker import VisaCheckerService
 router = APIRouter()
 visa_service = VisaCheckerService()
 
+
 @router.post("/check-visa", response_model=VisaCheckResponse)
 async def check_visa_requirement(request: VisaCheckRequest):
     """check_visa_requirement.

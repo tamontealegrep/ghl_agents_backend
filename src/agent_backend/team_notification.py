@@ -55,9 +55,18 @@ async def send_team_notification(
     if not recipients:
         return f"Notification not sent{bad_note}" if invalid else None
     try:
-        if not (gmail.google_client_id and gmail.google_client_secret and gmail.google_refresh_token and gmail.sender_email):
-            raise RuntimeError(f"Missing Gmail credentials ({prefix}_GOOGLE_CLIENT_ID_GMAIL / {prefix}_GMAIL_SENDER_EMAIL, etc.) in environment")
-        token = await get_access_token(gmail.google_client_id, gmail.google_client_secret, gmail.google_refresh_token)
+        if not (
+            gmail.google_client_id
+            and gmail.google_client_secret
+            and gmail.google_refresh_token
+            and gmail.sender_email
+        ):
+            raise RuntimeError(
+                f"Missing Gmail credentials ({prefix}_GOOGLE_CLIENT_ID_GMAIL / {prefix}_GMAIL_SENDER_EMAIL, etc.) in environment"
+            )
+        token = await get_access_token(
+            gmail.google_client_id, gmail.google_client_secret, gmail.google_refresh_token
+        )
         if not token:
             raise RuntimeError("Failed to obtain Gmail access token")
         await send_email(token, gmail.sender_email, ", ".join(recipients), subject, render_body())

@@ -35,14 +35,14 @@ from agent_runtime.dsl.schemas import (
 
 def build_minimal_manifest(**overrides) -> ManifestConfig:
     """
-Build a minimal valid ``ManifestConfig`` (start_at='GREETING').
+    Build a minimal valid ``ManifestConfig`` (start_at='GREETING').
 
-    Parameters:
-        overrides: Description.
+        Parameters:
+            overrides: Description.
 
-    Returns:
-        The result.
-"""
+        Returns:
+            The result.
+    """
     data = {
         "agent_id": "test_agent",
         "version": "1.0.0",
@@ -69,7 +69,11 @@ def build_minimal_context() -> ContextFile:
         company_context=["Synthetic test company."],
         approved_services=["Synthetic service."],
         summary_services_library=[
-            SummaryServiceItem(key="GREETING_SERVICE", procedure="greeting_service", text="A synthetic service used only for tests.")
+            SummaryServiceItem(
+                key="GREETING_SERVICE",
+                procedure="greeting_service",
+                text="A synthetic service used only for tests.",
+            )
         ],
         approved_process_intro="Synthetic approved process.",
         approved_process_steps=[ApprovedProcessStep(title="Step one", text="Greet the caller.")],
@@ -79,30 +83,32 @@ def build_minimal_context() -> ContextFile:
 
 def build_minimal_policies(**sections: list[str]) -> PoliciesFile:
     """
-Build a ``PoliciesFile`` with whatever dynamic sections are passed as kwargs.
+    Build a ``PoliciesFile`` with whatever dynamic sections are passed as kwargs.
 
-    Parameters:
-        sections: Description.
+        Parameters:
+            sections: Description.
 
-    Returns:
-        The result.
-"""
+        Returns:
+            The result.
+    """
     return PoliciesFile.model_validate(sections)
 
 
-def build_message_state(state_id: str = "GREETING", *, route: list[str] | None = None, say: list[str] | None = None, **overrides) -> StateModel:
+def build_message_state(
+    state_id: str = "GREETING", *, route: list[str] | None = None, say: list[str] | None = None, **overrides
+) -> StateModel:
     """
-Build a minimal valid ``type=message`` state (or another type via overrides).
+    Build a minimal valid ``type=message`` state (or another type via overrides).
 
-    Parameters:
-        state_id: Description.
-        route: Description.
-        say: Description.
-        overrides: Description.
+        Parameters:
+            state_id: Description.
+            route: Description.
+            say: Description.
+            overrides: Description.
 
-    Returns:
-        The result.
-"""
+        Returns:
+            The result.
+    """
     data = {
         "state_id": state_id,
         "type": "message",
@@ -116,15 +122,15 @@ Build a minimal valid ``type=message`` state (or another type via overrides).
 
 def build_terminal_state(state_id: str = "CLOSE", **overrides) -> StateModel:
     """
-Build a minimal valid ``type=terminal`` state.
+    Build a minimal valid ``type=terminal`` state.
 
-    Parameters:
-        state_id: Description.
-        overrides: Description.
+        Parameters:
+            state_id: Description.
+            overrides: Description.
 
-    Returns:
-        The result.
-"""
+        Returns:
+            The result.
+    """
     data = {"state_id": state_id, "type": "terminal", "say": ["Goodbye."], "wait": "no", "final": "yes"}
     data.update(overrides)
     return StateModel.model_validate(data)
@@ -148,32 +154,32 @@ def build_minimal_agent_spec(
     policies: PoliciesFile | None = None,
 ) -> AgentSpec:
     """
-Build a minimal, schema-valid, in-memory ``AgentSpec``.
+    Build a minimal, schema-valid, in-memory ``AgentSpec``.
 
-    Defaults to a two-node flow (``GREETING`` message -> ``CLOSE`` terminal)
-        with the two mandatory dynamic-state memory slots declared. Every
-        argument can be overridden to shape the spec for a specific validator
-        or renderer test without touching disk.
+        Defaults to a two-node flow (``GREETING`` message -> ``CLOSE`` terminal)
+            with the two mandatory dynamic-state memory slots declared. Every
+            argument can be overridden to shape the spec for a specific validator
+            or renderer test without touching disk.
 
-    Parameters:
-        states: Description.
-        terminal_states: Description.
-        handlers: Description.
-        faqs: Description.
-        constants: Description.
-        input_variables: Description.
-        tools: Description.
-        tool_contracts: Description.
-        tool_argument_overrides: Description.
-        memory_slots: Description.
-        flow_rules: Description.
-        faq_policy: Description.
-        manifest: Description.
-        policies: Description.
+        Parameters:
+            states: Description.
+            terminal_states: Description.
+            handlers: Description.
+            faqs: Description.
+            constants: Description.
+            input_variables: Description.
+            tools: Description.
+            tool_contracts: Description.
+            tool_argument_overrides: Description.
+            memory_slots: Description.
+            flow_rules: Description.
+            faq_policy: Description.
+            manifest: Description.
+            policies: Description.
 
-    Returns:
-        The result.
-"""
+        Returns:
+            The result.
+    """
     return AgentSpec(
         manifest=manifest if manifest is not None else build_minimal_manifest(),
         constants=constants if constants is not None else [],

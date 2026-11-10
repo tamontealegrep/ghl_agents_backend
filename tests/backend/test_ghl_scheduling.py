@@ -59,9 +59,17 @@ class Cal:
 
 
 GHL_CALENDAR = {
-    "slotDuration": 30, "slotDurationUnit": "mins", "slotInterval": 10, "slotIntervalUnit": "mins",
-    "preBuffer": None, "slotBuffer": 15, "slotBufferUnit": "mins",
-    "allowBookingAfter": 0, "allowBookingAfterUnit": "days", "allowBookingFor": 14, "allowBookingForUnit": "days",
+    "slotDuration": 30,
+    "slotDurationUnit": "mins",
+    "slotInterval": 10,
+    "slotIntervalUnit": "mins",
+    "preBuffer": None,
+    "slotBuffer": 15,
+    "slotBufferUnit": "mins",
+    "allowBookingAfter": 0,
+    "allowBookingAfterUnit": "days",
+    "allowBookingFor": 14,
+    "allowBookingForUnit": "days",
 }
 
 
@@ -150,7 +158,9 @@ def world(monkeypatch):
     monkeypatch.setattr(ghl_calendar, "create_appointment", create)
     monkeypatch.setattr(ghl_calendar, "update_appointment", update)
     monkeypatch.setattr(ghl_calendar, "delete_appointment", delete)
-    monkeypatch.setattr(ghl_calendar, "extract_appointment", lambda created: created.get("appointment", created))
+    monkeypatch.setattr(
+        ghl_calendar, "extract_appointment", lambda created: created.get("appointment", created)
+    )
     monkeypatch.setattr(ghl_calendar, "get_meet_link", lambda created: None)
     return w
 
@@ -233,7 +243,17 @@ def test_duration_is_not_sent_when_it_comes_from_ghl_and_is_sent_when_it_is_in_t
 def test_slots_outside_opening_hours_or_in_lunch_are_dropped(world):
     d = day()
     # 11:30-12:00 ends when lunch starts (offered); 11:40-12:10 overlaps it (dropped); 12:50-13:20 overlaps its end.
-    world.free = [at(d, 6, 30), at(d, 9), at(d, 11, 30), at(d, 11, 40), at(d, 12, 10), at(d, 12, 50), at(d, 13), at(d, 17), at(day(6), 9)]
+    world.free = [
+        at(d, 6, 30),
+        at(d, 9),
+        at(d, 11, 30),
+        at(d, 11, 40),
+        at(d, 12, 10),
+        at(d, 12, 50),
+        at(d, 13),
+        at(d, 17),
+        at(day(6), 9),
+    ]
     world.env["XX_POST_BUFFER_MINUTES_FT"] = "0"
     body = world.client.post("/get-available-slots-ghl", json={"calendar_type": "FT"}).json()
     assert starts(body) == ["09:00", "11:30", "13:00"]
@@ -244,7 +264,10 @@ def test_interval_from_the_env_thins_the_slots(world):
     world.free = [at(d, 9, m) for m in (0, 10, 20, 30, 40)]
     world.env["XX_INTERVAL_MINUTES_FT"] = "30"
     world.env["XX_POST_BUFFER_MINUTES_FT"] = "0"
-    assert starts(world.client.post("/get-available-slots-ghl", json={"calendar_type": "FT"}).json()) == ["09:00", "09:30"]
+    assert starts(world.client.post("/get-available-slots-ghl", json={"calendar_type": "FT"}).json()) == [
+        "09:00",
+        "09:30",
+    ]
 
 
 def test_min_notice_from_ghl_sets_the_search_start(world):
@@ -266,8 +289,12 @@ def test_a_date_range_over_ghls_limit_in_the_env_is_rejected(world):
 
 def book(world, start, **overrides):
     payload = {
-        "calendar_type": "FT", "start_date": start.isoformat(), "duration": "99",
-        "contact_name": "ana gomez", "contact_email": "Ana@Gmail.com", "contact_phone": "+573000000000",
+        "calendar_type": "FT",
+        "start_date": start.isoformat(),
+        "duration": "99",
+        "contact_name": "ana gomez",
+        "contact_email": "Ana@Gmail.com",
+        "contact_phone": "+573000000000",
     }
     payload.update(overrides)
     return world.client.post("/book-appointment-ghl", json=payload).json()
@@ -282,7 +309,9 @@ def test_booking_creates_the_appointment_with_the_calendars_duration_and_notifie
     assert body["success"] is True and body["event_id"] == "evt1" and body["errors"] is None
     created = world.calls["create"]
     assert created["title"] == "Visit - Ana Gomez - +573000000000"
-    assert (created["end_dt"] - created["start_dt"]) == timedelta(minutes=30)  # GHL's duration, not the request's "99"
+    assert (created["end_dt"] - created["start_dt"]) == timedelta(
+        minutes=30
+    )  # GHL's duration, not the request's "99"
     assert created["appointment_status"] == "confirmed" and created["to_notify"] is False
     assert world.calls["upsert"]["email"] == "ana@gmail.com"
     assert world.notified and world.notified[0]["contact_name"] == "Ana Gomez"
@@ -335,7 +364,11 @@ def test_a_ghl_400_is_reported_as_slot_taken_with_its_message(world):
     start = at(day(), 9)
     world.free = [start]
     request = httpx.Request("POST", "https://x")
-    world.create_error = httpx.HTTPStatusError("bad", request=request, response=httpx.Response(400, request=request, json={"message": "slot unavailable"}))
+    world.create_error = httpx.HTTPStatusError(
+        "bad",
+        request=request,
+        response=httpx.Response(400, request=request, json={"message": "slot unavailable"}),
+    )
     body = book(world, start)
     assert body["reason"] == "slot_taken" and "slot unavailable" in body["errors"]
 
@@ -348,10 +381,15 @@ def test_find_matches_by_contact_id_title_and_skips_cancelled(world):
     world.events = [
         event(at(d, 9), at(d, 9, 30), "by_contact", title="Whatever", contactId="c1"),
         event(at(d, 10), at(d, 10, 30), "by_title", title="Visit - Ana Gomez - +57300"),
-        event(at(d, 11), at(d, 11, 30), "cancelled", title="Visit - Ana Gomez", appointmentStatus="cancelled"),
+        event(
+            at(d, 11), at(d, 11, 30), "cancelled", title="Visit - Ana Gomez", appointmentStatus="cancelled"
+        ),
         event(at(d, 12), at(d, 12, 30), "other", title="Visit - Luis Ruiz"),
     ]
-    body = world.client.post("/find-appointment-ghl", json={"calendar_type": "FT", "contact_name": "Ana Gomez", "contact_email": "ana@gmail.com"}).json()
+    body = world.client.post(
+        "/find-appointment-ghl",
+        json={"calendar_type": "FT", "contact_name": "Ana Gomez", "contact_email": "ana@gmail.com"},
+    ).json()
     assert body["success"] is True
     assert [a["event_id"] for a in body["appointments"]] == ["by_contact", "by_title"]
 
@@ -359,30 +397,53 @@ def test_find_matches_by_contact_id_title_and_skips_cancelled(world):
 def test_find_by_phone_digits_in_the_title(world):
     d = day()
     world.events = [event(at(d, 9), at(d, 9, 30), "x", title="Visit - Ana - +57 300 123 4567")]
-    body = world.client.post("/find-appointment-ghl", json={"calendar_type": "FT", "contact_phone": "3001234567"}).json()
+    body = world.client.post(
+        "/find-appointment-ghl", json={"calendar_type": "FT", "contact_phone": "3001234567"}
+    ).json()
     assert [a["event_id"] for a in body["appointments"]] == ["x"]
 
 
 def test_find_validates_its_input_and_reports_no_results(world):
-    assert "at least" in world.client.post("/find-appointment-ghl", json={"calendar_type": "FT"}).json()["errors"]
-    assert "not in a valid format" in world.client.post("/find-appointment-ghl", json={"calendar_type": "FT", "contact_email": "nope"}).json()["errors"]
-    assert "No appointments found" in world.client.post("/find-appointment-ghl", json={"calendar_type": "FT", "contact_name": "Nadie Aqui"}).json()["errors"]
+    assert (
+        "at least"
+        in world.client.post("/find-appointment-ghl", json={"calendar_type": "FT"}).json()["errors"]
+    )
+    assert (
+        "not in a valid format"
+        in world.client.post(
+            "/find-appointment-ghl", json={"calendar_type": "FT", "contact_email": "nope"}
+        ).json()["errors"]
+    )
+    assert (
+        "No appointments found"
+        in world.client.post(
+            "/find-appointment-ghl", json={"calendar_type": "FT", "contact_name": "Nadie Aqui"}
+        ).json()["errors"]
+    )
 
 
 def test_edit_moves_the_appointment_but_not_into_another_ones_buffer(world):
     d = day()
     world.events = [event(at(d, 9), at(d, 9, 30), "other"), event(at(d, 14), at(d, 14, 30), "mine")]
-    refused = world.client.post("/edit-appointment-ghl", json={"calendar_type": "FT", "event_id": "mine", "new_start_date": at(d, 9, 40).isoformat()}).json()
+    refused = world.client.post(
+        "/edit-appointment-ghl",
+        json={"calendar_type": "FT", "event_id": "mine", "new_start_date": at(d, 9, 40).isoformat()},
+    ).json()
     assert refused["success"] is False and "already taken" in refused["errors"]
 
-    ok = world.client.post("/edit-appointment-ghl", json={"calendar_type": "FT", "event_id": "mine", "new_start_date": at(d, 10).isoformat()}).json()
+    ok = world.client.post(
+        "/edit-appointment-ghl",
+        json={"calendar_type": "FT", "event_id": "mine", "new_start_date": at(d, 10).isoformat()},
+    ).json()
     assert ok["success"] is True and "rescheduled" in ok["message"] and ok["new_duration"] == "30"
     assert world.calls["update"]["appointment_id"] == "mine"
     assert world.calls["update"]["end_dt"] - world.calls["update"]["start_dt"] == timedelta(minutes=30)
 
 
 def test_cancel_deletes_the_appointment(world):
-    body = world.client.post("/cancel-appointment-ghl", json={"calendar_type": "FT", "event_id": "evt9"}).json()
+    body = world.client.post(
+        "/cancel-appointment-ghl", json={"calendar_type": "FT", "event_id": "evt9"}
+    ).json()
     assert body["success"] is True and world.calls["delete"] == "evt9"
 
 

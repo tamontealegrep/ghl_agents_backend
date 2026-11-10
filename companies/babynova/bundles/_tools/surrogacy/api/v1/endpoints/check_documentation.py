@@ -13,4 +13,3 @@ async def check_documentation_sur(req: CheckDocumentationRequest):
         return CheckDocumentationResponse(success=True, **result, errors=None)
     except Exception as e:
         return CheckDocumentationResponse(success=False, errors=str(e))
-

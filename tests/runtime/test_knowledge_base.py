@@ -45,7 +45,9 @@ class FakeLLM:
 
 
 def _ctx(message: str = "¿Cuánto dura la primera consulta?", policies: list[str] | None = None) -> LLMContext:
-    return LLMContext(slots={}, history=["agent: ¿Tienes alguna duda?"], last_user_message=message, policies=policies or [])
+    return LLMContext(
+        slots={}, history=["agent: ¿Tienes alguna duda?"], last_user_message=message, policies=policies or []
+    )
 
 
 class StaticRAG(RAGKnowledgeBase):
@@ -181,7 +183,9 @@ def test_returns_none_when_the_answer_invents_a_number():
 def test_a_number_the_user_said_is_allowed_in_the_answer():
     llm = FakeLLM("Sí, con 2 personas es posible.")
     ctx = _ctx("¿Pueden ir 2 personas?")
-    assert answer_from_knowledge(llm, MarkdownKnowledgeBase(SERVICES), ctx) == "Sí, con 2 personas es posible."
+    assert (
+        answer_from_knowledge(llm, MarkdownKnowledgeBase(SERVICES), ctx) == "Sí, con 2 personas es posible."
+    )
 
 
 def test_returns_none_without_calling_the_model_when_nothing_is_retrieved():
@@ -199,7 +203,9 @@ def test_returns_none_for_a_blank_question():
 
 def test_explicit_question_overrides_the_latest_message():
     llm = FakeLLM("Es un programa para parejas.")
-    answer_from_knowledge(llm, MarkdownKnowledgeBase(SERVICES), _ctx("sí, y además..."), "¿Qué es la subrogación?")
+    answer_from_knowledge(
+        llm, MarkdownKnowledgeBase(SERVICES), _ctx("sí, y además..."), "¿Qué es la subrogación?"
+    )
     assert "¿Qué es la subrogación?" in llm.prompts[0]
 
 

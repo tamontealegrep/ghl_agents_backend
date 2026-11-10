@@ -107,7 +107,9 @@ class AgentRegistry:
 
         # A document too large for the model fails here, at startup, not on every question.
         knowledge_base = (
-            MarkdownKnowledgeBase.from_file(bundle.knowledge_path) if bundle.knowledge_path.is_file() else None
+            MarkdownKnowledgeBase.from_file(bundle.knowledge_path)
+            if bundle.knowledge_path.is_file()
+            else None
         )
         graph = build_graph(
             artifact,

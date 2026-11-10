@@ -1,4 +1,3 @@
-
 import pytest
 from surrogacy.services.slot_calculator import (
     compute_available_slots,
@@ -17,6 +16,7 @@ BOGOTA = "America/Bogota"
 # ---------------------------------------------------------------------------
 # get_day_window_hours
 # ---------------------------------------------------------------------------
+
 
 def test_get_day_window_hours_monday():
     assert get_day_window_hours(1, 10) == (7, 0, 12, 0)
@@ -47,6 +47,7 @@ def test_get_day_window_hours_closed_on_other_days(weekday):
 # is_holiday
 # ---------------------------------------------------------------------------
 
+
 def test_is_holiday_known_date():
     assert is_holiday(2026, 1, 1) is True
 
@@ -58,6 +59,7 @@ def test_is_holiday_regular_date():
 # ---------------------------------------------------------------------------
 # compute_processing_day_key
 # ---------------------------------------------------------------------------
+
 
 def test_compute_processing_day_key_regular_weekday():
     # Miercoles 2026-08-26 -> siguiente dia es jueves, sin salto
@@ -81,6 +83,7 @@ def test_compute_processing_day_key_skips_sunday_to_monday():
 # valid_advance
 # ---------------------------------------------------------------------------
 
+
 def test_valid_advance_true_when_slot_day_after_processing_day():
     slot_start = build_business_instant(2026, 8, 28, 7, 0, BOGOTA)
     assert valid_advance(slot_start, "2026-08-27") is True
@@ -100,9 +103,10 @@ def test_valid_advance_false_when_slot_day_before_processing_day():
 # get_candidate_days_list
 # ---------------------------------------------------------------------------
 
+
 def test_get_candidate_days_list_includes_only_business_days_with_window():
-    start = build_business_instant(2026, 8, 24, 0, 0, BOGOTA)   # Lunes
-    end = build_business_instant(2026, 8, 30, 23, 59, BOGOTA)   # Domingo
+    start = build_business_instant(2026, 8, 24, 0, 0, BOGOTA)  # Lunes
+    end = build_business_instant(2026, 8, 30, 23, 59, BOGOTA)  # Domingo
     days = get_candidate_days_list(start, end)
     assert [d["day"] for d in days] == [24, 26, 28]  # Lunes, Miercoles, Viernes
 
@@ -124,6 +128,7 @@ def test_get_candidate_days_list_includes_first_saturday_of_month():
 # ---------------------------------------------------------------------------
 # compute_available_slots
 # ---------------------------------------------------------------------------
+
 
 def _compute(**overrides):
     now = overrides.pop("now", build_business_instant(2026, 8, 20, 6, 0, BOGOTA))  # Jueves
@@ -147,7 +152,12 @@ def test_compute_available_slots_interval_zero_is_back_to_back():
 
 
 def test_compute_available_slots_post_buffer_keeps_time_after_an_existing_appointment():
-    busy = [(build_business_instant(2026, 8, 24, 8, 0, BOGOTA), build_business_instant(2026, 8, 24, 8, 30, BOGOTA))]
+    busy = [
+        (
+            build_business_instant(2026, 8, 24, 8, 0, BOGOTA),
+            build_business_instant(2026, 8, 24, 8, 30, BOGOTA),
+        )
+    ]
     plain = [s.start_co[11:16] for s in _compute(busy_events=busy)]
     buffered = [s.start_co[11:16] for s in _compute(busy_events=busy, post_buffer_minutes=10)]
     assert "08:30" in plain
@@ -155,7 +165,12 @@ def test_compute_available_slots_post_buffer_keeps_time_after_an_existing_appoin
 
 
 def test_compute_available_slots_pre_buffer_keeps_time_before_an_existing_appointment():
-    busy = [(build_business_instant(2026, 8, 24, 9, 0, BOGOTA), build_business_instant(2026, 8, 24, 9, 30, BOGOTA))]
+    busy = [
+        (
+            build_business_instant(2026, 8, 24, 9, 0, BOGOTA),
+            build_business_instant(2026, 8, 24, 9, 30, BOGOTA),
+        )
+    ]
     plain = [s.start_co[11:16] for s in _compute(busy_events=busy)]
     buffered = [s.start_co[11:16] for s in _compute(busy_events=busy, pre_buffer_minutes=10)]
     assert "08:30" in plain
@@ -163,7 +178,9 @@ def test_compute_available_slots_pre_buffer_keeps_time_before_an_existing_appoin
 
 
 def test_compute_available_slots_excludes_slot_overlapping_a_busy_event():
-    busy = [(build_business_instant(2026, 8, 24, 8, 6, BOGOTA), build_business_instant(2026, 8, 24, 8, 8, BOGOTA))]
+    busy = [
+        (build_business_instant(2026, 8, 24, 8, 6, BOGOTA), build_business_instant(2026, 8, 24, 8, 8, BOGOTA))
+    ]
     starts = [s.start_co for s in _compute(busy_events=busy)]
     assert "2026-08-24T08:00:00-05:00" not in starts
     assert len(starts) == 9

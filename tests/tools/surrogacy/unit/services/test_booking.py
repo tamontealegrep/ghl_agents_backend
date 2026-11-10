@@ -77,4 +77,3 @@ def test_saturday_invalid_before_opening_and_after_closing():
 
 def test_sunday_always_invalid():
     assert is_valid_business_hour(0, 10, 0) is False
-

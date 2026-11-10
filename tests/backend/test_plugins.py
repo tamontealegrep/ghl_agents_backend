@@ -67,7 +67,8 @@ def _make_company_shared(company_root, **modules: str) -> None:
 def test_a_plugin_can_import_from_the_company_shared_tools(agents_dir, clean_shared_import):
     _make_company_shared(agents_dir.parent, greeting="ROUTE = '/from-shared'\n")
     plugin = PLUGIN_SOURCE.replace('"/ping-tool"', "ROUTE").replace(
-        "from fastapi import APIRouter", "from fastapi import APIRouter\nfrom shared.tools.greeting import ROUTE"
+        "from fastapi import APIRouter",
+        "from fastapi import APIRouter\nfrom shared.tools.greeting import ROUTE",
     )
 
     router = load_tool_router(load_bundle(make_bundle(agents_dir, "a", plugin=plugin)))

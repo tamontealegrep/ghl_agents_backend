@@ -14,7 +14,10 @@ def test_template_variables_are_substituted_and_a_missing_one_fails(tmp_path):
         render_template_file(tmp_path, "nope", name="x")
 
 
-@pytest.mark.parametrize(("raw", "expected"), [(None, 20), ("", 20), ("abc", 20), ("0", 20), ("-5", 20), ("30", 30), ("45 min", 45)])
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [(None, 20), ("", 20), ("abc", 20), ("0", 20), ("-5", 20), ("30", 30), ("45 min", 45)],
+)
 def test_duration_falls_back_to_the_given_default(raw, expected):
     assert parse_duration_minutes(raw, 20) == expected
 

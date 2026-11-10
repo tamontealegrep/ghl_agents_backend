@@ -64,7 +64,11 @@ def load_session(session_file: Path, agents: list[AgentRef]) -> SessionState:
         KeyError: The session's agent no longer exists.
     """
     data = json.loads(session_file.read_text(encoding="utf-8"))
-    matches = [a for a in agents if a.slug == data["agent_slug"] and (not data.get("company") or a.company == data["company"])]
+    matches = [
+        a
+        for a in agents
+        if a.slug == data["agent_slug"] and (not data.get("company") or a.company == data["company"])
+    ]
     if not matches:
         raise KeyError(f"Agent {data['agent_slug']!r} of the session no longer exists")
     return SessionState(

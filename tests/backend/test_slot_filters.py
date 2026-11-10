@@ -45,7 +45,9 @@ def test_pre_buffer_keeps_free_time_before_an_existing_appointment():
 
 def test_each_existing_appointment_blocks_its_own_buffers():
     busy = [(at(0), at(30)), (at(60), at(90))]
-    free = drop_conflicting([at(m) for m in range(0, 120, 10)], 10, busy, pre_buffer_minutes=5, post_buffer_minutes=10)
+    free = drop_conflicting(
+        [at(m) for m in range(0, 120, 10)], 10, busy, pre_buffer_minutes=5, post_buffer_minutes=10
+    )
     assert free == [at(40), at(100), at(110)]
 
 

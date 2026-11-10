@@ -67,14 +67,22 @@ def test_the_default_target_is_local_unless_configured():
 
 def test_the_operations_of_every_agent_are_listed(openapi):
     operations = send_request.list_operations(openapi)
-    assert ("babynova_triage_obstetrico_text", "tools/calendars", "GET", "/agents/babynova_triage_obstetrico_text/tools/calendars") in operations
+    assert (
+        "babynova_triage_obstetrico_text",
+        "tools/calendars",
+        "GET",
+        "/agents/babynova_triage_obstetrico_text/tools/calendars",
+    ) in operations
     assert any(t == "chat" for _, t, _, _ in operations)
     assert any(t == "tools/book-appointment-ghl" for _, t, _, _ in operations)
 
 
 def test_a_tool_is_found_with_or_without_the_tools_prefix(openapi):
     slug = "babynova_surrogate_questions_text"
-    assert send_request.find_operation(openapi, slug, "book-appointment-ghl", None) == (f"/agents/{slug}/tools/book-appointment-ghl", "POST")
+    assert send_request.find_operation(openapi, slug, "book-appointment-ghl", None) == (
+        f"/agents/{slug}/tools/book-appointment-ghl",
+        "POST",
+    )
     assert send_request.find_operation(openapi, slug, "tools/calendars", None)[1] == "GET"
     with pytest.raises(ValueError, match="Available"):
         send_request.find_operation(openapi, slug, "nope", None)

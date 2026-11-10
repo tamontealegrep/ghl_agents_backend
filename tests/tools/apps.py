@@ -9,4 +9,3 @@ desk_app.include_router(desk_router, prefix="/api/v1")
 
 surrogacy_app = FastAPI(title="surrogacy (test)")
 surrogacy_app.include_router(surrogacy_router, prefix="/api/v1")
-

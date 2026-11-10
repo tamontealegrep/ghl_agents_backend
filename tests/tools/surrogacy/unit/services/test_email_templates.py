@@ -26,4 +26,3 @@ def test_render_email_template_missing_variable_raises():
 def test_render_email_template_unknown_template_raises():
     with pytest.raises(FileNotFoundError):
         render_email_template("no_existe", **VARS)
-

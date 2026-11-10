@@ -39,9 +39,7 @@ def _minimal_template(**overrides) -> SubflowTemplate:
                 fallback=["GO_TO: T_END"],
             ),
         ],
-        "terminal_states": [
-            _state("T_END", type="terminal", say=["Bye."], wait="no", final="yes", route=[])
-        ],
+        "terminal_states": [_state("T_END", type="terminal", say=["Bye."], wait="no", final="yes", route=[])],
         "exports": {"states": {"entry": "T_S"}},
     }
     data.update(overrides)
@@ -103,14 +101,14 @@ def test_eval_llm_forces_llm_edge_even_if_parseable():
 
 def test_missing_entry_export_falls_back_to_the_single_start_state():
     """
-Some subflows never declare exports.states.entry, relying instead on the
+    Some subflows never declare exports.states.entry, relying instead on the
 
-    convention that there is exactly one type=start state. The emitter must
-        tolerate that, not just the explicit-export form.
+        convention that there is exactly one type=start state. The emitter must
+            tolerate that, not just the explicit-export form.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     graph = render_subflow_graph(_minimal_template(exports={"states": {}}))
     assert graph.entry_point == "T_S"
 
@@ -174,14 +172,14 @@ def test_render_agent_graph_entry_point_is_start_at():
 
 def test_node_carries_goal_and_do():
     """
-A runtime's extraction/decision prompts need the DSL's own normalization
+    A runtime's extraction/decision prompts need the DSL's own normalization
 
-    instructions — without `goal`, an LLM extraction has no way to know two
-        normalized values are meant to stay distinct categories, not synonyms.
+        instructions — without `goal`, an LLM extraction has no way to know two
+            normalized values are meant to stay distinct categories, not synonyms.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     state = _state(
         "T_Q",
         type="question",
@@ -200,11 +198,11 @@ A runtime's extraction/decision prompts need the DSL's own normalization
 
 def test_node_carries_capture_fields():
     """
-A runtime needs to know what to extract from a question / populate from a tool call.
+    A runtime needs to know what to extract from a question / populate from a tool call.
 
-    Returns:
-        None.
-"""
+        Returns:
+            None.
+    """
     state = _state(
         "T_Q",
         type="question",

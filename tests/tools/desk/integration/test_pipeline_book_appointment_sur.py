@@ -94,7 +94,11 @@ async def _fake_get_free_busy_busy(*args, **kwargs):
 
 
 async def _fake_create_event(*args, **kwargs):
-    return {"id": "evt456", "htmlLink": "https://calendar.google.com/event?eid=def", "hangoutLink": "https://meet.google.com/uvw-lmno"}
+    return {
+        "id": "evt456",
+        "htmlLink": "https://calendar.google.com/event?eid=def",
+        "hangoutLink": "https://meet.google.com/uvw-lmno",
+    }
 
 
 async def _fake_create_event_no_id(*args, **kwargs):
@@ -153,7 +157,9 @@ def test_book_appointment_sur_rejects_outside_business_hours(mocked_success):
 def test_book_appointment_sur_monday_after_2pm_is_invalid(mocked_success):
     now = datetime.now(ZoneInfo("America/Bogota"))
     days_until_monday = (7 - now.weekday()) % 7 or 7
-    next_monday = (now + timedelta(days=days_until_monday)).replace(hour=15, minute=0, second=0, microsecond=0)
+    next_monday = (now + timedelta(days=days_until_monday)).replace(
+        hour=15, minute=0, second=0, microsecond=0
+    )
     payload = _valid_payload()
     payload["start_date"] = next_monday.isoformat()
     response = client.post("/api/v1/book-appointment-google", json=payload)
