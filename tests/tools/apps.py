@@ -2,12 +2,12 @@
 
 from fastapi import FastAPI
 
-from family_aims import router as family_aims_router
-from babynova_surrogacy import router as babynova_surrogacy_router
+from desk import router as desk_router
+from surrogacy import router as surrogacy_router
 
-family_aims_app = FastAPI(title="family_aims (test)")
-family_aims_app.include_router(family_aims_router, prefix="/api/v1")
+desk_app = FastAPI(title="family_aims (test)")
+desk_app.include_router(desk_router, prefix="/api/v1")
 
-babynova_surrogacy_app = FastAPI(title="babynova_surrogacy (test)")
-babynova_surrogacy_app.include_router(babynova_surrogacy_router, prefix="/api/v1")
+surrogacy_app = FastAPI(title="surrogacy (test)")
+surrogacy_app.include_router(surrogacy_router, prefix="/api/v1")
 
