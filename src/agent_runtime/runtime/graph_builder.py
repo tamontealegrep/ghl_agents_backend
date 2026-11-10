@@ -1009,6 +1009,7 @@ def _format_date_human(date_parts: _DateParts, language_code: str | None) -> str
 
 
 _ANY_ISO_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+_DAY_SLOT_NAMES = frozenset({"day", "new_day"})
 
 
 def _captured_string_values(slots: dict[str, Any]) -> list[str]:
@@ -1063,7 +1064,17 @@ def _find_selected_date(slots: dict[str, Any], candidate_dates: set[_DateParts])
     for parts in candidate_dates:
         by_day_number.setdefault(str(int(parts[2])), set()).add(parts)
 
-    for value in values:
+    # Only a slot that is itself about a day or date may name one with a loose number: any other
+    # answer ("11" kids, an age, a street number) would pass for the picked day and skip the day list.
+    day_values = [
+        value
+        for name, value in slots.items()
+        if name in _DAY_SLOT_NAMES
+        and not _CONSTANT_NAME_RE.match(name)
+        and isinstance(value, str)
+        and value.strip()
+    ]
+    for value in day_values:
         # Anything already written as an ISO date or timestamp is handled
         # above; its loose numbers (a `calendar`, a `now` anchor) name nothing.
         if _ANY_ISO_DATE_RE.search(value):

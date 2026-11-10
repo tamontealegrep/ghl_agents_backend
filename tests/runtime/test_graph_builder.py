@@ -1510,6 +1510,17 @@ def test_interpolate_slots_day_of_month_heuristic_never_misfires_on_a_compile_ti
     )
 
 
+def test_interpolate_slots_a_loose_number_in_an_unrelated_slot_does_not_pick_the_day():
+    slots = {
+        "children_count": "11",
+        "last_birth_date": "11/05/1995",
+        "c_email": "montealegre.tomas@outlook.com",
+        "available_slots": [_appointment("2026-11-11", "07:00"), _appointment("2026-11-11", "12:00")],
+    }
+    result = _interpolate_slots("[available_slots]", slots)
+    assert result == "🗓️ Miércoles 11 de noviembre\n └─ Mañana · Tarde"
+
+
 def test_interpolate_slots_day_of_month_heuristic_skips_ambiguous_matches():
     """
     Two different offered dates share day-of-month 22 (a 22nd next month) —
