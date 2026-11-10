@@ -163,6 +163,70 @@
     ]
   },
   {
+    "name": "update_custom_field",
+    "description": "Actualiza un campo personalizado (Custom Field de contacto) o un valor personalizado (Custom Value global) en GoHighLevel.",
+    "notes": [
+      "MANDATORY EXECUTION: cuando el usuario pide cambiar una preferencia personalizada como su idioma, o una configuración global de la subcuenta.",
+      "ARGUMENTS: name (nombre legible como 'language' o ID técnico), value (nuevo valor).",
+      "CONTEXT RULE: provee contactId para cambios específicos del usuario; si se omite pero se da locationId, actualiza un valor global (Custom Value).",
+      "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio."
+    ],
+    "inputs": [
+      {
+        "name": "name",
+        "required": true,
+        "description": "Nombre o ID del campo/valor a actualizar. Ejemplo: 'language', 'uWLes...'."
+      },
+      {
+        "name": "value",
+        "required": true,
+        "description": "Nuevo valor a asignar. Ejemplo: 'Spanish', 'English'."
+      },
+      {
+        "name": "contact_id",
+        "required": false,
+        "description": "ID del contacto en GHL (disponible en context.contact_id). Si se provee, se actualiza su campo personalizado."
+      },
+      {
+        "name": "location_id",
+        "required": false,
+        "description": "ID de la ubicación en GHL (disponible en context.location_id). Necesario para valores globales o para buscar campos por nombre."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Indica si la operación fue exitosa."
+      },
+      {
+        "name": "type",
+        "required": true,
+        "description": "Indica qué se actualizó: 'contact' (campo de usuario) o 'custom_value' (global)."
+      },
+      {
+        "name": "field_id",
+        "required": false,
+        "description": "ID técnico del campo/valor actualizado."
+      },
+      {
+        "name": "field_name",
+        "required": false,
+        "description": "Eco del nombre del campo solicitado."
+      },
+      {
+        "name": "value",
+        "required": false,
+        "description": "Eco del valor asignado."
+      },
+      {
+        "name": "errors",
+        "required": false,
+        "description": "Mensaje de error si la operación falló."
+      }
+    ]
+  },
+  {
     "name": "calculate_bmi",
     "description": "Authorized tool to calculate BMI; single source of truth for [imc].",
     "notes": [
