@@ -8,7 +8,11 @@ services:
       args:
         COMPANY: babynova
     image: agents-babynova:latest
-    env_file: .env
+    # Local development only: optional, never copied into the image. On Render the variables already
+    # exist in the environment and no .env is needed.
+    env_file:
+      - path: .env
+        required: false
     environment:
       HOST: 0.0.0.0
       PORT: "8010"

@@ -10,7 +10,11 @@ services:
       args:
         COMPANY: _template
     image: agents-company-template:latest
-    env_file: .env             # copy env.example to .env
+    # Local development only: optional, never copied into the image. On Render the variables already
+    # exist in the environment and no .env is needed.
+    env_file:
+      - path: .env
+        required: false
     environment:
       # Fixed inside the container. They override .env on purpose: the container must
       # listen on all interfaces, whatever a developer left in a local .env.

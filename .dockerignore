@@ -21,6 +21,8 @@ scripts
 *.db
 # secrets and local state never go into an image
 **/.env
+.env.*
+**/.env.*
 **/*.db
 companies/*/docker-compose.yml
 companies/*/env.example

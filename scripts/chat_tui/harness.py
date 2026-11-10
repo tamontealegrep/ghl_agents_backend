@@ -331,8 +331,9 @@ class AgentHarness:
             port=int(os.environ.get("PORT") or 8010),
             agents_dir=agent.root.parent,
             admin_token=None,
+            company=agent.company,  # tools are served once per company, as in the deployed backend
         )
-        self.tools_base_url = f"{settings.self_base_url}/agents/{agent.slug}/tools"
+        self.tools_base_url = f"{settings.self_base_url}/agents/{agent.company}/tools"
         self.tracing_http_client = TracingToolClient(
             trace_sink=self._trace_buffer,
             local_client=local_client or TestClient(create_app(settings)),

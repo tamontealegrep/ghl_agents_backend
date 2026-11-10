@@ -219,3 +219,14 @@ def test_contact_flags_build_the_simulated_contact():
     args = tui.parse_args(["--contact-name", "Ana", "--contact-language", "es"])
     assert tui._contact_from_args(args) == {"name": "Ana", "language": "es"}
     assert tui._contact_from_args(tui.parse_args([])) == {}
+
+
+def test_tool_calls_go_to_the_company_mount_like_in_the_deployed_backend(family_aims):
+    harness = tui.AgentHarness(family_aims["family_aims_sam_text"], llm_client=FakeLLM())
+    assert harness.tools_base_url.endswith("/agents/family_aims/tools")
+
+    harness.tracing_http_client.post(f"{harness.tools_base_url}/check_visa", json={"nationalities": "USA"})
+
+    event = next(e for e in harness.events if e["kind"] == "tool")
+    assert "/agents/family_aims/tools/" in event["url"] and "family_aims_sam_text" not in event["url"]
+    assert event["status"] == 200

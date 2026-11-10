@@ -37,7 +37,9 @@ class BrokenLLM(FakeLLM):
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("AGENT_DEFINITIONS_DIR", str(tmp_path / "no-definitions"))
     monkeypatch.setattr(server, "SAVE_DIR", tmp_path / "saved")
-    monkeypatch.delenv("GHL_LOCATION_ID", raising=False)  # other tests load company .env files into os.environ
+    monkeypatch.delenv(
+        "GHL_LOCATION_ID", raising=False
+    )  # other tests load company .env files into os.environ
     shutil.copytree(COMPANIES / "family_aims" / "bundles", tmp_path / "family_aims" / "bundles")
     llm = {"client": FakeLLM()}
 
