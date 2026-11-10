@@ -19,7 +19,7 @@ def _parse_float(val: Any) -> float | None:
         return None
 
 
-def calculate_bmi(raw_weight_kg: Any, raw_height_cm: Any) -> dict[str, float | None]:
+def calculate_bmi(raw_weight_kg: Any, raw_height_cm: Any) -> dict[str, Any]:
     """Calcula el BMI a partir de peso (kg) y altura (cm).
 
     Devuelve {bmi, errors}.

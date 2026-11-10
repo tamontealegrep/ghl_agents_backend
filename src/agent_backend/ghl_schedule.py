@@ -99,7 +99,10 @@ def schedule_from_calendar(calendar: Mapping[str, Any], tool: CalendarSettings) 
         "date_range_days": to_days(calendar.get("allowBookingFor"), calendar.get("allowBookingForUnit")) or None,  # 0 = no limit
     }
     taken = {name for name in wanted if found.get(name) is not None}
-    pick = lambda name: found[name] if name in taken else getattr(tool, name)
+    def pick(name: str) -> int:
+        value = found[name] if name in taken else getattr(tool, name)
+        return int(value or 0)
+
     return Schedule(
         duration_minutes=pick("duration_minutes"),
         interval_minutes=tool.interval_minutes,

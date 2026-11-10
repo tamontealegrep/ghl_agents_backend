@@ -319,7 +319,7 @@ def echo(payload: dict[str, Any]):
         last_message = max(inbound_messages, key=lambda item: _parse_iso_z(item.get("dateAdded")))
         last_body = str(last_message.get("body") or last_message.get("message") or "").strip()
         if not last_body:
-            last_body = incoming_text or f"(sin body) messageId={last_message.get('id')}"
+            last_body = str(incoming_text or f"(sin body) messageId={last_message.get('id')}")
 
         _append_trace(
             "selected_last_inbound",

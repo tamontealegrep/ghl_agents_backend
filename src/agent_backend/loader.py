@@ -8,6 +8,7 @@ import os
 import sqlite3
 import threading
 from dataclasses import dataclass
+from typing import Any
 
 from langgraph.checkpoint.sqlite import SqliteSaver
 
@@ -48,7 +49,7 @@ class LoadedAgent:
     """
 
     artifact: RuntimeArtifact
-    graph: object
+    graph: Any
 
 
 class AgentRegistry:

@@ -3,6 +3,8 @@ import asyncio
 from datetime import datetime, timedelta
 from urllib.parse import quote, urlparse
 
+from typing import Any
+
 import httpx
 
 from agent_backend.timezones import parse_iso
@@ -101,7 +103,7 @@ async def list_events(
     
     async with httpx.AsyncClient(timeout=20) as client:
         while True:
-            params = {
+            params: dict[str, Any] = {
                 "timeMin": time_min.isoformat(),
                 "timeMax": time_max.isoformat(),
                 "singleEvents": True,
@@ -159,7 +161,7 @@ async def update_event(
 ) -> dict:
     """Actualiza parcialmente un evento en Google Calendar (PATCH).
     """
-    body = {}
+    body: dict[str, Any] = {}
     if summary:
         body["summary"] = summary
     if description:

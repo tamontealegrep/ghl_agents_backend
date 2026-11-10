@@ -10,7 +10,7 @@ Module.
     cliente en particular.
 """
 
-from typing import Any
+from typing import Any, TypeGuard
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 _VALID_REASONS = {"no_availability", "booking_failed", "user_requested", "ambiguous_data", "technical_error"}
@@ -22,7 +22,7 @@ _WEEKEND = set(_DAY_NAMES[5:])
 _VALID_TIME_WINDOWS = {"morning", "midday", "afternoon", "evening"}
 
 
-def _is_present(val: Any) -> bool:
+def _is_present(val: Any) -> TypeGuard[str]:
     return val is not None and str(val).strip() != ""
 
 

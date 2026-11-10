@@ -33,7 +33,7 @@ async def update_custom_field_service(
         }
         
         if name in standard_fields:
-            payload = {name: value}
+            payload: dict[str, Any] = {name: value}
             field_id = name
         else:
             # Custom Field

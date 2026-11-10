@@ -236,7 +236,7 @@ Text accumulated for one thread_id, waiting out the debounce window.
 
     execution_ids: list[str] = field(default_factory=list)
     message_parts: list[str] = field(default_factory=list)
-    last_request: object = None
+    last_request: GhlAgentRequest | None = None
     flush_task: asyncio.Task | None = None
 
 
@@ -374,7 +374,7 @@ async def resolve_reply_channel(
     channel = request.channel
     if not usable(channel):
         channel = remembered
-    if not usable(channel):
+    if not usable(channel) and request.location_id:
         channel = await search_conversation_channel_async(request.contact_id, request.location_id, config, logger)
     if not usable(channel):
         contact = request.contact or {}
@@ -406,7 +406,7 @@ def build_compiled_agent_router(cfg: CompiledAgentGhlConfig, registry: AgentRegi
         channel = await resolve_reply_channel(request, known_channels.get(thread_id), cfg.ghl_client_config(), logger)
         if normalize_channel(channel) and normalize_channel(request.channel) != normalize_channel(channel):
             logger.info("[%s] Payload had no usable channel (%r); replying through %s.", execution_id, request.channel, channel)
-        if normalize_channel(channel) in cfg.ghl_client_config().channel_type_map:
+        if channel and normalize_channel(channel) in cfg.ghl_client_config().channel_type_map:
             known_channels[thread_id] = channel
         return channel
 
@@ -495,6 +495,8 @@ def build_compiled_agent_router(cfg: CompiledAgentGhlConfig, registry: AgentRegi
 
     async def _run_turn(thread_id: str, turn: _PendingTurn) -> None:
         request = turn.last_request
+        if request is None:
+            return
         combined_message = "\n".join(turn.message_parts).strip()
         combined_message, reset_requested = _strip_reset_marker(combined_message)
         execution_id = turn.execution_ids[-1]
@@ -565,7 +567,7 @@ def build_compiled_agent_router(cfg: CompiledAgentGhlConfig, registry: AgentRegi
             upsert_conversation(
                 thread_id=thread_id,
                 agent_slug=cfg.slug,
-                location_id=request.location_id,
+                location_id=request.location_id or "",
                 contact_id=request.contact_id,
                 contact=final_state.get("contact"),
                 slots=final_state.get("slots"),
