@@ -48,7 +48,7 @@ def _settings(**tool_overrides):
     return _Settings()
 
 
-def _day(iso_weekday: int = 4, min_days: int = 10):
+def _day(iso_weekday: int = 4, min_days: int = 3):
     day = datetime.now(BOGOTA).date() + timedelta(days=min_days)
     while day.isoweekday() != iso_weekday:
         day += timedelta(days=1)

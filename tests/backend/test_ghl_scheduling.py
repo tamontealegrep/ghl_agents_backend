@@ -165,7 +165,7 @@ def world(monkeypatch):
     return w
 
 
-def day(iso_weekday=4, min_days=10):
+def day(iso_weekday=4, min_days=3):
     d = datetime.now(BOGOTA).date() + timedelta(days=min_days)
     while d.isoweekday() != iso_weekday:
         d += timedelta(days=1)
@@ -450,3 +450,45 @@ def test_cancel_deletes_the_appointment(world):
 def test_the_shared_module_has_no_company_specific_name():
     source = open(ghl_scheduling.__file__, encoding="utf-8").read().lower()
     assert "babynova" not in source and "family aims" not in source and "family_aims" not in source
+
+
+def test_booking_uses_the_conversations_contact_instead_of_looking_one_up(world):
+    """An e-mail or phone that belongs to another contact must not move the appointment to that person."""
+    start = at(day(min_days=3), 9)
+    world.free = [start]
+
+    body = book(world, start, contact_id="F2FikaF1uvDozXJIcRB1")
+
+    assert body["success"] is True
+    assert world.calls["create"]["contact_id"] == "F2FikaF1uvDozXJIcRB1"
+    assert "upsert" not in world.calls  # nobody is looked up or updated by e-mail/phone
+
+
+def test_booking_without_a_contact_id_still_finds_or_creates_the_contact(world):
+    start = at(day(min_days=3), 9)
+    world.free = [start]
+
+    book(world, start, contact_id="  ")
+
+    assert world.calls["upsert"]["email"] == "ana@gmail.com"
+    assert world.calls["create"]["contact_id"] == "c1"
+
+
+def test_find_uses_the_conversations_contact_when_given(world):
+    d = day()
+    world.events = [
+        event(at(d, 9), at(d, 9, 30), "mine", title="Whatever", contactId="F2FikaF1uvDozXJIcRB1"),
+        event(at(d, 10), at(d, 10, 30), "theirs", title="Whatever", contactId="someone-else"),
+    ]
+
+    body = world.client.post(
+        "/find-appointment-ghl",
+        json={
+            "calendar_type": "FT",
+            "contact_email": "shared@mail.com",
+            "contact_id": "F2FikaF1uvDozXJIcRB1",
+        },
+    ).json()
+
+    assert [a["event_id"] for a in body["appointments"]] == ["mine"]
+    assert "upsert" not in world.calls

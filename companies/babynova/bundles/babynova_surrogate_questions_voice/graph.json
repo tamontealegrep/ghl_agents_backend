@@ -5982,6 +5982,7 @@
           "calendar_type = 'FT' (required in every call to this tool).",
           "start_date = the literal start_co field of the chosen object in [s__available_slots], without converting, rounding, or reformatting.",
           "duration = <APPOINTMENT_DURATION_MINUTES>. iana_timezone = 'America/Bogota'. contact_name, contact_email, and contact_phone = previously confirmed contact data.",
+          "contact_id = {{contact.contact_id}} when it has a real value (not empty and not the literal placeholder); otherwise omit it.",
           "It is FORBIDDEN to speak, confirm the appointment, run FAQs/handlers, or route before capturing [s__success].",
           "If you do not execute book_appointment, STAY here and retry. NEVER continue with empty or assumed [s__success]."
         ],
@@ -6351,6 +6352,7 @@
           "TOOL CALL ONLY: call find_appointment now.",
           "calendar_type = 'FT' (required in every call to this tool).",
           "Send contact_name = [am__am_name] if not NULL, else {{contact.name}}.",
+          "Send contact_id = {{contact.contact_id}} when it has a real value (not empty and not the literal placeholder); otherwise omit it.",
           "iana_timezone = 'America/Bogota'."
         ],
         "trigger": [],
@@ -8248,6 +8250,13 @@
           "required": true,
           "description": "Contact's phone number in E.164 international format, already confirmed in the flow.",
           "type_expr": "phone_number",
+          "examples": []
+        },
+        {
+          "name": "contact_id",
+          "required": false,
+          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. Send it whenever it has a real value (not empty, not the literal placeholder); the contact is then used as is instead of being looked up by e-mail or phone, which could attach the appointment to someone else.",
+          "type_expr": "str",
           "examples": [
             "+573001234567"
           ]
@@ -8345,6 +8354,13 @@
           "required": false,
           "description": "Contact's email to perform the search.",
           "type_expr": "email",
+          "examples": []
+        },
+        {
+          "name": "contact_id",
+          "required": false,
+          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. Send it whenever it has a real value (not empty, not the literal placeholder); the contact is then used as is instead of being looked up by e-mail or phone, which could attach the appointment to someone else.",
+          "type_expr": "str",
           "examples": []
         },
         {

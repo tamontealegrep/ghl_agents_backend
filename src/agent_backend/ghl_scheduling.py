@@ -316,14 +316,18 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
             ):
                 return fail("That time is no longer available", "slot_taken")
 
-            upsert = await ghl.upsert_contact(
-                settings.ghl_token,
-                settings.ghl_location_id,
-                email=contact_email or None,
-                phone=contact_phone or None,
-                name=contact_name or None,
-            )
-            contact_id = (upsert.get("contact") or {}).get("id")
+            # The conversation's own contact wins; only without it the contact is found (or created) by
+            # e-mail/phone, which can land the appointment on someone else who shares them.
+            contact_id: str | None = (req.contact_id or "").strip() or None
+            if not contact_id:
+                upsert = await ghl.upsert_contact(
+                    settings.ghl_token,
+                    settings.ghl_location_id,
+                    email=contact_email or None,
+                    phone=contact_phone or None,
+                    name=contact_name or None,
+                )
+                contact_id = (upsert.get("contact") or {}).get("id")
             if not contact_id:
                 return fail("Failed to resolve/create the contact in GHL", "creation_failed")
 
@@ -398,8 +402,8 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
 
             now = datetime.now(UTC)
             time_min = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)
-            contact_id = None
-            if email or phone:
+            contact_id = (req.contact_id or "").strip() or None
+            if not contact_id and (email or phone):
                 upsert = await ghl.upsert_contact(
                     settings.ghl_token,
                     settings.ghl_location_id,

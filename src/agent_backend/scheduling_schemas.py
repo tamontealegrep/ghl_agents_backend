@@ -35,6 +35,14 @@ class BookAppointmentRequest(BaseModel):
     contact_name: str = Field(examples=["Maria Perez"])
     contact_email: str = Field(examples=["maria.perez@example.com"])
     contact_phone: str = Field(examples=["+573001234567"])
+    contact_id: str | None = Field(
+        default=None,
+        examples=["F2FikaF1uvDozXJIcRB1"],
+        description=(
+            "GHL contact the appointment belongs to (the conversation's contact). When given it is used as is; "
+            "otherwise the contact is looked up or created from the e-mail, phone and name."
+        ),
+    )
     iana_timezone: str | None = Field(default=DEFAULT_TZ, examples=["America/Bogota"])
     calendar_type: str | None = Field(default=None, examples=["FT"], description=_CALENDAR)
 
@@ -52,6 +60,14 @@ class FindAppointmentRequest(BaseModel):
     contact_name: str | None = Field(default="", examples=["John Doe"])
     contact_phone: str | None = Field(default="", examples=["+573001234567"])
     contact_email: str | None = Field(default="", examples=["john@example.com"])
+    contact_id: str | None = Field(
+        default=None,
+        examples=["F2FikaF1uvDozXJIcRB1"],
+        description=(
+            "GHL contact the appointment belongs to (the conversation's contact). When given it is used as is; "
+            "otherwise the contact is looked up or created from the e-mail, phone and name."
+        ),
+    )
     iana_timezone: str | None = Field(default=DEFAULT_TZ, examples=["America/Bogota"])
     calendar_type: str | None = Field(default=None, examples=["FT"], description=_CALENDAR)
 

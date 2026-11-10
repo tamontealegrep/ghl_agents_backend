@@ -351,6 +351,11 @@
         "description": "Contact's phone number in E.164 international format, already confirmed in the flow."
       },
       {
+        "name": "contact_id",
+        "required": false,
+        "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. Send it whenever it has a real value (not empty, not the literal placeholder); the contact is then used as is instead of being looked up by e-mail or phone, which could attach the appointment to someone else."
+      },
+      {
         "name": "iana_timezone",
         "required": true,
         "description": "IANA timezone identifier of the contact; fixed value 'America/Bogota'."
@@ -418,6 +423,11 @@
         "name": "contact_email",
         "required": false,
         "description": "Contact's email to perform the search."
+      },
+      {
+        "name": "contact_id",
+        "required": false,
+        "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. Send it whenever it has a real value (not empty, not the literal placeholder); the contact is then used as is instead of being looked up by e-mail or phone, which could attach the appointment to someone else."
       },
       {
         "name": "iana_timezone",
