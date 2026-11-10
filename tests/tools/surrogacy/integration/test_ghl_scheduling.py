@@ -134,6 +134,7 @@ def test_booking_titles_the_appointment_and_notifies_the_team(ghl):
     body = client.post(
         "/api/v1/book-appointment-ghl",
         json={
+            "contact_id": "c1",
             "calendar_type": "FT",
             "start_date": start.isoformat(),
             "contact_name": "ana gomez",
@@ -155,6 +156,7 @@ def test_booking_outside_the_ft_booking_hours_is_rejected(ghl):
     body = client.post(
         "/api/v1/book-appointment-ghl",
         json={
+            "contact_id": "c1",
             "calendar_type": "FT",
             "start_date": start.isoformat(),
             "contact_name": "Ana",

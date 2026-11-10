@@ -2399,7 +2399,10 @@ def test_protect_lists_also_covers_the_new_day_and_part_of_day_blocks():
 
 
 def test_lists_follow_the_language_name_held_in_preferred_language():
-    slots = {"day": "2026-11-04", "available_slots": [_appointment("2026-11-04", t) for t in ("09:00", "09:30", "14:00")]}
+    slots = {
+        "day": "2026-11-04",
+        "available_slots": [_appointment("2026-11-04", t) for t in ("09:00", "09:30", "14:00")],
+    }
     assert (
         _interpolate_slots("[available_slots]", slots, "English")
         == "Morning\n🕐 09:00 to 09:30\n\nAfternoon\n🕐 14:00"

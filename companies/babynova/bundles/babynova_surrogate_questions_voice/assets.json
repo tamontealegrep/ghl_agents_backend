@@ -352,8 +352,8 @@
       },
       {
         "name": "contact_id",
-        "required": false,
-        "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. Send it whenever it has a real value (not empty, not the literal placeholder); the contact is then used as is instead of being looked up by e-mail or phone, which could attach the appointment to someone else."
+        "required": true,
+        "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. Required: the tool fails without it, and it never looks a contact up by e-mail or phone."
       },
       {
         "name": "iana_timezone",
@@ -426,8 +426,8 @@
       },
       {
         "name": "contact_id",
-        "required": false,
-        "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. Send it whenever it has a real value (not empty, not the literal placeholder); the contact is then used as is instead of being looked up by e-mail or phone, which could attach the appointment to someone else."
+        "required": true,
+        "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. Required: the tool fails without it, and it never looks a contact up by e-mail or phone."
       },
       {
         "name": "iana_timezone",

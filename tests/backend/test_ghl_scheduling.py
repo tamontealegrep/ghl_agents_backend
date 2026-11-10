@@ -295,6 +295,7 @@ def book(world, start, **overrides):
         "contact_name": "ana gomez",
         "contact_email": "Ana@Gmail.com",
         "contact_phone": "+573000000000",
+        "contact_id": "c1",
     }
     payload.update(overrides)
     return world.client.post("/book-appointment-ghl", json=payload).json()
@@ -313,7 +314,7 @@ def test_booking_creates_the_appointment_with_the_calendars_duration_and_notifie
         minutes=30
     )  # GHL's duration, not the request's "99"
     assert created["appointment_status"] == "confirmed" and created["to_notify"] is False
-    assert world.calls["upsert"]["email"] == "ana@gmail.com"
+    assert world.calls["create"]["contact_id"] == "c1" and "upsert" not in world.calls
     assert world.notified and world.notified[0]["contact_name"] == "Ana Gomez"
 
 
@@ -388,7 +389,12 @@ def test_find_matches_by_contact_id_title_and_skips_cancelled(world):
     ]
     body = world.client.post(
         "/find-appointment-ghl",
-        json={"calendar_type": "FT", "contact_name": "Ana Gomez", "contact_email": "ana@gmail.com"},
+        json={
+            "calendar_type": "FT",
+            "contact_id": "c1",
+            "contact_name": "Ana Gomez",
+            "contact_email": "ana@gmail.com",
+        },
     ).json()
     assert body["success"] is True
     assert [a["event_id"] for a in body["appointments"]] == ["by_contact", "by_title"]
@@ -398,26 +404,24 @@ def test_find_by_phone_digits_in_the_title(world):
     d = day()
     world.events = [event(at(d, 9), at(d, 9, 30), "x", title="Visit - Ana - +57 300 123 4567")]
     body = world.client.post(
-        "/find-appointment-ghl", json={"calendar_type": "FT", "contact_phone": "3001234567"}
+        "/find-appointment-ghl",
+        json={"calendar_type": "FT", "contact_id": "c1", "contact_phone": "3001234567"},
     ).json()
     assert [a["event_id"] for a in body["appointments"]] == ["x"]
 
 
 def test_find_validates_its_input_and_reports_no_results(world):
     assert (
-        "at least"
-        in world.client.post("/find-appointment-ghl", json={"calendar_type": "FT"}).json()["errors"]
-    )
-    assert (
         "not in a valid format"
         in world.client.post(
-            "/find-appointment-ghl", json={"calendar_type": "FT", "contact_email": "nope"}
+            "/find-appointment-ghl", json={"calendar_type": "FT", "contact_id": "c1", "contact_email": "nope"}
         ).json()["errors"]
     )
     assert (
         "No appointments found"
         in world.client.post(
-            "/find-appointment-ghl", json={"calendar_type": "FT", "contact_name": "Nadie Aqui"}
+            "/find-appointment-ghl",
+            json={"calendar_type": "FT", "contact_id": "c1", "contact_name": "Nadie Aqui"},
         ).json()["errors"]
     )
 
@@ -452,7 +456,7 @@ def test_the_shared_module_has_no_company_specific_name():
     assert "babynova" not in source and "family aims" not in source and "family_aims" not in source
 
 
-def test_booking_uses_the_conversations_contact_instead_of_looking_one_up(world):
+def test_booking_uses_the_conversations_contact_and_never_looks_one_up(world):
     """An e-mail or phone that belongs to another contact must not move the appointment to that person."""
     start = at(day(min_days=3), 9)
     world.free = [start]
@@ -464,17 +468,19 @@ def test_booking_uses_the_conversations_contact_instead_of_looking_one_up(world)
     assert "upsert" not in world.calls  # nobody is looked up or updated by e-mail/phone
 
 
-def test_booking_without_a_contact_id_still_finds_or_creates_the_contact(world):
+@pytest.mark.parametrize("contact_id", [None, "", "   "])
+def test_booking_fails_without_a_contact_id_before_touching_ghl(world, contact_id):
     start = at(day(min_days=3), 9)
     world.free = [start]
 
-    book(world, start, contact_id="  ")
+    body = book(world, start, contact_id=contact_id)
 
-    assert world.calls["upsert"]["email"] == "ana@gmail.com"
-    assert world.calls["create"]["contact_id"] == "c1"
+    assert body["success"] is False and body["reason"] == "missing_contact_id"
+    assert "contact_id is required" in body["errors"]
+    assert world.calls == {}  # no availability check, no contact lookup, no appointment
 
 
-def test_find_uses_the_conversations_contact_when_given(world):
+def test_find_uses_the_conversations_contact(world):
     d = day()
     world.events = [
         event(at(d, 9), at(d, 9, 30), "mine", title="Whatever", contactId="F2FikaF1uvDozXJIcRB1"),
@@ -492,3 +498,13 @@ def test_find_uses_the_conversations_contact_when_given(world):
 
     assert [a["event_id"] for a in body["appointments"]] == ["mine"]
     assert "upsert" not in world.calls
+
+
+@pytest.mark.parametrize("payload", [{}, {"contact_id": ""}, {"contact_id": "  "}])
+def test_find_fails_without_a_contact_id_before_touching_ghl(world, payload):
+    body = world.client.post(
+        "/find-appointment-ghl", json={"calendar_type": "FT", "contact_name": "Ana Gomez", **payload}
+    ).json()
+
+    assert body["success"] is False and "contact_id is required" in body["errors"]
+    assert world.calls == {}

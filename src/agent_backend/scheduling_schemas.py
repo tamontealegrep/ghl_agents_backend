@@ -39,8 +39,8 @@ class BookAppointmentRequest(BaseModel):
         default=None,
         examples=["F2FikaF1uvDozXJIcRB1"],
         description=(
-            "GHL contact the appointment belongs to (the conversation's contact). When given it is used as is; "
-            "otherwise the contact is looked up or created from the e-mail, phone and name."
+            "Required. GHL contact the appointment belongs to: the conversation's contact. The tool fails without "
+            "it; it never looks a contact up by e-mail or phone."
         ),
     )
     iana_timezone: str | None = Field(default=DEFAULT_TZ, examples=["America/Bogota"])
@@ -64,8 +64,8 @@ class FindAppointmentRequest(BaseModel):
         default=None,
         examples=["F2FikaF1uvDozXJIcRB1"],
         description=(
-            "GHL contact the appointment belongs to (the conversation's contact). When given it is used as is; "
-            "otherwise the contact is looked up or created from the e-mail, phone and name."
+            "Required. GHL contact the appointment belongs to: the conversation's contact. The tool fails without "
+            "it; it never looks a contact up by e-mail or phone."
         ),
     )
     iana_timezone: str | None = Field(default=DEFAULT_TZ, examples=["America/Bogota"])

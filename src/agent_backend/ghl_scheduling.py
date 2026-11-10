@@ -47,6 +47,11 @@ from agent_backend.slot_filters import Busy, conflicts_with_busy, parse_busy, th
 
 logger = logging.getLogger(__name__)
 
+MISSING_CONTACT_ID = (
+    "contact_id is required: the GHL contact of the conversation. Appointments are never attached to a "
+    "contact looked up by e-mail or phone."
+)
+
 __all__ = ["GHL_MAX_RANGE_DAYS", "GhlSchedulingHooks", "build_ghl_scheduling_router", "load_busy"]
 
 # GET /calendars/{id}/free-slots rejects ranges longer than this (GoHighLevel documentation).
@@ -258,6 +263,9 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
             settings, cal, error = resolve(req.calendar_type)
             if error:
                 return fail(error)
+            contact_id = (req.contact_id or "").strip()
+            if not contact_id:
+                return fail(MISSING_CONTACT_ID, "missing_contact_id")
             policy, tool = cal.booking, cal.tool
             schedule = await resolve_schedule(tool, settings.ghl_token)
             try:
@@ -315,21 +323,6 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
                 start_dt, end_dt, busy, schedule.pre_buffer_minutes, schedule.post_buffer_minutes
             ):
                 return fail("That time is no longer available", "slot_taken")
-
-            # The conversation's own contact wins; only without it the contact is found (or created) by
-            # e-mail/phone, which can land the appointment on someone else who shares them.
-            contact_id: str | None = (req.contact_id or "").strip() or None
-            if not contact_id:
-                upsert = await ghl.upsert_contact(
-                    settings.ghl_token,
-                    settings.ghl_location_id,
-                    email=contact_email or None,
-                    phone=contact_phone or None,
-                    name=contact_name or None,
-                )
-                contact_id = (upsert.get("contact") or {}).get("id")
-            if not contact_id:
-                return fail("Failed to resolve/create the contact in GHL", "creation_failed")
 
             title = f"{policy.EVENT_TITLE_PREFIX}{policy.TITLE_SEPARATOR}{contact_name}{policy.TITLE_SEPARATOR}{contact_phone}"
             try:
@@ -391,27 +384,18 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
             settings, cal, error = resolve(req.calendar_type)
             if error:
                 return fail(error)
+            contact_id = (req.contact_id or "").strip()
+            if not contact_id:
+                return fail(MISSING_CONTACT_ID)
             name = (req.contact_name or "").strip()
             phone = (req.contact_phone or "").strip()
             email = (req.contact_email or "").strip().lower()
-            if not (name or phone or email):
-                return fail("You must provide at least a name, phone, or email to search.")
             if email and ("@" not in email or "." not in email.split("@")[-1]):
                 return fail(f"The email '{email}' is not in a valid format.")
             client_tz = ZoneInfo((req.iana_timezone or hooks.business_tz).strip())
 
             now = datetime.now(UTC)
             time_min = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)
-            contact_id = (req.contact_id or "").strip() or None
-            if not contact_id and (email or phone):
-                upsert = await ghl.upsert_contact(
-                    settings.ghl_token,
-                    settings.ghl_location_id,
-                    email=email or None,
-                    phone=phone or None,
-                    name=name or None,
-                )
-                contact_id = (upsert.get("contact") or {}).get("id")
             data = await ghl.list_events(
                 access_token=settings.ghl_token,
                 location_id=settings.ghl_location_id,
