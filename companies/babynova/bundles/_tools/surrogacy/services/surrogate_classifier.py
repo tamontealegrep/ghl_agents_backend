@@ -68,6 +68,7 @@ _ELIGIBILITY_REASON_BY_REJECTION = {
     "Preeclampsia": "preeclampsia",
     "BMI": "bmi",
     "Documentation": "documentation",
+    "EPS": "eps",
     "Drug Use": "drug_use",
     "Availability": "availability",
 }
@@ -201,14 +202,21 @@ def classify_surrogate_detailed(data: dict[str, Any], today: date | None = None)
     if document not in _ALLOWED_DOCUMENTS:
         return "Rejected (Documentation)", None
 
-    # 10. Sustancias psicoactivas
+    # 10. Afiliacion activa a una EPS (resultado de check_adres): sin afiliacion no pasa
+    eps_active = parse_boolean(data.get("eps_active_affiliation"))
+    if eps_active is None:
+        return "Inconclusive", "eps_active_affiliation"
+    if eps_active is False:
+        return "Rejected (EPS)", None
+
+    # 11. Sustancias psicoactivas
     drug_use = parse_boolean(data.get("drug_use"))
     if drug_use is None:
         return "Inconclusive", "drug_use"
     if drug_use is True:
         return "Rejected (Drug Use)", None
 
-    # 11. Disponibilidad de tiempo para las consultas
+    # 12. Disponibilidad de tiempo para las consultas
     availability = parse_boolean(data.get("availability"))
     if availability is None:
         return "Inconclusive", "availability"

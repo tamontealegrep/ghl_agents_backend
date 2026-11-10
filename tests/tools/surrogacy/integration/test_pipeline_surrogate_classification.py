@@ -19,6 +19,7 @@ def _payload(**overrides):
         "preeclampsia": "no",
         "bmi": "22.5",
         "document_type": "cedula_ciudadania",
+        "eps_active_affiliation": "yes",
         "drug_use": "no",
         "availability": "si",
     }

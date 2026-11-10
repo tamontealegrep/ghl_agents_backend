@@ -274,7 +274,7 @@ tool_contracts:
       - "ARGUMENT RULE: never invent values; send an empty field when the data is missing."
       - "ARGUMENT RULE: birth_type (cesarea or natural) is only needed when the last birth was less than 18 months ago; otherwise it can be empty."
       - "ARGUMENT RULE: document_type is cedula_ciudadania, ppt or other. Only the first two are accepted."
-      - "RULES: age 18-38; allowed city; 1 to 4 children; last birth at least 18 months ago after a C-section or 12 months after a natural birth; at most 2 C-sections; preeclampsia rejects; abortions are only recorded; BMI 18.5-29.9; CC or PPT; no drug use; time available for appointments."
+      - "RULES: age 18-38; allowed city; 1 to 4 children; last birth at least 18 months ago after a C-section or 12 months after a natural birth; at most 2 C-sections; preeclampsia rejects; abortions are only recorded; BMI 18.5-29.9; CC or PPT; active EPS affiliation; no drug use; time available for appointments."
       - "SOURCE OF TRUTH RULE: use result as the only verdict. Nationality is recorded but never rejects."
     inputs:
       - name: age
@@ -310,6 +310,9 @@ tool_contracts:
       - name: document_type
         required: false
         description: "cedula_ciudadania, ppt or other."
+      - name: eps_active_affiliation
+        required: false
+        description: "Whether the candidate has an active EPS affiliation (from check_adres)."
       - name: drug_use
         required: false
         description: "Whether the candidate uses psychoactive substances."
@@ -322,7 +325,7 @@ tool_contracts:
         description: "Whether the classification ran correctly."
       - name: result
         required: true
-        description: "'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (Drug Use)' or 'Rejected (Availability)'."
+        description: "'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (EPS)', 'Rejected (Drug Use)' or 'Rejected (Availability)'."
       - name: eligibility_result
         required: true
         description: "approved, rejected or inconclusive."

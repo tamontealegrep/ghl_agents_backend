@@ -29,6 +29,7 @@ def valid():
         "preeclampsia": "no",
         "bmi": "22.5",
         "document_type": "cedula_ciudadania",
+        "eps_active_affiliation": "yes",
         "drug_use": "no",
         "availability": "si",
     }
@@ -207,9 +208,24 @@ def test_eligibility_reason_names_the_missing_field():
     )
 
 
-def test_eps_is_ignored(valid):
-    valid["eps"] = "no"
+@pytest.mark.parametrize("value", ["no", "NO", "false", False])
+def test_no_active_eps_affiliation_is_rejected(valid, value):
+    valid["eps_active_affiliation"] = value
+    assert classify(valid) == "Rejected (EPS)"
+
+
+@pytest.mark.parametrize("value", ["yes", "si", "true", True])
+def test_active_eps_affiliation_is_accepted(valid, value):
+    valid["eps_active_affiliation"] = value
     assert classify(valid) == "Approved"
+
+
+@pytest.mark.parametrize("value", [None, "", "unknown"])
+def test_missing_eps_affiliation_is_inconclusive(valid, value):
+    from surrogacy.services.surrogate_classifier import classify_surrogate_detailed
+
+    valid["eps_active_affiliation"] = value
+    assert classify_surrogate_detailed(valid, TODAY) == ("Inconclusive", "eps_active_affiliation")
 
 
 @pytest.mark.parametrize(
@@ -221,6 +237,7 @@ def test_eps_is_ignored(valid):
         ("Rejected (Timing)", ("rejected", "timing")),
         ("Rejected (Availability)", ("rejected", "availability")),
         ("Rejected (Documentation)", ("rejected", "documentation")),
+        ("Rejected (EPS)", ("rejected", "eps")),
     ],
 )
 def test_eligibility_fields(result, expected):

@@ -23,6 +23,7 @@ class SurrogateClassificationRequest(BaseModel):
     preeclampsia: Any | None = Field(default=None, examples=["no"])
     bmi: Any | None = Field(default=None, examples=["22.0"])
     document_type: Any | None = Field(default=None, examples=["cedula_ciudadania", "ppt", "other"])
+    eps_active_affiliation: Any | None = Field(default=None, examples=["si"])
     drug_use: Any | None = Field(default=None, examples=["no"])
     availability: Any | None = Field(default=None, examples=["si"])
 
