@@ -58,6 +58,7 @@ main.no-left.no-right { grid-template-columns: minmax(0, 1fr); }
 .var.live input { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
 .var.dirty input { border-color: var(--edit); background: var(--edit-bg); }
 .var .x { padding: 2px 8px; color: var(--muted); }
+.sep { border: 0; border-top: 1px solid var(--line); opacity: .7; margin: 2px 0; width: 100%; }
 .addrow { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; margin-top: 10px; }
 
 #chat { min-width: 0; }
@@ -287,9 +288,8 @@ function renderLeft() {
     const list = el("div", { class: "vars" });
     const contactNames = new Set(["contact_id", "location_id", ...meta.contact_fields]); Object.keys(contact || {}).forEach(k => contactNames.add(k));
     declared.filter(v => v.name.startsWith("contact.")).forEach(v => contactNames.add(v.name.slice(8)));
-    pin.append(el("p", { class: "hint", html: false, text: "GHL: el webhook trae contact_id y location_id en el payload. Aquí hay que poner contact_id para probar lo que habla con GHL (herramientas y sincronización de campos); location_id se toma del .env de la empresa si lo dejas vacío." }));
     pin.append(el("h3", { class: "hint", text: "contact.*" }));
-    [...contactNames].sort((a, b) => (["contact_id", "location_id"].indexOf(b) + 1) - (["contact_id", "location_id"].indexOf(a) + 1) || a.localeCompare(b)).forEach(k => { seen.add("contact." + k); const d = declared.find(v => v.name === "contact." + k); list.append(varRow({ name: "contact." + k, key: k, desc: d && d.description, value: (contact || {})[k], live, kind: "contact", remove: (contact || {})[k] !== undefined ? () => editState({}, { [k]: null }) : null })); });
+    [...contactNames].sort((a, b) => (["contact_id", "location_id"].indexOf(b) + 1) - (["contact_id", "location_id"].indexOf(a) + 1) || a.localeCompare(b)).forEach(k => { seen.add("contact." + k); const d = declared.find(v => v.name === "contact." + k); list.append(varRow({ name: "contact." + k, key: k, desc: d && d.description, value: (contact || {})[k], live, kind: "contact", remove: (contact || {})[k] !== undefined ? () => editState({}, { [k]: null }) : null })); if (k === "contact_id") list.append(el("hr", { class: "sep" })); });
     pin.append(list);
     const others = declared.filter(v => !v.name.startsWith("contact."));
     if (others.length) {
