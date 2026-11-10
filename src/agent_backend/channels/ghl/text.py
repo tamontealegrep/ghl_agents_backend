@@ -1,18 +1,23 @@
+"""Text helpers for incoming GoHighLevel messages."""
+
 import re
 import unicodedata
 from typing import Any
 
 
 def normalize_channel(value: str | None) -> str:
+    """Upper-cases a channel name and turns dashes into underscores."""
     return (value or "").strip().upper().replace("-", "_")
 
 
 def strip_accents(value: str) -> str:
+    """Removes the accents from a text."""
     normalized = unicodedata.normalize("NFKD", value or "")
     return "".join(ch for ch in normalized if not unicodedata.combining(ch))
 
 
 def normalize_text(value: Any) -> str:
+    """Strips accents, lower-cases and trims, so texts can be compared."""
     return strip_accents(str(value or "")).lower().strip()
 
 
@@ -70,6 +75,7 @@ def normalize_language(value: Any) -> str | None:
 
 
 def is_affirmative_message(message: str) -> bool:
+    """Tells whether a message is a plain confirmation such as 'si', 'ok' or 'confirmo'."""
     normalized = re.sub(r"[^a-z0-9 ]+", " ", normalize_text(message))
     tokens = [token for token in normalized.split() if token]
     if not tokens:
@@ -88,6 +94,7 @@ def is_affirmative_message(message: str) -> bool:
 
 
 def preview_text(value: str, limit: int = 120) -> str:
+    """Shortens a text for log lines."""
     compact = " ".join(value.split())
     if len(compact) <= limit:
         return compact

@@ -1,3 +1,5 @@
+"""Built-in tool: captures and logs any payload GoHighLevel sends, to study its webhooks."""
+
 import datetime
 import json
 from pathlib import Path

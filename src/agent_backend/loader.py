@@ -63,6 +63,7 @@ class AgentRegistry:
     """
 
     def __init__(self, settings: Settings) -> None:
+        """Creates an empty registry bound to the process settings."""
         self._settings = settings
         self._agents: dict[str, LoadedAgent] = {}
         self._lock = threading.Lock()

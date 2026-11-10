@@ -45,12 +45,17 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "RUF", "D"]
+# The formatter wraps code at line-length; what is left (long strings, comments, SQL) is not worth wrapping by hand.
+ignore = ["E501"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["D"]
+"tests/**" = ["D", "RUF012", "E402", "RUF043", "B017"]  # fakes with class attributes, sys.path set-up, loose raises
+"scripts/**" = ["D"]  # development tools, not library code
+"**/schemas/**" = ["D1"]
+"src/agent_backend/scheduling_schemas.py" = ["D1"]  # pydantic models: the field descriptions are the documentation
 "companies/**" = ["D"]
 
 [tool.pytest.ini_options]

@@ -48,8 +48,7 @@ from agent_runtime.runtime.session_resolver import resolve_session
 
 @dataclass
 class _PendingTurn:
-    """Text accumulated for one thread_id, waiting out the debounce window.
-    """
+    """Text accumulated for one thread_id, waiting out the debounce window."""
 
     execution_ids: list[str] = field(default_factory=list)
     message_parts: list[str] = field(default_factory=list)
@@ -63,7 +62,9 @@ async def resolve_reply_channel(
     config: GhlClientConfig,
     logger: logging.Logger,
 ) -> str | None:
-    """The channel a reply goes out through. A payload without message.type (the one a workflow
+    """Returns the channel a reply goes out through.
+
+    A payload without message.type (the one a workflow
     sends when the contact is created by their first message) carries no channel, and a reply
     with none falls to the default Live_Chat. Order: the payload, the last channel seen on this
     thread, the contact's conversation in GHL, then a WhatsApp attribution medium. When none is
@@ -98,7 +99,11 @@ def build_compiled_agent_router(cfg: CompiledAgentGhlConfig, registry: AgentRegi
     other's in-flight messages, even though the shapes are identical.
 
     Args:
+        cfg: Identity, phone allow-list, debounce and messages of the agent.
         registry: Source of the loaded agent graphs.
+
+    Returns:
+        The router with the agent's webhook route.
     """
     router = APIRouter()
     logger = logging.getLogger(f"compiled_runner.ghl_endpoint.{cfg.slug}")
@@ -336,9 +341,13 @@ def build_compiled_agent_router(cfg: CompiledAgentGhlConfig, registry: AgentRegi
             for eid in turn.execution_ids:
                 processing_messages.discard(eid)
 
+    background_tasks: set[asyncio.Task] = set()
+
     @router.on_event("startup")
     async def _start_closing_sweep() -> None:
         if postgres_enabled():
-            asyncio.create_task(_closing_sweep_loop(cfg))
+            task = asyncio.create_task(_closing_sweep_loop(cfg))
+            background_tasks.add(task)  # keep a reference so the task is not garbage-collected
+            task.add_done_callback(background_tasks.discard)
 
     return router

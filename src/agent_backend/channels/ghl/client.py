@@ -196,6 +196,7 @@ async def search_conversation_async(
     config: GhlClientConfig,
     logger: logging.Logger | None = None,
 ) -> str | None:
+    """Finds the GoHighLevel conversation of a contact, or None."""
     active_logger = logger or logging.getLogger(__name__)
     url = (
         f"{config.base_url}/conversations/search?locationId={location_id}"
@@ -225,7 +226,9 @@ async def search_conversation_channel_async(
     config: GhlClientConfig,
     logger: logging.Logger | None = None,
 ) -> str | None:
-    """Channel (normalized, e.g. 'WHATSAPP') of the contact's most recent conversation, read from its
+    """Returns the channel of the contact's most recent conversation.
+
+    The channel is normalized (e.g. 'WHATSAPP') and read from its
     lastMessageType, or None when there is no conversation or its last message is not on a
     channel a reply can be sent through.
     """
@@ -258,6 +261,7 @@ async def send_ghl_message_async(
     reply_message_id: str | None = None,
     logger: logging.Logger | None = None,
 ) -> dict[str, Any]:
+    """Sends a message to a contact through the given GoHighLevel channel."""
     active_logger = logger or logging.getLogger(__name__)
     send_type = config.channel_type_map.get(normalize_channel(channel), config.default_send_type)
     payload = {

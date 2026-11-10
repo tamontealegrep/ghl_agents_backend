@@ -1,3 +1,5 @@
+"""Routes of the built-in tools every company shares, mounted at ``/builtin-tools``."""
+
 from fastapi import APIRouter
 
 # Utils tools (shared across agents)

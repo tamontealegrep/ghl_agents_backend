@@ -1,3 +1,5 @@
+"""Built-in tool: whether a number of days has passed since a date."""
+
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -15,6 +17,7 @@ router = APIRouter()
 
 @router.post("/check-days-elapsed", response_model=CheckDaysElapsedResponse)
 async def check_days_elapsed_endpoint(req: CheckDaysElapsedRequest):
+    """Tells whether the given number of days has passed since a date (YYYY-MM-DD)."""
     try:
         raw_date = str(req.date).strip() if req.date is not None else ""
         try:

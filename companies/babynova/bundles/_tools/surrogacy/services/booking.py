@@ -3,7 +3,7 @@ Module.
 
     Core booking helpers: parsing start/duration, contact-name formatting, and
     Colombia business-hours validation. This is distinct from the availability
-    calculator (this one does attend Saturday, and Mon–Fri closes at 18:00).
+    calculator (this one does attend Saturday, and Mon-Fri closes at 18:00).
     Pure logic — no HTTP/Google concerns here.
 """
 
@@ -31,7 +31,7 @@ def is_valid_business_hour(weekday: int, hour: int, minute: int) -> bool:
     """Validate Colombia business hours.
 
     Weekday uses project convention (0=Sunday ... 6=Saturday, see utils/timezones.py).
-    Sunday closed; Mon–Fri 07:00–18:00; Saturday 08:00–13:00.
+    Sunday closed; Mon-Fri 07:00-18:00; Saturday 08:00-13:00.
     """
     if weekday == 0:  # Sunday
         return False

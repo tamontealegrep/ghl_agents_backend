@@ -1,5 +1,4 @@
-"""Regla de negocio pura: hora actual en una zona horaria dada. No sabe nada de HTTP.
-"""
+"""Regla de negocio pura: hora actual en una zona horaria dada. No sabe nada de HTTP."""
 
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo

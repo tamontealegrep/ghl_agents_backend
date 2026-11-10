@@ -1,3 +1,5 @@
+"""Built-in tool: updates a GoHighLevel custom field or custom value."""
+
 from fastapi import APIRouter
 
 from agent_backend.builtin_tools.schemas.ghl import GhlCustomFieldUpdate, GhlCustomUpdateResponse

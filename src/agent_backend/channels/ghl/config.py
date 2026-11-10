@@ -13,8 +13,7 @@ from agent_backend.channels.ghl.client import (
 
 @dataclass(frozen=True)
 class CompiledAgentGhlConfig:
-    """Everything that differs from one compiled agent's GHL endpoint to another.
-    """
+    """Everything that differs from one compiled agent's GHL endpoint to another."""
 
     slug: str
     """Must match a folder under compiled_agents/."""

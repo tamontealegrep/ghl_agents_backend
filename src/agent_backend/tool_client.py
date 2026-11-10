@@ -65,6 +65,7 @@ class ToolRoutingClient(httpx.Client):
     """
 
     def __init__(self, *args: Any, route_suffixes: tuple[str, ...] = (), **kwargs: Any) -> None:
+        """Creates the client with the route suffixes to try first."""
         super().__init__(*args, **kwargs)
         self._route_suffixes = route_suffixes
         self._resolved: dict[str, str] = {}

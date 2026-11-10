@@ -1,0 +1,1 @@
+"""The GoHighLevel webhook channel."""

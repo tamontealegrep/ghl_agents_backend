@@ -1,6 +1,6 @@
-"""Postgres wiring for the compiled-agent pipeline: the LangGraph
+"""Postgres wiring for the compiled-agent pipeline.
 
-checkpointer (conversation replay state), a small `conversations` table we
+It holds the LangGraph checkpointer (conversation replay state), a small `conversations` table we
 own ourselves, and the closing-message sweep that reads it.
 
 Why a separate table when the checkpointer already persists everything:
@@ -71,6 +71,7 @@ DATABASE_URL = _build_database_url()
 
 
 def postgres_enabled() -> bool:
+    """Tells whether ``DATABASE_URL`` is configured."""
     return bool(DATABASE_URL)
 
 

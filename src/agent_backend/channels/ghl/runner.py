@@ -1,9 +1,12 @@
+"""Execution ids of webhook turns."""
+
 import hashlib
 
 from agent_backend.channels.ghl.request import GhlAgentRequest
 
 
 def derive_execution_id(request: GhlAgentRequest, prefix: str) -> str:
+    """Builds the id of a webhook turn: the message id, else the conversation id, else a fingerprint of contact, location and text."""
     if request.messageId:
         return request.messageId
     if request.conversation_id:

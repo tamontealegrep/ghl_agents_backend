@@ -1,3 +1,5 @@
+"""Built-in tool: echoes the contact's last inbound message through GoHighLevel (for testing)."""
+
 import datetime
 import os
 import traceback
@@ -175,6 +177,7 @@ def _log_exception(status: str, payload: dict[str, Any], error: Exception) -> No
 
 @router.post("/echo")
 def echo(payload: dict[str, Any]):
+    """Sends an echo of the contact's last inbound message (a test tool) and logs the exchange."""
     try:
         _append_trace(
             "received_payload",

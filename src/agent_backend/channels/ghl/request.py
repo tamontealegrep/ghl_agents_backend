@@ -1,3 +1,5 @@
+"""Request model of the GoHighLevel webhook, tolerant of the payload shapes GHL sends."""
+
 import warnings
 from typing import Any
 
@@ -41,6 +43,7 @@ class GhlAgentRequest(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def fix_ghl_paths(cls, data: Any) -> Any:
+        """Reads the contact, location and message ids from the several places GoHighLevel puts them."""
         if not isinstance(data, dict):
             return data
 
@@ -133,6 +136,7 @@ class GhlAgentRequest(BaseModel):
     @field_validator("message", mode="before")
     @classmethod
     def extract_message_body(cls, value: Any) -> str | None:
+        """Reads the message text from either a string or GoHighLevel's message object."""
         if value is None:
             return None
         if isinstance(value, dict):

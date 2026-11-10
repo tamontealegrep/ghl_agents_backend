@@ -1,3 +1,5 @@
+"""GoHighLevel custom-field updates used by the built-in tools."""
+
 import ast
 import logging
 import time
@@ -128,8 +130,9 @@ _fields_cache: dict[str, tuple[float, list[dict[str, Any]]]] = {}
 
 
 def _as_option_values(field: dict[str, Any], value: str) -> str:
-    """Un campo de selección múltiple puede llegar como la lista de un slot (`['a', 'b']`):
+    """Convierte la lista de un slot a las opciones de un campo de selección múltiple.
 
+    Un campo de selección múltiple puede llegar como la lista de un slot (`['a', 'b']`);
     se convierte a las opciones separadas por coma que GHL espera.
 
     Args:

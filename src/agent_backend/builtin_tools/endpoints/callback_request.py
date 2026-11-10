@@ -1,3 +1,5 @@
+"""Built-in tool: validates and records a request to call the contact back."""
+
 from fastapi import APIRouter
 
 from agent_backend.builtin_tools.schemas.callback_request import CallbackRequest, CallbackRequestResponse
@@ -8,6 +10,7 @@ router = APIRouter()
 
 @router.post("/request-callback", response_model=CallbackRequestResponse)
 async def request_callback_endpoint(req: CallbackRequest):
+    """Validates a callback request and answers with the normalised data."""
     try:
         result = prepare_callback_request(
             req.contact_name,

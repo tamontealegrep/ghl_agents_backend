@@ -518,7 +518,7 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
     @router.post("/cancel-appointment-ghl", response_model=CancelAppointmentResponse)
     async def cancel_appointment_ghl(req: CancelAppointmentRequest):
         try:
-            settings, cal, error = resolve(req.calendar_type)
+            settings, _cal, error = resolve(req.calendar_type)
             if error:
                 return CancelAppointmentResponse(success=False, errors=error)
             if await ghl.delete_appointment(settings.ghl_token, req.event_id):
