@@ -14,11 +14,8 @@ from agent_backend.auth import require_api_token, require_webhook_token, warn_ab
 from agent_backend.builtin_tools.router import router as builtin_tools_router
 from agent_backend.bundle import AgentBundle, discover_bundles
 from agent_backend.channels.ghl.client import ghl_client_config_for
-from agent_backend.channels.ghl.endpoint import (
-    CompiledAgentGhlConfig,
-    build_compiled_agent_router,
-    load_phone_whitelist,
-)
+from agent_backend.channels.ghl.config import CompiledAgentGhlConfig, load_phone_whitelist
+from agent_backend.channels.ghl.endpoint import build_compiled_agent_router
 from agent_backend.loader import AgentRegistry
 from agent_backend.plugins import load_tool_router
 from agent_backend.settings import Settings, get_settings
