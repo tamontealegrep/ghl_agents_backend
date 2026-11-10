@@ -299,6 +299,11 @@
         "description": "Contact's phone in E.164 international format, already confirmed in the flow. Example: +573001234567"
       },
       {
+        "name": "contact_id",
+        "required": false,
+        "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone."
+      },
+      {
         "name": "iana_timezone",
         "required": true,
         "description": "IANA identifier of the contact's timezone, the same one used to check availability in get_available_slots."
@@ -355,6 +360,11 @@
         "name": "contact_email",
         "required": false,
         "description": "Contact's email address to perform the search."
+      },
+      {
+        "name": "contact_id",
+        "required": false,
+        "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone."
       },
       {
         "name": "calendar_type",

@@ -255,6 +255,7 @@
           "TOOL CALL ONLY: call find_appointment now.",
           "contact_name = [am__name] ?? {{contact.name}}",
           "contact_email = [am__email] ?? {{contact.email}}",
+          "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it).",
           "calendar_type = 'IVF'"
         ],
         "trigger": [],
@@ -324,6 +325,7 @@
           "TOOL CALL ONLY: call find_appointment now.",
           "contact_name = [am__name] ?? {{contact.name}}",
           "contact_email = [am__email] ?? {{contact.email}}",
+          "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it).",
           "calendar_type = 'SUR'"
         ],
         "trigger": [],
@@ -6892,6 +6894,7 @@
           "start_date = the literal start_co field of the object in [sc__available_slots] chosen in [sc__slot], without converting, rounding, or reformatting.",
           "duration = <APPOINTMENT_DURATION_MINUTES>. language = 'EN'. iana_timezone = [user_timezone]. calendar_type = 'IVF' if [appt_svc] == 'ivf', else 'SUR'.",
           "contact_name = [sc__c_name], contact_email = [sc__c_email], contact_phone = [sc__c_phone].",
+          "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it).",
           "It is FORBIDDEN to write to the contact, confirm the appointment, run FAQs or handlers, or route before capturing [sc__success].",
           "If you do not execute book_appointment, STAY here and retry. NEVER continue with an empty or assumed [sc__success]."
         ],
@@ -8120,6 +8123,13 @@
           ]
         },
         {
+          "name": "contact_id",
+          "required": false,
+          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
           "name": "iana_timezone",
           "required": true,
           "description": "IANA identifier of the contact's timezone, the same one used to check availability in get_available_slots.",
@@ -8195,6 +8205,13 @@
           "required": false,
           "description": "Contact's email address to perform the search.",
           "type_expr": "email",
+          "examples": []
+        },
+        {
+          "name": "contact_id",
+          "required": false,
+          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
+          "type_expr": "str",
           "examples": []
         },
         {

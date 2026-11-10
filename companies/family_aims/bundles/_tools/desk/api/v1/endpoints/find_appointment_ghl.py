@@ -5,7 +5,6 @@ from fastapi import APIRouter
 
 from agent_backend import date_formatting
 from agent_backend.ghl_calendar import list_events as ghl_list_events
-from agent_backend.ghl_calendar import upsert_contact as ghl_upsert_contact
 from agent_backend.timezones import parse_iso
 
 from ....core.config import get_settings
@@ -17,6 +16,10 @@ from ....schemas.booking import (
 from ....services.calendars import resolve_calendar, unknown_calendar_message
 
 router = APIRouter()
+MISSING_CONTACT_ID = (
+    "contact_id is required: the GHL contact of the conversation. Appointments are never attached to a "
+    "contact looked up by e-mail or phone."
+)
 
 
 @router.post("/find-appointment-ghl", response_model=FindAppointmentResponse)
@@ -32,8 +35,9 @@ async def find_appointment_ghl(req: FindAppointmentRequest):
         )
     requested_cal = cal.key
 
-    if not target_person and not target_email:
-        return FindAppointmentResponse(success=False, errors="You must provide the person's name or email")
+    contact_id = (req.contact_id or "").strip()
+    if not contact_id:
+        return FindAppointmentResponse(success=False, errors=MISSING_CONTACT_ID)
 
     try:
         now = datetime.now(ZoneInfo("UTC"))
@@ -49,16 +53,6 @@ async def find_appointment_ghl(req: FindAppointmentRequest):
             return FindAppointmentResponse(
                 success=False, errors=f"Missing FA_GHL_CALENDAR_ID_{requested_cal} in environment"
             )
-
-        # Resolver contacto en GHL para intentar filtrar por contact_id
-        upsert = await ghl_upsert_contact(
-            access_token=settings.ghl_token,
-            location_id=settings.ghl_location_id,
-            email=target_email or None,
-            phone=None,
-            name=target_person or None,
-        )
-        contact_id = (upsert.get("contact") or {}).get("id")
 
         data = await ghl_list_events(
             access_token=settings.ghl_token,

@@ -12,6 +12,14 @@ class BookAppointmentRequest(BaseModel):
     contact_name: str = Field(examples=["Maria Perez"])
     contact_email: str = Field(examples=["maria.perez@correo-cliente.com"])
     contact_phone: str = Field(examples=["+573001234567"])
+    contact_id: str | None = Field(
+        default=None,
+        examples=["F2FikaF1uvDozXJIcRB1"],
+        description=(
+            "Required. GHL contact the appointment belongs to: the conversation's contact. The tool fails without "
+            "it; it never looks a contact up by e-mail or phone."
+        ),
+    )
     language: str = Field(examples=["ES"])
     iana_timezone: str = Field(examples=["America/Bogota"])
 
@@ -28,6 +36,14 @@ class BookAppointmentResponse(BaseModel):
 class FindAppointmentRequest(BaseModel):
     contact_name: str = Field(default="", examples=["John Doe"])
     contact_email: str = Field(default="", examples=["john@example.com"])
+    contact_id: str | None = Field(
+        default=None,
+        examples=["F2FikaF1uvDozXJIcRB1"],
+        description=(
+            "Required. GHL contact the appointment belongs to: the conversation's contact. The tool fails without "
+            "it; it never looks a contact up by e-mail or phone."
+        ),
+    )
     calendar_type: str = Field(
         examples=["IVF"], description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'"
     )

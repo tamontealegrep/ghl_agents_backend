@@ -194,6 +194,7 @@ def _book(monkeypatch, tool_overrides, start: datetime, events, free=None):
             "contact_name": "Ana Perez",
             "contact_email": "ana.perez@gmail.com",
             "contact_phone": "+570000000",
+            "contact_id": "c1",
             "language": "ES",
             "iana_timezone": "America/Bogota",
         },

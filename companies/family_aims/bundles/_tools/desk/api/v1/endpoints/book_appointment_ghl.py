@@ -22,9 +22,6 @@ from agent_backend.ghl_calendar import (
 from agent_backend.ghl_calendar import (
     list_events as ghl_list_events,
 )
-from agent_backend.ghl_calendar import (
-    upsert_contact as ghl_upsert_contact,
-)
 from agent_backend.gmail import send_email
 from agent_backend.slot_filters import conflicts_with_busy
 
@@ -38,6 +35,10 @@ from ....services.notifications import join_errors, notify_booking
 from ....services.slot_rules import earliest_start, load_busy
 
 router = APIRouter()
+MISSING_CONTACT_ID = (
+    "contact_id is required: the GHL contact of the conversation. Appointments are never attached to a "
+    "contact looked up by e-mail or phone."
+)
 logger = logging.getLogger(__name__)
 
 
@@ -52,6 +53,10 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
             success=False, errors=unknown_calendar_message(settings, req.calendar_type)
         )
     calendar_type, tool, policy, env_suffix = cal.key, cal.tool, cal.booking, cal.key
+
+    contact_id = (req.contact_id or "").strip()
+    if not contact_id:
+        return BookAppointmentResponse(success=False, reason="missing_contact_id", errors=MISSING_CONTACT_ID)
 
     try:
         now = datetime.now(ZoneInfo("UTC"))
@@ -184,21 +189,6 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
             )
         except Exception:
             logger.warning("Pre-booking calendar read failed; continuing.", exc_info=True)
-
-        # Resolver contact_id vía upsert (formato original)
-        upsert = await ghl_upsert_contact(
-            access_token=settings.ghl_token,
-            location_id=settings.ghl_location_id,
-            email=contact_email or None,
-            phone=contact_phone or None,
-            name=contact_name or None,
-        )
-        contact_obj = upsert.get("contact") or {}
-        contact_id = contact_obj.get("id")
-        if not contact_id:
-            return BookAppointmentResponse(
-                success=False, reason="creation_failed", errors="Failed to resolve/create the contact in GHL"
-            )
 
         # Crear la cita en GHL
         title = f"Family Aims ({policy.EVENT_SUMMARY_TAG}) and {contact_name}"

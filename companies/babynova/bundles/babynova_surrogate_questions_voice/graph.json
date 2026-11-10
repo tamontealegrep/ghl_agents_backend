@@ -8254,8 +8254,8 @@
         },
         {
           "name": "contact_id",
-          "required": true,
-          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. Required: the tool fails without it, and it never looks a contact up by e-mail or phone.",
+          "required": false,
+          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
           "type_expr": "str",
           "examples": [
             "+573001234567"
@@ -8358,8 +8358,8 @@
         },
         {
           "name": "contact_id",
-          "required": true,
-          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. Required: the tool fails without it, and it never looks a contact up by e-mail or phone.",
+          "required": false,
+          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
           "type_expr": "str",
           "examples": []
         },

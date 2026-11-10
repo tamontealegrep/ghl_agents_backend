@@ -109,6 +109,7 @@ pre { margin: 0; padding: 8px 10px; background: var(--panel); border: 1px solid 
 .kv dt { color: var(--muted); } .kv dd { margin: 0; font-family: var(--mono); overflow-wrap: anywhere; }
 .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; border: 1px solid var(--line); }
 .badge.live { color: var(--ok); border-color: var(--ok); } .badge.end { color: var(--warn); border-color: var(--warn); }
+.toast.warn { background: var(--edit); color: #1c1608; }
 .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--err); color: #fff; padding: 8px 14px; border-radius: 8px; max-width: 80vw; z-index: 9; }
 </style>
 </head>
@@ -172,7 +173,7 @@ async function api(method, url, body) {
   if (!res.ok) throw new Error(data.detail || res.statusText);
   return data;
 }
-function toast(msg) { const t = el("div", { class: "toast", text: msg }); document.body.append(t); setTimeout(() => t.remove(), 6000); }
+function toast(msg, warn) { const t = el("div", { class: "toast" + (warn ? " warn" : ""), text: msg }); document.body.append(t); setTimeout(() => t.remove(), 6000); }
 const fmtMs = ms => ms == null ? "" : ms >= 1000 ? (ms / 1000).toFixed(1) + " s" : ms + " ms";
 const preview = (v, n = 70) => { const s = typeof v === "string" ? v : JSON.stringify(v); return s == null ? "" : s.replace(/\s+/g, " ").slice(0, n) + (s.length > n ? "…" : ""); };
 const pretty = v => typeof v === "string" ? v : JSON.stringify(v, null, 2);
@@ -218,6 +219,7 @@ async function newSession() {
   try {
     const s = await api("POST", "/api/sessions", { company, slug, first_speaker: $("#speaker").value, contact: state.draftContact, initial_slots: state.draftSlots });
     setSession(s); loadSaved();
+    if (!String((s.contact || {}).contact_id || "").trim()) toast("Sin contact_id: agendar y buscar citas va a fallar (missing_contact_id). Ponlo en Entradas.", true);
     if (s.first_speaker === "agent") await runStart();
   } catch (e) { toast(e.message); }
 }
