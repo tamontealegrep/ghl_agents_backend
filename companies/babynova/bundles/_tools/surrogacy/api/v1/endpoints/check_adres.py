@@ -19,7 +19,10 @@ async def check_adres(req: CheckAdresRequest):
     settings = get_settings()
     if not settings.croma_api_key:
         return CheckAdresResponse(
-            success=False, document_type=body["document_type"], errors="Missing CROMA_API_KEY in environment"
+            success=False,
+            document_type=body["document_type"],
+            document_number=body["document_number"],
+            errors="Missing CROMA_API_KEY in environment",
         )
     try:
         data = await lookup_affiliation(
@@ -29,9 +32,23 @@ async def check_adres(req: CheckAdresRequest):
             timeout_seconds=settings.croma_timeout_seconds,
         )
         return CheckAdresResponse(
-            success=True, document_type=body["document_type"], **build_result(data), errors=None
+            success=True,
+            document_type=body["document_type"],
+            document_number=body["document_number"],
+            **build_result(data),
+            errors=None,
         )
     except CromaError as exc:
-        return CheckAdresResponse(success=False, document_type=body["document_type"], errors=str(exc))
+        return CheckAdresResponse(
+            success=False,
+            document_type=body["document_type"],
+            document_number=body["document_number"],
+            errors=str(exc),
+        )
     except Exception as exc:
-        return CheckAdresResponse(success=False, document_type=body["document_type"], errors=str(exc))
+        return CheckAdresResponse(
+            success=False,
+            document_type=body["document_type"],
+            document_number=body["document_number"],
+            errors=str(exc),
+        )

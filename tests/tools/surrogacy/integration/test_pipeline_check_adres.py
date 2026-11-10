@@ -56,6 +56,7 @@ def test_an_affiliated_person_comes_back_with_the_documented_output(croma):
     assert body == {
         "success": True,
         "document_type": "CC",
+        "document_number": "1234567890",
         "found": True,
         "full_name": "ANA PEREZ",
         "department": "CUNDINAMARCA",
@@ -129,4 +130,4 @@ def test_a_provider_failure_is_a_technical_failure_with_its_message(croma, monke
     body = client.post(URL, json={"document_type": "CC", "document_number": "1234567"}).json()
 
     assert body["success"] is False and body["found"] is None and "429" in body["errors"]
-    assert body["document_type"] == "CC"
+    assert (body["document_type"], body["document_number"]) == ("CC", "1234567")

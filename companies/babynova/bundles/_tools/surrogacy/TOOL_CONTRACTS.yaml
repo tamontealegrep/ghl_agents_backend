@@ -242,6 +242,9 @@ tool_contracts:
       - name: document_type
         required: true
         description: "Sigla normalizada que se consultó (CC, TI, CE, RC, PA, PEP o PPT). null si la entrada era inválida."
+      - name: document_number
+        required: true
+        description: "Número consultado, sin espacios, puntos ni guiones. null si la entrada era inválida."
       - name: found
         required: true
         description: "false si el documento no está registrado en la BDUA; null si no se pudo consultar."

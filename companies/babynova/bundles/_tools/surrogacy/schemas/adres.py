@@ -33,6 +33,9 @@ class AdresAffiliation(BaseModel):
 class CheckAdresResponse(BaseModel):
     success: bool
     document_type: str | None = Field(default=None, description="Sigla normalizada que se consultó.")
+    document_number: str | None = Field(
+        default=None, description="Número consultado, sin espacios, puntos ni guiones."
+    )
     found: bool | None = Field(
         default=None, description="False si el documento no está registrado en la BDUA."
     )
