@@ -60,3 +60,5 @@ services:
         sync: false
       - key: GHL_LOCATION_ID
         sync: false
+      - key: CROMA_API_KEY # ADRES affiliation lookups (tool check_adres)
+        sync: false

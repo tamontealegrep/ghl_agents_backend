@@ -218,6 +218,52 @@ tool_contracts:
         required: true
         description: "Mensaje de error técnico si la verificación falló. null en caso de éxito."
 
+  - name: check_adres
+    description: "Consulta de afiliación en salud (BDUA de ADRES, vía Croma); fuente de verdad para found/affiliations/has_active_affiliation."
+    notes:
+      - "ARGUMENTOS: document_type y document_number de la persona consultada."
+      - "ARGUMENT RULE: document_type acepta las siglas CC, TI, CE, RC, PA, PEP, PPT (mayúscula o minúscula) o el nombre completo: cedula_de_ciudadania, tarjeta_de_identidad, cedula_de_extranjeria, registro_civil, pasaporte, permiso_especial_de_permanencia, permiso_por_proteccion_temporal. Mapea lo que diga la persona al más cercano; no lo inventes."
+      - "ARGUMENT RULE: document_number se envía tal como lo dio la persona (3 a 30 caracteres); la herramienta ignora espacios, puntos y guiones."
+      - "SOURCE OF TRUTH RULE: usa found, affiliations y has_active_affiliation como únicos datos de afiliación. Una afiliación está vigente (active == true) cuando termination_date es 31/12/2999. Los datos son los que las EPS reportan a ADRES."
+      - "POST-EXECUTION RULE: found == false significa que el documento no está registrado en la BDUA; no es un error. Si success == true y errors trae texto, el dato de entrada era inválido: vuelve a pedirlo antes de reintentar."
+      - "POST-EXECUTION RULE: si success == false es un fallo técnico (credenciales, red, tiempo de espera); no concluyas nada sobre la afiliación de la persona."
+      - "PRIVACY RULE: el resultado incluye datos personales (nombre, municipio, EPS); úsalo solo para el propósito del flujo."
+    inputs:
+      - name: document_type
+        required: true
+        description: "Tipo de documento: CC, TI, CE, RC, PA, PEP o PPT (o su nombre completo en minúsculas con guion bajo)."
+      - name: document_number
+        required: true
+        description: "Número del documento, de 3 a 30 caracteres."
+    outputs:
+      - name: success
+        required: true
+        description: "Valor booleano que indica si la consulta se ejecutó correctamente desde el punto de vista técnico."
+      - name: document_type
+        required: true
+        description: "Sigla normalizada que se consultó (CC, TI, CE, RC, PA, PEP o PPT). null si la entrada era inválida."
+      - name: found
+        required: true
+        description: "false si el documento no está registrado en la BDUA; null si no se pudo consultar."
+      - name: full_name
+        required: true
+        description: "Nombres y apellidos registrados, o null."
+      - name: department
+        required: true
+        description: "Departamento registrado, o null."
+      - name: municipality
+        required: true
+        description: "Municipio registrado, o null."
+      - name: has_active_affiliation
+        required: true
+        description: "true si alguna afiliación sigue vigente (termination_date 31/12/2999); null si no se pudo consultar."
+      - name: affiliations
+        required: true
+        description: "Lista de afiliaciones reportadas; cada una con entity, regime (CONTRIBUTIVO o SUBSIDIADO), status, effective_date, termination_date, affiliate_type y active. Vacía si found es false."
+      - name: errors
+        required: true
+        description: "Mensaje de error técnico o de validación. null en caso de éxito."
+
   - name: surrogate_classification
     description: "Final classification. Source of truth for result."
     notes:
@@ -279,7 +325,7 @@ tool_contracts:
         description: "approved, rejected or inconclusive."
       - name: eligibility_reason
         required: true
-        description: "Rejection reason, "missing_data (<field>)" naming the first missing field (for example "missing_data (last_birth_date)"), or none."
+        description: 'Rejection reason, "missing_data (<field>)" naming the first missing field (for example "missing_data (last_birth_date)"), or none.'
       - name: errors
         required: true
         description: "Technical error message when the classification failed. null on success."

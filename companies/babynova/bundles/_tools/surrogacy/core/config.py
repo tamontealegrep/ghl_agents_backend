@@ -50,6 +50,11 @@ class Settings:
         self.ghl_token = os.getenv("GHL_TOKEN", "")
         self.ghl_location_id = os.getenv("GHL_LOCATION_ID", "")
 
+        # Croma (https://docs.usecroma.com): ADRES affiliation lookups. The key is a company secret.
+        self.croma_api_key = os.getenv("CROMA_API_KEY", "")
+        self.croma_base_url = os.getenv("CROMA_BASE_URL", "https://api.croma.run")
+        self.croma_timeout_seconds = float(os.getenv("CROMA_TIMEOUT_SECONDS", "60"))
+
         # Optional internal addresses (comma-separated) told about every booked appointment,
         # so the team can start the human follow-up. Empty = no e-mail. Sent from this Gmail account.
         self.notification_email = os.getenv("BN_NOTIFICATION_EMAIL", "")
