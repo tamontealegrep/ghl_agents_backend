@@ -1,5 +1,10 @@
-# One image for every agent. Agents are NOT baked in: mount the bundles directory
-# (generated flows + agent.yaml + tool plugins) at /app/bundles, or at AGENTS_DIR.
+# One image per company. The code is the same for every company; the image carries that
+# company's agents (bundles: compiled flows, agent.yaml, tool plugins) and its shared code.
+#
+#   docker build --build-arg COMPANY=family_aims -t agents-family-aims .
+#
+# In local development docker-compose mounts ./bundles and ./shared over the baked copies,
+# so edits show up without rebuilding. On Render nothing is mounted: what was baked runs.
 FROM python:3.12-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -15,13 +20,20 @@ RUN python -c "import tomllib; print(chr(10).join(tomllib.load(open('pyproject.t
 COPY src ./src
 RUN pip install --no-deps .
 
+# The company this image serves (a folder under companies/). Render passes the service's
+# environment variables to the build, so setting COMPANY there is enough.
+ARG COMPANY
+RUN test -n "$COMPANY" || (echo "Set the COMPANY build argument (a folder under companies/)." >&2; exit 1)
+COPY companies/${COMPANY}/bundles /app/bundles
+COPY companies/${COMPANY}/shared /app/shared
+
 # Non-root runtime user; bundles/ must be writable for the local sessions.db fallback.
 RUN useradd --create-home --uid 10001 agent \
-    && mkdir -p /app/bundles \
     && chown -R agent:agent /app/bundles
 USER agent
 
-ENV HOST=0.0.0.0 \
+ENV COMPANY=${COMPANY} \
+    HOST=0.0.0.0 \
     PORT=8010 \
     AGENTS_DIR=/app/bundles
 

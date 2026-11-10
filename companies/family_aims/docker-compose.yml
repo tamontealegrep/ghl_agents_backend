@@ -5,7 +5,9 @@ services:
   backend:
     build:
       context: ../..
-    image: agent-backend:latest
+      args:
+        COMPANY: family_aims
+    image: agents-family-aims:latest
     env_file: .env
     environment:
       HOST: 0.0.0.0

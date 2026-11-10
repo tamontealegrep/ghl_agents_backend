@@ -1,0 +1,62 @@
+# Render Blueprint: one web service per company, built from the same Dockerfile.
+#
+# Only what every deployment needs is listed here. The rest of a company's variables (calendars,
+# Gmail, phones for testing, ...) are pasted in the service's Environment tab with "Add from .env"
+# (see companies/<company>/env.example for the whole list). Never write a secret in this file:
+# `sync: false` makes Render ask for the value in the dashboard.
+#
+# COMPANY is both a runtime variable (webhooks are served at /agents/<company>/...) and the build
+# argument the Dockerfile uses to bake that company's bundles into the image.
+
+services:
+  - type: web
+    name: agents-family-aims
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter # always on: a sleeping service loses the in-memory message buffer and answers late
+    healthCheckPath: /health
+    autoDeploy: false # deploy by hand until the first production run is verified
+    envVars:
+      - key: COMPANY
+        value: family_aims
+      - key: ADMIN_TOKEN # protects /reset and /admin/reload
+        generateValue: true
+      - key: API_TOKEN # protects chat, the company's tools and /builtin-tools (header X-API-Key)
+        generateValue: true
+      - key: WEBHOOK_TOKEN # GoHighLevel sends it in the header X-Webhook-Token
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DATABASE_URL # Render Postgres, internal connection string
+        sync: false
+      - key: GHL_TOKEN
+        sync: false
+      - key: GHL_LOCATION_ID
+        sync: false
+
+  - type: web
+    name: agents-babynova
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: COMPANY
+        value: babynova
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: API_TOKEN
+        generateValue: true
+      - key: WEBHOOK_TOKEN
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: GHL_TOKEN
+        sync: false
+      - key: GHL_LOCATION_ID
+        sync: false

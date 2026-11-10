@@ -8,7 +8,6 @@
 .mypy_cache
 graphify-out
 dist
-companies
 tests
 docs
 definitions
@@ -20,3 +19,9 @@ profiles
 scripts
 .env
 *.db
+# secrets and local state never go into an image
+**/.env
+**/*.db
+companies/*/docker-compose.yml
+companies/*/env.example
+companies/*/.env

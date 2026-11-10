@@ -7,7 +7,9 @@ services:
   backend:
     build:
       context: ../..           # backend/ (Dockerfile lives there)
-    image: agent-backend:latest
+      args:
+        COMPANY: _template
+    image: agents-company-template:latest
     env_file: .env             # copy env.example to .env
     environment:
       # Fixed inside the container. They override .env on purpose: the container must

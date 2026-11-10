@@ -5,7 +5,9 @@ services:
   backend:
     build:
       context: ../..
-    image: agent-backend:latest
+      args:
+        COMPANY: babynova
+    image: agents-babynova:latest
     env_file: .env
     environment:
       HOST: 0.0.0.0

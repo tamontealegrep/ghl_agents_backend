@@ -230,6 +230,21 @@ Cada `env.example` ya lista las suyas. Resumen:
 
 ---
 
+## Despliegue en Render
+
+Cada empresa es un servicio web de Render (`agents-family-aims`, `agents-babynova`) construido con el mismo `Dockerfile`: el argumento `COMPANY` decide qué carpeta de `companies/` se copia dentro de la imagen (sus `bundles` y su `shared`). En local, `docker-compose` monta `./bundles` y `./shared` encima, así que sigues editando sin reconstruir; en Render no se monta nada y corre lo que se copió. El `.env` y las bases `*.db` nunca entran en la imagen.
+
+Pasos (el detalle de cada variable está en `companies/<empresa>/env.example`):
+
+1. **Repositorio.** Sube `backend` a GitHub (privado). Los `.env` están en `.gitignore`.
+2. **Base de datos.** Crea una base Postgres en Render por empresa. Sin ella las conversaciones se pierden en cada reinicio (el disco de Render es efímero).
+3. **Servicios.** En Render: *New > Blueprint* y elige el repositorio; lee `render.yaml` y crea los dos servicios. Te pide los valores marcados `sync: false` (`OPENAI_API_KEY`, `DATABASE_URL` con la conexión interna, `GHL_TOKEN`, `GHL_LOCATION_ID`). `ADMIN_TOKEN`, `API_TOKEN` y `WEBHOOK_TOKEN` los genera Render; los ves en la pestaña *Environment*.
+4. **Resto de variables.** Render no lee tu `.env`. En la pestaña *Environment* de cada servicio usa **Add from .env** y pega el contenido del `.env` de esa empresa, quitando `HOST`, `PORT`, `HOST_PORT`, todo lo `NGROK_*`, `SEND_REQUEST_*`, `RENDER_BASE_URL` y `NGROK_BASE_URL` (son de tu máquina) y las `DATABASE_*` si ya pusiste `DATABASE_URL`. Revisa `*_DEV_ENFORCE_PHONE_WHITELIST` y `*_DEV_ALLOWED_PHONES`: con la restricción activa y la lista vacía el agente ignora todos los mensajes.
+5. **GHL.** Cada webhook pasa a `https://<servicio>.onrender.com/agents/<empresa>/<ruta>` con la cabecera `X-Webhook-Token` (el `WEBHOOK_TOKEN` del servicio). Un workflow que llame a una herramienta o a `/builtin-tools/...` necesita la cabecera `X-API-Key` (el `API_TOKEN`).
+6. **Migración.** Prueba con un contacto de prueba y pasa los workflows de una empresa a la vez; deja el servicio viejo (`ghl-tools`) unos días y apágalo al final.
+
+Notas: Render pone `PORT` solo (el backend lo lee); el chequeo de salud es `/health`; usa plan de pago (un servicio dormido pierde el buffer de mensajes, que vive en memoria) y una sola instancia por servicio. Render pasa las variables del servicio al build, por eso `COMPANY` en el panel basta como argumento; si el primer build falla con «Set the COMPANY build argument», crea la variable `COMPANY` antes de construir.
+
 ## 3b. Desarrollo y pruebas a mano
 
 ### Chat en terminal con un agente (TUI)
