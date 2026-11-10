@@ -42,6 +42,7 @@ def test_the_file_wins_over_the_process_environment(tmp_path, monkeypatch):
     [
         ({"HOST": "0.0.0.0", "PORT": "9000"}, "local", "http://127.0.0.1:9000"),
         ({}, "local", "http://127.0.0.1:8010"),
+        ({"HOST_PORT": "8011", "PORT": "8010"}, "docker", "http://127.0.0.1:8011"),
         ({"NGROK_BASE_URL": "https://a.ngrok.dev/"}, "ngrok", "https://a.ngrok.dev"),
         ({"NGROK_DOMAIN": "a.ngrok.dev"}, "ngrok", "https://a.ngrok.dev"),
         ({"RENDER_BASE_URL": "https://x.onrender.com/"}, "render", "https://x.onrender.com"),

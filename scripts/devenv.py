@@ -9,8 +9,8 @@ import os
 from pathlib import Path
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
-TARGET_LOCAL, TARGET_NGROK, TARGET_RENDER = "local", "ngrok", "render"
-TARGETS = (TARGET_LOCAL, TARGET_NGROK, TARGET_RENDER)
+TARGET_LOCAL, TARGET_DOCKER, TARGET_NGROK, TARGET_RENDER = "local", "docker", "ngrok", "render"
+TARGETS = (TARGET_LOCAL, TARGET_DOCKER, TARGET_NGROK, TARGET_RENDER)
 
 
 def read_env_file(path: Path) -> dict[str, str]:
@@ -70,7 +70,8 @@ def base_url(env: dict[str, str], target: str) -> str:
 
     Args:
         env: Variables (see ``load_environment``).
-        target: ``local``, ``ngrok`` or ``render``.
+        target: ``local`` (``python -m agent_backend`` on ``HOST``/``PORT``), ``docker`` (the container, published on
+            ``HOST_PORT``), ``ngrok`` or ``render``.
 
     Returns:
         The URL without a trailing slash.
@@ -89,6 +90,8 @@ def base_url(env: dict[str, str], target: str) -> str:
         if env.get("NGROK_DOMAIN", "").strip():
             return f"https://{env['NGROK_DOMAIN'].strip()}"
         raise ValueError("NGROK_BASE_URL and NGROK_DOMAIN are both empty")
+    if target == TARGET_DOCKER:
+        return f"http://127.0.0.1:{env.get('HOST_PORT', '').strip() or '8010'}"
     if target == TARGET_LOCAL:
         host = env.get("HOST", "127.0.0.1").strip() or "127.0.0.1"
         host = "127.0.0.1" if host in {"0.0.0.0", "::"} else host
