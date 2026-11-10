@@ -10,7 +10,8 @@ WORKDIR /app
 
 # Dependencies first (read from pyproject.toml) so code changes do not invalidate this layer.
 COPY pyproject.toml ./
-RUN python -c "import tomllib; print(chr(10).join(tomllib.load(open('pyproject.toml','rb'))['project']['dependencies']))" > requirements.txt \n    && pip install -r requirements.txt
+RUN python -c "import tomllib; print(chr(10).join(tomllib.load(open('pyproject.toml','rb'))['project']['dependencies']))" > requirements.txt \
+    && pip install -r requirements.txt
 COPY src ./src
 RUN pip install --no-deps .
 
