@@ -86,6 +86,8 @@ def _contact_from_args(args: argparse.Namespace) -> dict[str, Any]:
         "email": args.contact_email,
         "phone": args.contact_phone,
         "language": args.contact_language,
+        "contact_id": args.contact_id,
+        "location_id": args.location_id,
     }
     return {k: v for k, v in contact.items() if v is not None}
 
@@ -181,6 +183,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--contact-language",
         help="Simula un contacto ya conocido -- idioma preferido (resuelve {{contact.language}}).",
+    )
+    parser.add_argument(
+        "--contact-id",
+        help="Id del contacto en GoHighLevel ({{contact.contact_id}}): los webhooks lo traen; aqui hay que darlo "
+        "para que las herramientas de GHL y las sincronizaciones de campos funcionen.",
+    )
+    parser.add_argument(
+        "--location-id",
+        help="Id de la ubicacion (subcuenta) de GHL ({{contact.location_id}}). Si se omite se toma GHL_LOCATION_ID "
+        "del .env de la empresa.",
     )
     return parser.parse_args(argv)
 

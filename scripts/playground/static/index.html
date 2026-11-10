@@ -199,7 +199,10 @@ async function onAgentChange() {
   $("#speaker").value = a.first_speaker;
   state.meta = null; state.draftContact = {}; state.draftSlots = {}; state.dirty.clear();
   renderLeft();
-  try { state.meta = await api("GET", `/api/agents/${company}/${slug}/meta`); } catch (e) { toast(e.message); }
+  try {
+    state.meta = await api("GET", `/api/agents/${company}/${slug}/meta`);
+    if (state.meta.default_location_id) state.draftContact.location_id = state.meta.default_location_id;
+  } catch (e) { toast(e.message); }
   renderLeft();
 }
 async function loadSaved() {
@@ -282,10 +285,11 @@ function renderLeft() {
     pin.append(el("p", { class: "hint", text: live ? "Conversación en curso: los cambios se aplican al estado real del grafo." : "Antes de empezar son los valores iniciales; la conversación los usa al arrancar." }));
     const declared = meta.input_variables, seen = new Set();
     const list = el("div", { class: "vars" });
-    const contactNames = new Set(meta.contact_fields); Object.keys(contact || {}).forEach(k => contactNames.add(k));
+    const contactNames = new Set(["contact_id", "location_id", ...meta.contact_fields]); Object.keys(contact || {}).forEach(k => contactNames.add(k));
     declared.filter(v => v.name.startsWith("contact.")).forEach(v => contactNames.add(v.name.slice(8)));
+    pin.append(el("p", { class: "hint", html: false, text: "GHL: el webhook trae contact_id y location_id en el payload. Aquí hay que poner contact_id para probar lo que habla con GHL (herramientas y sincronización de campos); location_id se toma del .env de la empresa si lo dejas vacío." }));
     pin.append(el("h3", { class: "hint", text: "contact.*" }));
-    [...contactNames].sort().forEach(k => { seen.add("contact." + k); const d = declared.find(v => v.name === "contact." + k); list.append(varRow({ name: "contact." + k, key: k, desc: d && d.description, value: (contact || {})[k], live, kind: "contact", remove: (contact || {})[k] !== undefined ? () => editState({}, { [k]: null }) : null })); });
+    [...contactNames].sort((a, b) => (["contact_id", "location_id"].indexOf(b) + 1) - (["contact_id", "location_id"].indexOf(a) + 1) || a.localeCompare(b)).forEach(k => { seen.add("contact." + k); const d = declared.find(v => v.name === "contact." + k); list.append(varRow({ name: "contact." + k, key: k, desc: d && d.description, value: (contact || {})[k], live, kind: "contact", remove: (contact || {})[k] !== undefined ? () => editState({}, { [k]: null }) : null })); });
     pin.append(list);
     const others = declared.filter(v => !v.name.startsWith("contact."));
     if (others.length) {

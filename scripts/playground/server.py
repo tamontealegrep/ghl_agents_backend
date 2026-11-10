@@ -26,6 +26,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 
+from agent_backend.contact import with_default_ids
+
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 SAVE_DIR = DEFAULT_SESSION_DIR / "playground"
 HarnessFactory = Callable[..., AgentHarness]
@@ -402,7 +404,10 @@ def create_app(
         """Input variables, contact fields and slot names of an agent."""
         harness = meta_harness(find_agent(company, slug))
         variables = harness.discover_input_variables()
+        env_file = companies_dir / company / ".env"
+        env = devenv.read_env_file(env_file) if env_file.is_file() else {}
         return {
+            "default_location_id": with_default_ids({}, {**os.environ, **env}).get("location_id", ""),
             "input_variables": variables,
             "contact_fields": harness.discover_contact_fields(),
             "slot_names": harness.discover_slot_names(),
@@ -414,12 +419,13 @@ def create_app(
         """Creates a conversation; an agent that speaks first runs its first turn now."""
         agent = find_agent(body.company, body.slug)
         load_company_environment(companies_dir, agent.company)
-        harness = harness_factory(agent, contact=body.contact)
+        contact = with_default_ids(body.contact)
+        harness = harness_factory(agent, contact=contact)
         session = Session(
             agent,
             harness,
             first_speaker=body.first_speaker,
-            contact=body.contact,
+            contact=contact,
             initial_slots=body.initial_slots,
         )
         sessions[session.id] = session

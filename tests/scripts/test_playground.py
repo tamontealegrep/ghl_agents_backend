@@ -37,6 +37,7 @@ class BrokenLLM(FakeLLM):
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("AGENT_DEFINITIONS_DIR", str(tmp_path / "no-definitions"))
     monkeypatch.setattr(server, "SAVE_DIR", tmp_path / "saved")
+    monkeypatch.delenv("GHL_LOCATION_ID", raising=False)  # other tests load company .env files into os.environ
     shutil.copytree(COMPANIES / "family_aims" / "bundles", tmp_path / "family_aims" / "bundles")
     llm = {"client": FakeLLM()}
 
@@ -167,3 +168,15 @@ def test_live_events_and_export(client):
     export = client.get(f"/api/sessions/{session['id']}/export")
     assert export.status_code == 200 and export.json()["thread_id"] == session["thread_id"]
     assert client.post(f"/api/sessions/{session['id']}/messages", json={"text": "  "}).status_code == 422
+
+
+def test_the_location_id_defaults_to_the_company_env_and_the_contact_id_is_left_to_the_user(
+    client, monkeypatch, tmp_path
+):
+    monkeypatch.setenv("GHL_LOCATION_ID", "LOC-FROM-ENV")
+    meta = client.get(f"/api/agents/family_aims/{SLUG}/meta").json()
+    assert meta["default_location_id"] == "LOC-FROM-ENV"
+
+    session = _new(client, contact={"contact_id": "c-123"})
+
+    assert session["contact"] == {"contact_id": "c-123", "location_id": "LOC-FROM-ENV"}

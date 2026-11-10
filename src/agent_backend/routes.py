@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
 from agent_backend.auth import require_api_token
+from agent_backend.contact import with_default_ids
 from agent_backend.loader import AgentRegistry, LoadedAgent, message_buffer
 from agent_backend.settings import Settings
 from agent_runtime.runtime.graph_builder import fresh_state
@@ -140,7 +141,7 @@ async def chat(
     # the event loop or the self-call deadlocks until the tool timeout.
     if resolution in ("new", "stale"):
         result = await run_in_threadpool(
-            agent.graph.invoke, fresh_state(agent.artifact, contact=req.contact), config
+            agent.graph.invoke, fresh_state(agent.artifact, contact=with_default_ids(req.contact)), config
         )
     else:
         if not req.message:

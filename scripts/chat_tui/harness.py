@@ -16,6 +16,8 @@ try:
 except ImportError as exc:  # pragma: no cover - only without the optional dependencies
     raise SystemExit(f'Missing dependency ({exc.name}). Install it with: pip install -e ".[tui]"') from exc
 
+from agent_backend.contact import with_default_ids
+
 from .common import BACKEND_ROOT, COMPANIES_DIR, OUTBOUND_ANSWERED_SEED_LINE, SESSIONS_DB, console
 from .models import AgentRef, ChatTurnResult, ToolTrace
 
@@ -312,7 +314,7 @@ class AgentHarness:
         from agent_runtime.targets.langgraph.runtime_artifact import runtime_artifact_from_dict
 
         self.agent = agent
-        self.contact = contact or {}
+        self.contact = with_default_ids(contact)
         bundle = load_bundle(agent.root)
         artifact_json = json.loads(bundle.graph_path.read_text(encoding="utf-8"))
         self.artifact = runtime_artifact_from_dict(artifact_json)
