@@ -12,7 +12,6 @@ from .endpoints import (
     get_available_slots,
     surrogate_classification,
 )
-from agent_backend.builtin_tools.endpoints import calculate_bmi, time_now
 
 api_router = APIRouter()
 api_router.include_router(get_available_slots.router, tags=["get_available_slots"])
