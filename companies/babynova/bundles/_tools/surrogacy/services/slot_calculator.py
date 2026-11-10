@@ -9,7 +9,7 @@ from typing import List, Optional, Tuple
 from agent_backend.slot_filters import conflicts_with_busy
 
 from ..core.config import BUSINESS_TZ, load_slots_config
-from ..schemas.slots import Slot
+from agent_backend.scheduling_schemas import Slot
 from agent_backend.timezones import (
     add_days,
     build_business_instant,

@@ -1,0 +1,13 @@
+{
+  "include": ["src", "scripts", "tests", "companies"],
+  "exclude": ["**/__pycache__", "**/.venv"],
+  "extraPaths": [
+    "src",
+    ".",
+    "companies/family_aims/bundles/_tools",
+    "companies/babynova/bundles/_tools"
+  ],
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.11"
+}

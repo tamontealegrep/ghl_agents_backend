@@ -15,7 +15,7 @@ from typing import Any, List, Mapping, Optional, Tuple
 from agent_backend.calendars import CalendarSettings
 
 from ..core.config import CALENDARS_PATH
-from ..schemas.slots import Slot
+from agent_backend.scheduling_schemas import Slot
 from . import booking, slot_calculator
 
 BUILTIN_RULES_KEY = "FT"

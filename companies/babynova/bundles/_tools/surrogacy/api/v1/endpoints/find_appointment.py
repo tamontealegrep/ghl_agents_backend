@@ -5,7 +5,7 @@ from fastapi import APIRouter
 
 from ....core.config import get_settings
 from ....services.calendars import resolve_calendar, unknown_calendar_message
-from ....schemas.booking import (
+from agent_backend.scheduling_schemas import (
     AppointmentInfo,
     FindAppointmentRequest,
     FindAppointmentResponse,
