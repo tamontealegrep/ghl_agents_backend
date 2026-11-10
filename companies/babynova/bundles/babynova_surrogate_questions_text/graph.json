@@ -1963,20 +1963,6 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_CHECK_ADRES",
-            "condition_text": "IF [q__eps_active_affiliation] IS NULL AND [q__doc_type] IS NOT NULL AND [q__doc_number] IS NOT NULL -> GO_TO: Q__SQ_CHECK_ADRES",
-            "is_mechanical": true,
-            "python_expression": "q__eps_active_affiliation is None and q__doc_type is not None and q__doc_number is not None",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_SET_EPS_UNKNOWN",
-            "condition_text": "IF [q__eps_active_affiliation] IS NULL -> GO_TO: Q__SQ_SET_EPS_UNKNOWN",
-            "is_mechanical": true,
-            "python_expression": "q__eps_active_affiliation is None",
-            "reason": null
-          },
-          {
             "target": "Q__SQ_ASK_AGE",
             "condition_text": "IF [q__surrogate_age] IS NULL -> GO_TO: Q__SQ_ASK_AGE",
             "is_mechanical": true,
@@ -3610,13 +3596,6 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__eps_active_affiliation] == 'no' -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
-            "is_mechanical": true,
-            "python_expression": "q__eps_active_affiliation == 'no'",
-            "reason": null
-          },
-          {
             "target": "Q__SQ_ASK_DRUGS",
             "condition_text": "IF [q__uses_drugs] IS NULL -> GO_TO: Q__SQ_ASK_DRUGS",
             "is_mechanical": true,
@@ -3923,6 +3902,20 @@
             "reason": null
           },
           {
+            "target": "Q__SQ_CHECK_ADRES",
+            "condition_text": "IF [q__eps_active_affiliation] IS NULL AND [q__doc_type] IS NOT NULL AND [q__doc_number] IS NOT NULL -> GO_TO: Q__SQ_CHECK_ADRES",
+            "is_mechanical": true,
+            "python_expression": "q__eps_active_affiliation is None and q__doc_type is not None and q__doc_number is not None",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_SET_EPS_UNKNOWN",
+            "condition_text": "IF [q__eps_active_affiliation] IS NULL -> GO_TO: Q__SQ_SET_EPS_UNKNOWN",
+            "is_mechanical": true,
+            "python_expression": "q__eps_active_affiliation is None",
+            "reason": null
+          },
+          {
             "target": "Q__SQ_ASK_AGE",
             "condition_text": "IF [q__surrogate_age] IS NULL -> GO_TO: Q__SQ_ASK_AGE",
             "is_mechanical": true,
@@ -4088,6 +4081,13 @@
             "condition_text": "IF [q__imc] < 18.5 OR [q__imc] > 29.9 -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
             "is_mechanical": true,
             "python_expression": "q__imc < 18.5 or q__imc > 29.9",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_RUN_CLASSIFICATION",
+            "condition_text": "IF [q__eps_active_affiliation] == 'no' -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
+            "is_mechanical": true,
+            "python_expression": "q__eps_active_affiliation == 'no'",
             "reason": null
           },
           {
