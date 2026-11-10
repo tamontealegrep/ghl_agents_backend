@@ -1,4 +1,4 @@
-tools: babynova_surrogacy
+tools: surrogacy
 tool_route_suffixes: ["-ghl", "-sur"]
 ghl:
   path: /surrogate-questions-text

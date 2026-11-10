@@ -532,7 +532,7 @@
     ]
   },
   {
-    "name": "surrogate_classification",
+    "name": "surrogate_classification_v1",
     "description": "Authorized final classification; single source of truth for [classification_result].",
     "notes": [
       "MANDATORY EXECUTION: upon entering Q__SQ_RUN_CLASSIFICATION.",

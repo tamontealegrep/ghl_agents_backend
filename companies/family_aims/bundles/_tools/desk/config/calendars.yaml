@@ -1,0 +1,38 @@
+# Rules for the calendars of this company.
+#
+# A calendar EXISTS when its id is in the environment: FA_GHL_CALENDAR_ID_<KEY> (GoHighLevel)
+# and/or FA_GOOGLE_CALENDAR_ID_<KEY> (Google Calendar). This file says how it BEHAVES. <KEY> is
+# matched case-insensitively against the keys below.
+#
+# IVF and SUR keep their own rules in code (services/booking_ivf.py, booking_sur.py,
+# slots_ivf.py, slots_sur.py) and slots.yaml; the entries here apply to every other calendar.
+#
+# Hours: weekday number (0 = Sunday ... 6 = Saturday) -> [start_hour, start_minute, end_hour, end_minute].
+# A weekday that is not listed is closed. Times are in America/Bogota.
+
+# Used by a calendar that has no entry under "calendars". PLACEHOLDER VALUES: the owner has
+# not confirmed hours for new calendars; they copy the IVF schedule (opening at 07:30). Review before use.
+default:
+  agent_name: "Family Aims"
+  event_summary_tag: null        # null -> the calendar key, e.g. "CONSULTA"
+  email_template_prefix: null    # null -> no confirmation email is sent
+  hours:
+    1: [7, 30, 17, 0]
+    2: [7, 30, 17, 0]
+    3: [7, 30, 17, 0]
+    4: [7, 30, 17, 0]
+    5: [7, 30, 17, 0]
+  lunch_break:
+    start_hour: 12
+    end_hour: 13
+
+# Overrides per calendar. Any field left out comes from "default". Example:
+#
+# calendars:
+#   consulta:
+#     agent_name: "Ana"
+#     email_template_prefix: "book_appointment_consulta"   # needs templates/emails/book_appointment_consulta_{es,en,pt}.html
+#     hours:
+#       1: [8, 0, 12, 0]
+#       3: [8, 0, 12, 0]
+calendars: {}

@@ -3607,21 +3607,21 @@
         "node_id": "Q__SQ_RUN_CLASSIFICATION",
         "node_type": "action",
         "goal": [
-          "You MUST execute surrogate_classification in this turn. It is mandatory and the only allowed action here.",
-          "It is FORBIDDEN to declare approved/rejected/inconclusive or to classify by your own criteria, context, or memory. The only valid [q__classification_result] is what surrogate_classification returns."
+          "You MUST execute surrogate_classification_v1 in this turn. It is mandatory and the only allowed action here.",
+          "It is FORBIDDEN to declare approved/rejected/inconclusive or to classify by your own criteria, context, or memory. The only valid [q__classification_result] is what surrogate_classification_v1 returns."
         ],
         "do": [
-          "TOOL CALL ONLY: call surrogate_classification now.",
+          "TOOL CALL ONLY: call surrogate_classification_v1 now.",
           "ALWAYS send the 11 fields, each from its slot: age=[q__surrogate_age], city=[q__city_residence], eps=[q__eps_status], number_of_children=[q__children_count], last_birth_date=[q__last_birth_date], number_of_c_sections=[q__csections_count], abortions=[q__abortos], preeclampsia=[q__pree], bmi=[q__imc], documentation=[q__document_result], drug_use=[q__uses_drugs].",
           "An empty slot is sent as an empty string, never omitted or invented.",
           "It is FORBIDDEN to speak, run FAQs/handlers, or route before capturing [q__classification_result].",
-          "If you do not execute surrogate_classification, STAY here and retry. NEVER continue with an empty or assumed [q__classification_result]."
+          "If you do not execute surrogate_classification_v1, STAY here and retry. NEVER continue with an empty or assumed [q__classification_result]."
         ],
         "trigger": [],
         "disabled_in": [],
         "say": [],
         "say_verbatim": false,
-        "execute": "surrogate_classification",
+        "execute": "surrogate_classification_v1",
         "store": [],
         "capture": [
           [
@@ -3653,7 +3653,7 @@
         "node_id": "Q__SQ_DEC_ELIGIBILITY",
         "node_type": "decision",
         "goal": [
-          "Resolve the outcome using surrogate_classification verdict (values in English)."
+          "Resolve the outcome using surrogate_classification_v1 verdict (values in English)."
         ],
         "do": [
           "Evaluate [q__classification_result]."
@@ -7146,7 +7146,7 @@
       ]
     },
     {
-      "name": "surrogate_classification",
+      "name": "surrogate_classification_v1",
       "description": "Authorized final classification; single source of truth for [classification_result].",
       "inputs": [
         {

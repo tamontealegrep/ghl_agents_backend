@@ -1,5 +1,5 @@
 # Runtime settings. The compiler never writes or overwrites this file.
-tools: family_aims
+tools: desk
 tool_route_suffixes: ["-ghl"]
 ghl:
   path: /sam-text

@@ -1,0 +1,285 @@
+tool_contracts:
+  - name: get_available_slots
+    description: "Disponibilidad autorizada; fuente de verdad para días y horas."
+    notes:
+      - "ARGUMENTOS: iana_timezone IANA (defecto America/Bogota si vacío); un solo calendario (sin calendar_type)."
+      - "MANDATORY EXECUTION TRIGGER: al entrar a un paso del flujo que necesite ofrecer fechas para la primera cita comercial, llama get_available_slots como primera acción del turno — imperativo, sin excepción. También ante cualquier intención de agendar, reagendar, ver más opciones o reintentar una cita."
+      - "ABSOLUTE EXECUTION RULE: no menciones días, fechas, horas ni disponibilidad antes de ejecutar la herramienta y capturar una respuesta válida."
+      - "ARGUMENT RULE: esta herramienta usa un único calendario; no acepta calendar_type. El único argumento operativo es iana_timezone."
+      - "ARGUMENT RULE: iana_timezone es un identificador IANA continente/ciudad del contacto. Si llega vacío, la implementación usa 'America/Bogota' por defecto. Nunca uses abreviaturas como EST o COT."
+      - "SOURCE OF TRUTH RULE: la única fuente de horarios es el array available_slots de la llamada más reciente. Un horario solo es válido si aparece como objeto con start_co, end_co, start_local y end_local. Si errors no es null o available_slots no es una lista válida, trata la respuesta como inválida."
+      - "PRESENTATION RULE: al hablar con el contacto usa solo start_local/end_local. start_co/end_co son la hora del calendario en Colombia, solo para uso interno y para copiar luego a book_appointment."
+      - "POST-EXECUTION RULE: si el contacto pide más opciones, avanza dentro del mismo array antes de volver a llamar la herramienta. Al reservar, copia start_co del slot elegido a start_date de book_appointment sin alterar el offset."
+    inputs:
+      - name: iana_timezone
+        required: true
+        description: "Identificador IANA (continente/ciudad) de la zona horaria actual del contacto. Ejemplos: America/Bogota, Europe/Madrid, America/New_York. Si llega vacío, el endpoint responde usando America/Bogota."
+    outputs:
+      - name: success
+        required: true
+        description: "Booleano: la consulta se ejecutó correctamente. No indica por sí solo si hay disponibilidad — para eso revisa available_slots."
+      - name: iana_timezone
+        required: true
+        description: "Eco del identificador IANA usado para calcular start_local/end_local."
+      - name: available_slots
+        required: true
+        description: "Array de objetos con los espacios disponibles. Cada objeto trae start_co/end_co (hora del calendario en Colombia, ISO 8601) y start_local/end_local (zona del contacto, ISO 8601). Array vacío ([]) si no hay disponibilidad o si la consulta falló."
+      - name: errors
+        required: true
+        description: "Mensaje de error si la consulta falló. null cuando fue exitosa, incluso si available_slots vino vacío."
+
+  - name: book_appointment
+    description: "Reserva autorizada; crea la cita desde un slot válido."
+    notes:
+      - "ARGUMENTOS: start_date = slot.start_co; duration opcional (defecto '10'); contact_name/email/phone; iana_timezone opcional (defecto America/Bogota)."
+      - "MANDATORY EXECUTION TRIGGER: al entrar al paso del flujo que debe concretar la reserva, llama book_appointment como primera acción del turno — imperativo, sin excepción. Nunca la llames sin haber ejecutado antes get_available_slots."
+      - "ABSOLUTE EXECUTION RULE: no digas que la cita quedó agendada, reservada o confirmada antes de recibir success == true y event_id no nulo."
+      - "ARGUMENT RULE: start_date se copia literal del campo start_co del slot elegido — no lo conviertas, redondees, reformatees ni deduzcas. iana_timezone es la misma zona IANA usada en get_available_slots."
+      - "ARGUMENT RULE: esta herramienta usa un único calendario; no acepta calendar_type ni language. duration es opcional y en esta implementación su valor por defecto es '10'."
+      - "VALIDATION RULE: el horario solicitado debe ser futuro y caer dentro del horario laboral del calendario Novafem. Los domingos se rechazan y cualquier horario fuera de la ventana devuelve reason == 'invalid_hour'."
+      - "VALIDATION RULE: si start_date no es ISO 8601 válido, devuelve reason == 'invalid_start_date'."
+      - "DEPENDENCY RULE: además de las credenciales del calendario, esta implementación exige que exista BN_NOTIFICATION_EMAIL configurado para completar el flujo de notificación."
+      - "SOURCE OF TRUTH RULE: usa success como único resultado autorizado para decidir si la cita quedó creada. reason describe por qué no se creó cuando success es false."
+      - "POST-EXECUTION RULE: si success es false y reason es 'past_date' o 'invalid_start_date', vuelve a get_available_slots. Si reason es 'invalid_hour', informa que está fuera de horario y ofrece consultar de nuevo. Si reason es 'creation_failed' o errors describe un problema técnico/configuración, deriva a callback."
+      - "POST-EXECUTION RULE: si success es true pero errors trae texto, la cita sí quedó creada; el error corresponde a la notificación al contact center, no a la reserva."
+    inputs:
+      - name: start_date
+        required: true
+        description: "Fecha y hora de inicio en ISO 8601 con offset. Copia literal del campo start_co del slot elegido en available_slots."
+      - name: duration
+        required: false
+        description: "Duración de la cita en minutos, como string. Defecto de esta implementación: '10'."
+      - name: contact_name
+        required: true
+        description: "Nombre completo del contacto, ya confirmado en el flujo."
+      - name: contact_email
+        required: true
+        description: "Correo del contacto. Se usa como asistente de calendario y en la notificación."
+      - name: contact_phone
+        required: true
+        description: "Teléfono del contacto en formato internacional. Ejemplo: +573001234567"
+      - name: iana_timezone
+        required: false
+        description: "Identificador IANA de la zona horaria del contacto. Defecto: America/Bogota."
+    outputs:
+      - name: success
+        required: true
+        description: "Booleano: la reserva se creó correctamente."
+      - name: reason
+        required: true
+        description: "Motivo del rechazo cuando success es false. Valores observados en esta implementación: 'invalid_start_date', 'past_date', 'invalid_hour', 'creation_failed'. null cuando success es true."
+      - name: event_id
+        required: true
+        description: "Identificador del evento creado. null si la reserva no se completó."
+      - name: event_link
+        required: true
+        description: "Enlace al evento en Google Calendar. null si la reserva no se completó."
+      - name: meet_link
+        required: true
+        description: "Enlace de videollamada de la cita. null si la reserva no se completó."
+      - name: errors
+        required: true
+        description: "Mensaje de error técnico o de notificación. Puede venir presente con success == true si la cita se creó pero falló la notificación al contact center."
+
+  - name: find_appointment
+    description: "Búsqueda autorizada de citas existentes."
+    notes:
+      - "ARGUMENTOS: al menos uno entre contact_name|contact_phone|contact_email; iana_timezone opcional."
+      - "MANDATORY EXECUTION TRIGGER: ejecútala cuando el contacto quiera consultar, verificar o conocer los detalles de una cita que ya cree haber agendado."
+      - "ARGUMENT RULE: debes enviar al menos uno entre contact_name, contact_phone o contact_email. Si los tres llegan vacíos, la búsqueda falla."
+      - "ARGUMENT RULE: si contact_phone llega como un móvil colombiano de 10 dígitos empezando por 3, la implementación lo normaliza a +57 antes de buscar."
+      - "ARGUMENT RULE: iana_timezone controla el formateo horario del campo start_time."
+      - "VALIDATION RULE: si contact_email se envía con formato inválido, la búsqueda falla antes de consultar Google Calendar."
+      - "SEARCH RULE: la implementación inspecciona eventos 'Primera Vez' entre ayer y 35 días hacia adelante, priorizando coincidencias por teléfono, luego por correo y finalmente por nombre."
+      - "SOURCE OF TRUTH RULE: el array appointments contiene la lista de citas encontradas. Cada elemento devuelve también los datos extraídos de contacto cuando están disponibles en el evento."
+    inputs:
+      - name: contact_name
+        required: false
+        description: "Nombre completo del contacto para realizar la búsqueda."
+      - name: contact_phone
+        required: false
+        description: "Teléfono del contacto para realizar la búsqueda. Puede llegar con o sin +57; la implementación intenta normalizar móviles colombianos."
+      - name: contact_email
+        required: false
+        description: "Correo electrónico del contacto para realizar la búsqueda."
+      - name: iana_timezone
+        required: false
+        description: "Zona horaria IANA para mostrar las horas de las citas encontradas. Defecto: America/Bogota."
+    outputs:
+      - name: success
+        required: true
+        description: "Booleano indicando si la búsqueda encontró resultados y se completó."
+      - name: appointments
+        required: true
+        description: "Lista de objetos con información de las citas encontradas. Cada objeto incluye event_id, summary, start_time, contact_name, contact_phone y contact_email."
+      - name: errors
+        required: true
+        description: "Mensaje de error o de no encontrado si la búsqueda falló o no halló coincidencias."
+
+  - name: cancel_appointment
+    description: "Cancelación autorizada de citas existentes."
+    notes:
+      - "ARGUMENTOS: event_id exacto; iana_timezone opcional."
+      - "MANDATORY EXECUTION TRIGGER: ejecútala únicamente cuando el contacto solicite explícitamente cancelar su cita y proporcione o confirme el event_id correcto."
+      - "ABSOLUTE EXECUTION RULE: no confirmes la cancelación antes de recibir success == true."
+      - "ARGUMENT RULE: event_id debe ser el ID exacto devuelto por la API. Esta herramienta usa un único calendario; no acepta calendar_type."
+      - "SOURCE OF TRUTH RULE: usa success como único veredicto autorizado. message solo aparece en éxito; errors explica fallas como credenciales faltantes, token inválido o event_id inexistente."
+    inputs:
+      - name: event_id
+        required: true
+        description: "Identificador único del evento de Google Calendar a cancelar."
+      - name: iana_timezone
+        required: false
+        description: "Zona horaria IANA del contacto. Campo aceptado por el schema aunque no cambia la operación de borrado."
+    outputs:
+      - name: success
+        required: true
+        description: "Booleano indicando si la cancelación fue exitosa."
+      - name: message
+        required: true
+        description: "Mensaje de confirmación cuando la cancelación fue exitosa. null si falló."
+      - name: errors
+        required: true
+        description: "Mensaje de error si la cancelación falló."
+
+  - name: edit_appointment
+    description: "Edición/Reagenda autorizada de citas existentes."
+    notes:
+      - "ARGUMENTOS: event_id; new_start_date ISO 8601 (opcional); new_duration string (opcional); iana_timezone opcional."
+      - "MANDATORY EXECUTION TRIGGER: ejecútala cuando el contacto solicite cambiar la fecha, hora o duración de una cita ya agendada."
+      - "ABSOLUTE EXECUTION RULE: no confirmes el cambio antes de recibir success == true."
+      - "ARGUMENT RULE: event_id debe ser el ID exacto de la cita. Esta herramienta usa un único calendario; no acepta calendar_type ni language."
+      - "ARGUMENT RULE: new_start_date debe ser una fecha ISO 8601 válida. Si se está reprogramando, debe provenir de un slot válido obtenido de get_available_slots. Si solo se cambia la duración, este campo es opcional."
+      - "ARGUMENT RULE: new_duration es opcional y se envía como string. Si new_start_date viene informado pero new_duration no, la implementación usa la duración configurada del calendario como valor por defecto."
+      - "VALIDATION RULE: si new_start_date cae en el pasado, fuera del horario permitido o choca con otro evento del calendario, la modificación se rechaza."
+      - "SOURCE OF TRUTH RULE: usa success como único veredicto autorizado. message, new_start_time y new_duration son datos de apoyo cuando el cambio sí se aplicó."
+    inputs:
+      - name: event_id
+        required: true
+        description: "Identificador único del evento de Google Calendar a modificar."
+      - name: new_start_date
+        required: false
+        description: "Nueva fecha y hora en ISO 8601 con offset. Requerido si se cambia el horario."
+      - name: new_duration
+        required: false
+        description: "Nueva duración de la cita en minutos, como string. Requerido si se cambia la duración y opcional cuando también cambia el horario."
+      - name: iana_timezone
+        required: false
+        description: "Zona horaria IANA del contacto para formatear new_start_time. Defecto: America/Bogota."
+    outputs:
+      - name: success
+        required: true
+        description: "Booleano indicando si la modificación fue exitosa."
+      - name: message
+        required: true
+        description: "Mensaje de confirmación del cambio realizado."
+      - name: new_start_time
+        required: true
+        description: "Fecha y hora formateada si hubo cambio de horario. null si no se cambió la fecha/hora."
+      - name: new_duration
+        required: true
+        description: "Duración finalmente aplicada en minutos, como string, si se modificó o si hizo falta recalcularla."
+      - name: errors
+        required: true
+        description: "Mensaje de error si la modificación falló."
+
+  - name: check_documentation
+    description: "Verificación documental autorizada; fuente de verdad para approved/normalized_documents."
+    notes:
+      - "ARGUMENTOS: nationality ISO 3166-1 alpha-3 (UPPERCASE); document_type lista/CSV de alias normalizados."
+      - "MANDATORY EXECUTION TRIGGER: ejecútala inmediatamente después de conocer la nacionalidad de la candidata y, si aplica, su(s) tipo(s) de documento."
+      - "ARGUMENT RULE: nationality debe enviarse como código ISO 3166-1 alfa-3 en mayúsculas, inferido del país que la candidata mencionó. No lo infieras desde el acento ni desde el número telefónico."
+      - "ARGUMENT RULE: para nationality == 'COL' no hace falta document_type; las colombianas quedan aprobadas automáticamente por esta herramienta."
+      - "ARGUMENT RULE: para nacionalidad distinta de COL, document_type puede ser string separado por comas o array. Mapéalo al literal más cercano de esta lista: cedula_ciudadania, cedula_extranjeria, ppt, pasaporte, otro. Se aprueba si cualquiera de los documentos enviados es válido (cedula_ciudadania o ppt)."
+      - "SOURCE OF TRUTH RULE: usa approved como único veredicto documental autorizado. reason explica el veredicto; normalized_documents trae, en el mismo orden, el tipo normalizado de cada documento recibido."
+      - "FLOW-CONTINUATION RULE: aunque approved sea false, no cierres la conversación ni des un rechazo final todavía. Conserva ese veredicto y continúa con el resto de la precalificación hasta surrogate_classification."
+      - "POST-EXECUTION RULE: si nationality tiene un formato inválido o falta información documental, esta implementación puede devolver success == true con approved == false y un reason de formato; vuelve a capturar el dato antes de reintentar."
+    inputs:
+      - name: nationality
+        required: true
+        description: "Código ISO 3166-1 alfa-3 de la nacionalidad de la candidata, en mayúsculas. Ejemplos: COL, VEN, ARG, USA, ECU, MEX, PER, BOL, BRA."
+      - name: document_type
+        required: false
+        description: "String o array con el/los tipo(s) de documento de identidad que posee la candidata. Solo se envía cuando nationality no es 'COL'. Alias aceptados por la lógica: cedula_ciudadania | cc, ppt, cedula_extranjeria | ce, pasaporte | passport, otro."
+    outputs:
+      - name: success
+        required: true
+        description: "Valor booleano que indica si la verificación se ejecutó correctamente desde el punto de vista técnico."
+      - name: approved
+        required: true
+        description: "Booleano que indica si la candidata cumple el requisito documental."
+      - name: reason
+        required: true
+        description: "Explicación textual del veredicto documental."
+      - name: normalized_documents
+        required: true
+        description: "Array con el tipo normalizado de cada documento recibido, en el mismo orden."
+      - name: errors
+        required: true
+        description: "Mensaje de error técnico si la verificación falló. null en caso de éxito."
+
+  - name: surrogate_classification
+    description: "Final classification. Source of truth for result."
+    notes:
+      - "MANDATORY EXECUTION TRIGGER: run it as soon as the questionnaire reaches the final classification step."
+      - "ARGUMENT RULE: never invent values; send an empty field when the data is missing."
+      - "ARGUMENT RULE: birth_type (cesarea or natural) is only needed when the last birth was less than 18 months ago; otherwise it can be empty."
+      - "ARGUMENT RULE: document_type is cedula_ciudadania, ppt or other. Only the first two are accepted."
+      - "RULES: age 18-38; allowed city; 1 to 4 children; last birth at least 18 months ago after a C-section or 12 months after a natural birth; at most 2 C-sections; preeclampsia rejects; abortions are only recorded; BMI 18.5-29.9; CC or PPT; no drug use; time available for appointments."
+      - "SOURCE OF TRUTH RULE: use result as the only verdict. Nationality is recorded but never rejects."
+    inputs:
+      - name: age
+        required: false
+        description: "Candidate age in years."
+      - name: city
+        required: false
+        description: "City of residence in Colombia."
+      - name: nationality
+        required: false
+        description: "Nationality (ISO 3166-1 alpha-3). Recorded only."
+      - name: number_of_children
+        required: false
+        description: "Number of children born alive."
+      - name: last_birth_date
+        required: false
+        description: "Date of the last birth, YYYY-MM-DD or YYYY/MM/DD."
+      - name: birth_type
+        required: false
+        description: "cesarea or natural. Required when the last birth was less than 18 months ago."
+      - name: number_of_c_sections
+        required: false
+        description: "Number of C-sections. Use 0 when none."
+      - name: abortions
+        required: false
+        description: "Whether the candidate has had an abortion. Recorded only."
+      - name: preeclampsia
+        required: false
+        description: "Whether the candidate has a history of preeclampsia."
+      - name: bmi
+        required: false
+        description: "BMI calculated by calculate_bmi."
+      - name: document_type
+        required: false
+        description: "cedula_ciudadania, ppt or other."
+      - name: drug_use
+        required: false
+        description: "Whether the candidate uses psychoactive substances."
+      - name: availability
+        required: false
+        description: "Whether the candidate has time to attend the medical appointments."
+    outputs:
+      - name: success
+        required: true
+        description: "Whether the classification ran correctly."
+      - name: result
+        required: true
+        description: "'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (Drug Use)' or 'Rejected (Availability)'."
+      - name: eligibility_result
+        required: true
+        description: "approved, rejected or inconclusive."
+      - name: eligibility_reason
+        required: true
+        description: "Rejection reason, "missing_data (<field>)" naming the first missing field (for example "missing_data (last_birth_date)"), or none."
+      - name: errors
+        required: true
+        description: "Technical error message when the classification failed. null on success."

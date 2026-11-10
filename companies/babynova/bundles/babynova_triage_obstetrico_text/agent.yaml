@@ -1,4 +1,4 @@
-tools: babynova_surrogacy
+tools: surrogacy
 tool_route_suffixes: ["-sur"]
 ghl:
   path: /triage-text
