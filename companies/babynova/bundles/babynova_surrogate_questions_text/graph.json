@@ -1259,10 +1259,10 @@
         "node_id": "Q__SQ_SYNC_REASON_NONE",
         "node_type": "action",
         "goal": [
-          "Sync eligibility_reason to the contact's GHL custom field."
+          "Sync eligibility_reason to the contact's GHL custom field not_eligibility_reason."
         ],
         "do": [
-          "name = 'eligibility_reason'",
+          "name = 'not_eligibility_reason'",
           "value = 'none'",
           "contact_id = [contact.contact_id]",
           "location_id = [contact.location_id]"
@@ -4494,10 +4494,10 @@
         "node_id": "Q__SQ_SYNC_ELIGIBILITY_REASON",
         "node_type": "action",
         "goal": [
-          "Sync eligibility_reason to the contact's GHL custom field."
+          "Sync eligibility_reason to the contact's GHL custom field not_eligibility_reason."
         ],
         "do": [
-          "name = 'eligibility_reason'",
+          "name = 'not_eligibility_reason'",
           "value = [q__eligibility_reason]",
           "contact_id = [contact.contact_id]",
           "location_id = [contact.location_id]"
