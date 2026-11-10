@@ -547,6 +547,57 @@
     ]
   },
   {
+    "name": "check_adres",
+    "description": "Authorized tool that checks the health-system (EPS) affiliation of a person in ADRES/BDUA from the identity document. Its output is the source of truth for the affiliation.",
+    "notes": [
+      "MANDATORY EXECUTION: trigger on entering node Q__SQ_CHECK_ADRES, and only when document_type and document_number are both known.",
+      "ARGUMENT RULE: document_type is 'CC' for a cédula de ciudadanía and 'PPT' for a permiso por protección temporal. document_number is sent as the person gave it (3 to 30 characters); spaces, dots and dashes are ignored.",
+      "SOURCE OF TRUTH RULE: use found, has_active_affiliation and affiliations as the only affiliation data. An affiliation is active when its active field is true.",
+      "POST-EXECUTION RULE: found == false means the document is not registered in BDUA; it is not an error and means no active affiliation.",
+      "POST-EXECUTION RULE: if success == true and errors has text, the input was invalid; if success == false it is a technical failure. In both cases conclude nothing about the affiliation (the flow records unknown).",
+      "PRIVACY RULE: the result includes personal data (name, municipality, EPS); use it only for this flow and never repeat it to the candidate."
+    ],
+    "inputs": [
+      {
+        "name": "document_type",
+        "required": true,
+        "description": "Document type: CC or PPT."
+      },
+      {
+        "name": "document_number",
+        "required": true,
+        "description": "Document number, 3 to 30 characters."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Whether the lookup ran correctly from the technical point of view."
+      },
+      {
+        "name": "found",
+        "required": true,
+        "description": "false when the document is not registered in BDUA; null when it could not be checked."
+      },
+      {
+        "name": "has_active_affiliation",
+        "required": true,
+        "description": "true when any affiliation is still active; null when it could not be checked."
+      },
+      {
+        "name": "affiliations",
+        "required": true,
+        "description": "List of affiliations; each one has entity (EPS name), regime (CONTRIBUTIVO or SUBSIDIADO), status, effective_date, termination_date, affiliate_type and active. Empty when found is false."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Technical or validation error message. null on success."
+      }
+    ]
+  },
+  {
     "name": "surrogate_classification",
     "description": "Authorized final classification tool for medical and demographic eligibility. Its response is the only authorized source to resolve if the candidate is approved, rejected or inconclusive.",
     "notes": [
@@ -555,7 +606,7 @@
       "ARGUMENT RULE: city must be one of: Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá, Sibaté, or 'Otro'. Any other city rejects the candidate by city.",
       "ARGUMENT RULE: birth_type ('csection' or 'natural') is only required when the last birth was less than 18 months ago; otherwise it may be empty.",
       "ARGUMENT RULE: document_type is 'cedula_ciudadania', 'ppt' or 'other'. Only the first two are accepted.",
-      "ARGUMENT RULE: abortions, preeclampsia, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive.",
+      "ARGUMENT RULE: abortions, preeclampsia, eps_active_affiliation, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive.",
       "SOURCE OF TRUTH RULE: use 'result' as the only authorized verdict. Nationality is recorded but never rejects. Do not replace this decision with agent heuristics.",
       "POST-EXECUTION RULE: if 'result' is 'Inconclusive', request or reconfirm the missing data before calling the tool again.",
       "POST-EXECUTION RULE: if 'result' starts with 'Rejected', communicate it with empathy and do not continue the qualification. If it is 'Approved', continue to the questions and scheduling step."
@@ -617,6 +668,11 @@
         "description": "Identity document: cedula_ciudadania, ppt or other."
       },
       {
+        "name": "eps_active_affiliation",
+        "required": false,
+        "description": "Whether the candidate has an active EPS affiliation (from check_adres)."
+      },
+      {
         "name": "drug_use",
         "required": false,
         "description": "Whether the candidate uses or has used psychoactive substances."
@@ -636,7 +692,7 @@
       {
         "name": "result",
         "required": true,
-        "description": "Final classification: 'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (Drug Use)' or 'Rejected (Availability)'."
+        "description": "Final classification: 'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (EPS)', 'Rejected (Drug Use)' or 'Rejected (Availability)'."
       },
       {
         "name": "eligibility_result",
@@ -646,7 +702,7 @@
       {
         "name": "eligibility_reason",
         "required": true,
-        "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'drug_use', 'availability' when rejected, 'missing_data' when inconclusive, 'none' when approved."
+        "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'eps', 'drug_use', 'availability' when rejected, 'missing_data' when inconclusive, 'none' when approved."
       },
       {
         "name": "errors",

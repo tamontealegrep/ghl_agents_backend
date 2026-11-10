@@ -1962,7 +1962,15 @@
         "store": [
           "[q__interest] = NULL",
           "[q__nationality] = NULL",
-          "[q__doc_type] = NULL",
+          "[q__doc_type] = {{contact.document_type}} normalized to exactly one of: cedula_ciudadania (CC, cédula, cédula de ciudadanía), ppt (PPT, permiso por protección temporal) or other (any other document, such as a passport or a cédula de extranjería); NULL when the CRM has no document type",
+          "[q__doc_number] = {{contact.document_number}}, or NULL when the CRM has no document number",
+          "[q__eps_active_affiliation] = NULL",
+          "[q__eps_name] = NULL",
+          "[q__eps_regime] = NULL",
+          "[q__success] = NULL",
+          "[q__has_active_affiliation] = NULL",
+          "[q__affiliations] = NULL",
+          "[q__errors] = NULL",
           "[q__birth_type] = NULL",
           "[q__birth_window] = NULL",
           "[q__availability] = NULL",
@@ -1984,7 +1992,6 @@
           "[q__appt] = NULL",
           "[q__interest_try] = 0",
           "[q__nationality_try] = 0",
-          "[q__doc_type_try] = 0",
           "[q__btype_try] = 0",
           "[q__avail_try] = 0",
           "[q__age_try] = 0",
@@ -4015,15 +4022,15 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_ASK_DOC_TYPE",
-            "condition_text": "IF [q__nationality] IS NOT NULL -> GO_TO: Q__SQ_ASK_DOC_TYPE",
+            "target": "Q__SQ_DOC_READY",
+            "condition_text": "IF [q__nationality] IS NOT NULL -> GO_TO: Q__SQ_DOC_READY",
             "is_mechanical": true,
             "python_expression": "q__nationality is not None",
             "reason": null
           },
           {
-            "target": "Q__SQ_ASK_DOC_TYPE",
-            "condition_text": "IF [q__nationality_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_ASK_DOC_TYPE",
+            "target": "Q__SQ_DOC_READY",
+            "condition_text": "IF [q__nationality_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_DOC_READY",
             "is_mechanical": true,
             "python_expression": "q__nationality_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -4068,7 +4075,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_ASK_DOC_TYPE",
+            "target": "Q__SQ_DOC_READY",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -4078,47 +4085,13 @@
         "fallback": []
       },
       {
-        "node_id": "Q__SQ_ASK_DOC_TYPE",
-        "node_type": "question",
-        "goal": [
-          "Ask which identity document the candidate has: cédula de ciudadanía, permiso por protección temporal (PPT) or another document.",
-          "Map the answer to exactly one of: cedula_ciudadania, ppt, other. A bare 'cédula' or 'CC' is cedula_ciudadania. A passport, a cédula de extranjería or any other document is other."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "¿Tienes cédula de ciudadanía, permiso por protección temporal (PPT) u otro documento?"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [
-          [
-            "q__doc_type",
-            "Literal[cedula_ciudadania, ppt, other]"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_DEC_DOC_TYPE",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "Q__SQ_DEC_DOC_TYPE",
+        "node_id": "Q__SQ_DOC_READY",
         "node_type": "decision",
         "goal": [
-          "Validate the document type."
+          "The identity document is never asked during the call: its type and number come only from the CRM. Run the EPS lookup when both are there; otherwise record the affiliation as unknown so the classification comes back inconclusive for lack of information."
         ],
         "do": [
-          "[q__doc_type_try] = [q__doc_type_try] + 1"
+          "Evaluate [q__doc_type] and [q__doc_number], both read from the CRM at the start."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4130,51 +4103,23 @@
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__doc_type_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE AND [q__sync_on] == 'yes' -> GO_TO: Q__SQ_SYNC_ABANDONED",
-            "is_mechanical": true,
-            "python_expression": "q__doc_type_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True and q__sync_on == 'yes'",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_BYE_NOFIT",
-            "condition_text": "IF [q__doc_type_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_BYE_NOFIT",
-            "is_mechanical": true,
-            "python_expression": "q__doc_type_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__doc_type_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
-            "is_mechanical": true,
-            "python_expression": "q__doc_type_try >= MAX_RETRY_ATTEMPTS",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_ASK_DOC_TYPE",
-            "condition_text": "IF [q__doc_type] IS NULL -> GO_TO: Q__SQ_ASK_DOC_TYPE",
-            "is_mechanical": true,
-            "python_expression": "q__doc_type is None",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_SYNC_DOC_TYPE",
-            "condition_text": "IF [q__doc_type] IS NOT NULL AND [q__sync_on] == 'yes' -> GO_TO: Q__SQ_SYNC_DOC_TYPE",
-            "is_mechanical": true,
-            "python_expression": "q__doc_type is not None and q__sync_on == 'yes'",
-            "reason": null
-          },
-          {
             "target": "Q__SQ_ASK_DRUGS",
-            "condition_text": "IF [q__doc_type] IS NOT NULL -> GO_TO: Q__SQ_ASK_DRUGS",
+            "condition_text": "IF [q__doc_type] == 'other' -> GO_TO: Q__SQ_ASK_DRUGS",
             "is_mechanical": true,
-            "python_expression": "q__doc_type is not None",
+            "python_expression": "q__doc_type == 'other'",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_CHECK_ADRES",
+            "condition_text": "IF [q__doc_type] IS NOT NULL AND [q__doc_number] IS NOT NULL -> GO_TO: Q__SQ_CHECK_ADRES",
+            "is_mechanical": true,
+            "python_expression": "q__doc_type is not None and q__doc_number is not None",
             "reason": null
           }
         ],
         "fallback": [
           {
-            "target": "Q__SQ_ASK_DOC_TYPE",
+            "target": "Q__SQ_SET_EPS_UNKNOWN",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -4183,14 +4128,210 @@
         ]
       },
       {
-        "node_id": "Q__SQ_SYNC_DOC_TYPE",
+        "node_id": "Q__SQ_CHECK_ADRES",
         "node_type": "action",
         "goal": [
-          "Sync document_type to the contact's GHL custom field."
+          "Check the ADRES (BDUA) affiliation of the candidate with her identity document. Runs after the candidate said she is interested and before the classification, only when [q__doc_type] and [q__doc_number] are known. The document type and number come only from the CRM; they are never asked during the call."
         ],
         "do": [
-          "name = 'document_type'",
-          "value = [q__doc_type]",
+          "TOOL CALL: call check_adres with the identity document.",
+          "document_type = 'CC' when [q__doc_type] is cedula_ciudadania, 'PPT' when it is ppt",
+          "document_number = [q__doc_number]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "check_adres",
+        "store": [],
+        "capture": [
+          [
+            "q__success",
+            "bool"
+          ],
+          [
+            "q__has_active_affiliation",
+            "str"
+          ],
+          [
+            "q__affiliations",
+            "str"
+          ],
+          [
+            "q__errors",
+            "str"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_EXTRACT_EPS",
+            "condition_text": "IF [q__success] == TRUE -> GO_TO: Q__SQ_EXTRACT_EPS",
+            "is_mechanical": true,
+            "python_expression": "q__success == True",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "Q__SQ_SET_EPS_UNKNOWN",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "Q__SQ_EXTRACT_EPS",
+        "node_type": "registration",
+        "goal": [
+          "Derive the EPS variables from the check_adres result. Never guess: use only what the tool returned."
+        ],
+        "do": [
+          "Set the three EPS slots from the check_adres result."
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[q__eps_active_affiliation] = 'unknown' when [q__errors] has text (the lookup could not be done with that data)",
+          "[q__eps_active_affiliation] = 'yes' when [q__has_active_affiliation] is true, 'no' when it is false (this includes a document that was not found)",
+          "[q__eps_name] = the entity of the active affiliation (active == true) in [q__affiliations], copied exactly as it appears; 'none' when there is no active affiliation; 'unknown' when [q__eps_active_affiliation] is unknown",
+          "[q__eps_regime] = the regime of that same active affiliation, copied exactly as it appears; 'none' when there is no active affiliation; 'unknown' when [q__eps_active_affiliation] is unknown"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_SYNC_EPS_ACTIVE",
+            "condition_text": "IF [q__sync_on] == 'yes' -> GO_TO: Q__SQ_SYNC_EPS_ACTIVE",
+            "is_mechanical": true,
+            "python_expression": "q__sync_on == 'yes'",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_ASK_DRUGS",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_SET_EPS_UNKNOWN",
+        "node_type": "registration",
+        "goal": [
+          "The affiliation could not be checked (the tool failed, or the CRM has no document type or number). Record unknown for the three EPS fields; the classification treats it as missing data."
+        ],
+        "do": [
+          "Set the three EPS slots to unknown."
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[q__eps_active_affiliation] = 'unknown'",
+          "[q__eps_name] = 'unknown'",
+          "[q__eps_regime] = 'unknown'"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_SYNC_EPS_ACTIVE",
+            "condition_text": "IF [q__sync_on] == 'yes' -> GO_TO: Q__SQ_SYNC_EPS_ACTIVE",
+            "is_mechanical": true,
+            "python_expression": "q__sync_on == 'yes'",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_ASK_DRUGS",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_SYNC_EPS_ACTIVE",
+        "node_type": "action",
+        "goal": [
+          "Sync eps_active_affiliation to the contact's GHL custom field."
+        ],
+        "do": [
+          "name = 'eps_active_affiliation'",
+          "value = [q__eps_active_affiliation]",
+          "contact_id = [contact.contact_id]",
+          "location_id = [contact.location_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "update_custom_field",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_SYNC_EPS_NAME",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_SYNC_EPS_NAME",
+        "node_type": "action",
+        "goal": [
+          "Sync eps_name to the contact's GHL custom field."
+        ],
+        "do": [
+          "name = 'eps_name'",
+          "value = [q__eps_name]",
+          "contact_id = [contact.contact_id]",
+          "location_id = [contact.location_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "update_custom_field",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_SYNC_EPS_REGIME",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_SYNC_EPS_REGIME",
+        "node_type": "action",
+        "goal": [
+          "Sync eps_regime to the contact's GHL custom field."
+        ],
+        "do": [
+          "name = 'eps_regime'",
+          "value = [q__eps_regime]",
           "contact_id = [contact.contact_id]",
           "location_id = [contact.location_id]"
         ],
@@ -4621,7 +4762,7 @@
         ],
         "do": [
           "TOOL CALL ONLY: call surrogate_classification now.",
-          "ALWAYS send the 13 fields, each from its slot: age=[q__surrogate_age], city=[q__city_residence], nationality=[q__nationality], number_of_children=[q__children_count], last_birth_date=[q__last_birth_date], birth_type=[q__birth_type], number_of_c_sections=[q__csections_count], abortions=[q__abortos], preeclampsia=[q__pree], bmi=[q__imc], document_type=[q__doc_type], drug_use=[q__uses_drugs], availability=[q__availability].",
+          "ALWAYS send the 14 fields, each from its slot: age=[q__surrogate_age], city=[q__city_residence], nationality=[q__nationality], number_of_children=[q__children_count], last_birth_date=[q__last_birth_date], birth_type=[q__birth_type], number_of_c_sections=[q__csections_count], abortions=[q__abortos], preeclampsia=[q__pree], bmi=[q__imc], document_type=[q__doc_type], eps_active_affiliation=[q__eps_active_affiliation], drug_use=[q__uses_drugs], availability=[q__availability].",
           "An empty slot is sent as an empty string, never omitted or invented.",
           "It is FORBIDDEN to speak, run FAQs/handlers, or route before capturing [q__classification_result].",
           "If you do not execute surrogate_classification, STAY here and retry. NEVER continue with an empty or assumed [q__classification_result]."
@@ -4940,6 +5081,13 @@
             "condition_text": "IF [q__classification_result] == 'Rejected (Documentation)' -> GO_TO: Q__SQ_BYE_NOFIT",
             "is_mechanical": true,
             "python_expression": "q__classification_result == 'Rejected (Documentation)'",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_BYE_NOFIT",
+            "condition_text": "IF [q__classification_result] == 'Rejected (EPS)' -> GO_TO: Q__SQ_BYE_NOFIT",
+            "is_mechanical": true,
+            "python_expression": "q__classification_result == 'Rejected (EPS)'",
             "reason": null
           },
           {
@@ -8385,6 +8533,71 @@
       ]
     },
     {
+      "name": "check_adres",
+      "description": "Authorized tool that checks the health-system (EPS) affiliation of a person in ADRES/BDUA from the identity document. Its output is the source of truth for the affiliation.",
+      "inputs": [
+        {
+          "name": "document_type",
+          "required": true,
+          "description": "Document type: CC or PPT.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "document_number",
+          "required": true,
+          "description": "Document number, 3 to 30 characters.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "success",
+          "required": true,
+          "description": "Whether the lookup ran correctly from the technical point of view.",
+          "type_expr": "bool",
+          "examples": []
+        },
+        {
+          "name": "found",
+          "required": true,
+          "description": "false when the document is not registered in BDUA; null when it could not be checked.",
+          "type_expr": "bool",
+          "examples": []
+        },
+        {
+          "name": "has_active_affiliation",
+          "required": true,
+          "description": "true when any affiliation is still active; null when it could not be checked.",
+          "type_expr": "bool",
+          "examples": []
+        },
+        {
+          "name": "affiliations",
+          "required": true,
+          "description": "List of affiliations; each one has entity (EPS name), regime (CONTRIBUTIVO or SUBSIDIADO), status, effective_date, termination_date, affiliate_type and active. Empty when found is false.",
+          "type_expr": "free_text",
+          "examples": []
+        },
+        {
+          "name": "errors",
+          "required": true,
+          "description": "Technical or validation error message. null on success.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "notes": [
+        "MANDATORY EXECUTION: trigger on entering node Q__SQ_CHECK_ADRES, and only when document_type and document_number are both known.",
+        "ARGUMENT RULE: document_type is 'CC' for a cédula de ciudadanía and 'PPT' for a permiso por protección temporal. document_number is sent as the person gave it (3 to 30 characters); spaces, dots and dashes are ignored.",
+        "SOURCE OF TRUTH RULE: use found, has_active_affiliation and affiliations as the only affiliation data. An affiliation is active when its active field is true.",
+        "POST-EXECUTION RULE: found == false means the document is not registered in BDUA; it is not an error and means no active affiliation.",
+        "POST-EXECUTION RULE: if success == true and errors has text, the input was invalid; if success == false it is a technical failure. In both cases conclude nothing about the affiliation (the flow records unknown).",
+        "PRIVACY RULE: the result includes personal data (name, municipality, EPS); use it only for this flow and never repeat it to the candidate."
+      ]
+    },
+    {
       "name": "surrogate_classification",
       "description": "Authorized final classification tool for medical and demographic eligibility. Its response is the only authorized source to resolve if the candidate is approved, rejected or inconclusive.",
       "inputs": [
@@ -8490,6 +8703,16 @@
           ]
         },
         {
+          "name": "eps_active_affiliation",
+          "required": false,
+          "description": "Whether the candidate has an active EPS affiliation (from check_adres).",
+          "type_expr": "str",
+          "examples": [
+            "si",
+            "no"
+          ]
+        },
+        {
           "name": "drug_use",
           "required": false,
           "description": "Whether the candidate uses or has used psychoactive substances.",
@@ -8521,7 +8744,7 @@
         {
           "name": "result",
           "required": true,
-          "description": "Final classification: 'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (Drug Use)' or 'Rejected (Availability)'.",
+          "description": "Final classification: 'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (EPS)', 'Rejected (Drug Use)' or 'Rejected (Availability)'.",
           "type_expr": "str",
           "examples": []
         },
@@ -8535,7 +8758,7 @@
         {
           "name": "eligibility_reason",
           "required": true,
-          "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'drug_use', 'availability' when rejected, 'missing_data' when inconclusive, 'none' when approved.",
+          "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'eps', 'drug_use', 'availability' when rejected, 'missing_data' when inconclusive, 'none' when approved.",
           "type_expr": "str",
           "examples": []
         },
@@ -8553,7 +8776,7 @@
         "ARGUMENT RULE: city must be one of: Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá, Sibaté, or 'Otro'. Any other city rejects the candidate by city.",
         "ARGUMENT RULE: birth_type ('csection' or 'natural') is only required when the last birth was less than 18 months ago; otherwise it may be empty.",
         "ARGUMENT RULE: document_type is 'cedula_ciudadania', 'ppt' or 'other'. Only the first two are accepted.",
-        "ARGUMENT RULE: abortions, preeclampsia, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive.",
+        "ARGUMENT RULE: abortions, preeclampsia, eps_active_affiliation, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive.",
         "SOURCE OF TRUTH RULE: use 'result' as the only authorized verdict. Nationality is recorded but never rejects. Do not replace this decision with agent heuristics.",
         "POST-EXECUTION RULE: if 'result' is 'Inconclusive', request or reconfirm the missing data before calling the tool again.",
         "POST-EXECUTION RULE: if 'result' starts with 'Rejected', communicate it with empathy and do not continue the qualification. If it is 'Approved', continue to the questions and scheduling step."
