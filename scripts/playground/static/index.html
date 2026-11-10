@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent playground</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --panel2: #f0f2f5; --text: #1c2128; --muted: #667085; --line: #dde1e7;
+  --accent: #0f9d86; --user: #14804a; --user-bg: #e3f5ea; --agent-bg: #eef1f6;
+  --llm: #2563eb; --llm-bg: #e8f0ff; --http: #0e8fa8; --http-bg: #e2f6fa; --state: #7c5cc4; --state-bg: #f0eafb;
+  --edit: #b7791f; --edit-bg: #fdf3dc; --err: #c0392b; --err-bg: #fdeceb; --ok: #1a7f37; --warn: #b7791f;
+  --radius: 10px; --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1216; --panel: #171b21; --panel2: #1f242c; --text: #e6e9ee; --muted: #8b95a5; --line: #2a303a;
+    --accent: #2dd4bf; --user: #4ade80; --user-bg: #12301f; --agent-bg: #212733;
+    --llm: #7aa7ff; --llm-bg: #16233f; --http: #4cc9e0; --http-bg: #10303a; --state: #b79cff; --state-bg: #261f3d;
+    --edit: #f0b955; --edit-bg: #3a2f14; --err: #ff7b6f; --err-bg: #3b1a18; --ok: #4ade80; --warn: #f0b955;
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; display: flex; flex-direction: column; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: #04211c; border-color: var(--accent); font-weight: 600; }
+button:disabled { opacity: .5; cursor: default; }
+input, select, textarea { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; min-width: 0; }
+input:focus, select:focus, textarea:focus { outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent); border-color: var(--accent); }
+
+header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+header h1 { font-size: 15px; margin: 0 8px 0 0; letter-spacing: .2px; }
+header .grow { flex: 1; }
+header label { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 6px; }
+
+main { flex: 1; min-height: 0; display: grid; grid-template-columns: 330px minmax(0, 1fr) 300px; gap: 12px; padding: 12px 16px; }
+main.no-left { grid-template-columns: minmax(0, 1fr) 300px; } main.no-left #left { display: none; }
+main.no-right { grid-template-columns: 330px minmax(0, 1fr); } main.no-right #right { display: none; }
+main.no-left.no-right { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 1100px) { main, main.no-left, main.no-right { grid-template-columns: minmax(0, 1fr); } #left, #right { max-height: 38vh; } }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); min-height: 0; display: flex; flex-direction: column; }
+.card > h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); }
+.tabs button { flex: 1; border: 0; border-radius: 0; background: transparent; padding: 10px 4px; color: var(--muted); border-bottom: 2px solid transparent; }
+.tabs button.on { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+.pane { overflow: auto; padding: 10px 12px; min-height: 0; flex: 1; }
+.hint { color: var(--muted); font-size: 12px; margin: 2px 0 8px; }
+
+.vars { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.var { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 6px; align-items: center; }
+.var .name { font-family: var(--mono); font-size: 12px; color: var(--accent); grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 6px; }
+.var .desc { grid-column: 1 / -1; color: var(--muted); font-size: 11.5px; margin-top: -2px; }
+.var input { width: 100%; font-family: var(--mono); font-size: 12.5px; }
+.var.live input { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+.var.dirty input { border-color: var(--edit); background: var(--edit-bg); }
+.var .x { padding: 2px 8px; color: var(--muted); }
+.addrow { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; margin-top: 10px; }
+
+#chat { min-width: 0; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.toolbar .spacer { flex: 1; }
+.toggle { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); cursor: pointer; user-select: none; font-size: 12.5px; background: var(--panel2); }
+.toggle.off { opacity: .45; }
+.toggle .n { color: var(--muted); font-size: 11.5px; }
+.toggle[data-k="llm"] { color: var(--llm); } .toggle[data-k="tool"] { color: var(--http); } .toggle[data-k="state"] { color: var(--state); } .toggle[data-k="edit"] { color: var(--edit); }
+
+#timeline { flex: 1; overflow: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
+.empty { margin: auto; text-align: center; color: var(--muted); max-width: 420px; }
+.msg { max-width: min(78%, 760px); padding: 8px 12px; border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.user { align-self: flex-end; background: var(--user-bg); border: 1px solid color-mix(in srgb, var(--user) 35%, transparent); border-bottom-right-radius: 4px; }
+.msg.say { align-self: flex-start; background: var(--agent-bg); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.msg small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 2px; }
+.turnmark { align-self: center; color: var(--muted); font-size: 11px; display: flex; gap: 8px; align-items: center; width: 100%; }
+.turnmark::before, .turnmark::after { content: ""; flex: 1; border-top: 1px dashed var(--line); }
+
+details.ev { align-self: stretch; margin: 0 0 0 12px; border-left: 3px solid var(--c); border-radius: 6px; background: var(--bg-c); }
+details.ev > summary { list-style: none; cursor: pointer; padding: 4px 10px; display: flex; gap: 8px; align-items: baseline; overflow: hidden; font-size: 12.5px; }
+details.ev > summary::-webkit-details-marker { display: none; }
+details.ev > summary::before { content: "▸"; color: var(--c); font-size: 11px; }
+details.ev[open] > summary::before { content: "▾"; }
+details.ev > summary .kind { color: var(--c); font-weight: 600; white-space: nowrap; }
+details.ev > summary .name { font-family: var(--mono); white-space: nowrap; }
+details.ev > summary .meta { color: var(--muted); white-space: nowrap; }
+details.ev > summary .prev { color: var(--muted); font-family: var(--mono); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+details.ev.llm { --c: var(--llm); --bg-c: var(--llm-bg); } details.ev.tool { --c: var(--http); --bg-c: var(--http-bg); }
+details.ev.state { --c: var(--state); --bg-c: var(--state-bg); } details.ev.edit { --c: var(--edit); --bg-c: var(--edit-bg); }
+details.ev.error { --c: var(--err); --bg-c: var(--err-bg); }
+details.ev .body { padding: 6px 12px 10px; display: grid; gap: 8px; }
+.sec { display: grid; gap: 3px; }
+.sec > .t { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+.sec > .t button { padding: 0 8px; font-size: 11px; }
+pre { margin: 0; padding: 8px 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; font: 12px/1.45 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 340px; overflow: auto; }
+.ok { color: var(--ok); } .bad { color: var(--err); } .warn { color: var(--warn); }
+.attempts { font-family: var(--mono); font-size: 12px; }
+.diff .add { color: var(--ok); } .diff .rm { color: var(--err); } .diff .chg { color: var(--warn); }
+
+.composer { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); align-items: flex-end; }
+.composer textarea { flex: 1; resize: none; max-height: 140px; min-height: 40px; }
+.thinking { align-self: stretch; color: var(--muted); font-size: 12.5px; display: flex; gap: 8px; align-items: center; padding: 2px 12px; }
+.spin { width: 12px; height: 12px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 12.5px; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; font-family: var(--mono); overflow-wrap: anywhere; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; border: 1px solid var(--line); }
+.badge.live { color: var(--ok); border-color: var(--ok); } .badge.end { color: var(--warn); border-color: var(--warn); }
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--err); color: #fff; padding: 8px 14px; border-radius: 8px; max-width: 80vw; z-index: 9; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Agent playground</h1>
+  <label>Agente <select id="agent"></select></label>
+  <label>Habla primero <select id="speaker"><option value="user">el contacto (texto)</option><option value="agent">el agente (llamada)</option></select></label>
+  <button class="primary" id="new">Nueva conversación</button>
+  <label>Guardadas <select id="saved"><option value="">Abrir…</option></select></label>
+  <span class="grow"></span>
+  <button id="export" disabled>Exportar JSON</button>
+  <button id="toggleLeft" title="Mostrar u ocultar entradas">Entradas</button>
+  <button id="toggleRight" title="Mostrar u ocultar estado">Estado</button>
+</header>
+
+<main id="main">
+  <aside class="card" id="left">
+    <div class="tabs"><button data-tab="inputs" class="on">Entradas</button><button data-tab="slots">Variables del flujo</button></div>
+    <div class="pane" id="pane-inputs"></div>
+    <div class="pane" id="pane-slots" hidden></div>
+  </aside>
+
+  <section class="card" id="chat">
+    <div class="toolbar" id="toolbar"></div>
+    <div id="timeline"></div>
+    <div class="composer">
+      <textarea id="input" rows="1" placeholder="Escribe como el contacto…  (Enter envía, Shift+Enter nueva línea)" disabled></textarea>
+      <button class="primary" id="send" disabled>Enviar</button>
+    </div>
+  </section>
+
+  <aside class="card" id="right">
+    <h2>Estado del grafo</h2>
+    <div class="pane" id="pane-state"></div>
+  </aside>
+</main>
+
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else if (v !== false && v != null) n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid != null) n.append(kid.nodeType ? kid : document.createTextNode(kid));
+  return n;
+};
+const store = { get(k, d) { try { return JSON.parse(localStorage.getItem("pg." + k)) ?? d; } catch { return d; } }, set(k, v) { try { localStorage.setItem("pg." + k, JSON.stringify(v)); } catch {} } };
+
+const state = {
+  agents: [], meta: null, session: null, busy: false, livePoll: null, liveEvents: [],
+  filters: store.get("filters", { llm: true, tool: true, state: true, edit: true }),
+  draftContact: {}, draftSlots: {}, dirty: new Set(),
+};
+
+async function api(method, url, body) {
+  const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || res.statusText);
+  return data;
+}
+function toast(msg) { const t = el("div", { class: "toast", text: msg }); document.body.append(t); setTimeout(() => t.remove(), 6000); }
+const fmtMs = ms => ms == null ? "" : ms >= 1000 ? (ms / 1000).toFixed(1) + " s" : ms + " ms";
+const preview = (v, n = 70) => { const s = typeof v === "string" ? v : JSON.stringify(v); return s == null ? "" : s.replace(/\s+/g, " ").slice(0, n) + (s.length > n ? "…" : ""); };
+const pretty = v => typeof v === "string" ? v : JSON.stringify(v, null, 2);
+function parseValue(raw) { const t = raw.trim(); if (t === "") return ""; try { return JSON.parse(t); } catch { return raw; } }
+const showValue = v => v == null ? "" : typeof v === "string" ? v : JSON.stringify(v);
+
+// ---------------------------------------------------------------- agents / meta
+async function loadAgents() {
+  state.agents = await api("GET", "/api/agents");
+  const sel = $("#agent"); sel.innerHTML = "";
+  const byCompany = {};
+  state.agents.forEach(a => (byCompany[a.company] ||= []).push(a));
+  for (const [company, list] of Object.entries(byCompany)) {
+    const g = el("optgroup", { label: company });
+    list.forEach(a => g.append(el("option", { value: a.company + "/" + a.slug, text: a.slug })));
+    sel.append(g);
+  }
+  const last = store.get("agent"); if (last && [...sel.options].some(o => o.value === last)) sel.value = last;
+  await onAgentChange();
+}
+async function onAgentChange() {
+  const [company, slug] = $("#agent").value.split("/");
+  store.set("agent", $("#agent").value);
+  const a = state.agents.find(x => x.company === company && x.slug === slug);
+  $("#speaker").value = a.first_speaker;
+  state.meta = null; state.draftContact = {}; state.draftSlots = {}; state.dirty.clear();
+  renderLeft();
+  try { state.meta = await api("GET", `/api/agents/${company}/${slug}/meta`); } catch (e) { toast(e.message); }
+  renderLeft();
+}
+async function loadSaved() {
+  const sel = $("#saved"); sel.innerHTML = '<option value="">Abrir…</option>';
+  (await api("GET", "/api/saved")).forEach(s => sel.append(el("option", { value: s.file, text: `${s.slug} · ${s.turns} turnos · ${s.preview || "(sin mensajes)"}` })));
+}
+
+// ---------------------------------------------------------------- sessions
+function setSession(s) { state.session = s; state.dirty.clear(); render(); }
+async function newSession() {
+  const [company, slug] = $("#agent").value.split("/");
+  try {
+    const s = await api("POST", "/api/sessions", { company, slug, first_speaker: $("#speaker").value, contact: state.draftContact, initial_slots: state.draftSlots });
+    setSession(s); loadSaved();
+    if (s.first_speaker === "agent") await runStart();
+  } catch (e) { toast(e.message); }
+}
+async function runStart() {
+  state.busy = true; renderTimeline(); renderBusy(); startLive();
+  try { setSession(await api("POST", `/api/sessions/${state.session.id}/start`)); loadSaved(); }
+  catch (e) { toast(e.message); try { setSession(await api("GET", `/api/sessions/${state.session.id}`)); } catch {} }
+  finally { state.busy = false; stopLive(); renderBusy(); render(); }
+}
+async function send() {
+  const box = $("#input"), text = box.value.trim();
+  if (!text || !state.session || state.busy) return;
+  box.value = ""; autoGrow();
+  state.session.timeline.push({ kind: "user", text, at: Date.now() / 1000, turn: state.session.turns + 1 });
+  state.busy = true; renderTimeline(); renderBusy(); startLive();
+  try { setSession(await api("POST", `/api/sessions/${state.session.id}/messages`, { text })); loadSaved(); }
+  catch (e) { toast(e.message); try { setSession(await api("GET", `/api/sessions/${state.session.id}`)); } catch {} }
+  finally { state.busy = false; stopLive(); renderBusy(); render(); $("#input").focus(); }
+}
+function startLive() {
+  state.liveEvents = []; state.liveStart = Date.now();
+  state.livePoll = setInterval(async () => {
+    if (state.session) { try { state.liveEvents = await api("GET", `/api/sessions/${state.session.id}/live`); } catch {} }
+    renderTimeline(); renderBusy();
+  }, 600);
+}
+function stopLive() { clearInterval(state.livePoll); state.livePoll = null; state.liveEvents = []; }
+async function editState(slots, contact) {
+  if (!state.session) { Object.assign(state.draftSlots, slots); Object.assign(state.draftContact, contact); for (const o of [state.draftSlots, state.draftContact]) for (const k in o) if (o[k] === null) delete o[k]; renderLeft(); return; }
+  try { setSession(await api("PATCH", `/api/sessions/${state.session.id}/state`, { slots, contact })); } catch (e) { toast(e.message); }
+}
+async function resume(file) {
+  if (!file) return;
+  try { const s = await api("POST", "/api/sessions/resume", { file }); $("#agent").value = s.company + "/" + s.slug; store.set("agent", $("#agent").value); await onAgentChange(); $("#speaker").value = s.first_speaker; setSession(s); }
+  catch (e) { toast(e.message); } finally { $("#saved").value = ""; }
+}
+
+// ---------------------------------------------------------------- left panel (inputs / flow variables)
+function varRow({ name, key, desc, value, live, kind, remove }) {
+  const input = el("input", { value: showValue(value), spellcheck: "false", placeholder: "(sin valor)" });
+  const row = el("div", { class: "var" + (live ? " live" : "") },
+    el("div", { class: "name" }, el("span", { text: name }), remove ? el("button", { class: "x", title: "Quitar", text: "×", onclick: () => remove() }) : null),
+    input);
+  if (desc) row.append(el("div", { class: "desc", text: desc }));
+  const commit = () => { if (input.value === showValue(value)) { row.classList.remove("dirty"); return; } const v = parseValue(input.value); kind === "contact" ? editState({}, { [key]: v }) : editState({ [name]: v }, {}); };
+  input.addEventListener("input", () => row.classList.toggle("dirty", input.value !== showValue(value)));
+  input.addEventListener("keydown", e => { if (e.key === "Enter") commit(); });
+  input.addEventListener("change", commit);
+  return row;
+}
+function addRow(kind, datalistId) {
+  const n = el("input", { placeholder: kind === "contact" ? "campo (sin contact.)" : "nombre del slot", list: datalistId }), v = el("input", { placeholder: "valor" });
+  const add = () => { if (!n.value.trim()) return; const val = parseValue(v.value); kind === "contact" ? editState({}, { [n.value.trim()]: val }) : editState({ [n.value.trim()]: val }, {}); };
+  v.addEventListener("keydown", e => { if (e.key === "Enter") add(); });
+  return el("div", { class: "addrow" }, n, v, el("button", { text: "Añadir", onclick: add }));
+}
+function renderLeft() {
+  const s = state.session, meta = state.meta;
+  const contact = s ? (s.started ? s.state.contact : s.contact) : state.draftContact;
+  const slots = s && s.started ? s.state.slots : (s ? s.initial_slots : state.draftSlots);
+  const live = !!(s && s.started);
+  // --- inputs tab
+  const pin = $("#pane-inputs"); pin.innerHTML = "";
+  if (!meta) { pin.append(el("p", { class: "hint", text: "Cargando agente…" })); }
+  else {
+    pin.append(el("p", { class: "hint", text: live ? "Conversación en curso: los cambios se aplican al estado real del grafo." : "Antes de empezar son los valores iniciales; la conversación los usa al arrancar." }));
+    const declared = meta.input_variables, seen = new Set();
+    const list = el("div", { class: "vars" });
+    const contactNames = new Set(meta.contact_fields); Object.keys(contact || {}).forEach(k => contactNames.add(k));
+    declared.filter(v => v.name.startsWith("contact.")).forEach(v => contactNames.add(v.name.slice(8)));
+    pin.append(el("h3", { class: "hint", text: "contact.*" }));
+    [...contactNames].sort().forEach(k => { seen.add("contact." + k); const d = declared.find(v => v.name === "contact." + k); list.append(varRow({ name: "contact." + k, key: k, desc: d && d.description, value: (contact || {})[k], live, kind: "contact", remove: (contact || {})[k] !== undefined ? () => editState({}, { [k]: null }) : null })); });
+    pin.append(list);
+    const others = declared.filter(v => !v.name.startsWith("contact."));
+    if (others.length) {
+      pin.append(el("h3", { class: "hint", text: "Otras variables de entrada (se aplican como slots)" }));
+      const l2 = el("div", { class: "vars" });
+      others.forEach(v => l2.append(varRow({ name: v.name, desc: v.description, value: (slots || {})[v.name], live, kind: "slot" })));
+      pin.append(l2);
+    }
+    pin.append(addRow("contact"));
+  }
+  // --- flow variables tab
+  const ps = $("#pane-slots"); ps.innerHTML = "";
+  ps.append(el("p", { class: "hint", text: live ? "Valores reales del grafo. Enter o salir del campo para aplicar; × quita el slot." : "Slots iniciales que se cargarán antes de la primera vuelta. Las sugerencias salen del grafo." }));
+  const names = new Set([...(meta ? meta.slot_names : []), ...Object.keys(slots || {})]);
+  const dl = el("datalist", { id: "slotnames" }, [...names].sort().map(n => el("option", { value: n })));
+  ps.append(dl);
+  const list = el("div", { class: "vars" });
+  const shown = live ? Object.keys(slots || {}).sort() : [...names].sort();
+  shown.forEach(n => list.append(varRow({ name: n, value: (slots || {})[n], live, kind: "slot", remove: (slots || {})[n] !== undefined ? () => editState({ [n]: null }, {}) : null })));
+  ps.append(list, addRow("slot", "slotnames"));
+}
+
+// ---------------------------------------------------------------- timeline
+function section(title, content, copy) {
+  const pre = el("pre"); pre.textContent = content;
+  return el("div", { class: "sec" }, el("div", { class: "t" }, el("span", { text: title }), copy ? el("button", { text: "copiar", onclick: () => navigator.clipboard.writeText(content) }) : null), pre);
+}
+function statusClass(c) { return c >= 500 || c === 0 ? "bad" : c >= 400 ? "warn" : "ok"; }
+function lazy(details, build) { let done = false; details.addEventListener("toggle", () => { if (details.open && !done) { done = true; details.append(build()); } }); }
+
+function llmEvent(e) {
+  const d = el("details", { class: "ev llm" });
+  d.append(el("summary", {}, el("span", { class: "kind", text: "LLM" }), el("span", { class: "name", text: e.call === "complete" ? "complete" : "extract" }),
+    el("span", { class: "meta", text: [e.model, fmtMs(e.ms)].filter(Boolean).join(" · ") }),
+    e.error ? el("span", { class: "prev bad", text: e.error }) : el("span", { class: "prev", text: "→ " + preview(e.response) })));
+  lazy(d, () => el("div", { class: "body" },
+    section("Prompt enviado", e.prompt, true),
+    e.schema ? section("Schema pedido", pretty(e.schema), true) : null,
+    e.temperature != null ? el("div", { class: "hint", text: "temperature " + e.temperature }) : null,
+    e.error ? section("Error", e.error) : section("Respuesta", pretty(e.response), true)));
+  return d;
+}
+function toolEvent(e) {
+  const d = el("details", { class: "ev tool" });
+  d.append(el("summary", {}, el("span", { class: "kind", text: "HTTP" }), el("span", { class: "name", text: e.name }),
+    el("span", { class: "meta" }, e.method + " ", el("span", { class: statusClass(e.status), text: String(e.status) }), " · " + fmtMs(e.ms)),
+    el("span", { class: "prev", text: preview(e.request || {}) + "  →  " + preview(e.response) })));
+  lazy(d, () => el("div", { class: "body" },
+    el("div", { class: "sec" }, el("div", { class: "t", text: "Llamada" }), el("div", { class: "attempts" }, `${e.method} ${e.url}`,
+      ...(e.attempts && e.attempts.length > 1 ? [el("br"), "Rutas probadas: ", e.attempts.map(a => `${a.url.replace(/^https?:\/\/[^/]+/, "")} → ${a.status}`).join("  |  ")] : []))),
+    section("Parámetros de entrada (body)", pretty(e.request ?? {}), true),
+    section(`Respuesta (${e.status})`, pretty(e.response), true)));
+  return d;
+}
+function stateEvent(e) {
+  const df = e.diff || {}, n = Object.keys(df.added || {}).length + Object.keys(df.changed || {}).length + (df.removed || []).length;
+  const d = el("details", { class: "ev state" });
+  d.append(el("summary", {}, el("span", { class: "kind", text: "Estado" }), el("span", { class: "name", text: e.current_state || "—" }),
+    el("span", { class: "meta", text: [n ? n + " slot" + (n > 1 ? "s" : "") : "sin cambios", fmtMs(e.ms), e.ended ? "terminó" : ""].filter(Boolean).join(" · ") })));
+  lazy(d, () => {
+    const lines = [];
+    for (const [k, v] of Object.entries(df.added || {})) lines.push(el("div", { class: "add", text: `+ ${k} = ${preview(v, 200)}` }));
+    for (const [k, v] of Object.entries(df.changed || {})) lines.push(el("div", { class: "chg", text: `~ ${k}: ${preview(v.from, 80)} → ${preview(v.to, 120)}` }));
+    for (const k of df.removed || []) lines.push(el("div", { class: "rm", text: `- ${k}` }));
+    return el("div", { class: "body" }, el("div", { class: "diff attempts" }, lines.length ? lines : "Ningún slot cambió en este turno."));
+  });
+  return d;
+}
+function editEvent(e) {
+  const d = el("details", { class: "ev edit" });
+  const names = [...Object.keys(e.slots || {}), ...Object.keys(e.contact || {}).map(k => "contact." + k)];
+  d.append(el("summary", {}, el("span", { class: "kind", text: "Edición" }), el("span", { class: "name", text: names.join(", ") }), el("span", { class: "meta", text: e.live ? "en vivo" : "valores iniciales" })));
+  lazy(d, () => el("div", { class: "body" }, section("Cambios", pretty({ slots: e.slots, contact: e.contact }))));
+  return d;
+}
+function errorEvent(e) { const d = el("details", { class: "ev error", open: true }); d.append(el("summary", {}, el("span", { class: "kind", text: "Error" }), el("span", { class: "prev bad", text: e.text }))); return d; }
+function messageEvent(e) {
+  return el("div", { class: "msg " + (e.kind === "user" ? "user" : "say") }, el("small", { text: e.kind === "user" ? "Contacto" : "Agente" }), e.text);
+}
+const filterable = { llm: "llm", tool: "tool", state: "state", edit: "edit" };
+function eventNode(e) {
+  switch (e.kind) {
+    case "user": case "say": return messageEvent(e);
+    case "llm": return state.filters.llm ? llmEvent(e) : null;
+    case "tool": return state.filters.tool ? toolEvent(e) : null;
+    case "state": return state.filters.state ? stateEvent(e) : null;
+    case "edit": return state.filters.edit ? editEvent(e) : null;
+    case "error": return errorEvent(e);
+  }
+  return null;
+}
+function renderToolbar() {
+  const tl = state.session ? state.session.timeline : [];
+  const count = k => tl.filter(e => e.kind === k).length;
+  const bar = $("#toolbar"); bar.innerHTML = "";
+  [["llm", "LLM"], ["tool", "HTTP / herramientas"], ["state", "Estado"], ["edit", "Ediciones"]].forEach(([k, label]) =>
+    bar.append(el("span", { class: "toggle" + (state.filters[k] ? "" : " off"), "data-k": k, onclick: () => { state.filters[k] = !state.filters[k]; store.set("filters", state.filters); renderToolbar(); renderTimeline(); } }, label, el("span", { class: "n", text: count(k) }))));
+  bar.append(el("span", { class: "spacer" }),
+    el("button", { text: "Expandir todo", onclick: () => document.querySelectorAll("#timeline details.ev").forEach(d => d.open = true) }),
+    el("button", { text: "Colapsar todo", onclick: () => document.querySelectorAll("#timeline details.ev").forEach(d => d.open = false) }));
+}
+let lastTurnShown = 0;
+function renderTimeline() {
+  const box = $("#timeline"), stick = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+  const openIds = new Set([...box.querySelectorAll("details.ev[open]")].map(d => d.dataset.id).filter(Boolean));
+  box.innerHTML = "";
+  const s = state.session;
+  if (!s) { box.append(el("div", { class: "empty" }, el("h3", { text: "Elige un agente y pulsa «Nueva conversación»" }), el("p", { text: "Aquí verás los mensajes y, comprimidas, cada llamada al LLM y a las herramientas. Pulsa una para ver el detalle." }))); return; }
+  let turn = 0, i = 0;
+  const events = [...s.timeline, ...state.liveEvents.map(e => ({ ...e, live: true }))];
+  if (!events.length) box.append(el("div", { class: "empty" }, el("p", { text: s.first_speaker === "agent" ? "Esperando que el agente hable…" : "Escribe el primer mensaje como si fueras el contacto." })));
+  for (const e of events) {
+    const t = e.turn ?? (s.turns + 1);
+    if (t !== turn && ["user", "say", "llm", "tool"].includes(e.kind)) { turn = t; box.append(el("div", { class: "turnmark", text: "Turno " + turn })); }
+    const node = eventNode(e);
+    if (node) { if (node.tagName === "DETAILS") { node.dataset.id = e.kind + ":" + e.at; if (openIds.has(node.dataset.id)) node.open = true; } box.append(node); }
+  }
+  if (state.busy) box.append(el("div", { class: "thinking" }, el("span", { class: "spin" }), el("span", { id: "livetxt" })));
+  if (stick) box.scrollTop = box.scrollHeight;
+  renderToolbar(); renderBusy();
+}
+function renderBusy() {
+  const t = $("#livetxt"); if (t) t.textContent = `Pensando… ${((Date.now() - (state.liveStart || Date.now())) / 1000).toFixed(1)} s · ${state.liveEvents.length} llamadas`;
+  const can = !!state.session && !state.busy;
+  $("#input").disabled = !can; $("#send").disabled = !can; $("#new").disabled = state.busy;
+}
+
+// ---------------------------------------------------------------- right panel
+function renderState() {
+  const p = $("#pane-state"); p.innerHTML = "";
+  const s = state.session; if (!s) { p.append(el("p", { class: "hint", text: "Sin conversación." })); return; }
+  p.append(el("dl", { class: "kv" },
+    el("dt", { text: "Agente" }), el("dd", { text: s.slug }),
+    el("dt", { text: "Empresa" }), el("dd", { text: s.company }),
+    el("dt", { text: "thread_id" }), el("dd", { text: s.thread_id }),
+    el("dt", { text: "Estado" }), el("dd", {}, s.started ? (s.ended ? el("span", { class: "badge end", text: "terminada" }) : el("span", { class: "badge live", text: "en curso" })) : el("span", { class: "badge", text: "sin iniciar" })),
+    el("dt", { text: "Nodo" }), el("dd", { text: s.state.current_state || "—" }),
+    el("dt", { text: "Turnos" }), el("dd", { text: String(s.turns) }),
+    el("dt", { text: "Slots" }), el("dd", { text: String(Object.keys(s.state.slots || {}).length) })));
+  p.append(el("p", { class: "hint", text: "Estado completo del checkpoint:" }));
+  const raw = el("details", {}, el("summary", { text: "JSON del estado" }));
+  lazy(raw, () => section("", pretty(s.state.raw), true));
+  p.append(raw);
+}
+function render() {
+  const s = state.session;
+  $("#export").disabled = !s;
+  renderLeft(); renderTimeline(); renderState(); renderBusy();
+  if (s) $("#input").placeholder = s.started && s.ended ? "La conversación terminó; un mensaje nuevo la reinicia…" : "Escribe como el contacto…  (Enter envía, Shift+Enter nueva línea)";
+}
+
+// ---------------------------------------------------------------- wiring
+function autoGrow() { const t = $("#input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 140) + "px"; }
+$("#agent").addEventListener("change", onAgentChange);
+$("#new").addEventListener("click", newSession);
+$("#send").addEventListener("click", send);
+$("#input").addEventListener("input", autoGrow);
+$("#input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+$("#saved").addEventListener("change", e => resume(e.target.value));
+$("#export").addEventListener("click", () => { if (state.session) location.href = `/api/sessions/${state.session.id}/export`; });
+$("#toggleLeft").addEventListener("click", () => $("#main").classList.toggle("no-left"));
+$("#toggleRight").addEventListener("click", () => $("#main").classList.toggle("no-right"));
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
+  $("#pane-inputs").hidden = b.dataset.tab !== "inputs"; $("#pane-slots").hidden = b.dataset.tab !== "slots";
+}));
+loadAgents().then(loadSaved).then(render).catch(e => toast(e.message));
+</script>
+</body>
+</html>

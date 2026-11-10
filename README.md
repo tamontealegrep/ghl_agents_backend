@@ -246,6 +246,24 @@ Opciones: `--company`, `--agent`, `--list`, `--session-file`, `--initial-slots`,
 - **Estado compartido:** la conversación vive en `<bundle>/sessions.db` (el mismo archivo que usa el backend sin Postgres), así que puedes seguirla por HTTP con el mismo `thread_id`. El historial de `/history` es un registro aparte en `backend/tui_sessions/`.
 - **Descripción de las variables de entrada** (`/input`): se lee de las definiciones del compilador si existe `compiler/definitions` junto al backend (o `AGENT_DEFINITIONS_DIR`); si no, los campos `contact.*` se detectan escaneando el grafo.
 
+### Playground en el navegador
+
+`scripts/playground.py` es la versión web del TUI (mismo motor): una página con el chat en el centro, las **entradas** del agente a la izquierda y el **estado del grafo** a la derecha.
+
+```bash
+D:/trabajo/agents_refactor/backend/.venv/Scripts/python.exe D:/trabajo/agents_refactor/backend/scripts/playground.py --open
+```
+
+Opciones: `--company`, `--port` (8765) y `--host` (solo localhost por defecto). Es una herramienta de desarrollo: no está en la imagen de Docker y usa las mismas dependencias opcionales (`.[tui]`).
+
+- **Conversación:** eliges el agente, quién habla primero (el contacto o el agente, como en las llamadas) y pulsas *Nueva conversación*. Mientras el agente piensa se ven las llamadas según ocurren.
+- **Llamadas comprimidas:** cada llamada al LLM (azul), a una herramienta por HTTP (cian), cada cambio de estado (morado) y cada edición manual (ámbar) aparece como una línea dentro del chat. Al pulsarla se abre el detalle: del LLM, el prompt enviado, el schema pedido y la respuesta; de una herramienta, la URL, las rutas probadas, los parámetros de entrada y lo que devolvió; del estado, los slots que cambiaron en el turno. Hay filtros por tipo y *Expandir todo*.
+- **Variables de entrada:** `contact.*` y las demás variables de `input_variables.yaml` (con su descripción). Antes de empezar son valores iniciales; con la conversación en curso se aplican al estado real del grafo.
+- **Variables del flujo:** todos los slots con su valor actual, editables (Enter o salir del campo), con × para quitarlos y un formulario para añadir otros; los nombres se sugieren desde el grafo.
+- **Estado:** nodo actual, thread, turnos y el JSON completo del checkpoint.
+- **Guardadas:** cada conversación se guarda en `tui_sessions/playground/` (mensajes, llamadas y estado) y se reabre desde *Guardadas*; el grafo continúa desde su checkpoint. *Exportar JSON* la descarga.
+- Mismas advertencias que el TUI: usa OpenAI real y las herramientas tocan los servicios reales de la empresa (GHL, Google, Gmail). Cargar el `.env` de una empresa pisa las variables de la anterior en el mismo proceso.
+
 ### Otros scripts
 
 Dos scripts (en `backend/scripts/`) leen el `.env` de una empresa y sirven para probar sin armar peticiones a mano. Corren en **tu máquina**, no en el contenedor; las variables de la sección «Development and testing» del `.env` solo las usan ellos.

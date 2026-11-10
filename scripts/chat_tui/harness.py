@@ -6,6 +6,7 @@ import json
 import os
 import re
 import sqlite3
+import time
 from pathlib import Path
 from typing import Any
 
@@ -62,12 +63,30 @@ def definitions_dir() -> Path | None:
 # ----------------------------------------------------------------------------------------- tracing
 
 
+def record_event(events: list[dict[str, Any]] | None, kind: str, **fields: Any) -> dict[str, Any]:
+    """Appends one timeline event (LLM call, tool/HTTP call, spoken message) to ``events``.
+
+    Args:
+        events: Destination list; nothing is stored when it is None.
+        kind: ``"llm"``, ``"tool"`` or ``"say"``.
+        fields: What the event carries.
+
+    Returns:
+        The event (also when it was not stored).
+    """
+    event = {"id": len(events) if events is not None else 0, "kind": kind, "at": time.time(), **fields}
+    if events is not None:
+        events.append(event)
+    return event
+
+
 class TracingLLMClient:
     """Wraps an LLM client and prints prompts and responses while ``enabled``."""
 
-    def __init__(self, real_client: Any) -> None:
+    def __init__(self, real_client: Any, events: list[dict[str, Any]] | None = None) -> None:
         self.real_client = real_client
         self.enabled = False
+        self.events = events
 
     def complete(self, prompt: str, *, temperature: float = 0.0) -> str:
         """Runs a plain completion.
@@ -81,7 +100,30 @@ class TracingLLMClient:
         """
         if self.enabled:
             console.print(Panel(prompt, title="LLM Prompt (complete)", border_style="blue"))
-        result = self.real_client.complete(prompt, temperature=temperature)
+        started = time.perf_counter()
+        try:
+            result = self.real_client.complete(prompt, temperature=temperature)
+        except Exception as exc:
+            record_event(
+                self.events,
+                "llm",
+                call="complete",
+                prompt=prompt,
+                temperature=temperature,
+                error=str(exc),
+                ms=round((time.perf_counter() - started) * 1000),
+            )
+            raise
+        record_event(
+            self.events,
+            "llm",
+            call="complete",
+            prompt=prompt,
+            temperature=temperature,
+            response=result,
+            model=getattr(self.real_client, "model", None),
+            ms=round((time.perf_counter() - started) * 1000),
+        )
         if self.enabled:
             console.print(Panel(result, title="LLM Response", border_style="blue"))
         return result
@@ -103,7 +145,30 @@ class TracingLLMClient:
                     json.dumps(json_schema, indent=2, ensure_ascii=False), title="Schema", border_style="blue"
                 )
             )
-        result = self.real_client.extract_structured(prompt, json_schema)
+        started = time.perf_counter()
+        try:
+            result = self.real_client.extract_structured(prompt, json_schema)
+        except Exception as exc:
+            record_event(
+                self.events,
+                "llm",
+                call="extract_structured",
+                prompt=prompt,
+                schema=json_schema,
+                error=str(exc),
+                ms=round((time.perf_counter() - started) * 1000),
+            )
+            raise
+        record_event(
+            self.events,
+            "llm",
+            call="extract_structured",
+            prompt=prompt,
+            schema=json_schema,
+            response=result,
+            model=getattr(self.real_client, "model", None),
+            ms=round((time.perf_counter() - started) * 1000),
+        )
         if self.enabled:
             console.print(
                 Panel(
@@ -123,9 +188,15 @@ class TracingToolClient(httpx.Client):
     """
 
     def __init__(
-        self, *, trace_sink: list[ToolTrace], local_client: Any, route_suffixes: tuple[str, ...]
+        self,
+        *,
+        trace_sink: list[ToolTrace],
+        local_client: Any,
+        route_suffixes: tuple[str, ...],
+        events: list[dict[str, Any]] | None = None,
     ) -> None:
         super().__init__()
+        self._events = events
         self._trace_sink = trace_sink
         self._local_client = local_client
         self._route_suffixes = route_suffixes
@@ -153,14 +224,18 @@ class TracingToolClient(httpx.Client):
 
         first: httpx.Response | None = None
         used = str(url)
+        attempts: list[dict[str, Any]] = []
+        started = time.perf_counter()
         for candidate in candidate_urls(str(url), self._route_suffixes):
             response = self._local_client.post(candidate, *args, json=body_out, **kwargs)
+            attempts.append({"url": candidate, "status": response.status_code})
             if response.status_code != 404:
                 first, used = response, candidate
                 break
             first = first or response
         assert first is not None
         response = first
+        elapsed_ms = round((time.perf_counter() - started) * 1000)
 
         if self.enabled:
             console.print(f"[dim]HTTP Response {response.status_code}[/dim]")
@@ -173,6 +248,19 @@ class TracingToolClient(httpx.Client):
             parsed: Any = response.json()
         except ValueError:
             parsed = response.text
+        record_event(
+            self._events,
+            "tool",
+            name=used.rstrip("/").rsplit("/", 1)[-1],
+            method="POST",
+            requested_url=str(url),
+            url=used,
+            attempts=attempts,
+            request=body_out,
+            status=response.status_code,
+            response=parsed,
+            ms=elapsed_ms,
+        )
         self._trace_sink.append(
             ToolTrace(
                 tool_name=used.rstrip("/").rsplit("/", 1)[-1],
@@ -232,6 +320,7 @@ class AgentHarness:
 
         self._say_buffer: list[str] = []
         self._trace_buffer: list[ToolTrace] = []
+        self.events: list[dict[str, Any]] = []
 
         checkpointer = SqliteSaver(sqlite3.connect(str(agent.root / SESSIONS_DB), check_same_thread=False))
 
@@ -246,11 +335,12 @@ class AgentHarness:
             trace_sink=self._trace_buffer,
             local_client=local_client or TestClient(create_app(settings)),
             route_suffixes=bundle.config.tool_route_suffixes,
+            events=self.events,
         )
         self.tracing_http_client.enabled = log_http
 
         self.tracing_llm_client = TracingLLMClient(
-            llm_client or OpenAILLMClient(api_key=os.environ.get("OPENAI_API_KEY"))
+            llm_client or OpenAILLMClient(api_key=os.environ.get("OPENAI_API_KEY")), events=self.events
         )
         self.tracing_llm_client.enabled = log_llm
 
@@ -265,9 +355,18 @@ class AgentHarness:
             tools_base_url=self.tools_base_url,
             tool_http_client=self.tracing_http_client,
             checkpointer=checkpointer,
-            say_callback=self._say_buffer.append,
+            say_callback=self._on_say,
             knowledge_base=knowledge_base,
         )
+
+    def _on_say(self, text: str) -> None:
+        """Receives what the agent says while the graph runs.
+
+        Args:
+            text: One spoken message.
+        """
+        self._say_buffer.append(text)
+        record_event(self.events, "say", text=text)
 
     def discover_slot_names(self) -> list[str]:
         """Suggests editable slot names from the graph.
@@ -378,6 +477,7 @@ class AgentHarness:
         config = {"configurable": {"thread_id": thread_id}}
         self._say_buffer.clear()
         self._trace_buffer.clear()
+        self.events.clear()
         if first_speaker == "user":
             state = fresh_state(
                 self.artifact,
@@ -414,6 +514,7 @@ class AgentHarness:
         config = {"configurable": {"thread_id": thread_id}}
         self._say_buffer.clear()
         self._trace_buffer.clear()
+        self.events.clear()
         snapshot = self.graph.get_state(config)
         if resolve_session(snapshot.values, self.artifact.session_timeout_minutes) in ("new", "stale"):
             result = self.graph.invoke(fresh_state(self.artifact, contact=self.contact), config)
@@ -430,7 +531,9 @@ class AgentHarness:
         interrupts = result.get("__interrupt__")
         messages = list(self._say_buffer)
         if interrupts:
-            messages.extend(interrupts[0].value.get("prompt", []))
+            for prompt in interrupts[0].value.get("prompt", []):
+                messages.append(prompt)
+                record_event(self.events, "say", text=prompt)
         final_state = self.graph.get_state(config).values
         return ChatTurnResult(
             messages=messages,
@@ -449,3 +552,37 @@ class AgentHarness:
             The checkpoint values; empty when the thread has not started.
         """
         return dict(self.graph.get_state({"configurable": {"thread_id": thread_id}}).values or {})
+
+    def update_state(
+        self, thread_id: str, slots: dict[str, Any] | None = None, contact: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Edits the live graph state of a thread (flow variables and contact fields).
+
+        Args:
+            thread_id: Conversation key; the thread must have started.
+            slots: Slots to set; a value of None removes the slot.
+            contact: Contact fields to set; a value of None removes the field.
+
+        Returns:
+            The state after the edit.
+
+        Raises:
+            RuntimeError: The thread has not started, so there is no state to edit.
+        """
+        config = {"configurable": {"thread_id": thread_id}}
+        values = dict(self.graph.get_state(config).values or {})
+        if not values:
+            raise RuntimeError("The conversation has not started yet; set initial values instead.")
+        update: dict[str, Any] = {}
+        for key, changes in (("slots", slots), ("contact", contact)):
+            if changes:
+                merged = dict(values.get(key) or {})
+                for name, value in changes.items():
+                    if value is None:
+                        merged.pop(name, None)
+                    else:
+                        merged[name] = value
+                update[key] = merged
+        if update:
+            self.graph.update_state(config, update)
+        return self.state_snapshot(thread_id)
