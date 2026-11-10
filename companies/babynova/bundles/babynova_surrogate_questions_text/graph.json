@@ -6705,7 +6705,7 @@
         "node_id": "SC__SC_ASK_D",
         "node_type": "question",
         "goal": [
-          "Capture in [sc__day] the day the contact chooses, exactly as they wrote it ('el viernes', 'Nov 5', 'dia 3', 'mañana'). Do not convert it: the next step turns it into a calendar date. If the reply names no day, leave [sc__day] empty."
+          "Capture in [sc__day] the day the contact chooses, exactly as they wrote it ('el viernes', 'Nov 5', 'dia 3', 'mañana'). Do not convert it: the next step turns it into a calendar date. If the reply names no day, leave [sc__day] empty. A time ('a las 7', '7:00') or a part of the day ('en la mañana', 'por la tarde') is not a day: 'mañana' counts as a day only when it means tomorrow."
         ],
         "do": [],
         "trigger": [],
@@ -9806,7 +9806,7 @@
         "goal": [],
         "do": [],
         "trigger": [
-          "an open question about the company, the surrogacy program, requirements, the process, the appointment or how things work that is not answered by any FAQ or other handler (never the answer to what the agent just asked, never a request to book an appointment)"
+          "an open question about the company, the surrogacy program, requirements, the process, the appointment or how things work that is not answered by any FAQ or other handler (never the answer to what the agent just asked, never a request to book an appointment, never a question about which dates or times are available for the appointment, such as 'qué fechas tienes' or 'qué otros días hay', which belongs to the scheduling)"
         ],
         "disabled_in": [],
         "say": [],
