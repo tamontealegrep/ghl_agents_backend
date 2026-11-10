@@ -19,11 +19,13 @@ Module.
 """
 
 import os
-import yaml
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Mapping
+from typing import Any
+
+import yaml
 
 from agent_backend.calendars import CalendarSettings as ToolConfig
 from agent_backend.calendars import discover_calendar_keys as _discover
@@ -53,10 +55,10 @@ def discover_calendar_keys(environ: Mapping[str, str] | None = None) -> list[str
 
 
 @lru_cache
-def load_slots_config() -> Dict[str, Any]:
+def load_slots_config() -> dict[str, Any]:
     if not CONFIG_PATH.exists():
         return {"holidays": [], "policies": {}}
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    with open(CONFIG_PATH, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -70,7 +72,7 @@ class GmailConfig:
 
 class Settings:
     def __init__(self) -> None:
-        self.calendars: Dict[str, ToolConfig] = load_calendars("FA", BUILTIN_CALENDARS, post_buffer_minutes=DEFAULT_POST_BUFFER_MINUTES)
+        self.calendars: dict[str, ToolConfig] = load_calendars("FA", BUILTIN_CALENDARS, post_buffer_minutes=DEFAULT_POST_BUFFER_MINUTES)
         self.ghl_token = os.getenv("GHL_TOKEN", "")
         self.ghl_location_id = os.getenv("GHL_LOCATION_ID", "")
         # Optional internal addresses (comma-separated) told about every booking; empty = no notification.

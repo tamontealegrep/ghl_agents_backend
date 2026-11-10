@@ -1,5 +1,4 @@
 import pytest
-
 from desk.services.booking_ivf import is_valid_business_hour
 
 

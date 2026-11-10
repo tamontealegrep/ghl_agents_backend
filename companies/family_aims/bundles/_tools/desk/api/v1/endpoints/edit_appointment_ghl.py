@@ -1,17 +1,19 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+
 from fastapi import APIRouter
+
+from agent_backend import date_formatting
+from agent_backend.ghl_calendar import list_events as ghl_list_events
+from agent_backend.ghl_calendar import update_appointment as ghl_update_appointment
+from agent_backend.slot_filters import conflicts_with_busy
+from agent_backend.timezones import get_hour_in_tz, get_weekday_in_tz
 
 from ....core.config import get_settings
 from ....schemas.booking import EditAppointmentRequest, EditAppointmentResponse
-from ....services.calendars import resolve_calendar, unknown_calendar_message
 from ....services import booking_engine as engine
-from agent_backend import date_formatting
-from agent_backend.slot_filters import conflicts_with_busy
-
-from agent_backend.ghl_calendar import list_events as ghl_list_events, update_appointment as ghl_update_appointment
+from ....services.calendars import resolve_calendar, unknown_calendar_message
 from ....services.slot_rules import earliest_start, load_busy
-from agent_backend.timezones import get_hour_in_tz, get_weekday_in_tz
 
 router = APIRouter()
 

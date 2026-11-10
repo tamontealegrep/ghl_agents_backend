@@ -1,17 +1,19 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
 from fastapi import APIRouter
+
+from agent_backend import date_formatting
+from agent_backend.gmail import send_email
+from agent_backend.google_calendar import create_event, get_access_token, get_free_busy
+from agent_backend.timezones import get_hour_in_tz, get_weekday_in_tz
 
 from ....core.config import get_settings
 from ....schemas.booking import BookAppointmentRequest, BookAppointmentResponse
-from ....services.calendars import resolve_calendar, unknown_calendar_message
 from ....services import booking_engine as engine
-from agent_backend import date_formatting
+from ....services.calendars import resolve_calendar, unknown_calendar_message
 from ....services.email_templates import render_email_template
-from agent_backend.gmail import send_email
 from ....services.notifications import join_errors, notify_booking
-from agent_backend.google_calendar import create_event, get_access_token, get_free_busy
-from agent_backend.timezones import get_hour_in_tz, get_weekday_in_tz
 
 router = APIRouter()
 

@@ -15,8 +15,8 @@ from agent_runtime.runtime.knowledge_base import (
     MarkdownKnowledgeBase,
     RAGKnowledgeBase,
     answer_from_knowledge,
-    make_knowledge_tool_executor,
     build_answer_prompt,
+    make_knowledge_tool_executor,
     unsupported_numbers,
 )
 from agent_runtime.runtime.llm_client import LLMContext

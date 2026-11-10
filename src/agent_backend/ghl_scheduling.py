@@ -20,8 +20,8 @@ import logging
 import re
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from typing import Any, List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -73,10 +73,10 @@ class GhlSchedulingHooks:
 
     prefix: str
     get_settings: Callable[[], Any]
-    resolve_calendar: Callable[[Any, Optional[str]], Any]
-    unknown_calendar_message: Callable[[Any, Optional[str]], str]
+    resolve_calendar: Callable[[Any, str | None], Any]
+    unknown_calendar_message: Callable[[Any, str | None], str]
     default_earliest: Callable[[datetime], datetime]
-    notify_booking: Optional[Callable[..., Awaitable[Optional[str]]]] = None
+    notify_booking: Callable[..., Awaitable[str | None]] | None = None
     format_start: Callable[[datetime], str] = lambda dt: dt.strftime("%Y-%m-%d %H:%M")
     business_tz: str = "America/Bogota"
 
@@ -88,8 +88,8 @@ async def load_busy(
     start: datetime,
     end: datetime,
     *,
-    exclude_event_id: Optional[str] = None,
-) -> Optional[List[Busy]]:
+    exclude_event_id: str | None = None,
+) -> list[Busy] | None:
     """Reads the existing appointments of a calendar as busy intervals.
 
     Args:
@@ -140,7 +140,7 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
     router = APIRouter()
     tz = ZoneInfo(hooks.business_tz)
 
-    def resolve(calendar_type: Optional[str]) -> tuple[Any, Any, Optional[str]]:
+    def resolve(calendar_type: str | None) -> tuple[Any, Any, str | None]:
         """Finds the calendar and checks the configuration every GHL call needs."""
         settings = hooks.get_settings()
         cal = hooks.resolve_calendar(settings, calendar_type)
@@ -173,7 +173,7 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
             return False
         return not cal.hours.is_lunch(local_start, local_end)
 
-    def duration_to_send(cal: Any, schedule: Schedule) -> Optional[int]:
+    def duration_to_send(cal: Any, schedule: Schedule) -> int | None:
         # When the duration comes from GHL itself there is nothing to ask for: GHL uses its default.
         return None if "duration_minutes" in cal.tool.read_from_ghl and "duration_minutes" in schedule.from_ghl else schedule.duration_minutes
 
@@ -194,7 +194,7 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
             if "date_range_days" not in schedule.from_ghl and schedule.date_range_days > GHL_MAX_RANGE_DAYS:
                 return fail(f"{hooks.prefix}_DATE_RANGE_DAYS_{cal.key} is {schedule.date_range_days}; GoHighLevel free-slots accepts at most {GHL_MAX_RANGE_DAYS} days")
 
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             earliest = earliest_start(now, schedule)
             end_date = earliest + timedelta(days=min(schedule.date_range_days, GHL_MAX_RANGE_DAYS))
             duration = timedelta(minutes=schedule.duration_minutes)
@@ -230,7 +230,7 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
     # ------------------------------------------------------------------- book
     @router.post("/book-appointment-ghl", response_model=BookAppointmentResponse)
     async def book_appointment_ghl(req: BookAppointmentRequest):
-        def fail(message: str, reason: Optional[str] = None) -> BookAppointmentResponse:
+        def fail(message: str, reason: str | None = None) -> BookAppointmentResponse:
             return BookAppointmentResponse(success=False, reason=reason, errors=message)
 
         try:
@@ -245,7 +245,7 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
                 return fail("start_date is not a valid ISO 8601 date", "invalid_start_date")
             duration = timedelta(minutes=schedule.duration_minutes)
             end_dt = start_dt + duration
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
 
             if start_dt <= now:
                 return fail("The date cannot be in the past", "past_date")
@@ -346,7 +346,7 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
                 return fail(f"The email '{email}' is not in a valid format.")
             client_tz = ZoneInfo((req.iana_timezone or hooks.business_tz).strip())
 
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             time_min = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)
             contact_id = None
             if email or phone:
@@ -392,7 +392,7 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
                 return fail(error)
             tool, policy = cal.tool, cal.booking
             schedule = await resolve_schedule(tool, settings.ghl_token)
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             start_dt = end_dt = None
             applied_duration = req.new_duration
 

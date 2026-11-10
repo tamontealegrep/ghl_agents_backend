@@ -3,15 +3,15 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from agent_backend.calendars import CalendarSettings
 from fastapi.testclient import TestClient
-
 from surrogacy.api.v1.endpoints import book_appointment_google as book_endpoint
 from surrogacy.api.v1.endpoints import cancel_appointment_google as cancel_endpoint
 from surrogacy.api.v1.endpoints import edit_appointment_google as edit_endpoint
 from surrogacy.api.v1.endpoints import find_appointment_google as find_endpoint
 from surrogacy.api.v1.endpoints import get_available_slots_google as slots_endpoint
 from surrogacy.services import notifications
+
+from agent_backend.calendars import CalendarSettings
 from tests.tools.apps import surrogacy_app as app
 
 client = TestClient(app)

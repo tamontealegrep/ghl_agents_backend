@@ -6,6 +6,8 @@ Unit tests for agent_runtime.runtime.global_router — the interrupt-loop mechan
 
 from __future__ import annotations
 
+import pytest
+
 from agent_runtime.runtime.global_router import (
     UNANSWERED_QUESTION_ACK,
     handle_global_router_match,
@@ -13,10 +15,12 @@ from agent_runtime.runtime.global_router import (
     match_global_router,
 )
 from agent_runtime.runtime.llm_client import LLMContext
-from agent_runtime.targets.langgraph.graph_renderer import FaqNode, GlobalRouterDefinition, GraphEdge, GraphNode
-
-
-import pytest
+from agent_runtime.targets.langgraph.graph_renderer import (
+    FaqNode,
+    GlobalRouterDefinition,
+    GraphEdge,
+    GraphNode,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -478,6 +482,7 @@ def test_router_for_state_matches_a_single_state_id_and_not_a_prefix_lookalike()
 
 def test_handler_model_accepts_disabled_in_and_rejects_blank_entries():
     import pytest
+
     from agent_runtime.dsl.schemas import HandlerModel
 
     handler = HandlerModel(type="decision", wait="no", fallback=["GO_TO: SC__SC_S"], handler_id="H_X", trigger=["x"], disabled_in=["SC"])

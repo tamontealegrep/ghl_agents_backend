@@ -1,7 +1,7 @@
-from agent_backend.calendars import CalendarSettings
 from fastapi.testclient import TestClient
-
 from surrogacy.api.v1.endpoints import calendars as endpoint
+
+from agent_backend.calendars import CalendarSettings
 from tests.tools.apps import surrogacy_app as app
 
 client = TestClient(app)

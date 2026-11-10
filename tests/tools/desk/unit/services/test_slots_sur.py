@@ -1,5 +1,4 @@
 import pytest
-
 from desk.services.slots_sur import closing_hour, day_window, lunch_break
 
 

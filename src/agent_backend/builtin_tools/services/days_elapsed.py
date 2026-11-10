@@ -12,7 +12,7 @@ Module.
 
 import re
 from datetime import date
-from typing import Any, Optional, Tuple
+from typing import Any
 
 
 def parse_ymd_date(raw: str) -> date:
@@ -25,7 +25,7 @@ def parse_ymd_date(raw: str) -> date:
     return date(year, month, day)
 
 
-def parse_days_threshold(raw: Any) -> Optional[int]:
+def parse_days_threshold(raw: Any) -> int | None:
     """Convierte el umbral de días a un entero positivo, o None si no es válido.
     """
     if raw is None:
@@ -37,7 +37,7 @@ def parse_days_threshold(raw: Any) -> Optional[int]:
     return value if value > 0 else None
 
 
-def check_days_elapsed(input_date: date, today: date, days_threshold: int) -> Tuple[bool, int]:
+def check_days_elapsed(input_date: date, today: date, days_threshold: int) -> tuple[bool, int]:
     """Devuelve (elapsed, days_elapsed): si transcurrieron >= days_threshold días entre input_date y today.
     """
     days_elapsed = (today - input_date).days

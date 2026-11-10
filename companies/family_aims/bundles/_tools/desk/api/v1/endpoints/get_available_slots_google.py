@@ -1,11 +1,13 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
 from fastapi import APIRouter
+
+from agent_backend.google_calendar import get_access_token, get_free_busy
 
 from ....core.config import get_settings
 from ....schemas.slots import SlotsRequest, SlotsResponse
 from ....services.calendars import resolve_calendar, unknown_calendar_message
-from agent_backend.google_calendar import get_access_token, get_free_busy
 from ....services.slot_engine import compute_available_slots, compute_end_date, compute_start_date
 
 router = APIRouter()

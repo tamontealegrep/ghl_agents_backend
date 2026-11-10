@@ -1,5 +1,4 @@
 from fastapi.testclient import TestClient
-
 from tests.builtin_tools.app_factory import app
 
 client = TestClient(app)

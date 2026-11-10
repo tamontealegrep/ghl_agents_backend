@@ -1,16 +1,16 @@
 """BabyNova mounts the shared GHL scheduling tools with its own calendars, hours and team notification."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
-from agent_backend import ghl_calendar
-from agent_backend.calendars import CalendarSettings
 from fastapi.testclient import TestClient
-
 from surrogacy.api.v1.endpoints import ghl_scheduling as endpoint
 from surrogacy.services import calendars as calendars_service
 from surrogacy.services import notifications
+
+from agent_backend import ghl_calendar
+from agent_backend.calendars import CalendarSettings
 from tests.tools.apps import surrogacy_app as app
 
 client = TestClient(app)
@@ -45,7 +45,7 @@ def _at(d, hour, minute=0):
 
 
 def _iso(m):
-    return m.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return m.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 @pytest.fixture

@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
+from desk.api.v1.endpoints import book_appointment_google as endpoint
 from fastapi.testclient import TestClient
 
-from desk.api.v1.endpoints import book_appointment_google as endpoint
 from tests.tools.apps import desk_app as app
 
 client = TestClient(app)

@@ -7,10 +7,10 @@ Module.
 """
 
 import math
-from typing import Any, Dict, Optional
+from typing import Any
 
 
-def _parse_float(val: Any) -> Optional[float]:
+def _parse_float(val: Any) -> float | None:
     if val is None:
         return None
     try:
@@ -19,7 +19,7 @@ def _parse_float(val: Any) -> Optional[float]:
         return None
 
 
-def calculate_bmi(raw_weight_kg: Any, raw_height_cm: Any) -> Dict[str, Optional[float]]:
+def calculate_bmi(raw_weight_kg: Any, raw_height_cm: Any) -> dict[str, float | None]:
     """Calcula el BMI a partir de peso (kg) y altura (cm).
 
     Devuelve {bmi, errors}.

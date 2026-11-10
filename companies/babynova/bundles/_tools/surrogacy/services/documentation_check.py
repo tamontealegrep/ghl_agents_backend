@@ -14,7 +14,6 @@ Module.
 """
 
 import re
-from typing import Dict, List, Optional, Union
 
 _NATIONALITY_RE = re.compile(r"^[A-Z]{3}$")
 
@@ -45,7 +44,7 @@ _APPROVED_REASONS = {
 }
 
 
-def _split_document_types(raw: Optional[Union[str, List[str]]]) -> List[str]:
+def _split_document_types(raw: str | list[str] | None) -> list[str]:
     """Normaliza el input (string separado por comas, 'y' o 'and', o lista) a una lista de strings sin vacios.
     """
     if raw is None:
@@ -67,7 +66,7 @@ def _split_document_types(raw: Optional[Union[str, List[str]]]) -> List[str]:
     return [str(item).strip() for item in items if str(item).strip()]
 
 
-def _resolve_document_type(document_type: str) -> Optional[str]:
+def _resolve_document_type(document_type: str) -> str | None:
     """Busca el tipo canonico de un documento entre sus alias conocidos, o None si no se reconoce.
     """
     doc_clean = document_type.lower()
@@ -77,7 +76,7 @@ def _resolve_document_type(document_type: str) -> Optional[str]:
     return None
 
 
-def check_documentation(raw_nationality: Optional[str], raw_document_type: Optional[Union[str, List[str]]]) -> Dict[str, Union[bool, str, List[str]]]:
+def check_documentation(raw_nationality: str | None, raw_document_type: str | list[str] | None) -> dict[str, bool | str | list[str]]:
     """Valida nacionalidad + tipo(s) de documento y devuelve {approved, reason, normalized_documents}.
     """
     nationality = (raw_nationality or "").strip().upper()

@@ -2,7 +2,7 @@ import datetime
 import os
 import traceback
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import requests
 from fastapi import APIRouter, HTTPException
@@ -40,7 +40,7 @@ def _resolve_ghl_token() -> str:
         return ""
 
 
-def _build_headers() -> Dict[str, str]:
+def _build_headers() -> dict[str, str]:
     token = _resolve_ghl_token()
     return {
         "Authorization": f"Bearer {token}",
@@ -48,7 +48,7 @@ def _build_headers() -> Dict[str, str]:
     }
 
 
-def _send_echo(contact_id: str, channel: str, message: str, reply_message_id: Optional[str]) -> Dict[str, Any]:
+def _send_echo(contact_id: str, channel: str, message: str, reply_message_id: str | None) -> dict[str, Any]:
     channel_key = normalize_channel(channel)
     send_type = GHL_OUTBOUND_CHANNEL_MAP.get(channel_key)
     if not send_type:
@@ -57,7 +57,7 @@ def _send_echo(contact_id: str, channel: str, message: str, reply_message_id: Op
             detail=f"Unsupported channel for sending: {channel}. Supported: {sorted(GHL_OUTBOUND_CHANNEL_MAP)}",
         )
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "type": send_type,
         "contactId": contact_id,
         "message": message,
@@ -78,7 +78,7 @@ def _send_echo(contact_id: str, channel: str, message: str, reply_message_id: Op
     return response.json()
 
 
-def _extract_messages_list(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+def _extract_messages_list(data: dict[str, Any]) -> list[dict[str, Any]]:
     if not isinstance(data, dict):
         return []
 
@@ -91,7 +91,7 @@ def _extract_messages_list(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     return []
 
 
-def _parse_iso_z(value: Optional[str]) -> datetime.datetime:
+def _parse_iso_z(value: str | None) -> datetime.datetime:
     if not value:
         return datetime.datetime.min
     try:
@@ -100,16 +100,16 @@ def _parse_iso_z(value: Optional[str]) -> datetime.datetime:
         return datetime.datetime.min
 
 
-def _append_log(record: Dict[str, Any]) -> None:
+def _append_log(record: dict[str, Any]) -> None:
     return None
 
 
-def _append_trace(step: str, data: Dict[str, Any]) -> None:
+def _append_trace(step: str, data: dict[str, Any]) -> None:
     return None
 
 
-def _get_messages(conversation_id: str, limit: int, type_param: Optional[str]) -> List[Dict[str, Any]]:
-    params: Dict[str, Any] = {"limit": limit}
+def _get_messages(conversation_id: str, limit: int, type_param: str | None) -> list[dict[str, Any]]:
+    params: dict[str, Any] = {"limit": limit}
     if type_param:
         params["type"] = type_param
 
@@ -159,10 +159,10 @@ def _find_or_create_conversation(contact_id: str, location_id: str) -> str:
     return str(conversation_id)
 
 
-def _log_exception(status: str, payload: Dict[str, Any], error: Exception) -> None:
+def _log_exception(status: str, payload: dict[str, Any], error: Exception) -> None:
     _append_log(
         {
-            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
             "status": status,
             "raw_payload": payload,
             "error_type": type(error).__name__,
@@ -173,7 +173,7 @@ def _log_exception(status: str, payload: Dict[str, Any], error: Exception) -> No
 
 
 @router.post("/echo")
-def echo(payload: Dict[str, Any]):
+def echo(payload: dict[str, Any]):
     try:
         _append_trace(
             "received_payload",
@@ -221,7 +221,7 @@ def echo(payload: Dict[str, Any]):
         if phone not in allowed_phones:
             _append_log(
                 {
-                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
                     "status": "phone_not_allowed",
                     "phone": phone,
                     "raw_payload": payload,
@@ -297,7 +297,7 @@ def echo(payload: Dict[str, Any]):
         if not inbound_messages:
             _append_log(
                 {
-                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
                     "status": "no_inbound_messages_found",
                     "raw_payload": payload,
                     "contact_id": contact_id,
@@ -359,7 +359,7 @@ def echo(payload: Dict[str, Any]):
 
         _append_log(
             {
-                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
                 "status": "echo_sent",
                 "raw_payload": payload,
                 "contact_id": contact_id,

@@ -9,8 +9,8 @@ from fastapi.testclient import TestClient
 SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-import devenv  # noqa: E402
-import send_request  # noqa: E402
+import devenv
+import send_request
 
 BABYNOVA = Path(__file__).resolve().parents[2] / "companies" / "babynova" / "bundles"
 

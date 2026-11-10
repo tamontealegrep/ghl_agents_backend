@@ -3,12 +3,13 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter
 
+from agent_backend.google_calendar import create_event, get_access_token
+from agent_backend.scheduling_schemas import BookAppointmentRequest, BookAppointmentResponse
+from agent_backend.timezones import get_weekday_in_tz
+
 from ....core.config import get_settings
 from ....services.calendars import resolve_calendar, unknown_calendar_message
-from agent_backend.scheduling_schemas import BookAppointmentRequest, BookAppointmentResponse
 from ....services.notifications import notify_booking
-from agent_backend.google_calendar import create_event, get_access_token
-from agent_backend.timezones import get_weekday_in_tz
 
 router = APIRouter()
 

@@ -6,11 +6,11 @@ Module.
     de cierre del último día. La generación/formato de slots vive en slot_engine.py.
 """
 
-from typing import Optional, Tuple
+
 from ..core.config import load_slots_config
 
 
-def day_window(weekday: int) -> Optional[Tuple[int, int, int, int]]:
+def day_window(weekday: int) -> tuple[int, int, int, int] | None:
     """Configuración de ventanas horarias desde YAML.
     """
     config = load_slots_config().get("policies", {}).get("sur", {})
@@ -32,7 +32,7 @@ def lunch_break(start_min: int, end_min: int) -> bool:
     return lunch_start < lunch_end and start_min < lunch_end and end_min > lunch_start
 
 
-def closing_hour(weekday: int) -> Tuple[int, int]:
+def closing_hour(weekday: int) -> tuple[int, int]:
     """El rango de búsqueda cierra a la hora de fin de la ventana configurada.
     """
     window = day_window(weekday)

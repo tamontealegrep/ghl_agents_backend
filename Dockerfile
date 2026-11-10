@@ -8,10 +8,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Dependencies first so code changes do not invalidate this layer.
+# Dependencies first (read from pyproject.toml) so code changes do not invalidate this layer.
 COPY pyproject.toml ./
+RUN python -c "import tomllib; print(chr(10).join(tomllib.load(open('pyproject.toml','rb'))['project']['dependencies']))" > requirements.txt \n    && pip install -r requirements.txt
 COPY src ./src
-RUN pip install ".[backend]"
+RUN pip install --no-deps .
 
 # Non-root runtime user; bundles/ must be writable for the local sessions.db fallback.
 RUN useradd --create-home --uid 10001 agent \

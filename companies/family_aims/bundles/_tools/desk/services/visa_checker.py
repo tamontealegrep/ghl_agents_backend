@@ -1,6 +1,7 @@
 import re
-from typing import List, Dict, Union
+
 from ..schemas.visa import VisaCheckResponse
+
 
 class VisaCheckerService:
     def __init__(self):
@@ -71,7 +72,7 @@ class VisaCheckerService:
         text = re.sub(r'[Ñ]', 'N', text)
         return text
 
-    def check_visas(self, nationalities: Union[str, List[str]]) -> VisaCheckResponse:
+    def check_visas(self, nationalities: str | list[str]) -> VisaCheckResponse:
         try:
             if isinstance(nationalities, str):
                 # Dividir por comas y limpiar espacios de cada elemento

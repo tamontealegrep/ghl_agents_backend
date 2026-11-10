@@ -1,6 +1,7 @@
 import pytest
 from desk.services.visa_checker import VisaCheckerService
 
+
 @pytest.fixture
 def visa_service():
     return VisaCheckerService()

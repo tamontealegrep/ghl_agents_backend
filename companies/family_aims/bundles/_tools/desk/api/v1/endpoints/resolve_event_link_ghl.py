@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+
 from fastapi import APIRouter
 
 from ....core.config import get_settings
 from ....schemas.booking import ResolveEventLinkRequest, ResolveEventLinkResponse
-from ....services.calendars import resolve_calendar, unknown_calendar_message
 from ....services import booking_engine as engine
+from ....services.calendars import resolve_calendar, unknown_calendar_message
 
 router = APIRouter()
 
@@ -33,8 +33,12 @@ async def resolve_event_link_ghl(req: ResolveEventLinkRequest):
             return ResolveEventLinkResponse(success=False, errors=f"Missing Google Calendar credentials for {calendar_type}")
 
         from agent_backend.google_calendar import (
-            get_access_token as google_get_access_token,
             find_synced_google_event,
+        )
+        from agent_backend.google_calendar import (
+            get_access_token as google_get_access_token,
+        )
+        from agent_backend.google_calendar import (
             list_events as gcal_list_events,
         )
 

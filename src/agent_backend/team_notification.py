@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from typing import Any, Optional
+from typing import Any
 
 from agent_backend.recipients import split_recipients
 
 __all__ = ["join_errors", "send_team_notification"]
 
 
-def join_errors(*messages: Optional[str]) -> Optional[str]:
+def join_errors(*messages: str | None) -> str | None:
     """Joins the non-empty messages.
 
     Args:
@@ -31,9 +31,9 @@ async def send_team_notification(
     gmail: Any,
     subject: str,
     render_body: Callable[[], str],
-    get_access_token: Callable[..., Awaitable[Optional[str]]],
+    get_access_token: Callable[..., Awaitable[str | None]],
     send_email: Callable[..., Awaitable[Any]],
-) -> Optional[str]:
+) -> str | None:
     """Sends the team notification of a booking; never raises.
 
     Args:

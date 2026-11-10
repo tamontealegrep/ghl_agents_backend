@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+
 from tests.tools.apps import desk_app as app
 
 client = TestClient(app)

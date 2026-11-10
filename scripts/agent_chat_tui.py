@@ -30,12 +30,12 @@ import sqlite3
 import sys
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import devenv  # noqa: E402
+import devenv
 
 try:
     import httpx
@@ -102,8 +102,8 @@ class ToolTrace:
     """One tool call made during a turn."""
 
     tool_name: str
-    args: Dict[str, Any]
-    status_code: Optional[int] = None
+    args: dict[str, Any]
+    status_code: int | None = None
     response_body: Any = None
 
 
@@ -113,15 +113,15 @@ class SessionState:
 
     agent: AgentRef
     thread_id: str
-    history: List[Dict[str, Any]] = field(default_factory=list)
-    last_traces: List[ToolTrace] = field(default_factory=list)
+    history: list[dict[str, Any]] = field(default_factory=list)
+    last_traces: list[ToolTrace] = field(default_factory=list)
     # "agent" (outbound/voice: the agent speaks first) or "user" (inbound/text: the user writes first).
     first_speaker: str = "agent"
     log_llm: bool = False
     log_http: bool = False
     log_tools: bool = False
-    initial_slots: Dict[str, Any] = field(default_factory=dict)
-    contact: Dict[str, Any] = field(default_factory=dict)
+    initial_slots: dict[str, Any] = field(default_factory=dict)
+    contact: dict[str, Any] = field(default_factory=dict)
 
     @property
     def agent_slug(self) -> str:
@@ -133,16 +133,16 @@ class SessionState:
 class ChatTurnResult:
     """Outcome of one turn."""
 
-    messages: List[str]
+    messages: list[str]
     conversation_ended: bool
-    current_state: Optional[str]
-    traces: List[ToolTrace]
+    current_state: str | None
+    traces: list[ToolTrace]
 
 
 # ----------------------------------------------------------------------------------------- discovery
 
 
-def discover_agents(company: Optional[str] = None, companies_dir: Path = COMPANIES_DIR) -> List[AgentRef]:
+def discover_agents(company: str | None = None, companies_dir: Path = COMPANIES_DIR) -> list[AgentRef]:
     """Finds the agent bundles of one or every company.
 
     Args:
@@ -152,7 +152,7 @@ def discover_agents(company: Optional[str] = None, companies_dir: Path = COMPANI
     Returns:
         The bundles that have a ``graph.json``, sorted by company and slug (``_tools`` folders are skipped).
     """
-    found: List[AgentRef] = []
+    found: list[AgentRef] = []
     for company_dir in sorted(p for p in companies_dir.iterdir() if p.is_dir() and not p.name.startswith("_")) if companies_dir.exists() else []:
         if company and company_dir.name != company:
             continue
@@ -165,7 +165,7 @@ def discover_agents(company: Optional[str] = None, companies_dir: Path = COMPANI
     return found
 
 
-def definitions_dir() -> Optional[Path]:
+def definitions_dir() -> Path | None:
     """Folder with the compiler's agent definitions, used only to describe the input variables.
 
     Returns:
@@ -203,7 +203,7 @@ class TracingLLMClient:
             console.print(Panel(result, title="LLM Response", border_style="blue"))
         return result
 
-    def extract_structured(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_structured(self, prompt: str, json_schema: dict[str, Any]) -> dict[str, Any]:
         """Runs a structured extraction.
 
         Args:
@@ -229,7 +229,7 @@ class TracingToolClient(httpx.Client):
     retried on the other candidate routes, the way the backend does it (``agent_backend.tool_client``).
     """
 
-    def __init__(self, *, trace_sink: List[ToolTrace], local_client: Any, route_suffixes: tuple[str, ...]) -> None:
+    def __init__(self, *, trace_sink: list[ToolTrace], local_client: Any, route_suffixes: tuple[str, ...]) -> None:
         super().__init__()
         self._trace_sink = trace_sink
         self._local_client = local_client
@@ -256,7 +256,7 @@ class TracingToolClient(httpx.Client):
             if body_out:
                 console.print(Panel(_dumps(body_out), title="HTTP Request Body", border_style="cyan"))
 
-        first: Optional[httpx.Response] = None
+        first: httpx.Response | None = None
         used = str(url)
         for candidate in candidate_urls(str(url), self._route_suffixes):
             response = self._local_client.post(candidate, *args, json=body_out, **kwargs)
@@ -306,12 +306,15 @@ class AgentHarness:
     def __init__(
         self,
         agent: AgentRef,
-        contact: Optional[Dict[str, Any]] = None,
+        contact: dict[str, Any] | None = None,
         log_llm: bool = False,
         log_http: bool = False,
         llm_client: Any = None,
         local_client: Any = None,
     ) -> None:
+        from fastapi.testclient import TestClient
+        from langgraph.checkpoint.sqlite import SqliteSaver
+
         from agent_backend.app import create_app
         from agent_backend.bundle import load_bundle
         from agent_backend.settings import Settings
@@ -319,18 +322,16 @@ class AgentHarness:
         from agent_runtime.runtime.knowledge_base import MarkdownKnowledgeBase
         from agent_runtime.runtime.llm_client import OpenAILLMClient
         from agent_runtime.targets.langgraph.runtime_artifact import runtime_artifact_from_dict
-        from fastapi.testclient import TestClient
-        from langgraph.checkpoint.sqlite import SqliteSaver
 
         self.agent = agent
         self.contact = contact or {}
         bundle = load_bundle(agent.root)
         artifact_json = json.loads(bundle.graph_path.read_text(encoding="utf-8"))
         self.artifact = runtime_artifact_from_dict(artifact_json)
-        self._artifact_dict: Dict[str, Any] = artifact_json
+        self._artifact_dict: dict[str, Any] = artifact_json
 
-        self._say_buffer: List[str] = []
-        self._trace_buffer: List[ToolTrace] = []
+        self._say_buffer: list[str] = []
+        self._trace_buffer: list[ToolTrace] = []
 
         checkpointer = SqliteSaver(sqlite3.connect(str(agent.root / SESSIONS_DB), check_same_thread=False))
 
@@ -357,7 +358,7 @@ class AgentHarness:
             knowledge_base=knowledge_base,
         )
 
-    def discover_slot_names(self) -> List[str]:
+    def discover_slot_names(self) -> list[str]:
         """Suggests editable slot names from the graph.
 
         Takes every ``capture`` name and every identifier in brackets in a ``store`` line, from the graph nodes and
@@ -380,7 +381,7 @@ class AgentHarness:
             names.discard(constant)
         return sorted(names)
 
-    def discover_input_variables(self) -> List[Dict[str, str]]:
+    def discover_input_variables(self) -> list[dict[str, str]]:
         """Reads the agent's declared input variables from its definition, if the definitions are available.
 
         Returns:
@@ -404,7 +405,7 @@ class AgentHarness:
         except Exception:
             return []
 
-    def discover_contact_fields(self) -> List[str]:
+    def discover_contact_fields(self) -> list[str]:
         """Finds the ``contact.*`` variables of this agent.
 
         Uses the declared input variables when the definitions are available; otherwise scans the graph texts for
@@ -436,8 +437,8 @@ class AgentHarness:
         self,
         thread_id: str,
         first_speaker: str = "agent",
-        opening_message: Optional[str] = None,
-        initial_slots: Optional[Dict[str, Any]] = None,
+        opening_message: str | None = None,
+        initial_slots: dict[str, Any] | None = None,
     ) -> ChatTurnResult:
         """Runs the very first turn of a brand-new thread.
 
@@ -469,7 +470,7 @@ class AgentHarness:
             state["slots"].update(initial_slots)
         return self._finish(thread_id, self.graph.invoke(state, config))
 
-    def turn(self, thread_id: str, message: Optional[str]) -> ChatTurnResult:
+    def turn(self, thread_id: str, message: str | None) -> ChatTurnResult:
         """Runs one turn of an existing thread.
 
         Args:
@@ -482,9 +483,10 @@ class AgentHarness:
         Raises:
             RuntimeError: The thread is in progress and no message was given.
         """
+        from langgraph.types import Command
+
         from agent_runtime.runtime.graph_builder import fresh_state
         from agent_runtime.runtime.session_resolver import resolve_session
-        from langgraph.types import Command
 
         config = {"configurable": {"thread_id": thread_id}}
         self._say_buffer.clear()
@@ -498,7 +500,7 @@ class AgentHarness:
             result = self.graph.invoke(Command(resume=message), config)
         return self._finish(thread_id, result)
 
-    def _finish(self, thread_id: str, result: Dict[str, Any]) -> ChatTurnResult:
+    def _finish(self, thread_id: str, result: dict[str, Any]) -> ChatTurnResult:
         config = {"configurable": {"thread_id": thread_id}}
         interrupts = result.get("__interrupt__")
         messages = list(self._say_buffer)
@@ -512,7 +514,7 @@ class AgentHarness:
             traces=list(self._trace_buffer),
         )
 
-    def state_snapshot(self, thread_id: str) -> Dict[str, Any]:
+    def state_snapshot(self, thread_id: str) -> dict[str, Any]:
         """Returns the real graph state of a thread.
 
         Args:
@@ -528,10 +530,10 @@ class AgentHarness:
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
-def _history_entry(direction: str, body: str) -> Dict[str, Any]:
+def _history_entry(direction: str, body: str) -> dict[str, Any]:
     return {"direction": direction, "body": body, "at": _now_iso()}
 
 
@@ -563,7 +565,7 @@ def save_session(state: SessionState, session_file: Path) -> None:
     session_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-def load_session(session_file: Path, agents: List[AgentRef]) -> SessionState:
+def load_session(session_file: Path, agents: list[AgentRef]) -> SessionState:
     """Reads a saved session.
 
     Args:
@@ -593,7 +595,7 @@ def load_session(session_file: Path, agents: List[AgentRef]) -> SessionState:
     )
 
 
-def resolve_session_file(slug: str, session_file_arg: Optional[str]) -> Path:
+def resolve_session_file(slug: str, session_file_arg: str | None) -> Path:
     """Chooses the local log file of a session.
 
     Args:
@@ -622,7 +624,7 @@ def render_history(state: SessionState) -> None:
         console.print(Panel.fit(str(item.get("body", "")), title="User" if inbound else state.agent_slug, border_style="green" if inbound else "magenta"))
 
 
-def render_traces(traces: List[ToolTrace]) -> None:
+def render_traces(traces: list[ToolTrace]) -> None:
     if not traces:
         console.print("[dim]Sin tool calls en este turno.[/dim]")
         return
@@ -752,7 +754,7 @@ def _show_contact(state: SessionState) -> None:
         console.print("[dim]Ninguno (se pueden agregar con /contact-edit).[/dim]")
 
 
-def _set_contact_field(harness: AgentHarness, state: SessionState, key: str, value: Optional[str]) -> None:
+def _set_contact_field(harness: AgentHarness, state: SessionState, key: str, value: str | None) -> None:
     if value is None or value.strip() == "":
         state.contact.pop(key, None)
         harness.contact.pop(key, None)
@@ -871,7 +873,7 @@ def _edit_input_vars_interactive(harness: AgentHarness, state: SessionState, ses
             _edit_slots_interactive(harness, state, session_file, extra_candidates=others)
 
 
-def _edit_slots_interactive(harness: AgentHarness, state: SessionState, session_file: Path, extra_candidates: Optional[List[str]] = None) -> None:
+def _edit_slots_interactive(harness: AgentHarness, state: SessionState, session_file: Path, extra_candidates: list[str] | None = None) -> None:
     """Interactive editor of the initial slots (JSON or plain text values; an empty value is null).
 
     Args:
@@ -1046,7 +1048,7 @@ def run_first_turn(harness: AgentHarness, state: SessionState, session_file: Pat
             _edit_slots_interactive(harness, state, session_file)
             render_chat_header(state, session_file)
 
-    opening_message: Optional[str] = None
+    opening_message: str | None = None
     if state.first_speaker == "user":
         while True:
             opening_message = console.input("\n[bold green]Primer mensaje (usuario)> [/bold green]").strip()
@@ -1067,7 +1069,7 @@ def run_first_turn(harness: AgentHarness, state: SessionState, session_file: Pat
     _show_turn(result, state, session_file)
 
 
-def chat_loop(state: SessionState, session_file: Path, contact: Optional[Dict[str, Any]] = None) -> None:
+def chat_loop(state: SessionState, session_file: Path, contact: dict[str, Any] | None = None) -> None:
     harness = AgentHarness(
         state.agent,
         contact={**(contact or {}), **(state.contact or {})},
@@ -1088,7 +1090,7 @@ def chat_loop(state: SessionState, session_file: Path, contact: Optional[Dict[st
         except (EOFError, KeyboardInterrupt):
             console.print()
             save_session(state, session_file)
-            raise ReturnToLauncher()
+            raise ReturnToLauncher() from None
         if not raw_text:
             continue
         if raw_text.startswith("/") and handle_chat_command(raw_text, state, session_file, harness):
@@ -1104,7 +1106,7 @@ def chat_loop(state: SessionState, session_file: Path, contact: Optional[Dict[st
         _show_turn(result, state, session_file)
 
 
-def choose_agent(agents: List[AgentRef]) -> AgentRef:
+def choose_agent(agents: list[AgentRef]) -> AgentRef:
     console.clear()
     choice = questionary.select(
         "Selecciona un agente:",
@@ -1116,7 +1118,7 @@ def choose_agent(agents: List[AgentRef]) -> AgentRef:
     return choice
 
 
-def _contact_from_args(args: argparse.Namespace) -> Dict[str, Any]:
+def _contact_from_args(args: argparse.Namespace) -> dict[str, Any]:
     """Builds the session's ``contact`` dict (CRM fields ``{{contact.X}}`` resolves against) from the ``--contact-*`` flags."""
     contact = {"name": args.contact_name, "email": args.contact_email, "phone": args.contact_phone, "language": args.contact_language}
     return {k: v for k, v in contact.items() if v is not None}
@@ -1176,7 +1178,7 @@ def run_launcher(args: argparse.Namespace) -> int:
             return int(exc.code or 0)
 
 
-def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="TUI para probar cualquier agente bajo companies/<empresa>/bundles/")
     parser.add_argument("--company", help="Solo los agentes de esta empresa (carpeta bajo companies/).")
     parser.add_argument("--agent", help="Slug del agente a abrir directo (ver --list). Si se omite, muestra el selector.")
@@ -1193,7 +1195,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(argv: Optional[List[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     sys.path.insert(0, str(BACKEND_ROOT / "src"))
     if args.list:
@@ -1206,7 +1208,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     try:
         raise ExitLauncher(run_launcher(args))
     except ExitLauncher as exc:
-        raise SystemExit(int(exc.code or 0))
+        raise SystemExit(int(exc.code or 0)) from exc
 
 
 if __name__ == "__main__":

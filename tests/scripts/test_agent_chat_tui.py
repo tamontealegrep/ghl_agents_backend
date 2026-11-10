@@ -9,7 +9,7 @@ import pytest
 SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-import agent_chat_tui as tui  # noqa: E402
+import agent_chat_tui as tui
 
 COMPANIES = Path(__file__).resolve().parents[2] / "companies"
 

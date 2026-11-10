@@ -3,9 +3,9 @@ Prueba el endpoint /available-slots-ivf de punta a punta con Google Calendar moc
 """
 
 import pytest
+from desk.api.v1.endpoints import get_available_slots_google as endpoint
 from fastapi.testclient import TestClient
 
-from desk.api.v1.endpoints import get_available_slots_google as endpoint
 from tests.tools.apps import desk_app as app
 
 client = TestClient(app)

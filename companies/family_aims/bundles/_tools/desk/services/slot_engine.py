@@ -14,11 +14,9 @@ unificado a pedido del owner, 2026-08-27, en vez de las horas legibles en
 espaÃ±ol que tenÃ­a antes esta herramienta).
 """
 
+from collections.abc import Callable
 from datetime import date, datetime, timedelta
-from typing import Callable, List, Optional, Tuple
 
-from ..core.config import load_slots_config
-from ..schemas.slots import Slot
 from agent_backend.timezones import (
     build_business_instant,
     format_iso_with_offset,
@@ -27,11 +25,14 @@ from agent_backend.timezones import (
     get_weekday_in_tz,
 )
 
+from ..core.config import load_slots_config
+from ..schemas.slots import Slot
+
 BUSINESS_TZ = "America/Bogota"
 
-DayWindowFn = Callable[[int], Optional[Tuple[int, int, int, int]]]
+DayWindowFn = Callable[[int], tuple[int, int, int, int] | None]
 LunchBreakFn = Callable[[int, int], bool]
-ClosingHourFn = Callable[[int], Tuple[int, int]]
+ClosingHourFn = Callable[[int], tuple[int, int]]
 
 
 def is_holiday(year: int, month: int, day: int) -> bool:
@@ -104,10 +105,10 @@ def compute_available_slots(
     interval_minutes: int,
     min_advance_minutes: int,
     user_tz: str,
-    busy_events: List[Tuple[datetime, datetime]],
+    busy_events: list[tuple[datetime, datetime]],
     day_window_fn: DayWindowFn,
     lunch_break_fn: LunchBreakFn,
-) -> List[Slot]:
+) -> list[Slot]:
     """Port del nÃºcleo de code_02: genera los slots dentro de [start_date, end_date],
     excluyendo festivos, la franja de almuerzo, eventos ocupados y los que no
     cumplen la anticipaciÃ³n mÃ­nima (min_advance_minutes desde ahora)."""
@@ -123,7 +124,7 @@ def compute_available_slots(
             candidate_days.append((cursor_date, window))
         cursor_date += timedelta(days=1)
 
-    result: List[Slot] = []
+    result: list[Slot] = []
     for day, (h1, m1, h2, m2) in candidate_days:
         day_open = build_business_instant(day.year, day.month, day.day, h1, m1, BUSINESS_TZ)
         day_close = build_business_instant(day.year, day.month, day.day, h2, m2, BUSINESS_TZ)

@@ -1,9 +1,7 @@
 from datetime import date
 
 import pytest
-
 from surrogacy.utils.parsing import is_present, normalize, parse_boolean, parse_flexible_date, parse_float
-
 
 # ---------------------------------------------------------------------------
 # normalize

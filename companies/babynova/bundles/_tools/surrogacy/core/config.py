@@ -7,11 +7,12 @@ Module.
 """
 
 import os
-import yaml
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
+
+import yaml
 
 from agent_backend.calendars import CalendarSettings, load_calendars
 
@@ -22,10 +23,10 @@ CALENDARS_PATH = Path(__file__).resolve().parent.parent / "config" / "calendars.
 
 
 @lru_cache
-def load_slots_config() -> Dict[str, Any]:
+def load_slots_config() -> dict[str, Any]:
     if not CONFIG_PATH.exists():
         return {"holidays": [], "windows": {}}
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    with open(CONFIG_PATH, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -41,7 +42,7 @@ class Settings:
     def __init__(self) -> None:
         # Every calendar declared as BN_<VARIABLE>_<KEY> (see agent_backend.calendars); FT always exists
         # and defaults to the primary calendar of its Google account.
-        self.calendars: Dict[str, CalendarSettings] = load_calendars(
+        self.calendars: dict[str, CalendarSettings] = load_calendars(
             "BN", BUILTIN_CALENDARS, calendar_id_defaults={"FT": "primary"}, read_unset_from_ghl=True
         )
 

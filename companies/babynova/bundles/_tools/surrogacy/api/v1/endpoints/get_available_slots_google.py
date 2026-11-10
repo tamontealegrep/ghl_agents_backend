@@ -3,11 +3,12 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter
 
-from ....core.config import BUSINESS_TZ, get_settings
-from agent_backend.scheduling_schemas import SlotsRequest, SlotsResponse
 from agent_backend.google_calendar import get_access_token, get_free_busy
-from ....services.calendars import resolve_calendar, unknown_calendar_message
+from agent_backend.scheduling_schemas import SlotsRequest, SlotsResponse
 from agent_backend.timezones import add_days
+
+from ....core.config import BUSINESS_TZ, get_settings
+from ....services.calendars import resolve_calendar, unknown_calendar_message
 
 router = APIRouter()
 

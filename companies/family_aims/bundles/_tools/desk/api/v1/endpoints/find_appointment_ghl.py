@@ -3,16 +3,18 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter
 
+from agent_backend import date_formatting
+from agent_backend.ghl_calendar import list_events as ghl_list_events
+from agent_backend.ghl_calendar import upsert_contact as ghl_upsert_contact
+from agent_backend.timezones import parse_iso
+
 from ....core.config import get_settings
-from ....services.calendars import resolve_calendar, unknown_calendar_message
 from ....schemas.booking import (
     AppointmentInfo,
     FindAppointmentRequest,
     FindAppointmentResponse,
 )
-from agent_backend import date_formatting
-from agent_backend.ghl_calendar import list_events as ghl_list_events, upsert_contact as ghl_upsert_contact
-from agent_backend.timezones import parse_iso
+from ....services.calendars import resolve_calendar, unknown_calendar_message
 
 router = APIRouter()
 

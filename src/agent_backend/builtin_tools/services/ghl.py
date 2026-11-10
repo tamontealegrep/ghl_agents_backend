@@ -1,18 +1,20 @@
 import ast
 import logging
 import time
-from typing import Optional, Dict, Any, List
+from typing import Any
+
 import httpx
-from agent_backend.channels.ghl.client import ghl_client_config_for_location, get_ghl_headers
+
+from agent_backend.channels.ghl.client import get_ghl_headers, ghl_client_config_for_location
 
 logger = logging.getLogger(__name__)
 
 async def update_custom_field_service(
     name: str,
     value: str,
-    contact_id: Optional[str] = None,
-    location_id: Optional[str] = None
-) -> Dict[str, Any]:
+    contact_id: str | None = None,
+    location_id: str | None = None
+) -> dict[str, Any]:
     """update_custom_field_service.
 
     Unifica la actualización de campos personalizados en GHL.
@@ -98,10 +100,10 @@ async def update_custom_field_service(
 _OPTION_DATA_TYPES = {"SINGLE_OPTIONS", "MULTIPLE_OPTIONS"}
 
 _FIELDS_CACHE_SECONDS = 600
-_fields_cache: Dict[str, tuple[float, List[Dict[str, Any]]]] = {}
+_fields_cache: dict[str, tuple[float, list[dict[str, Any]]]] = {}
 
 
-def _as_option_values(field: Dict[str, Any], value: str) -> str:
+def _as_option_values(field: dict[str, Any], value: str) -> str:
     """Un campo de selección múltiple puede llegar como la lista de un slot (`['a', 'b']`):
 
     se convierte a las opciones separadas por coma que GHL espera.
@@ -123,7 +125,7 @@ def _as_option_values(field: Dict[str, Any], value: str) -> str:
     return value
 
 
-def _invalid_options(field: Dict[str, Any], value: str) -> list[str]:
+def _invalid_options(field: dict[str, Any], value: str) -> list[str]:
     """Valores de `value` que no son opciones del campo desplegable (GHL los guarda igual).
 
     Un campo de selección múltiple recibe las opciones separadas por coma.
@@ -143,10 +145,10 @@ def _invalid_options(field: Dict[str, Any], value: str) -> list[str]:
     return [v for v in values if v not in options]
 
 
-async def _find_custom_field_by_name(location_id: str, name: str, config, headers: dict) -> Optional[Dict[str, Any]]:
+async def _find_custom_field_by_name(location_id: str, name: str, config, headers: dict) -> dict[str, Any] | None:
     """Helper interno para mapear nombre de campo -> definición del campo en una ubicación.
     """
-    def _match(fields: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def _match(fields: list[dict[str, Any]]) -> dict[str, Any] | None:
         # Búsqueda por nombre (case-insensitive) o por fieldKey
         return next((f for f in fields if f.get("name", "").lower() == name.lower() or f.get("fieldKey") == name), None)
 

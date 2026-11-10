@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 from datetime import datetime, timedelta
-from typing import Optional
 from zoneinfo import ZoneInfo
 
 __all__ = ["compute_end_date", "format_contact_name", "is_future", "parse_duration_minutes", "parse_start_date"]
@@ -29,7 +28,7 @@ def parse_start_date(start_date_str: str, default_tz: str = "America/Bogota") ->
     return dt if dt.tzinfo else dt.replace(tzinfo=ZoneInfo(default_tz))
 
 
-def parse_duration_minutes(raw: Optional[str], default: int) -> int:
+def parse_duration_minutes(raw: str | None, default: int) -> int:
     """Reads a duration like JavaScript's ``parseInt(x, 10) || default``, rejecting durations of 0 or less.
 
     Args:

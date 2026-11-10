@@ -7,15 +7,17 @@ every other calendar gets its rules from ``config/calendars.yaml``.
 
 from __future__ import annotations
 
-import yaml
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Mapping, Optional, Tuple
+from typing import Any
+
+import yaml
 
 from ..core.config import CALENDARS_PATH, ToolConfig
 from . import booking_ivf, booking_sur, slots_ivf, slots_sur
 
-Window = Tuple[int, int, int, int]
+Window = tuple[int, int, int, int]
 
 _BUILTIN_POLICIES = {"IVF": (booking_ivf, slots_ivf), "SUR": (booking_sur, slots_sur)}
 
@@ -29,7 +31,7 @@ def load_calendars_config() -> dict[str, Any]:
     """
     if not CALENDARS_PATH.exists():
         return {"default": {}, "calendars": {}}
-    with open(CALENDARS_PATH, "r", encoding="utf-8") as f:
+    with open(CALENDARS_PATH, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
 
@@ -51,7 +53,7 @@ class ConfiguredBooking:
         """
         self.AGENT_NAME: str = rules.get("agent_name") or "Family Aims"
         self.EVENT_SUMMARY_TAG: str = rules.get("event_summary_tag") or key
-        self.EMAIL_TEMPLATE_PREFIX: Optional[str] = rules.get("email_template_prefix")
+        self.EMAIL_TEMPLATE_PREFIX: str | None = rules.get("email_template_prefix")
         self._hours: Mapping[int, list[int]] = rules.get("hours") or {}
         lunch = rules.get("lunch_break") or {}
         self._lunch = (lunch.get("start_hour", 12), lunch.get("end_hour", 13))
@@ -90,7 +92,7 @@ class ConfiguredSlots:
         lunch = rules.get("lunch_break") or {}
         self._lunch = (lunch.get("start_hour", 12), lunch.get("end_hour", 13))
 
-    def day_window(self, weekday: int) -> Optional[Window]:
+    def day_window(self, weekday: int) -> Window | None:
         """Returns the opening window of a weekday.
 
         Args:
@@ -116,7 +118,7 @@ class ConfiguredSlots:
         lunch_start, lunch_end = self._lunch[0] * 60, self._lunch[1] * 60
         return lunch_start < lunch_end and start_min < lunch_end and end_min > lunch_start
 
-    def closing_hour(self, weekday: int) -> Tuple[int, int]:
+    def closing_hour(self, weekday: int) -> tuple[int, int]:
         """Returns the time the search range closes on a weekday.
 
         Args:
@@ -158,7 +160,7 @@ def available_keys(settings: Any) -> list[str]:
     return list(settings.calendars)
 
 
-def resolve_calendar(settings: Any, calendar_type: Optional[str], config: Optional[Mapping[str, Any]] = None) -> Optional[CalendarContext]:
+def resolve_calendar(settings: Any, calendar_type: str | None, config: Mapping[str, Any] | None = None) -> CalendarContext | None:
     """Finds a calendar by the ``calendar_type`` a tool call sent.
 
     Args:
@@ -183,7 +185,7 @@ def resolve_calendar(settings: Any, calendar_type: Optional[str], config: Option
     return CalendarContext(key, tool, ConfiguredBooking(key, rules), ConfiguredSlots(rules))
 
 
-def unknown_calendar_message(settings: Any, calendar_type: Optional[str]) -> str:
+def unknown_calendar_message(settings: Any, calendar_type: str | None) -> str:
     """Builds the error for a calendar that is not declared.
 
     Args:

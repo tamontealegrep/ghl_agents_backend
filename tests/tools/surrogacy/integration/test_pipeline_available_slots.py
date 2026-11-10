@@ -2,8 +2,8 @@
 
 import pytest
 from fastapi.testclient import TestClient
-
 from surrogacy.api.v1.endpoints import get_available_slots_google as slots_endpoint
+
 from tests.tools.apps import surrogacy_app as app
 
 client = TestClient(app)

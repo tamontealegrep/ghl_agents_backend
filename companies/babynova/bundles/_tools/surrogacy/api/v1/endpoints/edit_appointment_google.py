@@ -1,13 +1,15 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
 from fastapi import APIRouter
+
+from agent_backend import date_formatting
+from agent_backend.google_calendar import get_access_token, list_events, update_event
+from agent_backend.scheduling_schemas import EditAppointmentRequest, EditAppointmentResponse
+from agent_backend.timezones import get_weekday_in_tz
 
 from ....core.config import get_settings
 from ....services.calendars import resolve_calendar, unknown_calendar_message
-from agent_backend.scheduling_schemas import EditAppointmentRequest, EditAppointmentResponse
-from agent_backend import date_formatting
-from agent_backend.google_calendar import update_event, get_access_token, list_events
-from agent_backend.timezones import get_weekday_in_tz
 
 router = APIRouter()
 

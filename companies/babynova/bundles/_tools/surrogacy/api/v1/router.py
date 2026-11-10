@@ -1,15 +1,16 @@
 from fastapi import APIRouter
 
+from agent_backend.builtin_tools.endpoints import health
+
 from .endpoints import (
     book_appointment_google,
     calendars,
-    ghl_scheduling,
     cancel_appointment_google,
+    check_documentation,
     edit_appointment_google,
     find_appointment_google,
-    check_documentation,
-    health,
     get_available_slots_google,
+    ghl_scheduling,
     surrogate_classification,
 )
 

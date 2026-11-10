@@ -2,9 +2,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
-
 from desk.services import booking_engine as engine
-
 
 # ---------------------------------------------------------------------------
 # parse_start_date

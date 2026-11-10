@@ -10,7 +10,7 @@ Module.
     cliente en particular.
 """
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 _VALID_REASONS = {"no_availability", "booking_failed", "user_requested", "ambiguous_data", "technical_error"}
@@ -26,7 +26,7 @@ def _is_present(val: Any) -> bool:
     return val is not None and str(val).strip() != ""
 
 
-def _split_list(raw: Optional[Union[str, List[str]]]) -> List[str]:
+def _split_list(raw: str | list[str] | None) -> list[str]:
     """Normalize input (comma-separated string or list) to a non-empty, lowercased list of strings.
     """
     if raw is None:
@@ -35,7 +35,7 @@ def _split_list(raw: Optional[Union[str, List[str]]]) -> List[str]:
     return [str(item).strip().lower() for item in items if str(item).strip()]
 
 
-def _normalize_preferred_days(raw: Optional[Union[str, List[str]]]) -> Tuple[List[str], Optional[str]]:
+def _normalize_preferred_days(raw: str | list[str] | None) -> tuple[list[str], str | None]:
     """Accepts individual days and 'weekdays'/'weekend'/'any' shortcuts.
 
     Returns (ordered_days, error).
@@ -60,7 +60,7 @@ def _normalize_preferred_days(raw: Optional[Union[str, List[str]]]) -> Tuple[Lis
     return [d for d in _DAY_NAMES if d in days], None
 
 
-def _normalize_time_window(raw: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+def _normalize_time_window(raw: str | None) -> tuple[str | None, str | None]:
     if not _is_present(raw):
         return None, None
     token = str(raw).strip().lower()
@@ -79,7 +79,7 @@ def _is_valid_timezone(tz: str) -> bool:
         return False
 
 
-def _rejected(error_message: str) -> Dict[str, Any]:
+def _rejected(error_message: str) -> dict[str, Any]:
     return {
         "contact_name": None,
         "contact_phone": None,
@@ -94,15 +94,15 @@ def _rejected(error_message: str) -> Dict[str, Any]:
 
 
 def prepare_callback_request(
-    raw_contact_name: Optional[str],
-    raw_contact_phone: Optional[str],
-    raw_contact_email: Optional[str],
-    raw_reason: Optional[str],
-    raw_context: Optional[str],
-    raw_preferred_days: Optional[Union[str, List[str]]],
-    raw_preferred_time_window: Optional[str],
-    raw_timezone: Optional[str],
-) -> Dict[str, Any]:
+    raw_contact_name: str | None,
+    raw_contact_phone: str | None,
+    raw_contact_email: str | None,
+    raw_reason: str | None,
+    raw_context: str | None,
+    raw_preferred_days: str | list[str] | None,
+    raw_preferred_time_window: str | None,
+    raw_timezone: str | None,
+) -> dict[str, Any]:
     """Validate and normalize a callback request.
 
     No side effects.

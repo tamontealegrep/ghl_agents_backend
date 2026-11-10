@@ -1,13 +1,13 @@
 """The calendar parameters of the .env (interval, buffers, minimum notice, date range) on top of GHL's free slots."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
-
-from fastapi.testclient import TestClient
 
 from desk.api.v1.endpoints import book_appointment_ghl as book_endpoint
 from desk.api.v1.endpoints import edit_appointment_ghl as edit_endpoint
 from desk.api.v1.endpoints import get_available_slots_ghl as slots_endpoint
+from fastapi.testclient import TestClient
+
 from tests.tools.apps import desk_app as app
 
 client = TestClient(app)
@@ -60,7 +60,7 @@ def _at(day, hour: int, minute: int = 0) -> datetime:
 
 
 def _iso(moment: datetime) -> str:
-    return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return moment.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _event(start: datetime, end: datetime, event_id: str = "e1") -> dict:
@@ -154,7 +154,7 @@ def test_min_notice_sets_the_earliest_slot_and_discards_earlier_ones(monkeypatch
     assert _starts(body) == ["09:00"]
     assert body["available_slots"][0]["start_co"][:10] == later.isoformat()
     asked = seen["free"]["start_dt"]
-    assert abs((asked - datetime.now(timezone.utc) - timedelta(days=10)).total_seconds()) < 60
+    assert abs((asked - datetime.now(UTC) - timedelta(days=10)).total_seconds()) < 60
 
 
 def test_a_date_range_longer_than_ghls_limit_is_rejected_naming_the_variable(monkeypatch):

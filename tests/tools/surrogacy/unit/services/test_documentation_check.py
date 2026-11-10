@@ -1,5 +1,4 @@
 import pytest
-
 from surrogacy.services.documentation_check import check_documentation
 
 

@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Request
-import json
 import datetime
+import json
 from pathlib import Path
+
+from fastapi import APIRouter, Request
+
 from agent_backend.builtin_tools.schemas.input_payload import InputPayloadResponse
 from agent_backend.channels.ghl.request import GhlAgentRequest
 
@@ -24,7 +26,7 @@ async def receive_payload(request: Request):
     except Exception:
         payload = {"raw_body": body.decode("utf-8", errors="replace") if body else "empty"}
 
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    timestamp = datetime.datetime.now(datetime.UTC).isoformat()
     
     # Capturar metadatos útiles para ingeniería inversa
     log_entry = {

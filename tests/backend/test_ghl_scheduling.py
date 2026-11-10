@@ -1,6 +1,6 @@
 """The shared GoHighLevel scheduling tools, with a fake company and a fake GHL."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -167,7 +167,7 @@ def at(d, hour, minute=0):
 
 
 def iso(moment):
-    return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return moment.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def event(start, end, event_id="e1", **extra):
@@ -252,7 +252,7 @@ def test_min_notice_from_ghl_sets_the_search_start(world):
     world.calendar["allowBookingAfterUnit"] = "days"
     world.client.post("/get-available-slots-ghl", json={"calendar_type": "FT"})
     asked = world.calls["free"]["start"]
-    assert abs((asked - datetime.now(timezone.utc) - timedelta(days=3)).total_seconds()) < 60
+    assert abs((asked - datetime.now(UTC) - timedelta(days=3)).total_seconds()) < 60
 
 
 def test_a_date_range_over_ghls_limit_in_the_env_is_rejected(world):

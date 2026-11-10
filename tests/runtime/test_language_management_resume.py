@@ -1,5 +1,5 @@
-from agent_runtime.targets.langgraph.graph_renderer import GraphEdge, GraphNode
 from agent_runtime.runtime.graph_builder import _make_router_fn
+from agent_runtime.targets.langgraph.graph_renderer import GraphEdge, GraphNode
 
 
 def test_lm_resume_dynamic_goto_uses_resume_state():

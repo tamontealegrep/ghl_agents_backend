@@ -1,12 +1,13 @@
 from fastapi import APIRouter
 
-from ....core.config import get_settings
-from ....services.calendars import resolve_calendar, unknown_calendar_message
+from agent_backend.google_calendar import delete_event, get_access_token
 from agent_backend.scheduling_schemas import (
     CancelAppointmentRequest,
     CancelAppointmentResponse,
 )
-from agent_backend.google_calendar import delete_event, get_access_token
+
+from ....core.config import get_settings
+from ....services.calendars import resolve_calendar, unknown_calendar_message
 
 router = APIRouter()
 

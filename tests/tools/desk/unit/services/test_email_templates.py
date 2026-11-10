@@ -1,5 +1,4 @@
 import pytest
-
 from desk.services.email_templates import render_email_template
 
 VARS = dict(

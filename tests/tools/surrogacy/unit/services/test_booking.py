@@ -1,7 +1,6 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
-
 from surrogacy.services.booking import (
     compute_end_date,
     format_contact_name,
@@ -39,15 +38,15 @@ def test_parse_duration_minutes_non_positive_falls_back_to_default():
 
 
 def test_compute_end_date_adds_minutes():
-    start = datetime(2026, 8, 28, 9, 0, tzinfo=timezone.utc)
+    start = datetime(2026, 8, 28, 9, 0, tzinfo=UTC)
     end = compute_end_date(start, 10)
     assert end.isoformat() == "2026-08-28T09:10:00+00:00"
 
 
 def test_is_future():
-    now = datetime(2026, 8, 28, 9, 0, tzinfo=timezone.utc)
-    assert is_future(datetime(2026, 8, 28, 10, 0, tzinfo=timezone.utc), now) is True
-    assert is_future(datetime(2026, 8, 28, 8, 0, tzinfo=timezone.utc), now) is False
+    now = datetime(2026, 8, 28, 9, 0, tzinfo=UTC)
+    assert is_future(datetime(2026, 8, 28, 10, 0, tzinfo=UTC), now) is True
+    assert is_future(datetime(2026, 8, 28, 8, 0, tzinfo=UTC), now) is False
 
 
 def test_format_contact_name_trims_collapses_and_capitalizes():

@@ -1,7 +1,6 @@
 """Google Calendar REST helpers (OAuth token, events, free/busy) shared by every company."""
 import asyncio
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple
 from urllib.parse import quote, urlparse
 
 import httpx
@@ -9,7 +8,7 @@ import httpx
 from agent_backend.timezones import parse_iso
 
 
-async def get_access_token(client_id: str, client_secret: str, refresh_token: str) -> Optional[str]:
+async def get_access_token(client_id: str, client_secret: str, refresh_token: str) -> str | None:
     """Intercambia el refresh token por un access token de Google OAuth.
     """
     async with httpx.AsyncClient(timeout=20) as client:
@@ -29,7 +28,7 @@ async def get_access_token(client_id: str, client_secret: str, refresh_token: st
 
 async def get_free_busy(
     access_token: str, calendar_id: str, time_min: datetime, time_max: datetime
-) -> List[Tuple[datetime, datetime]]:
+) -> list[tuple[datetime, datetime]]:
     """Consulta los intervalos ocupados del calendario en Google Calendar dentro del rango dado.
     """
     async with httpx.AsyncClient(timeout=20) as client:
@@ -93,8 +92,8 @@ async def create_event(
 
 
 async def list_events(
-    access_token: str, calendar_id: str, time_min: datetime, time_max: datetime, query: Optional[str] = None
-) -> List[dict]:
+    access_token: str, calendar_id: str, time_min: datetime, time_max: datetime, query: str | None = None
+) -> list[dict]:
     """Lista eventos en el calendario dado dentro del rango de tiempo, manejando paginación.
     """
     events = []
@@ -153,10 +152,10 @@ async def update_event(
     access_token: str,
     calendar_id: str,
     event_id: str,
-    start_dt: Optional[datetime] = None,
-    end_dt: Optional[datetime] = None,
-    summary: Optional[str] = None,
-    description: Optional[str] = None,
+    start_dt: datetime | None = None,
+    end_dt: datetime | None = None,
+    summary: str | None = None,
+    description: str | None = None,
 ) -> dict:
     """Actualiza parcialmente un evento en Google Calendar (PATCH).
     """
@@ -183,7 +182,7 @@ async def update_event(
         resp.raise_for_status()
         return resp.json()
 
-def normalize_meet_url(value: Optional[str]) -> Optional[str]:
+def normalize_meet_url(value: str | None) -> str | None:
     """Normaliza enlaces de Meet para compararlos sin query parameters."""
     if not value:
         return None
@@ -208,7 +207,7 @@ async def find_synced_google_event(
     end_dt: datetime,
     meet_link: str,
     attempts: int = 4,
-) -> Optional[dict]:
+) -> dict | None:
     """
     Busca el evento sincronizado desde GHL.
 

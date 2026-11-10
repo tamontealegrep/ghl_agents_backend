@@ -3,7 +3,13 @@ import asyncio
 import pytest
 
 from agent_backend.calendars import CalendarSettings, load_calendar_settings
-from agent_backend.ghl_schedule import clear_cache, resolve_schedule, schedule_from_calendar, to_days, to_minutes
+from agent_backend.ghl_schedule import (
+    clear_cache,
+    resolve_schedule,
+    schedule_from_calendar,
+    to_days,
+    to_minutes,
+)
 
 # The settings of the real FT calendar, as returned by GHL's Get Calendar.
 GHL_CALENDAR = {

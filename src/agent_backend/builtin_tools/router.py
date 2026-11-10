@@ -2,14 +2,22 @@ from fastapi import APIRouter
 
 # Utils tools (shared across agents)
 from agent_backend.builtin_tools.endpoints import (
-    time_now,
+    calculate_bmi,
     callback_request,
     check_days_elapsed,
-    calculate_bmi,
-    pause as pause_endpoint,
-    update_custom_field as ucf_endpoint,
+    time_now,
+)
+from agent_backend.builtin_tools.endpoints import (
     echo as echo_endpoint,
+)
+from agent_backend.builtin_tools.endpoints import (
     input_payload as input_payload_endpoint,
+)
+from agent_backend.builtin_tools.endpoints import (
+    pause as pause_endpoint,
+)
+from agent_backend.builtin_tools.endpoints import (
+    update_custom_field as ucf_endpoint,
 )
 from agent_backend.builtin_tools.schemas.ghl import GhlCustomUpdateResponse
 from agent_backend.builtin_tools.schemas.input_payload import InputPayloadResponse

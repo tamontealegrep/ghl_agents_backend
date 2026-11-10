@@ -6,8 +6,6 @@ import logging
 import secrets
 from typing import Annotated
 
-from agent_runtime.runtime.graph_builder import fresh_state
-from agent_runtime.runtime.session_resolver import resolve_session
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from langgraph.types import Command
 from pydantic import BaseModel
@@ -15,6 +13,8 @@ from starlette.concurrency import run_in_threadpool
 
 from agent_backend.loader import AgentRegistry, LoadedAgent, message_buffer
 from agent_backend.settings import Settings
+from agent_runtime.runtime.graph_builder import fresh_state
+from agent_runtime.runtime.session_resolver import resolve_session
 
 logger = logging.getLogger(__name__)
 

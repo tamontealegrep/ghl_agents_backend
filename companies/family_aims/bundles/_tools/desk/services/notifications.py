@@ -8,15 +8,15 @@ from __future__ import annotations
 
 from datetime import datetime
 from html import escape
-from typing import Any, Optional
+from typing import Any
 from zoneinfo import ZoneInfo
 
-from agent_backend.team_notification import join_errors, send_team_notification  # noqa: F401
-
 from agent_backend import date_formatting
-from .email_templates import render_email_template
 from agent_backend.gmail import send_email
 from agent_backend.google_calendar import get_access_token
+from agent_backend.team_notification import join_errors, send_team_notification  # noqa: F401
+
+from .email_templates import render_email_template
 
 TEMPLATE = "internal_booking_notification"
 
@@ -30,9 +30,9 @@ async def notify_booking(
     contact_phone: str,
     start_dt: datetime,
     timezone: str,
-    event_link: Optional[str],
-    meet_link: Optional[str],
-) -> Optional[str]:
+    event_link: str | None,
+    meet_link: str | None,
+) -> str | None:
     """Tells the addresses in ``FA_NOTIFICATION_EMAIL`` that an appointment was booked.
 
     Args:

@@ -7,6 +7,7 @@ from desk.services.slot_engine import (
     compute_start_date,
     is_holiday,
 )
+
 from agent_backend.timezones import build_business_instant
 
 BOGOTA = "America/Bogota"

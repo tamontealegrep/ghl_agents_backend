@@ -1,24 +1,22 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
 from fastapi import APIRouter
+
+from agent_backend import date_formatting
+from agent_backend.google_calendar import get_access_token, list_events, update_event
+from agent_backend.timezones import get_hour_in_tz, get_weekday_in_tz
 
 from ....core.config import get_settings
 from ....schemas.booking import EditAppointmentRequest, EditAppointmentResponse
-from ....services.calendars import resolve_calendar, unknown_calendar_message
 from ....services import booking_engine as engine
-from agent_backend import date_formatting
-from ....services.email_templates import render_email_template
-from agent_backend.gmail import send_email
-from agent_backend.google_calendar import update_event, get_access_token, list_events
-from agent_backend.timezones import get_hour_in_tz, get_weekday_in_tz
+from ....services.calendars import resolve_calendar, unknown_calendar_message
 
 router = APIRouter()
 
 @router.post("/edit-appointment-google", response_model=EditAppointmentResponse)
 async def edit_appointment_google(req: EditAppointmentRequest):
     settings = get_settings()
-    gmail = settings.gmail
-    
     cal = resolve_calendar(settings, req.calendar_type)
     if cal is None:
         return EditAppointmentResponse(success=False, errors=unknown_calendar_message(settings, req.calendar_type))

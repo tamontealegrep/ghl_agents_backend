@@ -1,9 +1,9 @@
 import re
 import unicodedata
-from typing import Any, Optional
+from typing import Any
 
 
-def normalize_channel(value: Optional[str]) -> str:
+def normalize_channel(value: str | None) -> str:
     return (value or "").strip().upper().replace("-", "_")
 
 
@@ -32,7 +32,7 @@ _LANGUAGE_ALIASES = {
 DEFAULT_LANGUAGE = "en"
 
 
-def normalize_language(value: Any) -> Optional[str]:
+def normalize_language(value: Any) -> str | None:
     """Normalizes a free-form language value (GHL's `contact_language` or `customData.language`, or anywhere else) to this project's canonical 2-letter code -- "es"/"en"/"pt", never anything else.
 
     Case- and accent-insensitive, and accepts locale-style codes (en-US, es_CO, pt-BR -- only the primary subtag matters).

@@ -1,7 +1,8 @@
-from typing import Any, Dict, List, Optional, Union
 import warnings
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
 try:
     # Silence Pydantic alias warnings for our validated payload model
     from pydantic._internal._generate_schema import UnsupportedFieldAttributeWarning
@@ -25,15 +26,15 @@ Base request shape for any agent triggered by a GHL workflow webhook.
 
     model_config = ConfigDict(populate_by_name=True, extra="allow")
 
-    messageId: Optional[str] = Field(None, description="Unique message ID from GHL")
-    conversation_id: Optional[str] = Field(None, alias="conversationId", description="Conversation ID from GHL")
+    messageId: str | None = Field(None, description="Unique message ID from GHL")
+    conversation_id: str | None = Field(None, alias="conversationId", description="Conversation ID from GHL")
     contact_id: str = Field(..., alias="contactId", description="Contact ID from GHL")
-    location_id: Optional[str] = Field(None, alias="locationId", description="Location ID from GHL")
-    message: Optional[Union[str, Dict[str, Any]]] = Field(None, description="The user's message")
-    channel: Optional[str] = Field(None, description="Origin channel inferred from GHL")
-    contact: Optional[Dict[str, Any]] = Field(None, description="Full contact object from GHL")
-    chat_history: List[Dict[str, Any]] = Field(default_factory=list, alias="chatHistory", description="Optional chat history")
-    webhook_url: Optional[str] = Field(None, alias="webhookUrl", description="Webhook URL to send the response")
+    location_id: str | None = Field(None, alias="locationId", description="Location ID from GHL")
+    message: str | dict[str, Any] | None = Field(None, description="The user's message")
+    channel: str | None = Field(None, description="Origin channel inferred from GHL")
+    contact: dict[str, Any] | None = Field(None, description="Full contact object from GHL")
+    chat_history: list[dict[str, Any]] = Field(default_factory=list, alias="chatHistory", description="Optional chat history")
+    webhook_url: str | None = Field(None, alias="webhookUrl", description="Webhook URL to send the response")
 
     @model_validator(mode="before")
     @classmethod
@@ -120,7 +121,7 @@ Base request shape for any agent triggered by a GHL workflow webhook.
 
     @field_validator("message", mode="before")
     @classmethod
-    def extract_message_body(cls, value: Any) -> Optional[str]:
+    def extract_message_body(cls, value: Any) -> str | None:
         if value is None:
             return None
         if isinstance(value, dict):

@@ -9,14 +9,14 @@ from __future__ import annotations
 
 from datetime import datetime
 from html import escape
-from typing import Any, Optional
+from typing import Any
 from zoneinfo import ZoneInfo
 
+from agent_backend.gmail import send_email
+from agent_backend.google_calendar import get_access_token
 from agent_backend.team_notification import send_team_notification
 
 from .email_templates import render_email_template
-from agent_backend.gmail import send_email
-from agent_backend.google_calendar import get_access_token
 
 
 async def notify_booking(
@@ -27,7 +27,7 @@ async def notify_booking(
     contact_phone: str,
     start_dt: datetime,
     timezone: str,
-) -> Optional[str]:
+) -> str | None:
     """Tells the addresses in ``BN_NOTIFICATION_EMAIL`` that an appointment was booked.
 
     Args:

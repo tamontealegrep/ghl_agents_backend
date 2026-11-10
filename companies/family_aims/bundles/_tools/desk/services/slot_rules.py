@@ -8,7 +8,7 @@ and the rest is offered. See ``agent_backend.slot_filters`` for the filters them
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from agent_backend.ghl_scheduling import load_busy  # noqa: F401  (shared with every company)
 
@@ -34,7 +34,7 @@ def earliest_start(now: datetime, tool: Any) -> datetime:
     return compute_start_date(now)
 
 
-def range_error(tool: Any, variable: str) -> Optional[str]:
+def range_error(tool: Any, variable: str) -> str | None:
     """Checks that the configured date range fits GoHighLevel's free-slots limit.
 
     Args:

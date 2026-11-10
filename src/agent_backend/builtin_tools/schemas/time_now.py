@@ -1,4 +1,3 @@
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -16,6 +15,6 @@ class TimeNowRequest(BaseModel):
 class TimeNowResponse(BaseModel):
     success: bool
     iana_timezone: str
-    now: Optional[str] = None
-    calendar: Optional[str] = None
-    errors: Optional[str] = None
+    now: str | None = None
+    calendar: str | None = None
+    errors: str | None = None

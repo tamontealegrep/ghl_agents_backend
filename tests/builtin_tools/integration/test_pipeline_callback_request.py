@@ -3,7 +3,6 @@ Prueba el endpoint /request-callback de punta a punta. Sin dependencias externas
 """
 
 from fastapi.testclient import TestClient
-
 from tests.builtin_tools.app_factory import app
 
 client = TestClient(app)

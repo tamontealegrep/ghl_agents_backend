@@ -5,7 +5,7 @@ Helpers de parsing flexible (texto, booleanos, fechas), usados por servicios de 
 import re
 import unicodedata
 from datetime import date, datetime
-from typing import Any, Optional
+from typing import Any
 
 
 def normalize(val: Any) -> str:
@@ -24,7 +24,7 @@ def is_present(val: Any) -> bool:
     return val is not None and str(val).strip() != ""
 
 
-def parse_boolean(val: Any) -> Optional[bool]:
+def parse_boolean(val: Any) -> bool | None:
     """Conversión flexible a booleano.
 
     Devuelve None si no se reconoce el valor.
@@ -39,7 +39,7 @@ def parse_boolean(val: Any) -> Optional[bool]:
     return None
 
 
-def parse_float(val: Any) -> Optional[float]:
+def parse_float(val: Any) -> float | None:
     """Conversión flexible a float.
 
     Devuelve None si el valor no se puede convertir.
@@ -52,7 +52,7 @@ def parse_float(val: Any) -> Optional[float]:
         return None
 
 
-def parse_flexible_date(val: Any) -> Optional[date]:
+def parse_flexible_date(val: Any) -> date | None:
     """Parser flexible de fechas (YYYY/MM/DD, DD/MM/YYYY, ISO).
     """
     if val is None:

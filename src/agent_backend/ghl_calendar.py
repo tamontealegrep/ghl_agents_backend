@@ -25,11 +25,10 @@ la operación podría haberse procesado. No reintentar a ciegas.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import quote, urlparse
 
 import httpx
-
 
 BASE_URL = "https://services.leadconnectorhq.com"
 API_VERSION = "2021-07-28"
@@ -76,10 +75,10 @@ async def _request(
     method: str,
     path: str,
     *,
-    params: Optional[Dict[str, Any]] = None,
-    payload: Optional[Dict[str, Any]] = None,
-    client: Optional[httpx.AsyncClient] = None,
-) -> Dict[str, Any]:
+    params: dict[str, Any] | None = None,
+    payload: dict[str, Any] | None = None,
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any]:
     """
     Ejecuta una solicitud y devuelve un objeto JSON.
 
@@ -96,7 +95,7 @@ async def _request(
         "Content-Type": "application/json",
     }
 
-    async def execute(http_client: httpx.AsyncClient) -> Dict[str, Any]:
+    async def execute(http_client: httpx.AsyncClient) -> dict[str, Any]:
         response = await http_client.request(
             method=method,
             url=f"{BASE_URL}{path}",
@@ -136,8 +135,8 @@ async def list_calendars(
     access_token: str,
     location_id: str,
     *,
-    client: Optional[httpx.AsyncClient] = None,
-) -> Dict[str, Any]:
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any]:
     """Consulta los calendarios de una subcuenta. Devuelve el JSON de GHL."""
     return await _request(
         access_token,
@@ -152,8 +151,8 @@ async def get_calendar(
     access_token: str,
     calendar_id: str,
     *,
-    client: Optional[httpx.AsyncClient] = None,
-) -> Dict[str, Any]:
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any]:
     """Consulta la configuración de un calendario."""
     return await _request(
         access_token,
@@ -174,10 +173,10 @@ async def get_free_slots(
     end_dt: datetime,
     timezone: str = "America/Bogota",
     *,
-    user_id: Optional[str] = None,
-    duration_minutes: Optional[int] = None,
-    client: Optional[httpx.AsyncClient] = None,
-) -> Dict[str, Any]:
+    user_id: str | None = None,
+    duration_minutes: int | None = None,
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any]:
     """
     Consulta disponibilidad y devuelve el JSON completo de GHL.
 
@@ -189,7 +188,7 @@ async def get_free_slots(
     """
     _validate_range(start_dt, end_dt)
 
-    params: Dict[str, Any] = {
+    params: dict[str, Any] = {
         "startDate": int(start_dt.timestamp() * 1000),
         "endDate": int(end_dt.timestamp() * 1000),
         "timezone": timezone,
@@ -216,10 +215,10 @@ async def get_available_slots(
     end_dt: datetime,
     timezone: str = "America/Bogota",
     *,
-    user_id: Optional[str] = None,
-    duration_minutes: Optional[int] = None,
-    client: Optional[httpx.AsyncClient] = None,
-) -> List[str]:
+    user_id: str | None = None,
+    duration_minutes: int | None = None,
+    client: httpx.AsyncClient | None = None,
+) -> list[str]:
     """
     Devuelve los horarios ISO disponibles, ordenados y sin duplicados.
 
@@ -271,11 +270,11 @@ async def upsert_contact(
     access_token: str,
     location_id: str,
     *,
-    email: Optional[str] = None,
-    phone: Optional[str] = None,
-    name: Optional[str] = None,
-    client: Optional[httpx.AsyncClient] = None,
-) -> Dict[str, Any]:
+    email: str | None = None,
+    phone: str | None = None,
+    name: str | None = None,
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any]:
     """
     Crea o actualiza un contacto.
 
@@ -287,7 +286,7 @@ async def upsert_contact(
     if not email and not phone:
         raise ValueError("Debes proporcionar email o phone.")
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "locationId": location_id,
     }
 
@@ -322,10 +321,10 @@ async def create_appointment(
     *,
     appointment_status: str = "new",
     to_notify: bool = False,
-    assigned_user_id: Optional[str] = None,
-    address: Optional[str] = None,
-    client: Optional[httpx.AsyncClient] = None,
-) -> Dict[str, Any]:
+    assigned_user_id: str | None = None,
+    address: str | None = None,
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any]:
     """
     Crea una cita y devuelve el JSON de GHL.
 
@@ -340,7 +339,7 @@ async def create_appointment(
     """
     _validate_range(start_dt, end_dt)
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "calendarId": calendar_id,
         "locationId": location_id,
         "contactId": contact_id,
@@ -370,8 +369,8 @@ async def get_appointment(
     access_token: str,
     appointment_id: str,
     *,
-    client: Optional[httpx.AsyncClient] = None,
-) -> Dict[str, Any]:
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any]:
     """Obtiene una cita utilizando su ID de GHL, no el de Google."""
     return await _request(
         access_token,
@@ -388,8 +387,8 @@ async def list_events(
     start_dt: datetime,
     end_dt: datetime,
     *,
-    client: Optional[httpx.AsyncClient] = None,
-) -> Dict[str, Any]:
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any]:
     """
     Consulta eventos del calendario en un rango.
 
@@ -416,22 +415,22 @@ async def update_appointment(
     access_token: str,
     appointment_id: str,
     *,
-    start_dt: Optional[datetime] = None,
-    end_dt: Optional[datetime] = None,
-    title: Optional[str] = None,
-    appointment_status: Optional[str] = None,
-    assigned_user_id: Optional[str] = None,
-    address: Optional[str] = None,
-    to_notify: Optional[bool] = None,
-    client: Optional[httpx.AsyncClient] = None,
-) -> Dict[str, Any]:
+    start_dt: datetime | None = None,
+    end_dt: datetime | None = None,
+    title: str | None = None,
+    appointment_status: str | None = None,
+    assigned_user_id: str | None = None,
+    address: str | None = None,
+    to_notify: bool | None = None,
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any]:
     """
     Actualiza una cita mediante PUT.
 
     Solo envía campos proporcionados.
     Para reprogramar, esta librería exige inicio y fin juntos.
     """
-    payload: Dict[str, Any] = {}
+    payload: dict[str, Any] = {}
 
     if start_dt is not None or end_dt is not None:
         if start_dt is None or end_dt is None:
@@ -476,8 +475,8 @@ async def cancel_appointment(
     appointment_id: str,
     *,
     to_notify: bool = False,
-    client: Optional[httpx.AsyncClient] = None,
-) -> Dict[str, Any]:
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any]:
     """
     Marca la cita como cancelada sin eliminarla.
 
@@ -496,7 +495,7 @@ async def delete_appointment(
     access_token: str,
     appointment_id: str,
     *,
-    client: Optional[httpx.AsyncClient] = None,
+    client: httpx.AsyncClient | None = None,
 ) -> bool:
     """
     Elimina el evento de GHL.
@@ -519,7 +518,7 @@ async def delete_appointment(
 # INTERPRETACIÓN DE RESPUESTAS
 # ============================================================
 
-def extract_appointment(data: Dict[str, Any]) -> Dict[str, Any]:
+def extract_appointment(data: dict[str, Any]) -> dict[str, Any]:
     """
     Extrae la cita de una respuesta directa o envuelta.
 
@@ -540,7 +539,7 @@ def extract_appointment(data: Dict[str, Any]) -> Dict[str, Any]:
     return data
 
 
-def get_meet_link(data: Dict[str, Any]) -> Optional[str]:
+def get_meet_link(data: dict[str, Any]) -> str | None:
     """
     Extrae un enlace de Google Meet del campo address.
 

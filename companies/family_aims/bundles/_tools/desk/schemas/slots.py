@@ -1,4 +1,3 @@
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -26,5 +25,5 @@ class Slot(BaseModel):
 class SlotsResponse(BaseModel):
     success: bool
     iana_timezone: str
-    available_slots: List[Slot]
-    errors: Optional[str] = None
+    available_slots: list[Slot]
+    errors: str | None = None

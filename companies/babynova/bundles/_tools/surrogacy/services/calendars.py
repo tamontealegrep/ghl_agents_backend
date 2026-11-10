@@ -7,19 +7,21 @@ A calendar exists when one of its variables is declared in the environment (see
 
 from __future__ import annotations
 
-import yaml
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, List, Mapping, Optional, Tuple
+from typing import Any
+
+import yaml
 
 from agent_backend.calendars import CalendarSettings
+from agent_backend.scheduling_schemas import Slot
 
 from ..core.config import CALENDARS_PATH
-from agent_backend.scheduling_schemas import Slot
 from . import booking, slot_calculator
 
 BUILTIN_RULES_KEY = "FT"
-Window = Tuple[int, int, int, int]
+Window = tuple[int, int, int, int]
 
 
 @lru_cache
@@ -31,7 +33,7 @@ def load_calendars_config() -> dict[str, Any]:
     """
     if not CALENDARS_PATH.exists():
         return {"default": {}, "calendars": {}}
-    with open(CALENDARS_PATH, "r", encoding="utf-8") as f:
+    with open(CALENDARS_PATH, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
 
@@ -120,7 +122,7 @@ class ConfiguredSlots:
         lunch = rules.get("lunch_break") or {}
         self._lunch = (lunch.get("start_hour", 12), lunch.get("end_hour", 13)) if lunch else None
 
-    def window(self, weekday: int, day: int) -> Optional[Window]:
+    def window(self, weekday: int, day: int) -> Window | None:
         """Returns the opening window of a weekday.
 
         Args:
@@ -155,7 +157,7 @@ class ConfiguredSlots:
     _window = window
     _is_lunch = is_lunch
 
-    def compute_available_slots(self, **kwargs: Any) -> List[Slot]:
+    def compute_available_slots(self, **kwargs: Any) -> list[Slot]:
         """Generates the bookable slots with this calendar's hours.
 
         Args:
@@ -208,7 +210,7 @@ def available_keys(settings: Any) -> list[str]:
     return list(settings.calendars)
 
 
-def resolve_calendar(settings: Any, calendar_type: Optional[str], config: Optional[Mapping[str, Any]] = None) -> Optional[CalendarContext]:
+def resolve_calendar(settings: Any, calendar_type: str | None, config: Mapping[str, Any] | None = None) -> CalendarContext | None:
     """Finds a calendar by the ``calendar_type`` a tool call sent.
 
     Args:
@@ -233,7 +235,7 @@ def resolve_calendar(settings: Any, calendar_type: Optional[str], config: Option
     return CalendarContext(key, tool, ConfiguredBooking(key, rules), slots, slots)
 
 
-def unknown_calendar_message(settings: Any, calendar_type: Optional[str]) -> str:
+def unknown_calendar_message(settings: Any, calendar_type: str | None) -> str:
     """Builds the error for a calendar that is not declared.
 
     Args:

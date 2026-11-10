@@ -2,7 +2,11 @@ from datetime import date, timedelta
 
 import pytest
 
-from agent_backend.builtin_tools.services.days_elapsed import check_days_elapsed, parse_days_threshold, parse_ymd_date
+from agent_backend.builtin_tools.services.days_elapsed import (
+    check_days_elapsed,
+    parse_days_threshold,
+    parse_ymd_date,
+)
 
 
 def test_parse_ymd_date_valid():

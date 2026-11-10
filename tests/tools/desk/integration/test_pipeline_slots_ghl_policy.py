@@ -5,9 +5,9 @@ Prueba que /get-available-slots-ghl aplica las restricciones de horario sobre lo
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from desk.api.v1.endpoints import get_available_slots_ghl as endpoint
 from fastapi.testclient import TestClient
 
-from desk.api.v1.endpoints import get_available_slots_ghl as endpoint
 from tests.tools.apps import desk_app as app
 
 client = TestClient(app)

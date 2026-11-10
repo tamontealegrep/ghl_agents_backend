@@ -1,14 +1,14 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
-from agent_backend.calendars import CalendarSettings
-
 from surrogacy.services import booking, slot_calculator
 from surrogacy.services.calendars import (
     ConfiguredBooking,
     ConfiguredSlots,
     resolve_calendar,
 )
+
+from agent_backend.calendars import CalendarSettings
 
 
 def _tool() -> CalendarSettings:
@@ -60,7 +60,7 @@ def test_configured_slots_match_the_ft_calculator_when_given_the_same_hours(monk
     ft_hours = {1: [7, 0, 12, 0], 3: [7, 0, 13, 0], 5: [14, 0, 17, 0]}
     slots_yaml = {"holidays": [], "windows": ft_hours, "lunch_break": {"start_hour": 13, "end_hour": 13}}
     monkeypatch.setattr(slot_calculator, "load_slots_config", lambda: slots_yaml)
-    now = datetime(2027, 3, 1, 12, 0, tzinfo=timezone.utc)
+    now = datetime(2027, 3, 1, 12, 0, tzinfo=UTC)
     kwargs = dict(now=now, date_range_days=14, duration_minutes=30, interval_minutes=35, user_tz="America/Bogota", busy_events=[])
 
     expected = slot_calculator.compute_available_slots(**kwargs)
@@ -72,7 +72,7 @@ def test_configured_slots_match_the_ft_calculator_when_given_the_same_hours(monk
 
 def test_configured_slots_skip_the_lunch_break_and_closed_days():
     configured = ConfiguredSlots("X", {"hours": {2: [8, 0, 14, 0]}, "lunch_break": {"start_hour": 12, "end_hour": 13}})
-    now = datetime(2027, 3, 1, 12, 0, tzinfo=timezone.utc)
+    now = datetime(2027, 3, 1, 12, 0, tzinfo=UTC)
     slots = configured.compute_available_slots(
         now=now, date_range_days=14, duration_minutes=60, user_tz="America/Bogota", busy_events=[]
     )

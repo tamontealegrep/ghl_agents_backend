@@ -3,16 +3,17 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter
 
+from agent_backend import date_formatting
+from agent_backend.google_calendar import get_access_token, list_events
+from agent_backend.timezones import parse_iso
+
 from ....core.config import get_settings
-from ....services.calendars import resolve_calendar, unknown_calendar_message
 from ....schemas.booking import (
     AppointmentInfo,
     FindAppointmentRequest,
     FindAppointmentResponse,
 )
-from agent_backend import date_formatting
-from agent_backend.google_calendar import get_access_token, list_events
-from agent_backend.timezones import parse_iso
+from ....services.calendars import resolve_calendar, unknown_calendar_message
 
 router = APIRouter()
 
@@ -23,7 +24,6 @@ async def find_appointment_google(req: FindAppointmentRequest):
     client_tz = req.iana_timezone.strip() or "America/Bogota"
     target_person = req.contact_name.strip()
     target_email = req.contact_email.strip().lower()
-    language = req.language.upper()
     cal = resolve_calendar(settings, req.calendar_type) if (req.calendar_type or "").strip() else None
     if cal is None:
         return FindAppointmentResponse(success=False, errors=unknown_calendar_message(settings, req.calendar_type))

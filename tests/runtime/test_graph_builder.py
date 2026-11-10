@@ -10,22 +10,22 @@ from __future__ import annotations
 
 from agent_runtime.dsl.schemas import ConstantItem, ToolContractField
 from agent_runtime.runtime.graph_builder import (
-    _apply_conditional_mutations,
     _append_history,
+    _apply_conditional_mutations,
     _apply_store_line,
     _bind_tool_inputs,
     _capture_json_schema,
     _coerce_constant,
+    _coerce_value,
     _extract_mechanical_arg_bindings,
     _interpolate_slots,
+    _json_schema_type,
     _llm_extract_capture,
     _make_node_fn,
-    _coerce_value,
-    _json_schema_type,
     _make_render_say,
-    _sync_language_change,
     _make_resolve_edges,
     _matches,
+    _sync_language_change,
     fresh_state,
     initial_slots,
 )

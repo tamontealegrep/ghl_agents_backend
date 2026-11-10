@@ -1,8 +1,7 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
-
 from desk.services import notifications
 from desk.services.notifications import join_errors, notify_booking
 
@@ -23,7 +22,7 @@ def _run(settings, **overrides):
         contact_name="Ana <b>Perez</b>",
         contact_email="ana@gmail.com",
         contact_phone="+570000000",
-        start_dt=datetime(2027, 3, 3, 14, 0, tzinfo=timezone.utc),
+        start_dt=datetime(2027, 3, 3, 14, 0, tzinfo=UTC),
         timezone="America/Bogota",
         event_link="https://cal/e",
         meet_link=None,

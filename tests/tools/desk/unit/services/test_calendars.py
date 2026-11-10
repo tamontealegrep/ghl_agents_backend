@@ -1,5 +1,4 @@
 import pytest
-
 from desk.core.config import ToolConfig, discover_calendar_keys
 from desk.services import booking_ivf, booking_sur, slots_ivf, slots_sur
 from desk.services.calendars import (

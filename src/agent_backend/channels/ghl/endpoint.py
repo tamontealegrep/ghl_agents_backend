@@ -17,28 +17,32 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
+import httpx
 from fastapi import APIRouter, status
 from langgraph.types import Command
 from starlette.concurrency import run_in_threadpool
 
-from agent_runtime.runtime.graph_builder import fresh_state
-import httpx
-from agent_runtime.runtime.session_resolver import resolve_session
-from agent_backend.channels.ghl.client import GhlClientConfig, search_conversation_channel_async, send_ghl_message_async
-from agent_backend.channels.ghl.text import normalize_channel
+from agent_backend.channels.ghl.client import (
+    GhlClientConfig,
+    search_conversation_channel_async,
+    send_ghl_message_async,
+)
 from agent_backend.channels.ghl.request import GhlAgentRequest
 from agent_backend.channels.ghl.runner import derive_execution_id
+from agent_backend.channels.ghl.text import normalize_channel
 from agent_backend.loader import AgentRegistry, message_buffer
 from agent_backend.persistence.postgres import (
     claim_conversations_needing_closing_message,
-    reset_closing_message_claim,
     mark_closing_message_sent,
     postgres_enabled,
+    reset_closing_message_claim,
     upsert_conversation,
 )
+from agent_runtime.runtime.graph_builder import fresh_state
+from agent_runtime.runtime.session_resolver import resolve_session
 
 
 @dataclass(frozen=True)
@@ -74,7 +78,7 @@ Everything that differs from one compiled agent's GHL endpoint to another.
     long-dead conversations once it catches back up. One .env var per
     agent, same pattern as debounce_seconds -- see each agent's own
     text.py."""
-    closing_message: "str | dict[str, str] | None" = None
+    closing_message: str | dict[str, str] | None = None
     """Override for the text sent by the closing sweep. A plain string
     always wins; a dict is looked up by the thread's preferred_language
     (stored as "English"/"Spanish"/"Portuguese" or as a code; English when
@@ -86,7 +90,7 @@ Everything that differs from one compiled agent's GHL endpoint to another.
     """(2026-10-02, pedido directamente) If True, an inbound message from
     the widget (LIVE_CHAT) is responded to via WhatsApp instead. Enabled
     by default; el widget solo se usa para el primer contacto."""
-    unsupported_media_message: "str | dict[str, str] | None" = None
+    unsupported_media_message: str | dict[str, str] | None = None
     """Override for the reply sent when a message arrives with no text (a
     video, audio or sticker reaches GHL with an empty body) in the middle of
     a conversation. Same shape as `closing_message`: a plain string always
@@ -111,7 +115,7 @@ _DEFAULT_CLOSING_MESSAGES: dict[str, str] = {
 }
 
 
-def _closing_message_text(cfg: CompiledAgentGhlConfig, preferred_language: "str | None") -> str:
+def _closing_message_text(cfg: CompiledAgentGhlConfig, preferred_language: str | None) -> str:
     if isinstance(cfg.closing_message, str):
         return cfg.closing_message
     messages = cfg.closing_message if isinstance(cfg.closing_message, dict) else _DEFAULT_CLOSING_MESSAGES
@@ -129,7 +133,7 @@ _DEFAULT_UNSUPPORTED_MEDIA_MESSAGES: dict[str, str] = {
 _LANGUAGE_CODES = {"spanish": "es", "english": "en", "portuguese": "pt"}
 
 
-def _unsupported_media_text(cfg: CompiledAgentGhlConfig, language: "str | None") -> str:
+def _unsupported_media_text(cfg: CompiledAgentGhlConfig, language: str | None) -> str:
     if isinstance(cfg.unsupported_media_message, str):
         return cfg.unsupported_media_message
     messages = (
@@ -233,7 +237,7 @@ Text accumulated for one thread_id, waiting out the debounce window.
     execution_ids: list[str] = field(default_factory=list)
     message_parts: list[str] = field(default_factory=list)
     last_request: object = None
-    flush_task: "asyncio.Task | None" = None
+    flush_task: asyncio.Task | None = None
 
 
 async def run_closing_sweep_once(cfg: CompiledAgentGhlConfig) -> int:
@@ -352,10 +356,10 @@ async def _closing_sweep_loop(cfg: CompiledAgentGhlConfig) -> None:
 
 async def resolve_reply_channel(
     request: GhlAgentRequest,
-    remembered: "str | None",
+    remembered: str | None,
     config: GhlClientConfig,
     logger: logging.Logger,
-) -> "str | None":
+) -> str | None:
     """
     The channel a reply goes out through. A payload without message.type (the one a workflow
     sends when the contact is created by their first message) carries no channel, and a reply
@@ -364,7 +368,7 @@ async def resolve_reply_channel(
     usable the payload's own value is returned and the default applies.
     """
 
-    def usable(channel: "str | None") -> bool:
+    def usable(channel: str | None) -> bool:
         return normalize_channel(channel) in config.channel_type_map
 
     channel = request.channel
@@ -398,7 +402,7 @@ def build_compiled_agent_router(cfg: CompiledAgentGhlConfig, registry: AgentRegi
     turn_locks: dict[str, asyncio.Lock] = {}
     known_channels: dict[str, str] = {}
 
-    async def _resolve_channel(request: GhlAgentRequest, thread_id: str, execution_id: str) -> "str | None":
+    async def _resolve_channel(request: GhlAgentRequest, thread_id: str, execution_id: str) -> str | None:
         channel = await resolve_reply_channel(request, known_channels.get(thread_id), cfg.ghl_client_config(), logger)
         if normalize_channel(channel) and normalize_channel(request.channel) != normalize_channel(channel):
             logger.info("[%s] Payload had no usable channel (%r); replying through %s.", execution_id, request.channel, channel)
@@ -469,7 +473,7 @@ def build_compiled_agent_router(cfg: CompiledAgentGhlConfig, registry: AgentRegi
             try:
                 await asyncio.wait_for(lock.acquire(), timeout=cfg.turn_lock_timeout_seconds)
                 holds_lock = True
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning(
                     "[%s] Previous turn still running after %ss; running this one anyway.",
                     thread_id,

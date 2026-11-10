@@ -35,7 +35,7 @@ from __future__ import annotations
 import os
 import re
 import threading
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import quote
 
@@ -318,7 +318,7 @@ def upsert_conversation(
                     last_user_message,
                     Jsonb(history or []),
                     Jsonb(build_slots_summary(slots)),
-                    datetime.now(timezone.utc),
+                    datetime.now(UTC),
                 ),
             )
     except Exception:

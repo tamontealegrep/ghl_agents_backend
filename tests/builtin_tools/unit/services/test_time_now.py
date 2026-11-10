@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -13,7 +13,7 @@ def test_get_current_time_returns_iso_string_with_offset():
 def test_get_current_time_utc_matches_wall_clock_within_a_few_seconds():
     result = get_current_time("UTC")
     parsed = datetime.fromisoformat(result)
-    assert abs((datetime.now(timezone.utc) - parsed).total_seconds()) < 5
+    assert abs((datetime.now(UTC) - parsed).total_seconds()) < 5
 
 
 def test_get_current_time_invalid_timezone_raises():

@@ -1,8 +1,9 @@
-from typing import List, Union, Optional
+
 from pydantic import BaseModel, Field
 
+
 class VisaCheckRequest(BaseModel):
-    nationalities: Union[str, List[str]] = Field(
+    nationalities: str | list[str] = Field(
         description="Una o más nacionalidades a revisar. Puede ser una lista o un string separado por comas.",
         examples=["USA", "China, India", ["Spain", "AFG"]]
     )
@@ -13,4 +14,4 @@ class VisaCheckResponse(BaseModel):
     requires_visa: bool = Field(description="Indica si la persona requiere visa para entrar a Colombia (basado en todas sus nacionalidades).")
     conditional_visa: bool = Field(description="Indica si el requisito de visa está condicionado a tener visa USA/Schengen.")
     summary: str = Field(description="Resumen legible de los requisitos encontrados.")
-    errors: Optional[str] = Field(default=None, description="Mensaje de error técnico si la consulta falló.")
+    errors: str | None = Field(default=None, description="Mensaje de error técnico si la consulta falló.")

@@ -10,7 +10,7 @@ already filtered is harmless.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 __all__ = [
@@ -44,7 +44,7 @@ def _parse(value: Any) -> datetime | None:
         parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
     except ValueError:
         return None
-    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
 def parse_busy(events: Iterable[Mapping[str, Any]]) -> list[Busy]:

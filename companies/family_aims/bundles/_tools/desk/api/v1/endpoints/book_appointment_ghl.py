@@ -1,29 +1,41 @@
-from datetime import datetime, timedelta
 import asyncio
 import logging
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+
 from fastapi import APIRouter
 
-from ....core.config import get_settings
-from ....schemas.booking import BookAppointmentRequest, BookAppointmentResponse
-from ....services.calendars import resolve_calendar, unknown_calendar_message
-from ....services import booking_engine as engine
 from agent_backend import date_formatting
-from ....services import slot_engine as engine_slots
-from ....services.email_templates import render_email_template
-from agent_backend.gmail import send_email
-from ....services.notifications import join_errors, notify_booking
-from ....services.slot_rules import earliest_start, load_busy
-from agent_backend.slot_filters import conflicts_with_busy
 from agent_backend.ghl_calendar import (
-    get_available_slots as ghl_get_available_slots,
-    list_events as ghl_list_events,
-    get_appointment as ghl_get_appointment,
-    upsert_contact as ghl_upsert_contact,
     create_appointment as ghl_create_appointment,
+)
+from agent_backend.ghl_calendar import (
     extract_appointment,
     get_meet_link,
 )
+from agent_backend.ghl_calendar import (
+    get_appointment as ghl_get_appointment,
+)
+from agent_backend.ghl_calendar import (
+    get_available_slots as ghl_get_available_slots,
+)
+from agent_backend.ghl_calendar import (
+    list_events as ghl_list_events,
+)
+from agent_backend.ghl_calendar import (
+    upsert_contact as ghl_upsert_contact,
+)
+from agent_backend.gmail import send_email
+from agent_backend.slot_filters import conflicts_with_busy
+
+from ....core.config import get_settings
+from ....schemas.booking import BookAppointmentRequest, BookAppointmentResponse
+from ....services import booking_engine as engine
+from ....services import slot_engine as engine_slots
+from ....services.calendars import resolve_calendar, unknown_calendar_message
+from ....services.email_templates import render_email_template
+from ....services.notifications import join_errors, notify_booking
+from ....services.slot_rules import earliest_start, load_busy
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -129,7 +141,7 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
                 end_dt=end_dt,
             )
         except Exception:
-            pass
+            logger.warning("Pre-booking calendar read failed; continuing.", exc_info=True)
 
         # Resolver contact_id vía upsert (formato original)
         upsert = await ghl_upsert_contact(
@@ -191,8 +203,10 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
         try:
             if meet_link and tool.google_client_id and tool.google_client_secret and tool.google_refresh_token and tool.calendar_id:
                 from agent_backend.google_calendar import (
-                    get_access_token as google_get_access_token,
                     find_synced_google_event,
+                )
+                from agent_backend.google_calendar import (
+                    get_access_token as google_get_access_token,
                 )
                 gcal_token = await google_get_access_token(tool.google_client_id, tool.google_client_secret, tool.google_refresh_token)
                 if gcal_token:
@@ -220,6 +234,8 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
             if not event_link and tool.google_client_id and tool.google_client_secret and tool.google_refresh_token and tool.calendar_id:
                 from agent_backend.google_calendar import (
                     get_access_token as google_get_access_token,
+                )
+                from agent_backend.google_calendar import (
                     list_events as gcal_list_events,
                 )
                 gcal_token = await google_get_access_token(tool.google_client_id, tool.google_client_secret, tool.google_refresh_token)
@@ -278,7 +294,7 @@ async def book_appointment_ghl(req: BookAppointmentRequest):
                         meet_link = m
                         break
             except Exception:
-                pass
+                logger.warning("Could not fetch the Meet link; booking continues without it.", exc_info=True)
 
         if not event_id:
             return BookAppointmentResponse(success=False, reason="creation_failed", errors="Failed to create the appointment. The booking was not completed")

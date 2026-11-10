@@ -1,21 +1,23 @@
 from fastapi import APIRouter
 
+from agent_backend.builtin_tools.endpoints import health
+
 from .endpoints import (
-    book_appointment_google,
-    cancel_appointment_google,
-    edit_appointment_google,
-    find_appointment_google,
-    get_available_slots_google,
-    get_available_slots_ghl,
     book_appointment_ghl,
-    resolve_event_link_ghl,
-    cancel_appointment_ghl,
-    edit_appointment_ghl,
-    find_appointment_ghl,
-    health,
-    check_visa,
+    book_appointment_google,
     calendars,
+    cancel_appointment_ghl,
+    cancel_appointment_google,
+    check_visa,
+    edit_appointment_ghl,
+    edit_appointment_google,
+    find_appointment_ghl,
+    find_appointment_google,
+    get_available_slots_ghl,
+    get_available_slots_google,
+    resolve_event_link_ghl,
 )
+
 # No cross-app aliasing: utils endpoints live under /tools/v1 exclusively.
 
 api_router = APIRouter()

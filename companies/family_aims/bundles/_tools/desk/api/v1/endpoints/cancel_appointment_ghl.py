@@ -1,11 +1,12 @@
 from fastapi import APIRouter
 
+from agent_backend.ghl_calendar import delete_appointment as ghl_delete_appointment
+
 from ....core.config import get_settings
 from ....schemas.booking import (
     CancelAppointmentRequest,
     CancelAppointmentResponse,
 )
-from agent_backend.ghl_calendar import delete_appointment as ghl_delete_appointment
 
 router = APIRouter()
 

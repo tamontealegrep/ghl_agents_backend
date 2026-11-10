@@ -4,12 +4,9 @@ y el cÃ¡lculo final de slots. No sabe nada de HTTP ni de Google.
 """
 
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple
 
-from agent_backend.slot_filters import conflicts_with_busy
-
-from ..core.config import BUSINESS_TZ, load_slots_config
 from agent_backend.scheduling_schemas import Slot
+from agent_backend.slot_filters import conflicts_with_busy
 from agent_backend.timezones import (
     add_days,
     build_business_instant,
@@ -18,8 +15,10 @@ from agent_backend.timezones import (
     get_weekday_in_tz,
 )
 
+from ..core.config import BUSINESS_TZ, load_slots_config
 
-def get_day_window_hours(weekday: int, day: int) -> Optional[Tuple[int, int, int, int]]:
+
+def get_day_window_hours(weekday: int, day: int) -> tuple[int, int, int, int] | None:
     """Ventana de atenciÃ³n (hora_ini, min_ini, hora_fin, min_fin) para ese dÃ­a de la semana, o None si no hay atenciÃ³n."""
     config = load_slots_config().get("windows", {})
     entry = config.get(weekday)
@@ -78,7 +77,7 @@ def valid_advance(slot_start_utc: datetime, processing_day_key: str) -> bool:
     return slot_day_key > processing_day_key
 
 
-def get_candidate_days_list(start: datetime, end: datetime, window_fn=None) -> List[dict]:
+def get_candidate_days_list(start: datetime, end: datetime, window_fn=None) -> list[dict]:
     """Lista los dÃ­as entre start y end que tienen ventana de atenciÃ³n y no son festivo."""
     days = []
     start_key = get_date_key_in_tz(start, BUSINESS_TZ)
@@ -106,14 +105,14 @@ def compute_available_slots(
     date_range_days: int,
     duration_minutes: int,
     user_tz: str,
-    busy_events: List[Tuple[datetime, datetime]],
+    busy_events: list[tuple[datetime, datetime]],
     window_fn=None,
     lunch_fn=None,
     interval_minutes: int = 0,
     pre_buffer_minutes: int = 0,
     post_buffer_minutes: int = 0,
-    min_notice_minutes: Optional[int] = None,
-) -> List[Slot]:
+    min_notice_minutes: int | None = None,
+) -> list[Slot]:
     """Generates the bookable slots inside the opening windows.
 
     Excludes holidays, lunch breaks, slots that overlap an existing appointment or its
@@ -140,7 +139,7 @@ def compute_available_slots(
     candidate_days = get_candidate_days_list(now, range_end, window_fn)
     earliest = now + timedelta(minutes=min_notice_minutes) if min_notice_minutes is not None else None
 
-    result_slots: List[Slot] = []
+    result_slots: list[Slot] = []
     step = max(duration_minutes, interval_minutes)
 
     for c in candidate_days:

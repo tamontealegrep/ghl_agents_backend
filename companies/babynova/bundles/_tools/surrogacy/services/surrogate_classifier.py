@@ -17,7 +17,7 @@ Cambios respecto a la version 1:
 """
 
 from datetime import date
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 from ..utils.parsing import (
     is_present,
@@ -62,7 +62,7 @@ _ELIGIBILITY_REASON_BY_REJECTION = {
 }
 
 
-def eligibility_fields(result: str, missing_field: Optional[str] = None) -> Tuple[str, str]:
+def eligibility_fields(result: str, missing_field: str | None = None) -> tuple[str, str]:
     """Traduce la etiqueta de clasificacion a los valores de los campos de GHL `eligibility_result` y `eligibility_reason`.
 
     Si el resultado es Inconclusive y se conoce el dato faltante, el motivo es `missing_data (<campo>)`.
@@ -75,7 +75,7 @@ def eligibility_fields(result: str, missing_field: Optional[str] = None) -> Tupl
     return "rejected", _ELIGIBILITY_REASON_BY_REJECTION.get(rejection, "none")
 
 
-def _parse_birth_type(value: Any) -> Optional[str]:
+def _parse_birth_type(value: Any) -> str | None:
     """Devuelve 'c_section', 'natural' o None cuando el valor no se reconoce."""
     clean = normalize(value)
     if clean in _C_SECTION_VALUES:
@@ -90,7 +90,7 @@ def _months_between(past: date, today: date) -> int:
     return (today.year - past.year) * 12 + (today.month - past.month)
 
 
-def _check_last_birth(last_birth_date: Any, birth_type: Any, today: date) -> Tuple[Optional[str], Optional[str]]:
+def _check_last_birth(last_birth_date: Any, birth_type: Any, today: date) -> tuple[str | None, str | None]:
     """Evalua el ultimo parto.
 
     Devuelve (veredicto, campo_faltante): veredicto es 'Inconclusive', 'Rejected (Timing)' o None cuando cumple.
@@ -115,12 +115,12 @@ def _check_last_birth(last_birth_date: Any, birth_type: Any, today: date) -> Tup
     return None, None
 
 
-def classify_surrogate(data: Dict[str, Any], today: Optional[date] = None) -> str:
+def classify_surrogate(data: dict[str, Any], today: date | None = None) -> str:
     """Aplica las reglas de elegibilidad en orden y devuelve la etiqueta de clasificacion resultante."""
     return classify_surrogate_detailed(data, today)[0]
 
 
-def classify_surrogate_detailed(data: Dict[str, Any], today: Optional[date] = None) -> Tuple[str, Optional[str]]:
+def classify_surrogate_detailed(data: dict[str, Any], today: date | None = None) -> tuple[str, str | None]:
     """Igual que classify_surrogate, pero devuelve tambien el primer dato faltante cuando el resultado es Inconclusive."""
     today = today or date.today()
 

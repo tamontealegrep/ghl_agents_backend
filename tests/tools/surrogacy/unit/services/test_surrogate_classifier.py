@@ -1,7 +1,6 @@
 from datetime import date
 
 import pytest
-
 from surrogacy.services.surrogate_classifier import (
     classify_surrogate,
     eligibility_fields,

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+
 from ....schemas.visa import VisaCheckRequest, VisaCheckResponse
 from ....services.visa_checker import VisaCheckerService
 

@@ -1,16 +1,15 @@
-from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 
 
 class CheckDocumentationRequest(BaseModel):
-    nationality: Optional[str] = Field(default=None, examples=["COL"])
-    document_type: Optional[Union[str, List[str]]] = Field(default=None, examples=["cedula_ciudadania", "ppt,pasaporte"])
+    nationality: str | None = Field(default=None, examples=["COL"])
+    document_type: str | list[str] | None = Field(default=None, examples=["cedula_ciudadania", "ppt,pasaporte"])
 
 
 class CheckDocumentationResponse(BaseModel):
     success: bool
-    approved: Optional[bool] = None
-    reason: Optional[str] = None
-    normalized_documents: Optional[List[str]] = None
-    errors: Optional[str] = None
+    approved: bool | None = None
+    reason: str | None = None
+    normalized_documents: list[str] | None = None
+    errors: str | None = None

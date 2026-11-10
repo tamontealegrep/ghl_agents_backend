@@ -3,7 +3,7 @@ Unit tests for agent_runtime.runtime.session_resolver — new/continuing/stale r
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from agent_runtime.runtime.session_resolver import now_iso, resolve_session
 
@@ -26,14 +26,14 @@ def test_continuing_when_no_timeout_configured():
 
 
 def test_continuing_when_within_timeout():
-    base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    base = datetime(2026, 1, 1, tzinfo=UTC)
     last_message_at = (base - timedelta(minutes=5)).isoformat()
     values = {"current_state": "ASKING_NAME", "last_message_at": last_message_at}
     assert resolve_session(values, timeout_minutes=10, now=base) == "continuing"
 
 
 def test_stale_when_gap_exceeds_timeout():
-    base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    base = datetime(2026, 1, 1, tzinfo=UTC)
     last_message_at = (base - timedelta(minutes=15)).isoformat()
     values = {"current_state": "ASKING_NAME", "last_message_at": last_message_at}
     assert resolve_session(values, timeout_minutes=10, now=base) == "stale"

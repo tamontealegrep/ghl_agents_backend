@@ -24,7 +24,7 @@ from typing import Any
 import httpx
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import devenv  # noqa: E402
+import devenv
 
 
 def list_operations(openapi: dict[str, Any]) -> list[tuple[str, str, str, str]]:

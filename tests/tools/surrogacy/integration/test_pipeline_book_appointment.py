@@ -5,9 +5,9 @@ from zoneinfo import ZoneInfo
 
 import pytest
 from fastapi.testclient import TestClient
-
 from surrogacy.api.v1.endpoints import book_appointment_google as endpoint
 from surrogacy.services import notifications
+
 from tests.tools.apps import surrogacy_app as app
 
 client = TestClient(app)

@@ -3,16 +3,17 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter
 
-from ....core.config import get_settings
-from ....services.calendars import resolve_calendar, unknown_calendar_message
+from agent_backend import date_formatting
+from agent_backend.google_calendar import get_access_token, list_events
 from agent_backend.scheduling_schemas import (
     AppointmentInfo,
     FindAppointmentRequest,
     FindAppointmentResponse,
 )
-from agent_backend import date_formatting
-from agent_backend.google_calendar import get_access_token, list_events
 from agent_backend.timezones import parse_iso
+
+from ....core.config import get_settings
+from ....services.calendars import resolve_calendar, unknown_calendar_message
 
 router = APIRouter()
 

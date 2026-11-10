@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from agent_backend.slot_filters import (
     conflicts_with_busy,
@@ -9,7 +9,7 @@ from agent_backend.slot_filters import (
     thin_by_interval,
 )
 
-T = datetime(2027, 3, 3, 14, 0, tzinfo=timezone.utc)
+T = datetime(2027, 3, 3, 14, 0, tzinfo=UTC)
 
 
 def at(minutes: int) -> datetime:

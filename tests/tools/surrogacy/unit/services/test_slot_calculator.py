@@ -1,7 +1,5 @@
-from datetime import timedelta
 
 import pytest
-
 from surrogacy.services.slot_calculator import (
     compute_available_slots,
     compute_processing_day_key,
@@ -10,6 +8,7 @@ from surrogacy.services.slot_calculator import (
     is_holiday,
     valid_advance,
 )
+
 from agent_backend.timezones import build_business_instant
 
 BOGOTA = "America/Bogota"

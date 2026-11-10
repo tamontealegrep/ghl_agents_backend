@@ -1,17 +1,18 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+
 from fastapi import APIRouter
 
-from ....core.config import get_settings
-from ....schemas.slots import SlotsRequest, SlotsResponse, Slot
-from ....services.calendars import resolve_calendar, unknown_calendar_message
-from agent_backend.slot_filters import conflicts_with_busy, thin_by_interval
-
-from ....services.slot_engine import compute_end_date, is_holiday, BUSINESS_TZ
-from ....services.slot_rules import earliest_start, load_busy, range_error
 from agent_backend.ghl_calendar import get_available_slots as ghl_get_available_slots
 from agent_backend.ghl_calendar import list_events as ghl_list_events
+from agent_backend.slot_filters import conflicts_with_busy, thin_by_interval
 from agent_backend.timezones import format_iso_with_offset, get_weekday_in_tz
+
+from ....core.config import get_settings
+from ....schemas.slots import Slot, SlotsRequest, SlotsResponse
+from ....services.calendars import resolve_calendar, unknown_calendar_message
+from ....services.slot_engine import BUSINESS_TZ, compute_end_date, is_holiday
+from ....services.slot_rules import earliest_start, load_busy, range_error
 
 router = APIRouter()
 

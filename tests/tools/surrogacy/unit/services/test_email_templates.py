@@ -1,5 +1,4 @@
 import pytest
-
 from surrogacy.services.email_templates import render_email_template
 
 VARS = dict(

@@ -8,14 +8,12 @@ Module.
 """
 
 import re
-from datetime import datetime, timedelta
-from typing import Optional
-from zoneinfo import ZoneInfo
+
 from agent_backend.booking_helpers import compute_end_date, format_contact_name, is_future, parse_start_date  # noqa: F401
 from agent_backend.booking_helpers import parse_duration_minutes as _parse_duration_minutes
 
 
-def parse_duration_minutes(raw: Optional[str], default: int = 10) -> int:
+def parse_duration_minutes(raw: str | None, default: int = 10) -> int:
     """Reads a duration in minutes; 10 when it is missing or not positive."""
     return _parse_duration_minutes(raw, default)
 
