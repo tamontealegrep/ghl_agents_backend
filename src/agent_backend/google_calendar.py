@@ -1,9 +1,8 @@
 """Google Calendar REST helpers (OAuth token, events, free/busy) shared by every company."""
 import asyncio
 from datetime import datetime, timedelta
-from urllib.parse import quote, urlparse
-
 from typing import Any
+from urllib.parse import quote, urlparse
 
 import httpx
 

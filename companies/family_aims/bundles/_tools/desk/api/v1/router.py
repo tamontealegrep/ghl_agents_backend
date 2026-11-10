@@ -1,11 +1,12 @@
 from fastapi import APIRouter
 
 from agent_backend.builtin_tools.endpoints import health
+from agent_backend.calendars_router import build_calendars_router
 
+from ...core import config
 from .endpoints import (
     book_appointment_ghl,
     book_appointment_google,
-    calendars,
     cancel_appointment_ghl,
     cancel_appointment_google,
     check_visa,
@@ -32,7 +33,7 @@ api_router.include_router(cancel_appointment_google.router, tags=["cancel_appoin
 api_router.include_router(edit_appointment_google.router, tags=["edit_appointment_google"])
 api_router.include_router(find_appointment_google.router, tags=["find_appointment_google"])
 api_router.include_router(get_available_slots_google.router, tags=["get_available_slots_google"])
-api_router.include_router(calendars.router, tags=["calendars"])
+api_router.include_router(build_calendars_router(lambda: config.get_settings()), tags=["calendars"])
 api_router.include_router(health.router, tags=["health"])
 api_router.include_router(check_visa.router, tags=["visa_check"])
 

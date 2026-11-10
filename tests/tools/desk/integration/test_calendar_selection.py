@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from desk.api.v1.endpoints import book_appointment_ghl as book_endpoint
 from desk.api.v1.endpoints import book_appointment_google as google_book_endpoint
-from desk.api.v1.endpoints import calendars as calendars_endpoint
+from desk.core import config as calendars_endpoint
 from desk.api.v1.endpoints import get_available_slots_ghl as slots_endpoint
 from desk.core.config import ToolConfig
 from fastapi.testclient import TestClient
