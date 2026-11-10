@@ -26,6 +26,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.5", "mypy>=1.10", "types-PyYAML"]
+# scripts/agent_chat_tui.py (terminal chat with an agent, real OpenAI calls)
+tui = ["questionary>=2.0", "rich>=13"]
 
 [project.scripts]
 agent-backend = "agent_backend.__main__:main"

@@ -20,4 +20,6 @@ services:
     volumes:
       # Agents (graph.json, assets.json, knowledge.md, agent.yaml) and tool plugins (_tools/).
       - ./bundles:/app/bundles
+      # Code shared by the company's business units (imported as `shared.tools...`).
+      - ./shared:/app/shared
     restart: unless-stopped

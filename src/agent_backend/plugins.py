@@ -5,6 +5,11 @@ module-level ``router``, a ``fastapi.APIRouter``. The backend mounts it at
 ``/agents/<slug>/tools``, which is where that agent's compiled tool calls land.
 Relative imports inside the ``tools`` folder work as in any package.
 
+A company can keep code that several of its business units share in
+``<company>/shared/tools/`` (next to the ``bundles`` folder). When
+``<company>/shared/__init__.py`` exists, the company folder is put on
+``sys.path`` so any plugin can ``from shared.tools.<module> import ...``.
+
 Bundles are trusted code supplied by the operator, like the image itself.
 """
 
@@ -62,6 +67,20 @@ def _import_plugin(bundle: AgentBundle) -> ModuleType:
     return module
 
 
+def _expose_company_shared(bundle: AgentBundle) -> None:
+    """Makes ``<company>/shared`` importable as the top-level package ``shared``.
+
+    One backend serves one company, so the name is unambiguous. Nothing happens when
+    the company has no ``shared/__init__.py``.
+
+    Args:
+        bundle: Bundle about to load its plugin; its folder sits in ``<company>/bundles``.
+    """
+    company_root = bundle.root.parent.parent
+    if (company_root / "shared" / "__init__.py").is_file() and str(company_root) not in sys.path:
+        sys.path.insert(0, str(company_root))
+
+
 def load_tool_router(bundle: AgentBundle) -> APIRouter | None:
     """Loads the agent's tool router, if the bundle ships one.
 
@@ -76,6 +95,7 @@ def load_tool_router(bundle: AgentBundle) -> APIRouter | None:
     """
     if not bundle.tools_dir.is_dir():
         return None
+    _expose_company_shared(bundle)
     router = getattr(_import_plugin(bundle), "router", None)
     if not isinstance(router, APIRouter):
         raise ImportError(f"{bundle.tools_dir} must expose a module-level `router: APIRouter`")
