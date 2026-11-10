@@ -10,6 +10,7 @@ SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import agent_chat_tui as tui
+from chat_tui import session as session_module
 
 COMPANIES = Path(__file__).resolve().parents[2] / "companies"
 
@@ -67,7 +68,7 @@ def test_a_session_of_a_missing_agent_is_reported(tmp_path, family_aims):
 
 
 def test_session_files_default_to_a_timestamped_log(tmp_path, monkeypatch):
-    monkeypatch.setattr(tui, "DEFAULT_SESSION_DIR", tmp_path / "logs")
+    monkeypatch.setattr(session_module, "DEFAULT_SESSION_DIR", tmp_path / "logs")
     path = tui.resolve_session_file("agent_x", None)
     assert path.parent == tmp_path / "logs" and path.name.startswith("agent_x_session_")
     assert tui.resolve_session_file("agent_x", str(tmp_path / "mine.json")) == tmp_path / "mine.json"
