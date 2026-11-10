@@ -7,7 +7,6 @@ def test_candidates_try_agent_routes_before_builtin():
     urls = candidate_urls("http://h:1/agents/sam/tools/check_visa")
     assert urls == [
         "http://h:1/agents/sam/tools/check-visa",
-        "http://h:1/agents/sam/tools/check_visa",
         "http://h:1/builtin-tools/check-visa",
     ]
 
@@ -32,6 +31,5 @@ def test_builtin_tools_skip_the_route_suffixes():
     urls = candidate_urls("http://h:1/agents/bn/tools/calculate_bmi", ("-ghl", "-sur"))
     assert urls == [
         "http://h:1/agents/bn/tools/calculate-bmi",
-        "http://h:1/agents/bn/tools/calculate_bmi",
         "http://h:1/builtin-tools/calculate-bmi",
     ]

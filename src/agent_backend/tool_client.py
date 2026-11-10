@@ -27,9 +27,10 @@ def candidate_urls(url: str, route_suffixes: tuple[str, ...] = ()) -> list[str]:
     """Lists the URLs to try for a tool call, most likely first.
 
     Order: the agent's kebab-case route with each configured suffix, the plain
-    kebab-case route, the snake_case route, then the shared built-in tool.
+    kebab-case route, then the shared built-in tool. Routes are always kebab-case:
+    the snake_case name of the contract is never tried.
     A built-in tool (``calculate_bmi``, ``time_now``...) never tries the suffixes:
-    only its plain kebab-case and snake_case routes, then the built-in one.
+    only its plain kebab-case route, then the built-in one.
 
     Args:
         url: The ``{base_url}/{tool_name}`` URL the runtime requested.
@@ -43,7 +44,7 @@ def candidate_urls(url: str, route_suffixes: tuple[str, ...] = ()) -> list[str]:
     kebab = tail.replace("_", "-")
     suffixes = () if kebab in _builtin_tool_names() else route_suffixes
     suffixed = [f"{head}/{kebab}{s}" for s in suffixes if not kebab.endswith(s)]
-    paths = [*suffixed, f"{head}/{kebab}", f"{head}/{tail}", f"{BUILTIN_TOOLS_PREFIX}/{kebab}"]
+    paths = [*suffixed, f"{head}/{kebab}", f"{BUILTIN_TOOLS_PREFIX}/{kebab}"]
     return [urlunsplit((parts.scheme, parts.netloc, p, parts.query, parts.fragment)) for p in dict.fromkeys(paths)]
 
 
