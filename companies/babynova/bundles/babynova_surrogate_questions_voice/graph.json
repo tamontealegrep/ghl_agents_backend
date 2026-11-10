@@ -1962,15 +1962,14 @@
         "store": [
           "[q__interest] = NULL",
           "[q__nationality] = NULL",
-          "[q__document_result] = NULL",
-          "[q__document_motive] = NULL",
-          "[q__document_norm] = NULL",
+          "[q__doc_type] = NULL",
+          "[q__birth_type] = NULL",
+          "[q__birth_window] = NULL",
+          "[q__availability] = NULL",
           "[q__classification_result] = NULL",
           "[q__force_cls] = NULL",
-          "[q__has_cc] = NULL",
           "[q__surrogate_age] = NULL",
           "[q__city_residence] = NULL",
-          "[q__eps_status] = NULL",
           "[q__no_interest_why] = NULL",
           "[q__children_count] = NULL",
           "[q__last_birth_date] = NULL",
@@ -1985,10 +1984,11 @@
           "[q__appt] = NULL",
           "[q__interest_try] = 0",
           "[q__nationality_try] = 0",
-          "[q__cc_try] = 0",
+          "[q__doc_type_try] = 0",
+          "[q__btype_try] = 0",
+          "[q__avail_try] = 0",
           "[q__age_try] = 0",
           "[q__city_try] = 0",
-          "[q__eps_try] = 0",
           "[q__kids_try] = 0",
           "[q__birth_try] = 0",
           "[q__csec_try] = 0",
@@ -2342,8 +2342,8 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_ASK_EPS",
-            "condition_text": "IF [q__city_residence] IS NOT NULL -> GO_TO: Q__SQ_ASK_EPS",
+            "target": "Q__SQ_ASK_CHILDREN",
+            "condition_text": "IF [q__city_residence] IS NOT NULL -> GO_TO: Q__SQ_ASK_CHILDREN",
             "is_mechanical": true,
             "python_expression": "q__city_residence is not None",
             "reason": null
@@ -2352,98 +2352,6 @@
         "fallback": [
           {
             "target": "Q__SQ_ASK_CITY",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "Q__SQ_ASK_EPS",
-        "node_type": "question",
-        "goal": [
-          "Ask about active EPS status."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "¿Cuentas con una epeese activa en Colombia?"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[q__eps_status] = [q__eps_status]"
-        ],
-        "capture": [
-          [
-            "q__eps_status",
-            "Literal[yes, no]"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_DECIDE_EPS",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "Q__SQ_DECIDE_EPS",
-        "node_type": "decision",
-        "goal": [
-          "Validate EPS status."
-        ],
-        "do": [
-          "[q__eps_try] = [q__eps_try] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_BYE_NOFIT",
-            "condition_text": "IF [q__eps_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_BYE_NOFIT",
-            "is_mechanical": true,
-            "python_expression": "q__eps_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__eps_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
-            "is_mechanical": true,
-            "python_expression": "q__eps_try >= MAX_RETRY_ATTEMPTS",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_ASK_EPS",
-            "condition_text": "IF [q__eps_status] IS NULL -> GO_TO: Q__SQ_ASK_EPS",
-            "is_mechanical": true,
-            "python_expression": "q__eps_status is None",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_ASK_CHILDREN",
-            "condition_text": "IF [q__eps_status] IS NOT NULL -> GO_TO: Q__SQ_ASK_CHILDREN",
-            "is_mechanical": true,
-            "python_expression": "q__eps_status is not None",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "Q__SQ_ASK_EPS",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -2665,8 +2573,8 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_ASK_CSEC",
-            "condition_text": "IF [q__last_birth_date] IS NOT NULL -> GO_TO: Q__SQ_ASK_CSEC",
+            "target": "Q__SQ_BIRTH_WINDOW",
+            "condition_text": "IF [q__last_birth_date] IS NOT NULL -> GO_TO: Q__SQ_BIRTH_WINDOW",
             "is_mechanical": true,
             "python_expression": "q__last_birth_date is not None",
             "reason": null
@@ -2675,6 +2583,142 @@
         "fallback": [
           {
             "target": "Q__SQ_ASK_LB",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "Q__SQ_BIRTH_WINDOW",
+        "node_type": "registration",
+        "goal": [
+          "Classify how long ago the last birth was, from [q__last_birth_date] and [q__now]."
+        ],
+        "do": [
+          "[q__birth_window] = 'under_12' when less than 12 whole months have passed between [q__last_birth_date] and [q__now]; '12_to_18' when 12 or more but less than 18 whole months have passed; 'over_18' when 18 or more whole months have passed."
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[q__birth_window] = 'under_12' | '12_to_18' | 'over_18'"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_ASK_BTYPE",
+            "condition_text": "IF [q__birth_window] == 'under_12' OR [q__birth_window] == '12_to_18' -> GO_TO: Q__SQ_ASK_BTYPE",
+            "is_mechanical": true,
+            "python_expression": "q__birth_window == 'under_12' or q__birth_window == '12_to_18'",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_ASK_CSEC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "Q__SQ_ASK_CSEC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "Q__SQ_ASK_BTYPE",
+        "node_type": "question",
+        "goal": [
+          "Ask whether the last birth was by C-section or natural. Only asked when the last birth was less than 18 months ago.",
+          "Map the answer to exactly one of: csection, natural."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Tu último parto, ¿fue por cesárea o parto natural?"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [
+          [
+            "q__birth_type",
+            "Literal[csection, natural]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_DEC_BTYPE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_DEC_BTYPE",
+        "node_type": "decision",
+        "goal": [
+          "Validate birth type."
+        ],
+        "do": [
+          "[q__btype_try] = [q__btype_try] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_BYE_NOFIT",
+            "condition_text": "IF [q__btype_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_BYE_NOFIT",
+            "is_mechanical": true,
+            "python_expression": "q__btype_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__btype_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "is_mechanical": true,
+            "python_expression": "q__btype_try >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_ASK_BTYPE",
+            "condition_text": "IF [q__birth_type] IS NULL -> GO_TO: Q__SQ_ASK_BTYPE",
+            "is_mechanical": true,
+            "python_expression": "q__birth_type is None",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_ASK_CSEC",
+            "condition_text": "IF [q__birth_type] IS NOT NULL -> GO_TO: Q__SQ_ASK_CSEC",
+            "is_mechanical": true,
+            "python_expression": "q__birth_type is not None",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "Q__SQ_ASK_BTYPE",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -3274,7 +3318,7 @@
         "node_id": "Q__SQ_DECIDE_NATIONALITY",
         "node_type": "decision",
         "goal": [
-          "Branch: Colombian goes straight to documentary check; non-Colombian is asked for document first."
+          "Nationality is only recorded; after the allowed retries the flow goes on without it."
         ],
         "do": [
           "Normalize [q__nationality] to ISO 3166-1 alpha-3 (UPPERCASE).",
@@ -3290,15 +3334,15 @@
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_BYE_NOFIT",
-            "condition_text": "IF [q__nationality_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_BYE_NOFIT",
+            "target": "Q__SQ_ASK_DOC_TYPE",
+            "condition_text": "IF [q__nationality] IS NOT NULL -> GO_TO: Q__SQ_ASK_DOC_TYPE",
             "is_mechanical": true,
-            "python_expression": "q__nationality_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__nationality is not None",
             "reason": null
           },
           {
-            "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__nationality_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "target": "Q__SQ_ASK_DOC_TYPE",
+            "condition_text": "IF [q__nationality_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_ASK_DOC_TYPE",
             "is_mechanical": true,
             "python_expression": "q__nationality_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -3308,20 +3352,6 @@
             "condition_text": "IF [q__nationality] IS NULL -> GO_TO: Q__SQ_ASK_NATIONALITY",
             "is_mechanical": true,
             "python_expression": "q__nationality is None",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_CHECK_DOCUMENTATION",
-            "condition_text": "IF [q__nationality] == 'COL' -> GO_TO: Q__SQ_CHECK_DOCUMENTATION",
-            "is_mechanical": true,
-            "python_expression": "q__nationality == 'COL'",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_ASK_CC",
-            "condition_text": "IF [q__nationality] IS NOT NULL -> GO_TO: Q__SQ_ASK_CC",
-            "is_mechanical": true,
-            "python_expression": "q__nationality is not None",
             "reason": null
           }
         ],
@@ -3336,33 +3366,31 @@
         ]
       },
       {
-        "node_id": "Q__SQ_ASK_CC",
+        "node_id": "Q__SQ_ASK_DOC_TYPE",
         "node_type": "question",
         "goal": [
-          "Capture the ID document(s) the candidate holds in Colombia.",
-          "Normalize to one of: cedula_ciudadania, cedula_extranjeria, ppt, pasaporte, otro."
+          "Ask which identity document the candidate has: cédula de ciudadanía, permiso por protección temporal (PPT) or another document.",
+          "Map the answer to exactly one of: cedula_ciudadania, ppt, other. A bare 'cédula' or 'CC' is cedula_ciudadania. A passport, a cédula de extranjería or any other document is other."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "¿Qué documento de identidad tienes en Colombia? Por ejemplo, cédula de ciudadanía, cédula de extranjería, PPT o pasaporte."
+          "¿Tienes cédula de ciudadanía, permiso por protección temporal (PPT) u otro documento?"
         ],
         "say_verbatim": false,
         "execute": null,
-        "store": [
-          "[q__has_cc] = map to (cedula_ciudadania | cedula_extranjeria | ppt | pasaporte | otro)"
-        ],
+        "store": [],
         "capture": [
           [
-            "q__has_cc",
-            "str"
+            "q__doc_type",
+            "Literal[cedula_ciudadania, ppt, other]"
           ]
         ],
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_DEC_CC",
+            "target": "Q__SQ_DEC_DOC_TYPE",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -3372,13 +3400,13 @@
         "fallback": []
       },
       {
-        "node_id": "Q__SQ_DEC_CC",
+        "node_id": "Q__SQ_DEC_DOC_TYPE",
         "node_type": "decision",
         "goal": [
-          "Validate reported document."
+          "Validate the document type."
         ],
         "do": [
-          "[q__cc_try] = [q__cc_try] + 1"
+          "[q__doc_type_try] = [q__doc_type_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3391,89 +3419,36 @@
         "route": [
           {
             "target": "Q__SQ_BYE_NOFIT",
-            "condition_text": "IF [q__cc_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_BYE_NOFIT",
+            "condition_text": "IF [q__doc_type_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_BYE_NOFIT",
             "is_mechanical": true,
-            "python_expression": "q__cc_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__doc_type_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__cc_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__doc_type_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__cc_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__doc_type_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
           },
           {
-            "target": "Q__SQ_ASK_CC",
-            "condition_text": "IF [q__has_cc] IS NULL -> GO_TO: Q__SQ_ASK_CC",
+            "target": "Q__SQ_ASK_DOC_TYPE",
+            "condition_text": "IF [q__doc_type] IS NULL -> GO_TO: Q__SQ_ASK_DOC_TYPE",
             "is_mechanical": true,
-            "python_expression": "q__has_cc is None",
+            "python_expression": "q__doc_type is None",
             "reason": null
           },
-          {
-            "target": "Q__SQ_CHECK_DOCUMENTATION",
-            "condition_text": "IF [q__has_cc] IS NOT NULL -> GO_TO: Q__SQ_CHECK_DOCUMENTATION",
-            "is_mechanical": true,
-            "python_expression": "q__has_cc is not None",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "Q__SQ_ASK_CC",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "Q__SQ_CHECK_DOCUMENTATION",
-        "node_type": "action",
-        "goal": [
-          "You MUST execute check_documentation in this turn as the first step of the node. It is mandatory and the only allowed action here.",
-          "It is FORBIDDEN to give or assume a documentary verdict from knowledge or context. The only valid [q__document_result] is what check_documentation returns."
-        ],
-        "do": [
-          "TOOL CALL ONLY: call check_documentation now.",
-          "Send [q__nationality] as nationality. If [q__has_cc] IS NOT NULL, send it as document_type; if NULL, omit it.",
-          "It is FORBIDDEN to ask, speak, run FAQs/handlers, or route before capturing [q__document_result].",
-          "[q__document_result] == false does NOT close the flow. If you do not execute check_documentation, STAY here and retry."
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": "check_documentation",
-        "store": [],
-        "capture": [
-          [
-            "q__document_result",
-            "bool"
-          ],
-          [
-            "q__document_motive",
-            "str"
-          ],
-          [
-            "q__document_norm",
-            "str"
-          ]
-        ],
-        "eval": "code",
-        "route": [
           {
             "target": "Q__SQ_ASK_DRUGS",
-            "condition_text": "IF [q__document_result] IS NOT NULL -> GO_TO: Q__SQ_ASK_DRUGS",
+            "condition_text": "IF [q__doc_type] IS NOT NULL -> GO_TO: Q__SQ_ASK_DRUGS",
             "is_mechanical": true,
-            "python_expression": "q__document_result is not None",
+            "python_expression": "q__doc_type is not None",
             "reason": null
           }
         ],
         "fallback": [
           {
-            "target": "Q__SQ_CHECK_DOCUMENTATION",
+            "target": "Q__SQ_ASK_DOC_TYPE",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -3556,8 +3531,8 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__uses_drugs] IS NOT NULL -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
+            "target": "Q__SQ_ASK_AVAIL",
+            "condition_text": "IF [q__uses_drugs] IS NOT NULL -> GO_TO: Q__SQ_ASK_AVAIL",
             "is_mechanical": true,
             "python_expression": "q__uses_drugs is not None",
             "reason": null
@@ -3566,6 +3541,96 @@
         "fallback": [
           {
             "target": "Q__SQ_ASK_DRUGS",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "Q__SQ_ASK_AVAIL",
+        "node_type": "question",
+        "goal": [
+          "Ask whether she has the time to attend the medical appointments."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "¿Tienes disponibilidad de tiempo para asistir a tus citas médicas?"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [
+          [
+            "q__availability",
+            "Literal[yes, no, unknown]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_DEC_AVAIL",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_DEC_AVAIL",
+        "node_type": "decision",
+        "goal": [
+          "Validate the availability answer."
+        ],
+        "do": [
+          "[q__avail_try] = [q__avail_try] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_BYE_NOFIT",
+            "condition_text": "IF [q__avail_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_BYE_NOFIT",
+            "is_mechanical": true,
+            "python_expression": "q__avail_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__avail_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "is_mechanical": true,
+            "python_expression": "q__avail_try >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_ASK_AVAIL",
+            "condition_text": "IF [q__availability] IS NULL OR [q__availability] == 'unknown' -> GO_TO: Q__SQ_ASK_AVAIL",
+            "is_mechanical": true,
+            "python_expression": "q__availability is None or q__availability == 'unknown'",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_RUN_CLASSIFICATION",
+            "condition_text": "IF [q__availability] IS NOT NULL -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
+            "is_mechanical": true,
+            "python_expression": "q__availability is not None",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "Q__SQ_ASK_AVAIL",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -3607,25 +3672,27 @@
         "node_id": "Q__SQ_RUN_CLASSIFICATION",
         "node_type": "action",
         "goal": [
-          "You MUST execute surrogate_classification_v1 in this turn. It is mandatory and the only allowed action here.",
-          "It is FORBIDDEN to declare approved/rejected/inconclusive or to classify by your own criteria, context, or memory. The only valid [q__classification_result] is what surrogate_classification_v1 returns."
+          "You MUST execute surrogate_classification in this turn. It is mandatory and the only allowed action here.",
+          "It is FORBIDDEN to declare approved/rejected/inconclusive or to classify by your own criteria, context, or memory. The only valid [q__classification_result] is what surrogate_classification returns."
         ],
         "do": [
-          "TOOL CALL ONLY: call surrogate_classification_v1 now.",
-          "ALWAYS send the 11 fields, each from its slot: age=[q__surrogate_age], city=[q__city_residence], eps=[q__eps_status], number_of_children=[q__children_count], last_birth_date=[q__last_birth_date], number_of_c_sections=[q__csections_count], abortions=[q__abortos], preeclampsia=[q__pree], bmi=[q__imc], documentation=[q__document_result], drug_use=[q__uses_drugs].",
+          "TOOL CALL ONLY: call surrogate_classification now.",
+          "ALWAYS send the 13 fields, each from its slot: age=[q__surrogate_age], city=[q__city_residence], nationality=[q__nationality], number_of_children=[q__children_count], last_birth_date=[q__last_birth_date], birth_type=[q__birth_type], number_of_c_sections=[q__csections_count], abortions=[q__abortos], preeclampsia=[q__pree], bmi=[q__imc], document_type=[q__doc_type], drug_use=[q__uses_drugs], availability=[q__availability].",
           "An empty slot is sent as an empty string, never omitted or invented.",
           "It is FORBIDDEN to speak, run FAQs/handlers, or route before capturing [q__classification_result].",
-          "If you do not execute surrogate_classification_v1, STAY here and retry. NEVER continue with an empty or assumed [q__classification_result]."
+          "If you do not execute surrogate_classification, STAY here and retry. NEVER continue with an empty or assumed [q__classification_result]."
         ],
         "trigger": [],
         "disabled_in": [],
         "say": [],
         "say_verbatim": false,
-        "execute": "surrogate_classification_v1",
-        "store": [],
+        "execute": "surrogate_classification",
+        "store": [
+          "[q__classification_result] = [q__result]"
+        ],
         "capture": [
           [
-            "q__classification_result",
+            "q__result",
             "str"
           ]
         ],
@@ -3653,7 +3720,7 @@
         "node_id": "Q__SQ_DEC_ELIGIBILITY",
         "node_type": "decision",
         "goal": [
-          "Resolve the outcome using surrogate_classification_v1 verdict (values in English)."
+          "Resolve the outcome using surrogate_classification verdict (values in English)."
         ],
         "do": [
           "Evaluate [q__classification_result]."
@@ -3718,13 +3785,6 @@
           },
           {
             "target": "Q__SQ_BYE_NOFIT",
-            "condition_text": "IF [q__classification_result] == 'Rejected (EPS)' -> GO_TO: Q__SQ_BYE_NOFIT",
-            "is_mechanical": true,
-            "python_expression": "q__classification_result == 'Rejected (EPS)'",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_BYE_NOFIT",
             "condition_text": "IF [q__classification_result] == 'Rejected (Children)' -> GO_TO: Q__SQ_BYE_NOFIT",
             "is_mechanical": true,
             "python_expression": "q__classification_result == 'Rejected (Children)'",
@@ -3763,6 +3823,13 @@
             "condition_text": "IF [q__classification_result] == 'Rejected (Drug Use)' -> GO_TO: Q__SQ_BYE_NOFIT",
             "is_mechanical": true,
             "python_expression": "q__classification_result == 'Rejected (Drug Use)'",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_BYE_NOFIT",
+            "condition_text": "IF [q__classification_result] == 'Rejected (Availability)' -> GO_TO: Q__SQ_BYE_NOFIT",
+            "is_mechanical": true,
+            "python_expression": "q__classification_result == 'Rejected (Availability)'",
             "reason": null
           }
         ],
@@ -7079,185 +7146,128 @@
       ]
     },
     {
-      "name": "check_documentation",
-      "description": "Authorized documentary verification; single source of truth for [document_result/document_motive/document_norm].",
-      "inputs": [
-        {
-          "name": "nationality",
-          "required": true,
-          "description": "ISO 3166-1 alpha-3 code in uppercase. Examples: COL, VEN, ARG, USA, ECU, MEX, PER, BOL, BRA. Inferred from what the candidate said — never from accent nor phone.",
-          "type_expr": "str",
-          "examples": [
-            "COL",
-            "VEN",
-            "USA"
-          ]
-        },
-        {
-          "name": "document_type",
-          "required": false,
-          "description": "Array of document types. Only sent when nationality != 'COL'. Per-element values: cedula_ciudadania and ppt (approve); cedula_extranjeria, pasaporte, otro (reject). Approve if ANY array element is an approved type.",
-          "type_expr": "list[Literal[cedula_ciudadania, ppt, cedula_extranjeria, pasaporte, otro]]",
-          "examples": []
-        }
-      ],
-      "outputs": [
-        {
-          "name": "success",
-          "required": true,
-          "description": "Boolean: the verification executed successfully.",
-          "type_expr": "bool",
-          "examples": []
-        },
-        {
-          "name": "document_result",
-          "required": true,
-          "description": "Boolean: true if the candidate meets the documentary requirement, false otherwise.",
-          "type_expr": "bool",
-          "examples": []
-        },
-        {
-          "name": "document_motive",
-          "required": true,
-          "description": "Textual explanation of the verdict, in English (proper names of Colombian documents in Spanish). Example: \"Document not allowed ('pasaporte'). Cedula de Ciudadania or PPT is required for non-Colombians.\"",
-          "type_expr": "free_text",
-          "examples": []
-        },
-        {
-          "name": "document_norm",
-          "required": true,
-          "description": "Array with the normalized type of each provided document, in order. Values: cedula_ciudadania, ppt, cedula_extranjeria, pasaporte, otro, desconocido. Empty array ([]) when not applicable (Colombian, invalid nationality, or missing document_type).",
-          "type_expr": "list[Literal[cedula_ciudadania, ppt, cedula_extranjeria, pasaporte, otro, desconocido]]",
-          "examples": []
-        },
-        {
-          "name": "errors",
-          "required": true,
-          "description": "Technical error message if the verification failed. null on success.",
-          "type_expr": "str",
-          "examples": []
-        }
-      ],
-      "notes": [
-        "MANDATORY EXECUTION: upon entering Q__SQ_CHECK_DOCUMENTATION.",
-        "ARGUMENTS: nationality = ISO 3166-1 alpha-3 (UPPERCASE); if nationality != 'COL' send document_type = normalized list.",
-        "SOURCE OF TRUTH: use only document_result/document_motive/document_norm.",
-        "RULE: do not issue a verdict without executing; keep the result and continue the flow."
-      ]
-    },
-    {
-      "name": "surrogate_classification_v1",
-      "description": "Authorized final classification; single source of truth for [classification_result].",
+      "name": "surrogate_classification",
+      "description": "Authorized final classification tool for medical and demographic eligibility. Its response is the only authorized source to resolve if the candidate is approved, rejected or inconclusive.",
       "inputs": [
         {
           "name": "age",
           "required": false,
-          "description": "Candidate's age in years. Numeric when present.",
+          "description": "Candidate age in years. Numeric value when it exists.",
           "type_expr": "int",
           "examples": []
         },
         {
           "name": "city",
           "required": false,
-          "description": "Candidate's city of residence in Colombia. Send the captured text when present. Must be one of: Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá, Sibaté, Otro.",
+          "description": "Candidate city of residence in Colombia. Must be one of the allowed cities or Otro.",
           "type_expr": "str",
           "examples": [
             "Bogotá",
             "Chía",
-            "La Calera",
             "Otro"
           ]
         },
         {
-          "name": "eps",
+          "name": "nationality",
           "required": false,
-          "description": "Whether the candidate has active EPS in Colombia. Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent.",
+          "description": "Nationality as an ISO 3166-1 alpha-3 code. Recorded only; never rejects.",
           "type_expr": "str",
           "examples": [
-            "si",
-            "no",
-            "1",
-            "0"
+            "COL",
+            "VEN"
           ]
         },
         {
           "name": "number_of_children",
           "required": false,
-          "description": "Number of the candidate's biological children. Numeric when present.",
+          "description": "Number of children born alive. Numeric value when it exists.",
           "type_expr": "int",
           "examples": []
         },
         {
           "name": "last_birth_date",
           "required": false,
-          "description": "Candidate's last delivery date, in YYYY-MM-DD (also accepts YYYY/MM/DD). Send empty when absent.",
+          "description": "Date of the last birth, YYYY-MM-DD (also accepts YYYY/MM/DD). Empty when it does not exist.",
           "type_expr": "str",
           "examples": [
             "2023-05-14"
           ]
         },
         {
+          "name": "birth_type",
+          "required": false,
+          "description": "Type of the last birth: csection or natural. Required only when the last birth was less than 18 months ago.",
+          "type_expr": "str",
+          "examples": [
+            "csection",
+            "natural"
+          ]
+        },
+        {
           "name": "number_of_c_sections",
           "required": false,
-          "description": "Number of the candidate's C-sections. Numeric when present. Use 0 if none.",
+          "description": "Total number of C-sections. Use 0 when none.",
           "type_expr": "int",
           "examples": []
         },
         {
           "name": "abortions",
           "required": false,
-          "description": "Whether the candidate has had prior abortions or pregnancy losses. Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent.",
+          "description": "Whether the candidate has had an abortion. Recorded only.",
           "type_expr": "str",
           "examples": [
             "si",
-            "no",
-            "1",
-            "0"
+            "no"
           ]
         },
         {
           "name": "preeclampsia",
           "required": false,
-          "description": "Whether the candidate has a history of preeclampsia. Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent.",
+          "description": "Whether the candidate has a history of preeclampsia.",
           "type_expr": "str",
           "examples": [
             "si",
-            "no",
-            "1",
-            "0"
+            "no"
           ]
         },
         {
           "name": "bmi",
           "required": false,
-          "description": "Body Mass Index calculated by calculate_bmi. Numeric when present — never manually estimated.",
+          "description": "Body mass index calculated by calculate_bmi. Never estimated by hand.",
           "type_expr": "str",
           "examples": [
             "23.4"
           ]
         },
         {
-          "name": "documentation",
+          "name": "document_type",
           "required": false,
-          "description": "Whether the candidate meets the documentation requirement (from check_documentation result, or fixed 'si' for Colombians). Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent.",
+          "description": "Identity document: cedula_ciudadania, ppt or other.",
           "type_expr": "str",
           "examples": [
-            "si",
-            "no",
-            "1",
-            "0"
+            "cedula_ciudadania",
+            "ppt",
+            "other"
           ]
         },
         {
           "name": "drug_use",
           "required": false,
-          "description": "Whether the candidate currently uses recreational drugs. Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent.",
+          "description": "Whether the candidate uses or has used psychoactive substances.",
           "type_expr": "str",
           "examples": [
             "si",
-            "no",
-            "1",
-            "0"
+            "no"
+          ]
+        },
+        {
+          "name": "availability",
+          "required": false,
+          "description": "Whether the candidate has time available to attend the medical appointments.",
+          "type_expr": "str",
+          "examples": [
+            "si",
+            "no"
           ]
         }
       ],
@@ -7265,30 +7275,49 @@
         {
           "name": "success",
           "required": true,
-          "description": "Boolean indicating whether the classification executed successfully.",
+          "description": "Whether the classification was executed correctly.",
           "type_expr": "bool",
           "examples": []
         },
         {
-          "name": "classification_result",
+          "name": "result",
           "required": true,
-          "description": "Final classification. Expected values: 'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)' (covers both under 18 and recent delivery, 12 months or less), 'Rejected (City)', 'Rejected (EPS)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (Drug Use)'.",
+          "description": "Final classification: 'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (Drug Use)' or 'Rejected (Availability)'.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "eligibility_result",
+          "required": true,
+          "description": "Eligibility value for the GHL field: 'approved', 'rejected' or 'inconclusive'.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "eligibility_reason",
+          "required": true,
+          "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'drug_use', 'availability' when rejected, 'missing_data' when inconclusive, 'none' when approved.",
           "type_expr": "str",
           "examples": []
         },
         {
           "name": "errors",
           "required": true,
-          "description": "Technical error message if the classification failed. null on success.",
+          "description": "Technical error message if classification failed. null in case of success.",
           "type_expr": "str",
           "examples": []
         }
       ],
       "notes": [
-        "MANDATORY EXECUTION: upon entering Q__SQ_RUN_CLASSIFICATION.",
-        "ARGUMENTS: send the slots exactly as captured; missing values -> empty string; bmi from calculate_bmi; documentation from check_documentation.",
-        "SOURCE OF TRUTH: use classification_result as the only decision.",
-        "RULE: if 'Inconclusive', capture the lack and retry."
+        "MANDATORY EXECUTION TRIGGER: execute this tool immediately upon reaching node Q__SQ_RUN_CLASSIFICATION — imperative, without exception — with all the data collected up to that point.",
+        "ARGUMENTS: send captured fields as-is; empty when missing. Do not invent values. bmi must be copied literally from calculate_bmi.",
+        "ARGUMENT RULE: city must be one of: Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá, Sibaté, or 'Otro'. Any other city rejects the candidate by city.",
+        "ARGUMENT RULE: birth_type ('csection' or 'natural') is only required when the last birth was less than 18 months ago; otherwise it may be empty.",
+        "ARGUMENT RULE: document_type is 'cedula_ciudadania', 'ppt' or 'other'. Only the first two are accepted.",
+        "ARGUMENT RULE: abortions, preeclampsia, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive.",
+        "SOURCE OF TRUTH RULE: use 'result' as the only authorized verdict. Nationality is recorded but never rejects. Do not replace this decision with agent heuristics.",
+        "POST-EXECUTION RULE: if 'result' is 'Inconclusive', request or reconfirm the missing data before calling the tool again.",
+        "POST-EXECUTION RULE: if 'result' starts with 'Rejected', communicate it with empathy and do not continue the qualification. If it is 'Approved', continue to the questions and scheduling step."
       ]
     }
   ],

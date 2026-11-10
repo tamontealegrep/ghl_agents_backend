@@ -483,135 +483,111 @@
     ]
   },
   {
-    "name": "check_documentation",
-    "description": "Authorized documentary verification; single source of truth for [document_result/document_motive/document_norm].",
+    "name": "surrogate_classification",
+    "description": "Authorized final classification tool for medical and demographic eligibility. Its response is the only authorized source to resolve if the candidate is approved, rejected or inconclusive.",
     "notes": [
-      "MANDATORY EXECUTION: upon entering Q__SQ_CHECK_DOCUMENTATION.",
-      "ARGUMENTS: nationality = ISO 3166-1 alpha-3 (UPPERCASE); if nationality != 'COL' send document_type = normalized list.",
-      "SOURCE OF TRUTH: use only document_result/document_motive/document_norm.",
-      "RULE: do not issue a verdict without executing; keep the result and continue the flow."
-    ],
-    "inputs": [
-      {
-        "name": "nationality",
-        "required": true,
-        "description": "ISO 3166-1 alpha-3 code in uppercase. Examples: COL, VEN, ARG, USA, ECU, MEX, PER, BOL, BRA. Inferred from what the candidate said — never from accent nor phone."
-      },
-      {
-        "name": "document_type",
-        "required": false,
-        "description": "Array of document types. Only sent when nationality != 'COL'. Per-element values: cedula_ciudadania and ppt (approve); cedula_extranjeria, pasaporte, otro (reject). Approve if ANY array element is an approved type."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "success",
-        "required": true,
-        "description": "Boolean: the verification executed successfully."
-      },
-      {
-        "name": "document_result",
-        "required": true,
-        "description": "Boolean: true if the candidate meets the documentary requirement, false otherwise."
-      },
-      {
-        "name": "document_motive",
-        "required": true,
-        "description": "Textual explanation of the verdict, in English (proper names of Colombian documents in Spanish). Example: \"Document not allowed ('pasaporte'). Cedula de Ciudadania or PPT is required for non-Colombians.\""
-      },
-      {
-        "name": "document_norm",
-        "required": true,
-        "description": "Array with the normalized type of each provided document, in order. Values: cedula_ciudadania, ppt, cedula_extranjeria, pasaporte, otro, desconocido. Empty array ([]) when not applicable (Colombian, invalid nationality, or missing document_type)."
-      },
-      {
-        "name": "errors",
-        "required": true,
-        "description": "Technical error message if the verification failed. null on success."
-      }
-    ]
-  },
-  {
-    "name": "surrogate_classification_v1",
-    "description": "Authorized final classification; single source of truth for [classification_result].",
-    "notes": [
-      "MANDATORY EXECUTION: upon entering Q__SQ_RUN_CLASSIFICATION.",
-      "ARGUMENTS: send the slots exactly as captured; missing values -> empty string; bmi from calculate_bmi; documentation from check_documentation.",
-      "SOURCE OF TRUTH: use classification_result as the only decision.",
-      "RULE: if 'Inconclusive', capture the lack and retry."
+      "MANDATORY EXECUTION TRIGGER: execute this tool immediately upon reaching node Q__SQ_RUN_CLASSIFICATION — imperative, without exception — with all the data collected up to that point.",
+      "ARGUMENTS: send captured fields as-is; empty when missing. Do not invent values. bmi must be copied literally from calculate_bmi.",
+      "ARGUMENT RULE: city must be one of: Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá, Sibaté, or 'Otro'. Any other city rejects the candidate by city.",
+      "ARGUMENT RULE: birth_type ('csection' or 'natural') is only required when the last birth was less than 18 months ago; otherwise it may be empty.",
+      "ARGUMENT RULE: document_type is 'cedula_ciudadania', 'ppt' or 'other'. Only the first two are accepted.",
+      "ARGUMENT RULE: abortions, preeclampsia, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive.",
+      "SOURCE OF TRUTH RULE: use 'result' as the only authorized verdict. Nationality is recorded but never rejects. Do not replace this decision with agent heuristics.",
+      "POST-EXECUTION RULE: if 'result' is 'Inconclusive', request or reconfirm the missing data before calling the tool again.",
+      "POST-EXECUTION RULE: if 'result' starts with 'Rejected', communicate it with empathy and do not continue the qualification. If it is 'Approved', continue to the questions and scheduling step."
     ],
     "inputs": [
       {
         "name": "age",
         "required": false,
-        "description": "Candidate's age in years. Numeric when present."
+        "description": "Candidate age in years. Numeric value when it exists."
       },
       {
         "name": "city",
         "required": false,
-        "description": "Candidate's city of residence in Colombia. Send the captured text when present. Must be one of: Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá, Sibaté, Otro."
+        "description": "Candidate city of residence in Colombia. Must be one of the allowed cities or Otro."
       },
       {
-        "name": "eps",
+        "name": "nationality",
         "required": false,
-        "description": "Whether the candidate has active EPS in Colombia. Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent."
+        "description": "Nationality as an ISO 3166-1 alpha-3 code. Recorded only; never rejects."
       },
       {
         "name": "number_of_children",
         "required": false,
-        "description": "Number of the candidate's biological children. Numeric when present."
+        "description": "Number of children born alive. Numeric value when it exists."
       },
       {
         "name": "last_birth_date",
         "required": false,
-        "description": "Candidate's last delivery date, in YYYY-MM-DD (also accepts YYYY/MM/DD). Send empty when absent."
+        "description": "Date of the last birth, YYYY-MM-DD (also accepts YYYY/MM/DD). Empty when it does not exist."
+      },
+      {
+        "name": "birth_type",
+        "required": false,
+        "description": "Type of the last birth: csection or natural. Required only when the last birth was less than 18 months ago."
       },
       {
         "name": "number_of_c_sections",
         "required": false,
-        "description": "Number of the candidate's C-sections. Numeric when present. Use 0 if none."
+        "description": "Total number of C-sections. Use 0 when none."
       },
       {
         "name": "abortions",
         "required": false,
-        "description": "Whether the candidate has had prior abortions or pregnancy losses. Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent."
+        "description": "Whether the candidate has had an abortion. Recorded only."
       },
       {
         "name": "preeclampsia",
         "required": false,
-        "description": "Whether the candidate has a history of preeclampsia. Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent."
+        "description": "Whether the candidate has a history of preeclampsia."
       },
       {
         "name": "bmi",
         "required": false,
-        "description": "Body Mass Index calculated by calculate_bmi. Numeric when present — never manually estimated."
+        "description": "Body mass index calculated by calculate_bmi. Never estimated by hand."
       },
       {
-        "name": "documentation",
+        "name": "document_type",
         "required": false,
-        "description": "Whether the candidate meets the documentation requirement (from check_documentation result, or fixed 'si' for Colombians). Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent."
+        "description": "Identity document: cedula_ciudadania, ppt or other."
       },
       {
         "name": "drug_use",
         "required": false,
-        "description": "Whether the candidate currently uses recreational drugs. Accepts booleans (true/false) or text equivalents ('si'/'no', 'yes'/'no', '1'/'0'). Send empty when absent."
+        "description": "Whether the candidate uses or has used psychoactive substances."
+      },
+      {
+        "name": "availability",
+        "required": false,
+        "description": "Whether the candidate has time available to attend the medical appointments."
       }
     ],
     "outputs": [
       {
         "name": "success",
         "required": true,
-        "description": "Boolean indicating whether the classification executed successfully."
+        "description": "Whether the classification was executed correctly."
       },
       {
-        "name": "classification_result",
+        "name": "result",
         "required": true,
-        "description": "Final classification. Expected values: 'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)' (covers both under 18 and recent delivery, 12 months or less), 'Rejected (City)', 'Rejected (EPS)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (Drug Use)'."
+        "description": "Final classification: 'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (Drug Use)' or 'Rejected (Availability)'."
+      },
+      {
+        "name": "eligibility_result",
+        "required": true,
+        "description": "Eligibility value for the GHL field: 'approved', 'rejected' or 'inconclusive'."
+      },
+      {
+        "name": "eligibility_reason",
+        "required": true,
+        "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'drug_use', 'availability' when rejected, 'missing_data' when inconclusive, 'none' when approved."
       },
       {
         "name": "errors",
         "required": true,
-        "description": "Technical error message if the classification failed. null on success."
+        "description": "Technical error message if classification failed. null in case of success."
       }
     ]
   }
