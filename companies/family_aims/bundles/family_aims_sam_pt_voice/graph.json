@@ -8057,7 +8057,14 @@
         {
           "name": "event_link",
           "required": true,
-          "description": "Link to the event in the calendar. null if the booking was not completed.",
+          "description": "Link to the event in the advisor's Google Calendar. null with GoHighLevel or if the booking was not completed.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "calendar_link",
+          "required": true,
+          "description": "Link that adds the appointment to the patient's own Google Calendar. Always built when the booking was completed; null otherwise.",
           "type_expr": "str",
           "examples": []
         },
