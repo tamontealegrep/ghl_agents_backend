@@ -29,6 +29,7 @@ class BookAppointmentResponse(BaseModel):
     reason: str | None = None
     event_id: str | None = None
     event_link: str | None = None
+    calendar_link: str | None = Field(default=None, description="Link that adds the appointment to the patient's Google Calendar (always built, needs no credentials).")
     meet_link: str | None = None
     errors: str | None = None
 

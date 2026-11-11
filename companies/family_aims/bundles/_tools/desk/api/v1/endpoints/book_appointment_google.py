@@ -11,6 +11,7 @@ from agent_backend.timezones import get_hour_in_tz, get_weekday_in_tz
 from ....core.config import get_settings
 from ....schemas.booking import BookAppointmentRequest, BookAppointmentResponse
 from ....services import booking_engine as engine
+from ....services.calendar_links import build_add_to_calendar_link
 from ....services.calendars import resolve_calendar, unknown_calendar_message
 from ....services.email_templates import render_email_template
 from ....services.notifications import join_errors, notify_booking
@@ -108,6 +109,7 @@ async def book_appointment_google(req: BookAppointmentRequest):
         event_link = event.get("htmlLink")
         meet_link = event.get("hangoutLink")
 
+        calendar_link = build_add_to_calendar_link(start_dt, end_dt, language, meet_link)
         notify_error = await notify_booking(
             settings,
             calendar=calendar_type,
@@ -125,6 +127,7 @@ async def book_appointment_google(req: BookAppointmentRequest):
                 success=True,
                 event_id=event_id,
                 event_link=event_link,
+                calendar_link=calendar_link,
                 meet_link=meet_link,
                 errors=notify_error,
             )
@@ -152,6 +155,7 @@ async def book_appointment_google(req: BookAppointmentRequest):
                 booking_time=date_formatting.format_booking_time(local_start, language),
                 meet_link=meet_link or "",
                 event_link=event_link or "",
+                calendar_link=calendar_link,
             )
             await send_email(
                 gmail_token, gmail.sender_email, contact_email, engine.EMAIL_SUBJECTS[language], html_body
@@ -161,6 +165,7 @@ async def book_appointment_google(req: BookAppointmentRequest):
                 success=True,
                 event_id=event_id,
                 event_link=event_link,
+                calendar_link=calendar_link,
                 meet_link=meet_link,
                 errors=join_errors(
                     f"The appointment was created but email notification failed: {email_error}", notify_error
@@ -168,7 +173,12 @@ async def book_appointment_google(req: BookAppointmentRequest):
             )
 
         return BookAppointmentResponse(
-            success=True, event_id=event_id, event_link=event_link, meet_link=meet_link, errors=notify_error
+            success=True,
+            event_id=event_id,
+            event_link=event_link,
+            calendar_link=calendar_link,
+            meet_link=meet_link,
+            errors=notify_error,
         )
 
     except Exception as e:

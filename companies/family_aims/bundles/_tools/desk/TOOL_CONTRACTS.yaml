@@ -75,7 +75,10 @@ tool_contracts:
         description: "Identificador del evento creado. null si la reserva no se completó."
       - name: event_link
         required: true
-        description: "Enlace al evento en Google Calendar. null si la reserva no se completó."
+        description: "Enlace al evento en Google Calendar del asesor. null con GoHighLevel o si la reserva no se completó."
+      - name: calendar_link
+        required: true
+        description: "Enlace que agrega la cita al Google Calendar del paciente. Siempre se genera cuando la reserva se completó; null si no."
       - name: meet_link
         required: true
         description: "Enlace de videollamada de la cita. null si la reserva no se completó."
