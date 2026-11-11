@@ -147,7 +147,7 @@ BN_GOOGLE_CALENDAR_ID_CONTROL=control@group.calendar.google.com
 BN_DURATION_MINUTES_CONTROL=20
 ```
 
-`CONTROL` es la **clave**: el valor que las herramientas de agenda reciben en `calendar_type`, en cualquier combinación de mayúsculas. Existen siempre `IVF` y `SUR` en Family Aims, y `FT` en BabyNova. Las variables de **Gmail** (`*_GOOGLE_CLIENT_ID_GMAIL`, `*_GMAIL_SENDER_EMAIL`...) no son calendarios: sirven para enviar correos, y `GMAIL` es una clave reservada. Tampoco lo es `*_NOTIFICATION_EMAIL`.
+`CONTROL` es la **clave**: el valor que las herramientas de agenda reciben en `calendar_type`, en cualquier combinación de mayúsculas. Existe siempre `FT`, tanto en Family Aims como en BabyNova. En Family Aims `FT` es el calendario **round robin** de GoHighLevel, que reparte las citas entre los asesores (ya no hay calendarios `IVF` ni `SUR`). Las variables de **Gmail** (`*_GOOGLE_CLIENT_ID_GMAIL`, `*_GMAIL_SENDER_EMAIL`...) no son calendarios: sirven para enviar correos, y `GMAIL` es una clave reservada. Tampoco lo es `*_NOTIFICATION_EMAIL`.
 
 Verifica qué calendarios detectó el contenedor (no devuelve ids ni credenciales):
 
@@ -155,9 +155,9 @@ Verifica qué calendarios detectó el contenedor (no devuelve ids ni credenciale
 curl http://localhost:8012/agents/babynova/tools/calendars
 ```
 
-**Reglas de cada calendario** (horario, almuerzo, prefijo del título y del asunto, nombre del agente y plantilla de correo en Family Aims) en `bundles/_tools/<plugin>/config/calendars.yaml`. Un calendario sin entrada usa la sección `default`, que hoy tiene **valores provisionales** (copian el horario de IVF y de FT respectivamente): revísalos antes de usarlo con pacientes. `IVF`, `SUR` y `FT` conservan sus reglas en código.
+**Reglas de cada calendario** (horario, almuerzo, prefijo del título y del asunto, nombre del agente y plantilla de correo en Family Aims) en `bundles/_tools/<plugin>/config/calendars.yaml`. Un calendario sin entrada usa la sección `default`, que hoy tiene **valores provisionales** (copian el horario de IVF y de FT respectivamente): revísalos antes de usarlo con pacientes. `FT` de BabyNova conserva sus reglas en código; `FT` de Family Aims las tiene en `calendars.yaml` (lunes a viernes 07:30 a 17:00, almuerzo 12:00 a 13:00) y su plantilla de correo no menciona a ningún asesor (`templates/emails/book_appointment_ft_{es,en,pt}.html`). Las reglas heredadas de `IVF` y `SUR` siguen en código pero ningún calendario las usa.
 
-Todas las herramientas de agenda (horarios, agendar, buscar, editar, cancelar) reciben `calendar_type`. En **BabyNova es obligatorio**: una llamada sin él falla con un error que lista las claves válidas. En Family Aims, si no se envía, se usa `IVF`. Un valor desconocido falla en ambas empresas.
+Todas las herramientas de agenda (horarios, agendar, buscar, editar, cancelar) reciben `calendar_type`. En **BabyNova es obligatorio**: una llamada sin él falla con un error que lista las claves válidas. En Family Aims, si no se envía, se usa `FT`. Un valor desconocido falla en ambas empresas.
 
 **El agente debe saber elegir.** Las herramientas aceptan la clave, pero el prompt del agente (la definición del compilador) todavía habla solo de los calendarios originales: para que use `CONTROL`, agrégalo a la definición y recompila (sección 4).
 
@@ -176,11 +176,11 @@ Hay tres niveles, de lo más general a lo más concreto:
 | Qué | Dónde se define |
 |---|---|
 | Disponibilidad real del calendario (horas abiertas, festivos, bloqueos) | En **GoHighLevel**, en el propio calendario. Es lo primero que se aplica a los horarios libres |
-| Horarios de **IVF** y **SUR** (Family Aims) | `bundles/_tools/desk/config/slots.yaml` (`policies.ivf` / `policies.sur`: ventana por día y almuerzo, y la lista de **festivos**). Las reglas para *agendar* están en código: `services/booking_ivf.py` y `booking_sur.py` |
+| Horarios heredados de **IVF** y **SUR** (Family Aims, sin uso) | `bundles/_tools/desk/config/slots.yaml` (`policies.ivf` / `policies.sur`: ventana por día y almuerzo, y la lista de **festivos**). Las reglas para *agendar* están en código: `services/booking_ivf.py` y `booking_sur.py` |
 | Horarios de **FT** (BabyNova) | `bundles/_tools/surrogacy/config/slots.yaml` (`windows`, `lunch_break` y `holidays`; el sábado admite «primera semana del mes»). Las reglas para *agendar* están en código: `services/booking.py` (`is_valid_business_hour`) |
 | Horarios de **cualquier otro calendario** | `bundles/_tools/<plugin>/config/calendars.yaml`: sección `default` y una entrada por calendario (`hours`, `lunch_break`, títulos) |
 
-Los números de día son `0 = domingo ... 6 = sábado`, la hora es de Bogotá y cada ventana es `[hora_ini, min_ini, hora_fin, min_fin]`. Para IVF, SUR y FT, el horario que se *ofrece* (`slots.yaml`) y el que se *acepta al agendar* (código) no son idénticos: los de agendar son más amplios.
+Los números de día son `0 = domingo ... 6 = sábado`, la hora es de Bogotá y cada ventana es `[hora_ini, min_ini, hora_fin, min_fin]`. Para FT de BabyNova, el horario que se *ofrece* (`slots.yaml`) y el que se *acepta al agendar* (código) no son idénticos: los de agendar son más amplios.
 
 ### Herramientas de GoHighLevel compartidas (`agent_backend`)
 

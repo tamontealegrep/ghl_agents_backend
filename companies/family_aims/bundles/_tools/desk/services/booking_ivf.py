@@ -11,7 +11,7 @@ Module.
 
 AGENT_NAME = "Ayda"
 EVENT_SUMMARY_TAG = "IVF"
-EMAIL_TEMPLATE_PREFIX = "book_appointment_ivf"
+EMAIL_TEMPLATE_PREFIX = "book_appointment_ft"
 
 
 def is_valid_business_hour(weekday: int, hour: int, minute: int) -> bool:

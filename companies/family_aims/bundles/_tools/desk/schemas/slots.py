@@ -3,9 +3,9 @@ from pydantic import BaseModel, Field
 
 class SlotsRequest(BaseModel):
     calendar_type: str = Field(
-        default="IVF",
-        examples=["IVF", "SUR"],
-        description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'.",
+        default="FT",
+        examples=["FT"],
+        description="Calendar key (see GET /calendars), e.g. 'FT'.",
     )
     iana_timezone: str = Field(
         default="America/Bogota",

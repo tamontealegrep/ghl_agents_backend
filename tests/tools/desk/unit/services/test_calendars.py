@@ -27,13 +27,13 @@ LUNCH = {"start_hour": 12, "end_hour": 13}
 # --- discovery -------------------------------------------------------------
 
 
-def test_discovery_finds_ghl_and_google_ids_and_keeps_builtins_first():
+def test_discovery_finds_ghl_and_google_ids_and_keeps_ft_first():
     env = {
         "FA_GHL_CALENDAR_ID_CONSULTA": "abc",
         "FA_GOOGLE_CALENDAR_ID_SEGUIMIENTO": "def",
         "FA_GHL_CALENDAR_ID_IVF": "x",
     }
-    assert discover_calendar_keys(env) == ["IVF", "SUR", "CONSULTA", "SEGUIMIENTO"]
+    assert discover_calendar_keys(env) == ["FT", "CONSULTA", "IVF", "SEGUIMIENTO"]
 
 
 def test_discovery_ignores_empty_values_and_unrelated_variables():
@@ -45,12 +45,12 @@ def test_discovery_ignores_empty_values_and_unrelated_variables():
         "FA_GMAIL_SENDER_EMAIL": "x@y.z",
         "FA_NOTIFICATION_EMAIL": "team@y.z",
     }
-    assert discover_calendar_keys(env) == ["IVF", "SUR"]
+    assert discover_calendar_keys(env) == ["FT"]
 
 
 def test_google_and_timing_variables_also_declare_a_calendar():
     env = {"FA_GOOGLE_CLIENT_ID_CONTROL": "x", "FA_DURATION_MINUTES_SEGUIMIENTO": "20"}
-    assert discover_calendar_keys(env) == ["IVF", "SUR", "CONTROL", "SEGUIMIENTO"]
+    assert discover_calendar_keys(env) == ["FT", "CONTROL", "SEGUIMIENTO"]
 
 
 def test_discovery_supports_keys_with_underscores_and_digits():
@@ -68,9 +68,9 @@ def test_builtin_calendars_keep_their_own_policy_modules():
     assert sur.booking is booking_sur and sur.slots is slots_sur
 
 
-def test_empty_calendar_type_means_ivf():
-    assert resolve_calendar(_Settings(ivf=_tool()), None).key == "IVF"
-    assert resolve_calendar(_Settings(ivf=_tool()), "").key == "IVF"
+def test_empty_calendar_type_means_ft():
+    assert resolve_calendar(_Settings(ft=_tool()), None).key == "FT"
+    assert resolve_calendar(_Settings(ft=_tool()), "").key == "FT"
 
 
 def test_unknown_calendar_resolves_to_none_instead_of_falling_back_to_ivf():
@@ -143,3 +143,24 @@ def test_configured_slots_match_reference(policy_name, reference):
         assert configured.lunch_break(start_min, start_min + 30) == reference.lunch_break(
             start_min, start_min + 30
         )
+
+
+# --- FT: the single round-robin calendar --------------------------------------
+
+
+def test_ft_always_exists_and_is_the_default_calendar():
+    assert discover_calendar_keys({}) == ["FT"]
+
+
+def test_ft_takes_its_rules_from_calendars_yaml_and_sends_the_advisor_free_e_mail():
+    from desk.services.calendars import load_calendars_config
+
+    cal = resolve_calendar(_Settings(ft=_tool("rr-id")), "ft", load_calendars_config())
+
+    assert cal.tool.ghl_calendar_id == "rr-id"
+    assert cal.booking.EVENT_SUMMARY_TAG == "FT"
+    assert cal.booking.EMAIL_TEMPLATE_PREFIX == "book_appointment_ft"
+    assert cal.booking.is_valid_business_hour(1, 7, 30) is True  # opens at 07:30
+    assert cal.booking.is_valid_business_hour(1, 7, 0) is False
+    assert cal.booking.is_valid_business_hour(1, 12, 30) is False  # lunch
+    assert cal.booking.is_valid_business_hour(0, 9, 0) is False  # Sunday: closed

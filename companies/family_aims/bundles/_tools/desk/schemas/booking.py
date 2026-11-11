@@ -3,9 +3,9 @@ from pydantic import BaseModel, Field
 
 class BookAppointmentRequest(BaseModel):
     calendar_type: str = Field(
-        default="IVF",
-        examples=["IVF", "SUR"],
-        description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'.",
+        default="FT",
+        examples=["FT"],
+        description="Calendar key (see GET /calendars), e.g. 'FT'.",
     )
     start_date: str = Field(examples=["2026-08-28T09:00:00-05:00"])
     duration: str = Field(examples=["20"])
@@ -44,9 +44,7 @@ class FindAppointmentRequest(BaseModel):
             "it; it never looks a contact up by e-mail or phone."
         ),
     )
-    calendar_type: str = Field(
-        examples=["IVF"], description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'"
-    )
+    calendar_type: str = Field(examples=["FT"], description="Calendar key (see GET /calendars), e.g. 'FT'")
     iana_timezone: str = Field(default="America/Bogota", examples=["America/Bogota"])
     language: str = Field(default="ES", examples=["ES", "EN", "PT"])
 
@@ -55,7 +53,7 @@ class AppointmentInfo(BaseModel):
     event_id: str
     summary: str
     start_time: str
-    calendar_type: str  # "IVF" o "SUR"
+    calendar_type: str  # "FT"
 
 
 class FindAppointmentResponse(BaseModel):
@@ -66,9 +64,7 @@ class FindAppointmentResponse(BaseModel):
 
 class CancelAppointmentRequest(BaseModel):
     event_id: str = Field(examples=["_60q30c1060o30e1g60o30hc160o30jbi60o30h9g60o30c1g60o3..."])
-    calendar_type: str = Field(
-        examples=["IVF"], description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'"
-    )
+    calendar_type: str = Field(examples=["FT"], description="Calendar key (see GET /calendars), e.g. 'FT'")
     iana_timezone: str = Field(default="America/Bogota", examples=["America/Bogota"])
 
 
@@ -80,9 +76,7 @@ class CancelAppointmentResponse(BaseModel):
 
 class EditAppointmentRequest(BaseModel):
     event_id: str = Field(examples=["_60q30c1060o30e1g60o30hc160o30jbi60o30h9g60o30c1g60o3..."])
-    calendar_type: str = Field(
-        examples=["IVF"], description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'"
-    )
+    calendar_type: str = Field(examples=["FT"], description="Calendar key (see GET /calendars), e.g. 'FT'")
     new_start_date: str | None = Field(default=None, examples=["2026-08-28T10:00:00-05:00"])
     new_duration: str | None = Field(default=None, examples=["30"])
     iana_timezone: str = Field(default="America/Bogota", examples=["America/Bogota"])
@@ -100,9 +94,9 @@ class EditAppointmentResponse(BaseModel):
 # --- GHL: resolve event link ---
 class ResolveEventLinkRequest(BaseModel):
     calendar_type: str = Field(
-        default="IVF",
-        examples=["IVF", "SUR"],
-        description="Calendar key (see GET /calendars), e.g. 'IVF' or 'SUR'",
+        default="FT",
+        examples=["FT"],
+        description="Calendar key (see GET /calendars), e.g. 'FT'",
     )
     start_date: str = Field(examples=["2026-08-28T09:00:00-05:00"])
     iana_timezone: str = Field(default="America/Bogota", examples=["America/Bogota"])

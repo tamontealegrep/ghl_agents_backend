@@ -5,7 +5,8 @@ Module.
     del root con prefijo FA_. Nada más en el proyecto debe llamar a os.getenv
     directamente.
 
-    IVF y SU son calendarios independientes: cada uno con su propia autorización
+    Hoy hay un solo calendario, FT: un round robin de GoHighLevel que reparte las citas
+    entre los asesores (antes había IVF y SUR, uno por asesor). Cada calendario con su propia autorización
     OAuth (confirmado con el owner: no comparten refresh token) y su propia
     política de agenda — de ahí que ToolConfig agrupe credenciales + agenda por
     calendario, no solo las credenciales. Ese MISMO ToolConfig lo usan tanto
@@ -37,7 +38,7 @@ CALENDARS_PATH = Path(__file__).resolve().parent.parent / "config" / "calendars.
 
 # Calendars that always exist, so a deployment without their variables still answers
 # with "Missing FA_..." errors as before.
-BUILTIN_CALENDARS = ("IVF", "SUR")
+BUILTIN_CALENDARS = ("FT",)
 # Free time kept after every appointment so the agent is not rushed; FA_POST_BUFFER_MINUTES_<KEY> overrides it.
 DEFAULT_POST_BUFFER_MINUTES = 10
 
@@ -49,7 +50,7 @@ def discover_calendar_keys(environ: Mapping[str, str] | None = None) -> list[str
         environ: Variables to scan. Defaults to ``os.environ``.
 
     Returns:
-        Upper-case keys, IVF and SUR first. See ``agent_backend.calendars``.
+        Upper-case keys, FT first. See ``agent_backend.calendars``.
     """
     return _discover("FA", environ, BUILTIN_CALENDARS)
 

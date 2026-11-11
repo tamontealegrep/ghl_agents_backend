@@ -62,3 +62,32 @@ def test_the_webhook_puts_contact_id_and_location_id_in_the_contact(payload):
     contact = GhlAgentRequest.model_validate(payload).contact
 
     assert contact["contact_id"] == "abc123" and contact["location_id"] == "loc9"
+
+
+FAMILY_AIMS_AGENTS = [slug for company, slug in SCHEDULING_AGENTS if company == "family_aims"]
+
+
+@pytest.mark.parametrize("slug", FAMILY_AIMS_AGENTS)
+def test_family_aims_agents_use_only_the_ft_round_robin_calendar(slug):
+    """IVF and SUR are gone: every scheduling step asks for FT, and the contracts only allow it."""
+    graph = _graph("family_aims", slug)
+    calendar_lines = [
+        line
+        for node in graph["graph"]["nodes"]
+        for line in node.get("do", [])
+        if "calendar_type" in line and "].calendar_type" not in line
+    ]
+
+    assert calendar_lines and all("'FT'" in line for line in calendar_lines), calendar_lines
+    assert not any("'IVF'" in line or "'SUR'" in line for line in calendar_lines)
+    contracts = graph["tool_contracts"]
+    by_name = {c["name"]: c for c in (contracts.values() if isinstance(contracts, dict) else contracts)}
+    for tool in (
+        "get_available_slots",
+        "book_appointment",
+        "find_appointment",
+        "cancel_appointment",
+        "edit_appointment",
+    ):
+        calendar = {i["name"]: i for i in by_name[tool]["inputs"]}["calendar_type"]
+        assert calendar["type_expr"] == "Literal[FT]", (slug, tool)

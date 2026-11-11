@@ -1,8 +1,8 @@
 """Resolves a ``calendar_type`` request value to a calendar's credentials and rules.
 
 A calendar exists when its id is declared in the environment (see
-``core.config.discover_calendar_keys``). IVF and SUR use their own policy modules;
-every other calendar gets its rules from ``config/calendars.yaml``.
+``core.config.discover_calendar_keys``). FT, like every other calendar, gets its rules from
+``config/calendars.yaml``; only the legacy IVF and SUR keys (no longer configured) use their own policy modules.
 """
 
 from __future__ import annotations
@@ -136,7 +136,7 @@ class CalendarContext:
     """Everything an endpoint needs to work with one calendar.
 
     Attributes:
-        key: Upper-case calendar key, e.g. ``"IVF"``.
+        key: Upper-case calendar key, e.g. ``"FT"``.
         tool: Credentials, calendar ids and durations.
         booking: Booking rules (hours, agent name, email template).
         slots: Slot rules (windows, lunch break, closing hour).
@@ -167,13 +167,13 @@ def resolve_calendar(
 
     Args:
         settings: Plugin settings.
-        calendar_type: Value from the request, any letter case. Empty means ``IVF``.
+        calendar_type: Value from the request, any letter case. Empty means ``FT``.
         config: ``calendars.yaml`` contents; defaults to the file on disk.
 
     Returns:
         The calendar's context, or None when no such calendar is declared.
     """
-    key = (calendar_type or "IVF").strip().upper()
+    key = (calendar_type or "FT").strip().upper()
     tool = settings.calendars.get(key)
     if tool is None:
         return None

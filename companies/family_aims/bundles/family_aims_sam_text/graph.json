@@ -225,14 +225,14 @@
         "node_id": "AM__AM_FIND",
         "node_type": "action",
         "goal": [
-          "Search the IVF calendar via find_appointment."
+          "Search the calendar via find_appointment."
         ],
         "do": [
           "TOOL CALL ONLY: call find_appointment now.",
           "contact_name = [am__name] ?? {{contact.name}}",
           "contact_email = [am__email] ?? {{contact.email}}",
           "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it).",
-          "calendar_type = 'IVF'"
+          "calendar_type = 'FT'"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -252,83 +252,6 @@
         ],
         "eval": "code",
         "route": [
-          {
-            "target": "AM__AM_FIND_SAVE_IVF",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "AM__AM_FIND_SAVE_IVF",
-        "node_type": "registration",
-        "goal": [
-          "Save the IVF search result before searching surrogacy."
-        ],
-        "do": [
-          "[am__appointments_ivf] = [am__appointments]",
-          "[am__success_ivf] = [am__success]"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "AM__AM_FIND_SUR",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "AM__AM_FIND_SUR",
-        "node_type": "action",
-        "goal": [
-          "Search the surrogacy calendar via find_appointment."
-        ],
-        "do": [
-          "TOOL CALL ONLY: call find_appointment now.",
-          "contact_name = [am__name] ?? {{contact.name}}",
-          "contact_email = [am__email] ?? {{contact.email}}",
-          "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it).",
-          "calendar_type = 'SUR'"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": "find_appointment",
-        "store": [],
-        "capture": [
-          [
-            "am__success",
-            "bool"
-          ],
-          [
-            "am__appointments",
-            "list[Appointment]"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "AM__AM_FIND_USE_IVF",
-            "condition_text": "IF [am__appointments_ivf] IS NOT NULL AND [am__appointments_ivf].length > 0 -> GO_TO: AM__AM_FIND_USE_IVF",
-            "is_mechanical": true,
-            "python_expression": "am__appointments_ivf is not None and len(am__appointments_ivf) > 0",
-            "reason": null
-          },
           {
             "target": "AM__AM_FIND_ROUTE",
             "condition_text": "IF [am__appointments] IS NOT NULL AND [am__appointments].length > 0 -> GO_TO: AM__AM_FIND_ROUTE",
@@ -346,34 +269,6 @@
             "reason": null
           }
         ]
-      },
-      {
-        "node_id": "AM__AM_FIND_USE_IVF",
-        "node_type": "registration",
-        "goal": [
-          "Use the appointments found on the IVF calendar."
-        ],
-        "do": [
-          "[am__appointments] = [am__appointments_ivf]"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "AM__AM_FIND_ROUTE",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
       },
       {
         "node_id": "AM__AM_FIND_ROUTE",
@@ -2806,7 +2701,7 @@
         "execute": null,
         "store": [
           "[appt_svc] = 'ivf'",
-          "[appt_minutes] = <IVF_APPOINTMENT_DURATION_MINUTES>"
+          "[appt_minutes] = <APPOINTMENT_DURATION_MINUTES>"
         ],
         "capture": [],
         "eval": "code",
@@ -2835,7 +2730,7 @@
         "execute": null,
         "store": [
           "[appt_svc] = 'surrogacy'",
-          "[appt_minutes] = <SUR_APPOINTMENT_DURATION_MINUTES>"
+          "[appt_minutes] = <APPOINTMENT_DURATION_MINUTES>"
         ],
         "capture": [],
         "eval": "code",
@@ -2864,7 +2759,7 @@
         "execute": null,
         "store": [
           "[appt_svc] = NULL",
-          "[appt_minutes] = '<SUR_APPOINTMENT_DURATION_MINUTES> to <IVF_APPOINTMENT_DURATION_MINUTES>'"
+          "[appt_minutes] = <APPOINTMENT_DURATION_MINUTES>"
         ],
         "capture": [],
         "eval": "code",
@@ -3442,7 +3337,7 @@
         "store": [
           "[svc] = 'ivf'",
           "[appt_svc] = 'ivf'",
-          "[appt_minutes] = <IVF_APPOINTMENT_DURATION_MINUTES>"
+          "[appt_minutes] = <APPOINTMENT_DURATION_MINUTES>"
         ],
         "capture": [],
         "eval": "code",
@@ -3472,7 +3367,7 @@
         "store": [
           "[svc] = 'surrogacy'",
           "[appt_svc] = 'surrogacy'",
-          "[appt_minutes] = <SUR_APPOINTMENT_DURATION_MINUTES>"
+          "[appt_minutes] = <APPOINTMENT_DURATION_MINUTES>"
         ],
         "capture": [],
         "eval": "code",
@@ -3663,7 +3558,7 @@
           "[ropa] = NULL",
           "[svc] = 'surrogacy'",
           "[appt_svc] = 'surrogacy'",
-          "[appt_minutes] = <SUR_APPOINTMENT_DURATION_MINUTES>",
+          "[appt_minutes] = <APPOINTMENT_DURATION_MINUTES>",
           "[o__fit_try] = 0"
         ],
         "capture": [],
@@ -3779,7 +3674,7 @@
           "[ropa] = NULL",
           "[svc] = 'ivf'",
           "[appt_svc] = 'ivf'",
-          "[appt_minutes] = <IVF_APPOINTMENT_DURATION_MINUTES>",
+          "[appt_minutes] = <APPOINTMENT_DURATION_MINUTES>",
           "[o__fit_try] = 0"
         ],
         "capture": [],
@@ -6497,7 +6392,7 @@
         "say_verbatim": false,
         "execute": "get_available_slots",
         "store": [
-          "[appt_minutes] = <IVF_APPOINTMENT_DURATION_MINUTES>"
+          "[appt_minutes] = <APPOINTMENT_DURATION_MINUTES>"
         ],
         "capture": [
           [
@@ -6544,7 +6439,7 @@
         "say_verbatim": false,
         "execute": "get_available_slots",
         "store": [
-          "[appt_minutes] = <SUR_APPOINTMENT_DURATION_MINUTES>"
+          "[appt_minutes] = <APPOINTMENT_DURATION_MINUTES>"
         ],
         "capture": [
           [
@@ -7189,7 +7084,7 @@
         ],
         "do": [
           "TOOL CALL ONLY: call get_available_slots now.",
-          "calendar_type = 'IVF'. Send [user_timezone] as iana_timezone.",
+          "calendar_type = 'FT'. Send [user_timezone] as iana_timezone.",
           "It is FORBIDDEN to write to the contact, run FAQs or handlers, or route before capturing [sc__fresh_available_slots]."
         ],
         "trigger": [],
@@ -7239,7 +7134,7 @@
         ],
         "do": [
           "TOOL CALL ONLY: call get_available_slots now.",
-          "calendar_type = 'SUR'. Send [user_timezone] as iana_timezone.",
+          "calendar_type = 'FT'. Send [user_timezone] as iana_timezone.",
           "It is FORBIDDEN to write to the contact, run FAQs or handlers, or route before capturing [sc__fresh_available_slots]."
         ],
         "trigger": [],
@@ -7868,7 +7763,7 @@
           "[sc__book_try] = [sc__book_try] + 1",
           "TOOL CALL ONLY: call book_appointment now.",
           "start_date = [sc__start_date]",
-          "duration = <IVF_APPOINTMENT_DURATION_MINUTES>. language = [preferred_language] in uppercase ('EN', 'ES', or 'PT'). iana_timezone = [user_timezone].",
+          "duration = <APPOINTMENT_DURATION_MINUTES>. language = [preferred_language] in uppercase ('EN', 'ES', or 'PT'). iana_timezone = [user_timezone].",
           "contact_name = [sc__c_name], contact_email = [sc__c_email], contact_phone = [sc__c_phone].",
           "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it).",
           "It is FORBIDDEN to write to the contact, confirm the appointment, run FAQs or handlers, or route before capturing [sc__success].",
@@ -7943,7 +7838,7 @@
           "[sc__book_try] = [sc__book_try] + 1",
           "TOOL CALL ONLY: call book_appointment now.",
           "start_date = [sc__start_date]",
-          "duration = <SUR_APPOINTMENT_DURATION_MINUTES>. language = [preferred_language] in uppercase ('EN', 'ES', or 'PT'). iana_timezone = [user_timezone].",
+          "duration = <APPOINTMENT_DURATION_MINUTES>. language = [preferred_language] in uppercase ('EN', 'ES', or 'PT'). iana_timezone = [user_timezone].",
           "contact_name = [sc__c_name], contact_email = [sc__c_email], contact_phone = [sc__c_phone].",
           "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it).",
           "It is FORBIDDEN to write to the contact, confirm the appointment, run FAQs or handlers, or route before capturing [sc__success].",
@@ -10519,8 +10414,8 @@
         {
           "name": "calendar_type",
           "required": true,
-          "description": "Literal defining the calendar to use: 'IVF' for in vitro fertilization or 'SUR' for surrogacy. Determined by the flow node where the contact is located.",
-          "type_expr": "Literal[IVF, SUR]",
+          "description": "The calendar to use: always 'FT' (the round-robin calendar that shares the appointments among the advisors).",
+          "type_expr": "Literal[FT]",
           "examples": []
         },
         {
@@ -10568,8 +10463,8 @@
         }
       ],
       "notes": [
-        "MANDATORY EXECUTION: on entering SC__SC_AV_I (IVF) or SC__SC_AV_S (SUR), or SC__SC_CHK_I (IVF) or SC__SC_CHK_S (SUR) to re-verify the chosen time, and on any intent to schedule/reschedule/see-more/retry.",
-        "ARGUMENTS: calendar_type in {'IVF','SUR'}; iana_timezone is a real IANA zone (e.g., America/Bogota) resolved in-flow.",
+        "MANDATORY EXECUTION: on entering SC__SC_AV_I or SC__SC_AV_S, or SC__SC_CHK_I or SC__SC_CHK_S to re-verify the chosen time, and on any intent to schedule/reschedule/see-more/retry.",
+        "ARGUMENTS: calendar_type = 'FT'; iana_timezone is a real IANA zone (e.g., America/Bogota) resolved in-flow.",
         "SOURCE OF TRUTH: use only available_slots; each slot must include start_co/end_co and start_local/end_local.",
         "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal."
       ]
@@ -10581,8 +10476,8 @@
         {
           "name": "calendar_type",
           "required": true,
-          "description": "Literal defining the calendar where the booking will be made: 'IVF' for in vitro fertilization or 'SUR' for surrogacy.",
-          "type_expr": "Literal[IVF, SUR]",
+          "description": "The calendar where the booking will be made: always 'FT' (the round-robin calendar).",
+          "type_expr": "Literal[FT]",
           "examples": []
         },
         {
@@ -10597,7 +10492,7 @@
         {
           "name": "duration",
           "required": true,
-          "description": "Appointment duration in minutes, sent as a string. Fixed value per calendar: <IVF_APPOINTMENT_DURATION_MINUTES> for IVF, <SUR_APPOINTMENT_DURATION_MINUTES> for SUR.",
+          "description": "Appointment duration in minutes, sent as a string. Fixed value: <APPOINTMENT_DURATION_MINUTES>.",
           "type_expr": "str",
           "examples": [
             "30"
@@ -10695,8 +10590,8 @@
         }
       ],
       "notes": [
-        "MANDATORY EXECUTION: on entering SC__SC_BOOK_I (IVF) or SC__SC_BOOK_S (SUR); requires prior get_available_slots.",
-        "ARGUMENTS: start_date = chosen slot.start_co; duration = <IVF_APPOINTMENT_DURATION_MINUTES> for IVF or <SUR_APPOINTMENT_DURATION_MINUTES> for SUR; language in {'EN','ES','PT'}; iana_timezone = same as availability; calendar_type in {'IVF','SUR'}.",
+        "MANDATORY EXECUTION: on entering SC__SC_BOOK_I or SC__SC_BOOK_S; requires prior get_available_slots.",
+        "ARGUMENTS: start_date = chosen slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT'}; iana_timezone = same as availability; calendar_type = 'FT'.",
         "SOURCE OF TRUTH: success determines creation; do not confirm before success == true and event_id != null."
       ]
     },
@@ -10728,8 +10623,8 @@
         {
           "name": "calendar_type",
           "required": true,
-          "description": "Calendar filter: 'IVF' or 'SUR'.",
-          "type_expr": "Literal[IVF, SUR]",
+          "description": "Calendar filter: always 'FT'.",
+          "type_expr": "Literal[FT]",
           "examples": []
         },
         {
@@ -10776,7 +10671,7 @@
       ],
       "notes": [
         "MANDATORY EXECUTION: when the contact asks to check/verify appointment details.",
-        "ARGUMENTS: contact_name and/or contact_email; optional calendar_type in {'IVF','SUR'}; optional iana_timezone/language for formatting.",
+        "ARGUMENTS: contact_name and/or contact_email; optional calendar_type = 'FT'; optional iana_timezone/language for formatting.",
         "SOURCE OF TRUTH: appointments array; empty -> no records."
       ]
     },
@@ -10794,8 +10689,8 @@
         {
           "name": "calendar_type",
           "required": true,
-          "description": "Type of calendar where the appointment resides: 'IVF' or 'SUR'.",
-          "type_expr": "Literal[IVF, SUR]",
+          "description": "The calendar where the appointment resides: always 'FT'.",
+          "type_expr": "Literal[FT]",
           "examples": []
         },
         {
@@ -10826,7 +10721,7 @@
       ],
       "notes": [
         "MANDATORY EXECUTION: only with a confirmed event_id (from find_appointment).",
-        "ARGUMENTS: event_id (exact), calendar_type in {'IVF','SUR'}, optional iana_timezone.",
+        "ARGUMENTS: event_id (exact), calendar_type = 'FT', optional iana_timezone.",
         "SOURCE OF TRUTH: use success as the only authorized verdict."
       ]
     },
@@ -10844,8 +10739,8 @@
         {
           "name": "calendar_type",
           "required": true,
-          "description": "Type of calendar: 'IVF' or 'SUR'.",
-          "type_expr": "Literal[IVF, SUR]",
+          "description": "The calendar: always 'FT'.",
+          "type_expr": "Literal[FT]",
           "examples": []
         },
         {
@@ -10919,7 +10814,7 @@
       ],
       "notes": [
         "MANDATORY EXECUTION: when changing date/time/duration of a scheduled appointment.",
-        "ARGUMENTS: event_id (exact), calendar_type in {'IVF','SUR'}, optional new_start_date (from availability), optional new_duration, optional iana_timezone/language.",
+        "ARGUMENTS: event_id (exact), calendar_type = 'FT', optional new_start_date (from availability), optional new_duration, optional iana_timezone/language.",
         "SOURCE OF TRUTH: use success as the only authorized verdict; message/new_start_time are supporting details."
       ]
     },
@@ -10984,8 +10879,7 @@
     "HUMAN_IVF_ADVISOR_NAME": "Ayda Chuquizan",
     "PROCESS_DURATION_MONTHS": "24 months",
     "IVF_CITY": "Bogotá",
-    "IVF_APPOINTMENT_DURATION_MINUTES": "40",
-    "SUR_APPOINTMENT_DURATION_MINUTES": "30",
+    "APPOINTMENT_DURATION_MINUTES": "30",
     "MIGRATION_POLICY_REASON": "This policy responds exclusively to Colombian migration requirements and aims to ensure that the process can be carried out legally and safely.",
     "SUPPORTED_LANG": "English|Spanish|Portuguese",
     "DATA_POLICY_URL": "https://familyaims.com/privacy-policy-us/",

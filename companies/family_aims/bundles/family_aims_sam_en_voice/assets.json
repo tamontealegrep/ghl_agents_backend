@@ -215,7 +215,7 @@
     "description": "Authorized availability tool; source of truth for days and times.",
     "notes": [
       "MANDATORY EXECUTION: on entering SC__SC_AV and any schedule/reschedule/see-more/retry intent.",
-      "ARGUMENTS: calendar_type in {'IVF','SUR'}; iana_timezone is a real IANA zone resolved in-flow (e.g., America/Bogota).",
+      "ARGUMENTS: calendar_type = 'FT'; iana_timezone is a real IANA zone resolved in-flow (e.g., America/Bogota).",
       "SOURCE OF TRUTH: use only available_slots with start_co/end_co and start_local/end_local.",
       "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal."
     ],
@@ -223,7 +223,7 @@
       {
         "name": "calendar_type",
         "required": true,
-        "description": "Literal defining the calendar to use: 'IVF' for in vitro fertilization or 'SUR' for surrogacy. Determined by the flow node where the contact is located."
+        "description": "The calendar to use: always 'FT' (the round-robin calendar that shares the appointments among the advisors)."
       },
       {
         "name": "iana_timezone",
@@ -259,14 +259,14 @@
     "description": "Authorized booking tool; creates the appointment from a valid slot.",
     "notes": [
       "MANDATORY EXECUTION: on entering SC__SC_BOOK; requires prior get_available_slots.",
-      "ARGUMENTS: start_date = slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT'}; iana_timezone = same as availability; calendar_type in {'IVF','SUR'}.",
+      "ARGUMENTS: start_date = slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT'}; iana_timezone = same as availability; calendar_type = 'FT'.",
       "SOURCE OF TRUTH: success determines creation; do not confirm before success == true and event_id != null."
     ],
     "inputs": [
       {
         "name": "calendar_type",
         "required": true,
-        "description": "Literal defining the calendar where the booking will be made: 'IVF' for in vitro fertilization or 'SUR' for surrogacy."
+        "description": "The calendar where the booking will be made: always 'FT' (the round-robin calendar)."
       },
       {
         "name": "start_date",
@@ -347,7 +347,7 @@
     "description": "Authorized tool to search for a contact's existing appointments by name or email in the Family Aims calendars.",
     "notes": [
       "MANDATORY EXECUTION TRIGGER: execute it when the contact wants to check, verify, or learn the details of an appointment they believe they already booked.",
-      "ARGUMENTS: contact_name and/or contact_email; calendar_type in {'IVF','SUR'}; optional iana_timezone/language.",
+      "ARGUMENTS: contact_name and/or contact_email; calendar_type = 'FT'; optional iana_timezone/language.",
       "SOURCE OF TRUTH RULE: the 'appointments' array contains the list of appointments found. If it is empty, tell the contact that no records were found under that name or email."
     ],
     "inputs": [
@@ -369,7 +369,7 @@
       {
         "name": "calendar_type",
         "required": true,
-        "description": "Calendar filter: 'IVF' or 'SUR'."
+        "description": "Calendar filter: always 'FT'."
       },
       {
         "name": "iana_timezone",
@@ -406,7 +406,7 @@
     "notes": [
       "MANDATORY EXECUTION TRIGGER: execute it only when the contact explicitly requests to cancel their appointment and provides or confirms the event_id (previously obtained via find_appointment).",
       "ABSOLUTE EXECUTION RULE: do not confirm the cancellation before receiving success == true.",
-      "ARGUMENTS: event_id exact; calendar_type in {'IVF','SUR'}; optional iana_timezone.",
+      "ARGUMENTS: event_id exact; calendar_type = 'FT'; optional iana_timezone.",
       "SOURCE OF TRUTH: use success as the only authorized verdict."
     ],
     "inputs": [
@@ -418,7 +418,7 @@
       {
         "name": "calendar_type",
         "required": true,
-        "description": "Calendar type where the appointment resides: 'IVF' or 'SUR'."
+        "description": "The calendar where the appointment resides: always 'FT'."
       },
       {
         "name": "iana_timezone",
@@ -445,7 +445,7 @@
     "notes": [
       "MANDATORY EXECUTION TRIGGER: execute it when the contact requests to change the date, time, or duration of an already scheduled appointment.",
       "ABSOLUTE EXECUTION RULE: do not confirm the change before receiving success == true.",
-      "ARGUMENTS: event_id; calendar_type in {'IVF','SUR'}; optional new_start_date (from availability), new_duration, iana_timezone/language.",
+      "ARGUMENTS: event_id; calendar_type = 'FT'; optional new_start_date (from availability), new_duration, iana_timezone/language.",
       "VALIDATION RULE: the tool automatically checks availability and business hours before applying the change.",
       "SOURCE OF TRUTH: use success as the only authorized verdict; message/new_start_time are supporting details."
     ],
@@ -458,7 +458,7 @@
       {
         "name": "calendar_type",
         "required": true,
-        "description": "Calendar type: 'IVF' or 'SUR'."
+        "description": "The calendar: always 'FT'."
       },
       {
         "name": "new_start_date",
