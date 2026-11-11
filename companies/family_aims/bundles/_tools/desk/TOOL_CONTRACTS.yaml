@@ -228,3 +228,44 @@ tool_contracts:
       - name: errors
         required: true
         description: "Mensaje de error técnico si la consulta falló. null en caso de éxito."
+
+  - name: update_custom_field
+    description: "Actualiza un campo de contacto o un valor personalizado global en GoHighLevel."
+    notes:
+      - "ARGUMENTOS: name y value; indica contact_id para actualizar un campo del contacto, o location_id para actualizar un Custom Value global."
+      - "MODE RULE: si se proporciona contact_id, se actualiza el contacto aunque también venga location_id. Sin contact_id, location_id es necesario para actualizar un valor global."
+      - "FIELD RULE: para un campo personalizado del contacto, name puede ser el ID técnico o un nombre/fieldKey legible. Resolver por nombre requiere location_id."
+      - "VALIDATION RULE: los campos de opciones simples o múltiples rechazan valores que no estén entre las opciones permitidas. En un campo múltiple, una lista serializada como string se convierte a valores separados por comas."
+      - "SOURCE OF TRUTH RULE: solo confirma la actualización cuando success == true. type indica si se intentó actualizar un contacto, un custom_value global o si faltó el contexto requerido."
+    inputs:
+      - name: name
+        required: true
+        description: "Nombre o ID del campo/valor personalizado a actualizar. Para campos de contacto también acepta nombres de campos estándar de GHL."
+      - name: value
+        required: true
+        description: "Nuevo valor que se asignará al campo o valor personalizado."
+      - name: contact_id
+        required: false
+        description: "ID del contacto de GHL. Si se proporciona, actualiza un campo de ese contacto."
+      - name: location_id
+        required: false
+        description: "ID de la ubicación/subcuenta de GHL. Se usa para actualizar un Custom Value global o para resolver el nombre de un campo personalizado de contacto."
+    outputs:
+      - name: success
+        required: true
+        description: "Booleano que indica si la actualización se completó."
+      - name: type
+        required: true
+        description: "Tipo de operación: 'contact', 'custom_value' o 'unknown' cuando falta contact_id y location_id."
+      - name: field_id
+        required: true
+        description: "ID técnico del campo o valor actualizado. null si la operación falló."
+      - name: field_name
+        required: true
+        description: "Nombre del campo o valor actualizado. null si la operación falló."
+      - name: value
+        required: true
+        description: "Valor asignado, incluyendo la forma normalizada para campos de selección múltiple. null si la operación falló."
+      - name: errors
+        required: true
+        description: "Mensaje de error si la actualización falló; null si tuvo éxito."
