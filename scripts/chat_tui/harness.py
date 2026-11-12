@@ -124,6 +124,7 @@ class TracingLLMClient:
             temperature=temperature,
             response=result,
             model=getattr(self.real_client, "model", None),
+            provider=getattr(self.real_client, "last_provider", None),
             ms=round((time.perf_counter() - started) * 1000),
         )
         if self.enabled:
@@ -169,6 +170,7 @@ class TracingLLMClient:
             schema=json_schema,
             response=result,
             model=getattr(self.real_client, "model", None),
+            provider=getattr(self.real_client, "last_provider", None),
             ms=round((time.perf_counter() - started) * 1000),
         )
         if self.enabled:
@@ -307,10 +309,10 @@ class AgentHarness:
 
         from agent_backend.app import create_app
         from agent_backend.bundle import load_bundle
+        from agent_backend.llm import build_llm_client
         from agent_backend.settings import Settings
         from agent_runtime.runtime.graph_builder import build_graph
         from agent_runtime.runtime.knowledge_base import MarkdownKnowledgeBase
-        from agent_runtime.runtime.llm_client import OpenAILLMClient
         from agent_runtime.targets.langgraph.runtime_artifact import runtime_artifact_from_dict
 
         self.agent = agent
@@ -343,7 +345,7 @@ class AgentHarness:
         self.tracing_http_client.enabled = log_http
 
         self.tracing_llm_client = TracingLLMClient(
-            llm_client or OpenAILLMClient(api_key=os.environ.get("OPENAI_API_KEY")), events=self.events
+            llm_client or build_llm_client(), events=self.events
         )
         self.tracing_llm_client.enabled = log_llm
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextvars
 import json
-import os
 import sqlite3
 import threading
 from dataclasses import dataclass
@@ -14,12 +13,12 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 
 from agent_backend.auth import API_KEY_HEADER
 from agent_backend.bundle import AgentBundle, load_bundle
+from agent_backend.llm import build_llm_client
 from agent_backend.persistence.postgres import build_postgres_checkpointer, postgres_enabled
 from agent_backend.settings import Settings
 from agent_backend.tool_client import ToolRoutingClient
 from agent_runtime.runtime.graph_builder import build_graph
 from agent_runtime.runtime.knowledge_base import MarkdownKnowledgeBase
-from agent_runtime.runtime.llm_client import OpenAILLMClient
 from agent_runtime.targets.langgraph.runtime_artifact import RuntimeArtifact, runtime_artifact_from_dict
 
 SESSIONS_DB = "sessions.db"
@@ -114,7 +113,7 @@ class AgentRegistry:
         )
         graph = build_graph(
             artifact,
-            OpenAILLMClient(api_key=os.environ.get("OPENAI_API_KEY")),
+            build_llm_client(),
             tools_base_url=self.tools_base_url(slug),
             tool_http_client=ToolRoutingClient(
                 route_suffixes=bundle.config.tool_route_suffixes,
