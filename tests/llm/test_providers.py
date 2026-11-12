@@ -8,7 +8,7 @@ import pytest
 
 from agent_backend.llm.errors import ErrorKind, LLMProviderError
 from agent_backend.llm.factory import build_llm_client
-from agent_backend.llm.providers import AnthropicProvider, GeminiProvider, OpenAIProvider
+from agent_backend.llm.providers import AnthropicProvider, GoogleProvider, OpenAIProvider
 
 SCHEMA = {"type": "object", "properties": {"name": {"type": ["string", "null"]}}, "required": ["name"]}
 
@@ -112,7 +112,7 @@ def test_anthropic_without_a_tool_call_is_an_empty_extraction(monkeypatch):
 
 
 # -------------------------------------------------------------------------------------------------- gemini
-def install_gemini(monkeypatch, text='{"name": "Ana"}'):
+def install_google(monkeypatch, text='{"name": "Ana"}'):
     seen = []
 
     class Config:
@@ -142,9 +142,9 @@ def install_gemini(monkeypatch, text='{"name": "Ana"}'):
     return seen
 
 
-def test_gemini_complete_and_structured(monkeypatch):
-    seen = install_gemini(monkeypatch)
-    provider = GeminiProvider("k", "gemini-x", 20)
+def test_google_complete_and_structured(monkeypatch):
+    seen = install_google(monkeypatch)
+    provider = GoogleProvider("k", "gemini-x", 20)
 
     assert provider.complete("p") == '{"name": "Ana"}'
     assert provider.extract_structured("p", SCHEMA) == {"name": "Ana"}
@@ -157,16 +157,18 @@ def test_gemini_complete_and_structured(monkeypatch):
 def test_the_factory_builds_the_listed_providers_in_order(monkeypatch):
     install_openai(monkeypatch)
     install_anthropic(monkeypatch, [])
-    install_gemini(monkeypatch)
+    install_google(monkeypatch)
     env = {
-        "LLM_PROVIDERS": "gemini,openai,anthropic",
+        "LLM_PROVIDERS": "google,openai,anthropic",
         "OPENAI_API_KEY": "o",
         "ANTHROPIC_API_KEY": "a",
-        "GEMINI_API_KEY": "g",
+        "GOOGLE_API_KEY": "g",
+        "GOOGLE_MODEL": "gemini-x",
+        "ANTHROPIC_MODEL": "claude-x",
         "OPENAI_MODEL": "gpt-x",
     }
 
     llm = build_llm_client(env)
 
-    assert llm.provider_names == ["gemini", "openai", "anthropic"]
+    assert llm.provider_names == ["google", "openai", "anthropic"]
     assert {row["provider"]: row["model"] for row in llm.status()}["openai"] == "gpt-x"

@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 from .config import LLMSettings, ProviderSettings, load_llm_settings
 from .failover import FailoverLLMClient
-from .providers import AnthropicProvider, GeminiProvider, OpenAIProvider, Provider
+from .providers import AnthropicProvider, GoogleProvider, OpenAIProvider, Provider
 
 __all__ = ["build_llm_client", "build_provider"]
 
@@ -25,8 +25,8 @@ def build_provider(settings: ProviderSettings, timeout_seconds: float) -> Provid
         return OpenAIProvider(settings.api_key, settings.model, timeout_seconds)
     if settings.name == "anthropic":
         return AnthropicProvider(settings.api_key, settings.model, timeout_seconds)
-    if settings.name == "gemini":
-        return GeminiProvider(settings.api_key, settings.model, timeout_seconds)
+    if settings.name == "google":
+        return GoogleProvider(settings.api_key, settings.model, timeout_seconds)
     raise ValueError(f"Unknown LLM provider {settings.name!r}")
 
 

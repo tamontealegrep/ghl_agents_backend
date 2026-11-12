@@ -51,9 +51,9 @@ def test_kinds(exc, kind):
 
 
 def test_the_provider_name_and_message_are_kept():
-    error = classify_exception("gemini", FakeApiError("nope", status_code=401))
+    error = classify_exception("google", FakeApiError("nope", status_code=401))
 
-    assert error.provider == "gemini"
+    assert error.provider == "google"
     assert "nope" in str(error)
 
 

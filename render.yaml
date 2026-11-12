@@ -28,11 +28,17 @@ services:
         generateValue: true
       - key: OPENAI_API_KEY
         sync: false
-      - key: LLM_PROVIDERS # most preferred first, e.g. openai,anthropic,gemini (empty = openai only)
+      - key: LLM_PROVIDERS # most preferred first, e.g. openai,anthropic,google (required, no default: the service will not start without it)
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
-      - key: GEMINI_API_KEY
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: OPENAI_MODEL # each listed provider needs its key and its model; there are no defaults
+        sync: false
+      - key: ANTHROPIC_MODEL
+        sync: false
+      - key: GOOGLE_MODEL
         sync: false
       - key: DATABASE_URL # Render Postgres, internal connection string
         sync: false
@@ -60,11 +66,17 @@ services:
         generateValue: true
       - key: OPENAI_API_KEY
         sync: false
-      - key: LLM_PROVIDERS # most preferred first, e.g. openai,anthropic,gemini (empty = openai only)
+      - key: LLM_PROVIDERS # most preferred first, e.g. openai,anthropic,google (required, no default: the service will not start without it)
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
-      - key: GEMINI_API_KEY
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: OPENAI_MODEL # each listed provider needs its key and its model; there are no defaults
+        sync: false
+      - key: ANTHROPIC_MODEL
+        sync: false
+      - key: GOOGLE_MODEL
         sync: false
       - key: DATABASE_URL
         sync: false

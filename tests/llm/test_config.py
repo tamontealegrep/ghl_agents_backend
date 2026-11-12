@@ -2,26 +2,35 @@
 
 import pytest
 
-from agent_backend.llm.config import DEFAULT_MODELS, load_llm_settings, parse_provider_list
+from agent_backend.llm.config import load_llm_settings, parse_provider_list
 from agent_backend.llm.errors import NoProviderConfiguredError
 
-ALL_KEYS = {"OPENAI_API_KEY": "o", "ANTHROPIC_API_KEY": "a", "GEMINI_API_KEY": "g"}
+ALL_KEYS = {
+    "OPENAI_API_KEY": "o",
+    "OPENAI_MODEL": "gpt-x",
+    "ANTHROPIC_API_KEY": "a",
+    "ANTHROPIC_MODEL": "claude-x",
+    "GOOGLE_API_KEY": "g",
+    "GOOGLE_MODEL": "gemini-x",
+}
 
 
 def names(settings):
     return [p.name for p in settings.providers]
 
 
-def test_without_a_list_only_openai_is_used_so_existing_deployments_do_not_change():
-    settings = load_llm_settings(ALL_KEYS)
+@pytest.mark.parametrize("value", [None, "", "  ", " , "])
+def test_the_list_is_required_and_has_no_default(value):
+    env = dict(ALL_KEYS) if value is None else {**ALL_KEYS, "LLM_PROVIDERS": value}
 
-    assert names(settings) == ["openai"]
+    with pytest.raises(NoProviderConfiguredError, match="LLM_PROVIDERS"):
+        load_llm_settings(env)
 
 
 def test_the_list_sets_the_priority_order():
-    settings = load_llm_settings({**ALL_KEYS, "LLM_PROVIDERS": "gemini, anthropic ,openai"})
+    settings = load_llm_settings({**ALL_KEYS, "LLM_PROVIDERS": "google, anthropic ,openai"})
 
-    assert names(settings) == ["gemini", "anthropic", "openai"]
+    assert names(settings) == ["google", "anthropic", "openai"]
 
 
 def test_a_provider_that_is_not_listed_is_left_out_even_with_a_key():
@@ -30,32 +39,41 @@ def test_a_provider_that_is_not_listed_is_left_out_even_with_a_key():
     assert names(settings) == ["anthropic"]
 
 
-def test_a_listed_provider_without_a_key_is_skipped():
-    settings = load_llm_settings({"LLM_PROVIDERS": "openai,anthropic", "ANTHROPIC_API_KEY": "a"})
+def test_a_listed_provider_without_its_key_is_ignored():
+    settings = load_llm_settings({**ALL_KEYS, "LLM_PROVIDERS": "openai,anthropic", "OPENAI_API_KEY": ""})
 
     assert names(settings) == ["anthropic"]
 
 
-def test_no_usable_provider_fails_with_a_clear_message():
-    with pytest.raises(NoProviderConfiguredError, match="OPENAI_API_KEY"):
-        load_llm_settings({"LLM_PROVIDERS": "openai"})
+def test_a_listed_provider_without_its_model_is_ignored():
+    settings = load_llm_settings({**ALL_KEYS, "LLM_PROVIDERS": "openai,anthropic", "OPENAI_MODEL": "  "})
+
+    assert names(settings) == ["anthropic"]
 
 
-def test_models_come_from_the_environment_or_the_defaults():
+def test_there_are_no_default_models():
+    with pytest.raises(NoProviderConfiguredError, match="OPENAI_MODEL"):
+        load_llm_settings({"LLM_PROVIDERS": "openai", "OPENAI_API_KEY": "o"})
+
+
+def test_no_usable_provider_is_an_error_that_names_what_is_missing():
+    with pytest.raises(NoProviderConfiguredError) as info:
+        load_llm_settings({"LLM_PROVIDERS": "openai,google"})
+
+    message = str(info.value)
+    assert "OPENAI_API_KEY" in message and "GOOGLE_MODEL" in message
+
+
+def test_models_come_from_the_environment_exactly_as_given():
     settings = load_llm_settings(
-        {**ALL_KEYS, "LLM_PROVIDERS": "openai,anthropic,gemini", "ANTHROPIC_MODEL": " claude-x "}
+        {**ALL_KEYS, "LLM_PROVIDERS": "openai,anthropic,google", "ANTHROPIC_MODEL": " claude-y "}
     )
-    models = {p.name: p.model for p in settings.providers}
 
-    assert models["anthropic"] == "claude-x"
-    assert models["openai"] == DEFAULT_MODELS["openai"]
-    assert models["gemini"] == DEFAULT_MODELS["gemini"]
-
-
-def test_gemini_accepts_the_google_api_key_name():
-    settings = load_llm_settings({"LLM_PROVIDERS": "gemini", "GOOGLE_API_KEY": "g"})
-
-    assert settings.providers[0].api_key == "g"
+    assert {p.name: p.model for p in settings.providers} == {
+        "openai": "gpt-x",
+        "anthropic": "claude-y",
+        "google": "gemini-x",
+    }
 
 
 def test_a_misspelled_provider_is_an_error_not_a_silent_omission():
@@ -68,10 +86,10 @@ def test_repeated_names_count_once():
 
 
 def test_timings_have_defaults_and_must_be_positive_numbers():
-    settings = load_llm_settings({"OPENAI_API_KEY": "o", "LLM_TIMEOUT_SECONDS": "20"})
+    settings = load_llm_settings({**ALL_KEYS, "LLM_PROVIDERS": "openai", "LLM_TIMEOUT_SECONDS": "20"})
     assert settings.timeout_seconds == 20
     assert settings.cooldown_seconds == 300
     with pytest.raises(ValueError, match="LLM_COOLDOWN_SECONDS"):
-        load_llm_settings({"OPENAI_API_KEY": "o", "LLM_COOLDOWN_SECONDS": "soon"})
+        load_llm_settings({**ALL_KEYS, "LLM_PROVIDERS": "openai", "LLM_COOLDOWN_SECONDS": "soon"})
     with pytest.raises(ValueError, match="LLM_TIMEOUT_SECONDS"):
-        load_llm_settings({"OPENAI_API_KEY": "o", "LLM_TIMEOUT_SECONDS": "0"})
+        load_llm_settings({**ALL_KEYS, "LLM_PROVIDERS": "openai", "LLM_TIMEOUT_SECONDS": "0"})

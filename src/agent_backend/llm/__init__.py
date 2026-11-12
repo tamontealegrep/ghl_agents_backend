@@ -1,4 +1,4 @@
-"""Multi-provider LLM support: OpenAI, Anthropic (Claude) and Google (Gemini) with automatic failover.
+"""Multi-provider LLM support: OpenAI, Anthropic (Claude) and Google (Gemini models) with automatic failover.
 
 The runtime only needs the two-method ``LLMClient`` protocol (``complete`` and ``extract_structured``);
 ``build_llm_client`` returns one that tries the providers named in ``LLM_PROVIDERS`` in order.

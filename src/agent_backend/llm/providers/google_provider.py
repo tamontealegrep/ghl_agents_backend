@@ -1,4 +1,4 @@
-"""Google Gemini adapter (google-genai SDK)."""
+"""Google (Gemini models) adapter, google-genai SDK."""
 
 from __future__ import annotations
 
@@ -7,13 +7,13 @@ from typing import Any
 from .base import Provider, parse_json_object
 
 
-class GeminiProvider(Provider):
-    """Gemini models. Structured output uses the JSON-schema response mode."""
+class GoogleProvider(Provider):
+    """Google models (Gemini). Structured output uses the JSON-schema response mode."""
 
-    name = "gemini"
+    name = "google"
 
     def __init__(self, api_key: str, model: str, timeout_seconds: float) -> None:
-        """Creates the Gemini client."""
+        """Creates the Google client."""
         super().__init__(model)
         from google import genai  # local import: importing this package never requires the SDK
         from google.genai import types

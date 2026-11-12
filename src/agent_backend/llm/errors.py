@@ -34,7 +34,7 @@ class LLMProviderError(Exception):
     """A call to one provider failed.
 
     Attributes:
-        provider: Provider name (``openai``, ``anthropic``, ``gemini``).
+        provider: Provider name (``openai``, ``anthropic``, ``google``).
         kind: Why it failed.
         detail: The SDK's own message.
     """
