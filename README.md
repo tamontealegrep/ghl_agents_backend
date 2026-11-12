@@ -39,7 +39,7 @@ cd companies/family_aims
 cp env.example .env
 ```
 
-Edita `.env` y completa al menos `OPENAI_API_KEY`, `ADMIN_TOKEN`, `API_TOKEN` y `WEBHOOK_TOKEN` (genera cada uno con `python -c "import secrets; print(secrets.token_urlsafe(32))"`), más las variables de la sección «Variables por empresa» (más abajo). Luego:
+Edita `.env` y completa al menos la llave de un proveedor (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY` o `GEMINI_API_KEY`), `ADMIN_TOKEN`, `API_TOKEN` y `WEBHOOK_TOKEN` (genera cada uno con `python -c "import secrets; print(secrets.token_urlsafe(32))"`), más las variables de la sección «Variables por empresa» (más abajo). Luego:
 
 ```bash
 docker compose up -d --build
@@ -210,7 +210,11 @@ Cada `env.example` ya lista las suyas. Resumen:
 
 | Variable | Empresa | Para qué |
 |---|---|---|
-| `OPENAI_API_KEY` | todas | **Obligatoria.** Sin ella, `chat` y `admin/reload` responden 500 |
+| `LLM_PROVIDERS` | todas | Proveedores de modelo, de mayor a menor prioridad, separados por comas: `openai`, `anthropic` (Claude), `gemini`. Uno que no esté en la lista no se usa. Vacío = solo `openai`. Ver «Varios proveedores de modelo» |
+| `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` | todas | Llave de cada proveedor (`GOOGLE_API_KEY` también sirve para Gemini). Hace falta la de **al menos un** proveedor de la lista; sin ninguna, `chat` y `admin/reload` responden 500. Un proveedor listado sin llave se omite con un aviso |
+| `OPENAI_MODEL`, `ANTHROPIC_MODEL`, `GEMINI_MODEL` | todas (opcional) | Modelo de cada proveedor. Vacío = `gpt-4o-mini`, `claude-haiku-5-5`, `gemini-2.5-flash` |
+| `LLM_TIMEOUT_SECONDS` | todas (opcional) | Segundos que se espera a un proveedor antes de pasar la llamada al siguiente (60) |
+| `LLM_COOLDOWN_SECONDS` | todas (opcional) | Segundos que se omite un proveedor sin créditos o con llave inválida antes de volver a intentarlo (300) |
 | `ADMIN_TOKEN` | todas | Protege `reset` y `admin/reload`; sin valor quedan abiertos |
 | `API_TOKEN` | todas | Protege `chat`, las herramientas de la empresa y `/builtin-tools`. Se envía en `X-API-Key` (o `Authorization: Bearer`); el backend lo envía solo cuando un agente llama a sus herramientas. Sin valor quedan abiertas |
 | `WEBHOOK_TOKEN` | todas | Protege los webhooks de GHL. Se envía en la cabecera `X-Webhook-Token`: agrégala como cabecera personalizada en la acción de webhook de GHL. Sin valor quedan abiertos |
@@ -228,6 +232,12 @@ Cada `env.example` ya lista las suyas. Resumen:
 
 **Importante:** si un webhook tiene `*_DEV_ENFORCE_PHONE_WHITELIST=true` y `*_DEV_ALLOWED_PHONES` vacío, **ignora todos los mensajes**. Pon los teléfonos o desactiva la restricción a propósito.
 
+
+### Varios proveedores de modelo
+
+`LLM_PROVIDERS=openai,anthropic,gemini` hace que cada llamada al modelo vaya primero a OpenAI. Si falla (sin créditos, llave inválida, límite de uso, caída del servicio o tiempo de espera), **esa misma llamada** la responde el siguiente de la lista y la conversación sigue sin que el usuario lo note. El proveedor que falló se omite un rato para no esperarlo en cada mensaje: `LLM_COOLDOWN_SECONDS` (300) si fue por créditos o llave, 30 s si fue un límite de uso o una caída; después se vuelve a intentar el preferido. Una petición que el proveedor rechaza (`bad request`) pasa al siguiente pero no lo deja descansando. Si fallan todos, la llamada termina con un error que nombra a cada proveedor y el motivo. Cada cambio de proveedor queda en el log (`LLM provider X failed (quota); trying the next one`).
+
+El código está en `src/agent_backend/llm/` (`config.py` lee el entorno, `providers/` tiene un adaptador por proveedor, `failover.py` el cambio automático, `factory.py` lo arma). El runtime no cambió: sigue pidiendo `complete` y `extract_structured`. La salida estructurada usa el modo de esquema JSON estricto en OpenAI, una llamada de herramienta forzada en Claude y `response_json_schema` en Gemini.
 ---
 
 ## Despliegue en Render
@@ -404,7 +414,7 @@ curl -X POST http://localhost:8011/agents/family_aims_sam_text/admin/reload \
 
 | Síntoma | Causa |
 |---|---|
-| `admin/reload` o `chat` devuelven 500 y el log dice `Missing credentials` | Falta `OPENAI_API_KEY` en `.env` |
+| `admin/reload` o `chat` devuelven 500 y el log dice `Missing credentials` | Falta la llave del proveedor de modelo (`OPENAI_API_KEY`, o la del primero de `LLM_PROVIDERS`) en `.env` |
 | `/health` lista `"agents":[]` | `bundles/` está vacía o los agentes no tienen `graph.json` y `assets.json` |
 | El webhook responde pero el agente no contesta | La lista `*_DEV_ALLOWED_PHONES` está vacía con restricción activa |
 | Un agente falta en `/health` | Su `agent.yaml` es inválido (claves desconocidas o `tools:` con un plugin que no existe); revisa `docker compose logs` |

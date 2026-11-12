@@ -28,6 +28,12 @@ services:
         generateValue: true
       - key: OPENAI_API_KEY
         sync: false
+      - key: LLM_PROVIDERS # most preferred first, e.g. openai,anthropic,gemini (empty = openai only)
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
       - key: DATABASE_URL # Render Postgres, internal connection string
         sync: false
       - key: GHL_TOKEN
@@ -53,6 +59,12 @@ services:
       - key: WEBHOOK_TOKEN
         generateValue: true
       - key: OPENAI_API_KEY
+        sync: false
+      - key: LLM_PROVIDERS # most preferred first, e.g. openai,anthropic,gemini (empty = openai only)
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
         sync: false
       - key: DATABASE_URL
         sync: false
