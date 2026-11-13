@@ -13,12 +13,12 @@ router = APIRouter()
 async def surrogate_classification(req: SurrogateClassificationRequest):
     try:
         result, missing_field = classify_surrogate_detailed(req.model_dump())
-        eligibility_result, eligibility_reason = eligibility_fields(result, missing_field)
+        eligibility_result, not_eligibility_reason = eligibility_fields(result, missing_field)
         return SurrogateClassificationResponse(
             success=True,
             result=result,
             eligibility_result=eligibility_result,
-            eligibility_reason=eligibility_reason,
+            not_eligibility_reason=not_eligibility_reason,
             errors=None,
         )
     except Exception as e:

@@ -34,7 +34,7 @@ def test_v2_endpoint_returns_approved_for_valid_payload():
         "success": True,
         "result": "Approved",
         "eligibility_result": "approved",
-        "eligibility_reason": "none",
+        "not_eligibility_reason": "none",
         "errors": None,
     }
 
@@ -43,16 +43,16 @@ def test_v2_endpoint_returns_inconclusive_for_empty_payload():
     body = client.post(URL, json={}).json()
     assert body["success"] is True
     assert body["result"] == "Inconclusive"
-    assert body["eligibility_reason"] == "missing_data (age)"
+    assert body["not_eligibility_reason"] == "missing_data (age)"
 
 
 def test_v2_endpoint_rejects_three_c_sections():
     body = client.post(URL, json=_payload(number_of_c_sections="3")).json()
     assert body["result"] == "Rejected (C-Sections)"
-    assert body["eligibility_reason"] == "c_sections"
+    assert body["not_eligibility_reason"] == "c_sections"
 
 
 def test_v2_endpoint_rejects_when_there_is_no_time_for_appointments():
     body = client.post(URL, json=_payload(availability="no")).json()
     assert body["result"] == "Rejected (Availability)"
-    assert body["eligibility_reason"] == "availability"
+    assert body["not_eligibility_reason"] == "availability"

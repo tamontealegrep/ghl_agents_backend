@@ -163,7 +163,7 @@
         "route": [
           {
             "target": "O__OP_GREET_NAME",
-            "condition_text": "IF {{contact.name}} IS NOT NULL AND {{contact.name}} != '{{contact.name}}' -> GO_TO: O__OP_GREET_NAME",
+            "condition_text": "IF {{contact.first_name}} IS NOT NULL AND {{contact.first_name}} != '{{contact.first_name}}' -> GO_TO: O__OP_GREET_NAME",
             "is_mechanical": false,
             "python_expression": null,
             "reason": "disallowed syntax: Set"
@@ -183,13 +183,13 @@
         "node_id": "O__OP_GREET_NAME",
         "node_type": "message",
         "goal": [
-          "Greet the candidate by her first name only (the first given name of the full name {{contact.name}}), introduce yourself as the virtual assistant of <COMPANY_NAME> and welcome her warmly."
+          "Greet the candidate by her first name ({{contact.first_name}}), introduce yourself as the virtual assistant of <COMPANY_NAME> and welcome her warmly."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Hi {{contact.name}}, welcome! I am <AGENT_NAME>, a virtual assistant of <COMPANY_NAME>."
+          "Hi {{contact.first_name}}, welcome! I am <AGENT_NAME>, a virtual assistant of <COMPANY_NAME>."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -1095,7 +1095,7 @@
           "[q__avail_pitched] = NULL",
           "[q__result] = NULL",
           "[q__eligibility_result] = NULL",
-          "[q__eligibility_reason] = NULL",
+          "[q__not_eligibility_reason] = NULL",
           "[q__force_cls] = NULL",
           "[q__fixed_field] = NULL",
           "[q__now] = NULL",
@@ -1114,7 +1114,11 @@
           "[q__height_try] = 0",
           "[q__drugs_try] = 0",
           "[q__avail_try] = 0",
-          "[q__missing_try] = 0"
+          "[q__missing_try] = 0",
+          "[q__prop_interest] = NULL",
+          "[q__prop_ok] = NULL",
+          "[q__prop_int_try] = 0",
+          "[q__prop_ok_try] = 0"
         ],
         "capture": [],
         "eval": "code",
@@ -1259,7 +1263,7 @@
         "node_id": "Q__SQ_SYNC_REASON_NONE",
         "node_type": "action",
         "goal": [
-          "Sync eligibility_reason to the contact's GHL custom field not_eligibility_reason."
+          "Sync not_eligibility_reason to the contact's GHL custom field not_eligibility_reason."
         ],
         "do": [
           "name = 'not_eligibility_reason'",
@@ -1450,64 +1454,6 @@
         "route": [
           {
             "target": "Q__SQ_FIND_MISSING",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "Q__SQ_NO_DOC",
-        "node_type": "message",
-        "goal": [
-          "Sandler soft close: only a cédula de ciudadanía or a PPT is accepted, so the process cannot go on. Say it kindly and honestly, thank her and leave the door open."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Thank you for telling me. For now, the program only accepts a cédula de ciudadanía or a permiso por protección temporal (PPT), so we cannot continue with the process. If your situation changes, write to us here and we will gladly review it again."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_SET_NO_DOC",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "Q__SQ_SET_NO_DOC",
-        "node_type": "registration",
-        "goal": [
-          "Record the documentation rejection without running the classification."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[q__result] = 'Rejected (Documentation)'",
-          "[q__eligibility_result] = 'rejected'",
-          "[q__eligibility_reason] = 'documentation'"
-        ],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_SYNC_ELIGIBILITY_RESULT",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -3898,8 +3844,9 @@
         "node_type": "decision",
         "goal": [
           "Go to the first question, in the order they are asked, whose data is still missing; with nothing missing, classify.",
-          "A clear rejection criterion goes straight to the classification so the candidate is not asked more questions than necessary. The order is the same one the classification tool uses.",
-          "An 'unknown' answer is asked once more, and only after a classification came back inconclusive ([q__missing_try] above 0)."
+          "An 'unknown' answer is asked once more, and only after a classification came back inconclusive ([q__missing_try] above 0).",
+          "Every question is always asked before the classification, so as much information as possible is captured; the classification only runs when nothing is missing.",
+          "A document other than a cédula de ciudadanía or a PPT does not close the flow: the document number and the ADRES lookup are skipped, every question is still asked, and the classification returns the documentation rejection."
         ],
         "do": [],
         "trigger": [],
@@ -3919,24 +3866,17 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_NO_DOC",
-            "condition_text": "IF [q__doc_type] == 'other' -> GO_TO: Q__SQ_NO_DOC",
-            "is_mechanical": true,
-            "python_expression": "q__doc_type == 'other'",
-            "reason": null
-          },
-          {
             "target": "Q__SQ_DOC_LABEL",
-            "condition_text": "IF [q__doc_number] IS NULL AND [q__doc_num_try] < <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_DOC_LABEL",
+            "condition_text": "IF [q__doc_type] != 'other' AND [q__doc_number] IS NULL AND [q__doc_num_try] < <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_DOC_LABEL",
             "is_mechanical": true,
-            "python_expression": "q__doc_number is None and q__doc_num_try < MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__doc_type != 'other' and q__doc_number is None and q__doc_num_try < MAX_RETRY_ATTEMPTS",
             "reason": null
           },
           {
             "target": "Q__SQ_CHECK_ADRES",
-            "condition_text": "IF [q__eps_active_affiliation] IS NULL AND [q__doc_type] IS NOT NULL AND [q__doc_number] IS NOT NULL -> GO_TO: Q__SQ_CHECK_ADRES",
+            "condition_text": "IF [q__doc_type] != 'other' AND [q__eps_active_affiliation] IS NULL AND [q__doc_type] IS NOT NULL AND [q__doc_number] IS NOT NULL -> GO_TO: Q__SQ_CHECK_ADRES",
             "is_mechanical": true,
-            "python_expression": "q__eps_active_affiliation is None and q__doc_type is not None and q__doc_number is not None",
+            "python_expression": "q__doc_type != 'other' and q__eps_active_affiliation is None and q__doc_type is not None and q__doc_number is not None",
             "reason": null
           },
           {
@@ -3954,13 +3894,6 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__surrogate_age] < 18 OR [q__surrogate_age] > 38 -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
-            "is_mechanical": true,
-            "python_expression": "q__surrogate_age < 18 or q__surrogate_age > 38",
-            "reason": null
-          },
-          {
             "target": "Q__SQ_ASK_NATIONALITY",
             "condition_text": "IF [q__nationality] IS NULL -> GO_TO: Q__SQ_ASK_NATIONALITY",
             "is_mechanical": true,
@@ -3975,24 +3908,10 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__city_residence] == 'Otro' -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
-            "is_mechanical": true,
-            "python_expression": "q__city_residence == 'Otro'",
-            "reason": null
-          },
-          {
             "target": "Q__SQ_ASK_CHILDREN",
             "condition_text": "IF [q__children_count] IS NULL -> GO_TO: Q__SQ_ASK_CHILDREN",
             "is_mechanical": true,
             "python_expression": "q__children_count is None",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__children_count] < 1 OR [q__children_count] > 4 -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
-            "is_mechanical": true,
-            "python_expression": "q__children_count < 1 or q__children_count > 4",
             "reason": null
           },
           {
@@ -4017,38 +3936,10 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__birth_type] == 'csection' AND [q__birth_window] == 'under_12' -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
-            "is_mechanical": true,
-            "python_expression": "q__birth_type == 'csection' and q__birth_window == 'under_12'",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__birth_type] == 'csection' AND [q__birth_window] == '12_to_18' -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
-            "is_mechanical": true,
-            "python_expression": "q__birth_type == 'csection' and q__birth_window == '12_to_18'",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__birth_type] == 'natural' AND [q__birth_window] == 'under_12' -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
-            "is_mechanical": true,
-            "python_expression": "q__birth_type == 'natural' and q__birth_window == 'under_12'",
-            "reason": null
-          },
-          {
             "target": "Q__SQ_ASK_CSEC",
             "condition_text": "IF [q__csections_count] IS NULL -> GO_TO: Q__SQ_ASK_CSEC",
             "is_mechanical": true,
             "python_expression": "q__csections_count is None",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__csections_count] > 2 -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
-            "is_mechanical": true,
-            "python_expression": "q__csections_count > 2",
             "reason": null
           },
           {
@@ -4080,13 +3971,6 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__pree] == 'yes' -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
-            "is_mechanical": true,
-            "python_expression": "q__pree == 'yes'",
-            "reason": null
-          },
-          {
             "target": "Q__SQ_ASK_WEIGHT",
             "condition_text": "IF [q__weight] IS NULL -> GO_TO: Q__SQ_ASK_WEIGHT",
             "is_mechanical": true,
@@ -4108,20 +3992,6 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__imc] < 18.5 OR [q__imc] > 29.9 -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
-            "is_mechanical": true,
-            "python_expression": "q__imc < 18.5 or q__imc > 29.9",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__eps_active_affiliation] == 'no' -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
-            "is_mechanical": true,
-            "python_expression": "q__eps_active_affiliation == 'no'",
-            "reason": null
-          },
-          {
             "target": "Q__SQ_ASK_DRUGS",
             "condition_text": "IF [q__uses_drugs] IS NULL -> GO_TO: Q__SQ_ASK_DRUGS",
             "is_mechanical": true,
@@ -4133,13 +4003,6 @@
             "condition_text": "IF [q__uses_drugs] == 'unknown' AND [q__missing_try] > 0 AND [q__drugs_try] == 0 -> GO_TO: Q__SQ_ASK_DRUGS",
             "is_mechanical": true,
             "python_expression": "q__uses_drugs == 'unknown' and q__missing_try > 0 and q__drugs_try == 0",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_RUN_CLASSIFICATION",
-            "condition_text": "IF [q__uses_drugs] == 'yes' -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
-            "is_mechanical": true,
-            "python_expression": "q__uses_drugs == 'yes'",
             "reason": null
           },
           {
@@ -4435,7 +4298,7 @@
             "str"
           ],
           [
-            "q__eligibility_reason",
+            "q__not_eligibility_reason",
             "str"
           ]
         ],
@@ -4494,11 +4357,11 @@
         "node_id": "Q__SQ_SYNC_ELIGIBILITY_REASON",
         "node_type": "action",
         "goal": [
-          "Sync eligibility_reason to the contact's GHL custom field not_eligibility_reason."
+          "Sync not_eligibility_reason to the contact's GHL custom field not_eligibility_reason."
         ],
         "do": [
           "name = 'not_eligibility_reason'",
-          "value = [q__eligibility_reason]",
+          "value = [q__not_eligibility_reason]",
           "contact_id = [contact.contact_id]",
           "location_id = [contact.location_id]"
         ],
@@ -4717,7 +4580,7 @@
         "node_id": "Q__SQ_DEC_MISSING",
         "node_type": "decision",
         "goal": [
-          "The classification was inconclusive: eligibility_reason names the missing field as \"missing_data (<field>)\". Go straight to that question, a limited number of times, with fresh retries for each question. birth_type is optional and only requested when the last birth was less than 18 months ago."
+          "The classification was inconclusive: not_eligibility_reason names the missing field as \"missing_data (<field>)\". Go straight to that question, a limited number of times, with fresh retries for each question. birth_type is optional and only requested when the last birth was less than 18 months ago."
         ],
         "do": [
           "[q__missing_try] = [q__missing_try] + 1",
@@ -4756,93 +4619,93 @@
           },
           {
             "target": "Q__SQ_ASK_AGE",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (age)' -> GO_TO: Q__SQ_ASK_AGE",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (age)' -> GO_TO: Q__SQ_ASK_AGE",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (age)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (age)'",
             "reason": null
           },
           {
             "target": "Q__SQ_ASK_CITY",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (city)' -> GO_TO: Q__SQ_ASK_CITY",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (city)' -> GO_TO: Q__SQ_ASK_CITY",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (city)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (city)'",
             "reason": null
           },
           {
             "target": "Q__SQ_ASK_CHILDREN",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (number_of_children)' -> GO_TO: Q__SQ_ASK_CHILDREN",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (number_of_children)' -> GO_TO: Q__SQ_ASK_CHILDREN",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (number_of_children)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (number_of_children)'",
             "reason": null
           },
           {
             "target": "Q__SQ_LB_NOW",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (last_birth_date)' -> GO_TO: Q__SQ_LB_NOW",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (last_birth_date)' -> GO_TO: Q__SQ_LB_NOW",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (last_birth_date)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (last_birth_date)'",
             "reason": null
           },
           {
             "target": "Q__SQ_ASK_BTYPE",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (birth_type)' -> GO_TO: Q__SQ_ASK_BTYPE",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (birth_type)' -> GO_TO: Q__SQ_ASK_BTYPE",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (birth_type)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (birth_type)'",
             "reason": null
           },
           {
             "target": "Q__SQ_ASK_CSEC",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (number_of_c_sections)' -> GO_TO: Q__SQ_ASK_CSEC",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (number_of_c_sections)' -> GO_TO: Q__SQ_ASK_CSEC",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (number_of_c_sections)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (number_of_c_sections)'",
             "reason": null
           },
           {
             "target": "Q__SQ_ASK_ABORTIONS",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (abortions)' -> GO_TO: Q__SQ_ASK_ABORTIONS",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (abortions)' -> GO_TO: Q__SQ_ASK_ABORTIONS",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (abortions)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (abortions)'",
             "reason": null
           },
           {
             "target": "Q__SQ_ASK_PREE",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (preeclampsia)' -> GO_TO: Q__SQ_ASK_PREE",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (preeclampsia)' -> GO_TO: Q__SQ_ASK_PREE",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (preeclampsia)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (preeclampsia)'",
             "reason": null
           },
           {
             "target": "Q__SQ_FIND_MISSING",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (bmi)' -> GO_TO: Q__SQ_FIND_MISSING",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (bmi)' -> GO_TO: Q__SQ_FIND_MISSING",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (bmi)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (bmi)'",
             "reason": null
           },
           {
             "target": "Q__SQ_ASK_DOC_TYPE",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (document_type)' -> GO_TO: Q__SQ_ASK_DOC_TYPE",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (document_type)' -> GO_TO: Q__SQ_ASK_DOC_TYPE",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (document_type)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (document_type)'",
             "reason": null
           },
           {
             "target": "Q__SQ_RETRY_EPS",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (eps_active_affiliation)' -> GO_TO: Q__SQ_RETRY_EPS",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (eps_active_affiliation)' -> GO_TO: Q__SQ_RETRY_EPS",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (eps_active_affiliation)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (eps_active_affiliation)'",
             "reason": null
           },
           {
             "target": "Q__SQ_ASK_DRUGS",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (drug_use)' -> GO_TO: Q__SQ_ASK_DRUGS",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (drug_use)' -> GO_TO: Q__SQ_ASK_DRUGS",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (drug_use)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (drug_use)'",
             "reason": null
           },
           {
             "target": "Q__SQ_ASK_AVAIL",
-            "condition_text": "IF [q__eligibility_reason] == 'missing_data (availability)' -> GO_TO: Q__SQ_ASK_AVAIL",
+            "condition_text": "IF [q__not_eligibility_reason] == 'missing_data (availability)' -> GO_TO: Q__SQ_ASK_AVAIL",
             "is_mechanical": true,
-            "python_expression": "q__eligibility_reason == 'missing_data (availability)'",
+            "python_expression": "q__not_eligibility_reason == 'missing_data (availability)'",
             "reason": null
           }
         ],
@@ -4876,7 +4739,367 @@
         "eval": "code",
         "route": [
           {
+            "target": "Q__SQ_ASK_PROP_INT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_ASK_PROP_INT",
+        "node_type": "question",
+        "goal": [
+          "Ask, without pressure, whether she is interested in hearing the proposal; that answer is the authorization to send it. A no is accepted with respect."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Would you like to hear the proposal we have for you? Either answer is fine."
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [
+          [
+            "q__prop_interest",
+            "Literal[yes, no]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_DEC_PROP_INT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_DEC_PROP_INT",
+        "node_type": "decision",
+        "goal": [
+          "Evaluate whether she wants to hear the proposal."
+        ],
+        "do": [
+          "[q__prop_int_try] = [q__prop_int_try] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_SYNC_PROP_SEND_YES",
+            "condition_text": "IF [q__prop_interest] == 'yes' -> GO_TO: Q__SQ_SYNC_PROP_SEND_YES",
+            "is_mechanical": true,
+            "python_expression": "q__prop_interest == 'yes'",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_SYNC_PROP_SEND_NO",
+            "condition_text": "IF [q__prop_interest] == 'no' -> GO_TO: Q__SQ_SYNC_PROP_SEND_NO",
+            "is_mechanical": true,
+            "python_expression": "q__prop_interest == 'no'",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_SYNC_PROP_SEND_NO",
+            "condition_text": "IF [q__prop_int_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_SYNC_PROP_SEND_NO",
+            "is_mechanical": true,
+            "python_expression": "q__prop_int_try >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_ASK_PROP_INT",
+            "condition_text": "IF [q__prop_interest] IS NULL -> GO_TO: Q__SQ_ASK_PROP_INT",
+            "is_mechanical": true,
+            "python_expression": "q__prop_interest is None",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "Q__SQ_ASK_PROP_INT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "Q__SQ_SYNC_PROP_SEND_YES",
+        "node_type": "action",
+        "goal": [
+          "Sync proposal_send_authorized to the contact's GHL custom field."
+        ],
+        "do": [
+          "name = 'proposal_send_authorized'",
+          "value = 'yes'",
+          "contact_id = [contact.contact_id]",
+          "location_id = [contact.location_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "update_custom_field",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_SHOW_PROPOSAL",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_SYNC_PROP_SEND_NO",
+        "node_type": "action",
+        "goal": [
+          "Sync proposal_send_authorized to the contact's GHL custom field."
+        ],
+        "do": [
+          "name = 'proposal_send_authorized'",
+          "value = 'no'",
+          "contact_id = [contact.contact_id]",
+          "location_id = [contact.location_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "update_custom_field",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_BYE_PROPOSAL",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_SHOW_PROPOSAL",
+        "node_type": "message",
+        "goal": [
+          "Present the proposal exactly as written in <PROPOSAL_TEXT>."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Here is the proposal: <PROPOSAL_TEXT>"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_ASK_PROP_OK",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_ASK_PROP_OK",
+        "node_type": "question",
+        "goal": [
+          "Ask whether she agrees with the proposal and wants to continue."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Do you agree with the proposal and would you like to continue?"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [
+          [
+            "q__prop_ok",
+            "Literal[yes, no]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_DEC_PROP_OK",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_DEC_PROP_OK",
+        "node_type": "decision",
+        "goal": [
+          "Evaluate whether she agrees with the proposal."
+        ],
+        "do": [
+          "[q__prop_ok_try] = [q__prop_ok_try] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_SYNC_PROP_YES",
+            "condition_text": "IF [q__prop_ok] == 'yes' -> GO_TO: Q__SQ_SYNC_PROP_YES",
+            "is_mechanical": true,
+            "python_expression": "q__prop_ok == 'yes'",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_SYNC_PROP_NO",
+            "condition_text": "IF [q__prop_ok] == 'no' -> GO_TO: Q__SQ_SYNC_PROP_NO",
+            "is_mechanical": true,
+            "python_expression": "q__prop_ok == 'no'",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_SYNC_PROP_NO",
+            "condition_text": "IF [q__prop_ok_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_SYNC_PROP_NO",
+            "is_mechanical": true,
+            "python_expression": "q__prop_ok_try >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_ASK_PROP_OK",
+            "condition_text": "IF [q__prop_ok] IS NULL -> GO_TO: Q__SQ_ASK_PROP_OK",
+            "is_mechanical": true,
+            "python_expression": "q__prop_ok is None",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "Q__SQ_ASK_PROP_OK",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "Q__SQ_SYNC_PROP_YES",
+        "node_type": "action",
+        "goal": [
+          "Sync proposal_accepted to the contact's GHL custom field."
+        ],
+        "do": [
+          "name = 'proposal_accepted'",
+          "value = 'yes'",
+          "contact_id = [contact.contact_id]",
+          "location_id = [contact.location_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "update_custom_field",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
             "target": "Q__SQ_TO_KQ",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_SYNC_PROP_NO",
+        "node_type": "action",
+        "goal": [
+          "Sync proposal_accepted to the contact's GHL custom field."
+        ],
+        "do": [
+          "name = 'proposal_accepted'",
+          "value = 'no'",
+          "contact_id = [contact.contact_id]",
+          "location_id = [contact.location_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "update_custom_field",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_BYE_PROPOSAL",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_BYE_PROPOSAL",
+        "node_type": "message",
+        "goal": [
+          "She does not want to hear or accept the proposal: thank her, leave the door open and close the conversation. No chasing."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Understood, thank you very much for your time. If you change your mind, write to us here and we will gladly pick it up. Have a great day!"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_END",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -5985,7 +6208,7 @@
           "Check the CRM for the contact's name."
         ],
         "do": [
-          "Treat the literal unresolved placeholder '{{contact.name}}' as missing data, not as a valid name."
+          "Treat the literal unresolved placeholder '{{contact.first_name}}' as missing data, not as a valid name."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -5998,7 +6221,7 @@
         "route": [
           {
             "target": "SC__SC_ST_N",
-            "condition_text": "IF {{contact.name}} IS NOT NULL AND {{contact.name}} != '{{contact.name}}' -> GO_TO: SC__SC_ST_N",
+            "condition_text": "IF {{contact.first_name}} IS NOT NULL AND {{contact.first_name}} != '{{contact.first_name}}' -> GO_TO: SC__SC_ST_N",
             "is_mechanical": false,
             "python_expression": null,
             "reason": "disallowed syntax: Set"
@@ -6021,7 +6244,7 @@
           "Use the CRM name for scheduling."
         ],
         "do": [
-          "[sc__c_name] = {{contact.name}}"
+          "[sc__c_name] = {{contact.first_name}}"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -6029,7 +6252,7 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[sc__c_name] = {{contact.name}}"
+          "[sc__c_name] = {{contact.first_name}}"
         ],
         "capture": [],
         "eval": "code",
@@ -6099,9 +6322,9 @@
         "route": [
           {
             "target": "SC__SC_DEC_P",
-            "condition_text": "IF [sc__c_name] IS NOT NULL AND [sc__c_name] != '{{contact.name}}' -> GO_TO: SC__SC_DEC_P",
+            "condition_text": "IF [sc__c_name] IS NOT NULL AND [sc__c_name] != '{{contact.first_name}}' -> GO_TO: SC__SC_DEC_P",
             "is_mechanical": true,
-            "python_expression": "sc__c_name is not None and sc__c_name != '{{contact.name}}'",
+            "python_expression": "sc__c_name is not None and sc__c_name != '{{contact.first_name}}'",
             "reason": null
           },
           {
@@ -8417,14 +8640,14 @@
         "route": [
           {
             "target": "AM__AM_FIND",
-            "condition_text": "IF {{contact.name}} != null AND {{contact.name}} != '{{contact.name}}' -> GO_TO: AM__AM_FIND",
+            "condition_text": "IF {{contact.first_name}} != null AND {{contact.first_name}} != '{{contact.first_name}}' -> GO_TO: AM__AM_FIND",
             "is_mechanical": false,
             "python_expression": null,
             "reason": "disallowed syntax: Set"
           },
           {
             "target": "AM__AM_ASK_NAME",
-            "condition_text": "IF {{contact.name}} == null OR {{contact.name}} == '{{contact.name}}' -> GO_TO: AM__AM_ASK_NAME",
+            "condition_text": "IF {{contact.first_name}} == null OR {{contact.first_name}} == '{{contact.first_name}}' -> GO_TO: AM__AM_ASK_NAME",
             "is_mechanical": false,
             "python_expression": null,
             "reason": "disallowed syntax: Set"
@@ -8476,7 +8699,7 @@
         "do": [
           "TOOL CALL ONLY: call find_appointment now.",
           "calendar_type = 'FT' (required in every call to this tool).",
-          "contact_name = [am__am_name] if not NULL, otherwise {{contact.name}}.",
+          "contact_name = [am__am_name] if not NULL, otherwise {{contact.first_name}}.",
           "contact_email = {{contact.email}} (optional). iana_timezone = 'America/Bogota' (optional).",
           "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it)."
         ],
@@ -10858,7 +11081,7 @@
           "examples": []
         },
         {
-          "name": "eligibility_reason",
+          "name": "not_eligibility_reason",
           "required": true,
           "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'eps', 'drug_use', 'availability' when rejected, 'missing_data' when inconclusive, 'none' when approved.",
           "type_expr": "str",
@@ -10898,7 +11121,8 @@
     "MAX_KB_ROUNDS": "8",
     "KB_SIDE_NUDGE_AFTER": "2",
     "DATA_LAW_REFERENCE": "Política de Privacidad y Protección de Datos Personales de Novafem S.A.S, que se da en cumplimiento de lo dispuesto por el artículo 15 de la Constitución Política de 1991, así como por la Ley 1581 de 2012, el Decreto 1377 de 2013 y el Decreto 886 de 2014. Que puedes encontrar en https://www.babynovaclinic.com/wp-content/uploads/2026/05/PO-GJ-02-Politica-de-Privacidad-y-Uso-de-Datos-Novafem-V2-27052025.pdf",
-    "ALLOWED_CITIES": "Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá y Sibaté"
+    "ALLOWED_CITIES": "Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá y Sibaté",
+    "PROPOSAL_TEXT": "[PENDING: proposal text]"
   },
   "session_timeout_minutes": 10080,
   "say_policies": [

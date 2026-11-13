@@ -329,7 +329,7 @@ tool_contracts:
       - name: eligibility_result
         required: true
         description: "approved, rejected or inconclusive."
-      - name: eligibility_reason
+      - name: not_eligibility_reason
         required: true
         description: 'Rejection reason, "missing_data (<field>)" naming the first missing field (for example "missing_data (last_birth_date)"), or none.'
       - name: errors

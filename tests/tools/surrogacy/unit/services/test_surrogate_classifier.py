@@ -201,7 +201,7 @@ def test_missing_birth_type_is_reported_only_for_recent_births(valid):
     assert classify_surrogate_detailed(valid, TODAY) == ("Inconclusive", "birth_type")
 
 
-def test_eligibility_reason_names_the_missing_field():
+def test_not_eligibility_reason_names_the_missing_field():
     assert eligibility_fields("Inconclusive", "last_birth_date") == (
         "inconclusive",
         "missing_data (last_birth_date)",
@@ -242,3 +242,16 @@ def test_missing_eps_affiliation_is_inconclusive(valid, value):
 )
 def test_eligibility_fields(result, expected):
     assert eligibility_fields(result) == expected
+
+
+def test_missing_document_is_inconclusive_by_document_type(valid):
+    from surrogacy.services.surrogate_classifier import classify_surrogate_detailed
+
+    valid["document_type"] = ""
+    assert classify_surrogate_detailed(valid, TODAY) == ("Inconclusive", "document_type")
+
+
+def test_document_is_checked_last(valid):
+    valid["document_type"] = "pasaporte"
+    valid["drug_use"] = "si"
+    assert classify(valid) == "Rejected (Drug Use)"

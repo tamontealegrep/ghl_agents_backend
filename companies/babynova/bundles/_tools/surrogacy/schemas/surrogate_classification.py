@@ -32,7 +32,7 @@ class SurrogateClassificationResponse(BaseModel):
     success: bool
     result: str | None = None
     eligibility_result: str | None = Field(default=None, description="approved, rejected o inconclusive.")
-    eligibility_reason: str | None = Field(
+    not_eligibility_reason: str | None = Field(
         default=None,
         description="Motivo del rechazo, 'missing_data (<campo>)' con el primer dato faltante, o none.",
     )

@@ -75,7 +75,7 @@ _ELIGIBILITY_REASON_BY_REJECTION = {
 
 
 def eligibility_fields(result: str, missing_field: str | None = None) -> tuple[str, str]:
-    """Traduce la etiqueta de clasificacion a los valores de los campos de GHL `eligibility_result` y `eligibility_reason`.
+    """Traduce la etiqueta de clasificacion a los valores de los campos de GHL `eligibility_result` y `not_eligibility_reason`.
 
     Si el resultado es Inconclusive y se conoce el dato faltante, el motivo es `missing_data (<campo>)`.
     """
@@ -195,32 +195,32 @@ def classify_surrogate_detailed(data: dict[str, Any], today: date | None = None)
     if bmi < MIN_BMI or bmi > MAX_BMI:
         return "Rejected (BMI)", None
 
-    # 9. Documento: solo cedula de ciudadania o PPT
-    if not is_present(data.get("document_type")):
-        return "Inconclusive", "document_type"
-    document = normalize(data.get("document_type")).replace(" ", "_")
-    if document not in _ALLOWED_DOCUMENTS:
-        return "Rejected (Documentation)", None
-
-    # 10. Afiliacion activa a una EPS (resultado de check_adres): sin afiliacion no pasa
-    eps_active = parse_boolean(data.get("eps_active_affiliation"))
-    if eps_active is None:
-        return "Inconclusive", "eps_active_affiliation"
-    if eps_active is False:
-        return "Rejected (EPS)", None
-
-    # 11. Sustancias psicoactivas
+    # 9. Sustancias psicoactivas
     drug_use = parse_boolean(data.get("drug_use"))
     if drug_use is None:
         return "Inconclusive", "drug_use"
     if drug_use is True:
         return "Rejected (Drug Use)", None
 
-    # 12. Disponibilidad de tiempo para las consultas
+    # 10. Disponibilidad de tiempo para las consultas
     availability = parse_boolean(data.get("availability"))
     if availability is None:
         return "Inconclusive", "availability"
     if availability is False:
         return "Rejected (Availability)", None
+
+    # 11. Documento: solo cedula de ciudadania o PPT
+    if not is_present(data.get("document_type")):
+        return "Inconclusive", "document_type"
+    document = normalize(data.get("document_type")).replace(" ", "_")
+    if document not in _ALLOWED_DOCUMENTS:
+        return "Rejected (Documentation)", None
+
+    # 12. Afiliacion activa a una EPS (ultima validacion; sale de check_adres, que necesita el documento): sin afiliacion no pasa
+    eps_active = parse_boolean(data.get("eps_active_affiliation"))
+    if eps_active is None:
+        return "Inconclusive", "eps_active_affiliation"
+    if eps_active is False:
+        return "Rejected (EPS)", None
 
     return "Approved", None

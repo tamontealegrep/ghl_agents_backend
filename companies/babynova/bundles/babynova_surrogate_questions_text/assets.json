@@ -631,7 +631,7 @@
         "description": "Eligibility value for the GHL field: 'approved', 'rejected' or 'inconclusive'."
       },
       {
-        "name": "eligibility_reason",
+        "name": "not_eligibility_reason",
         "required": true,
         "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'eps', 'drug_use', 'availability' when rejected, 'missing_data' when inconclusive, 'none' when approved."
       },
