@@ -2263,6 +2263,79 @@ def test_resolve_time_reference_accepts_only_unambiguous_offered_times():
     assert _resolve_time_reference("15", both, "2026-11-04") == "15:00"
 
 
+def test_resolve_time_reference_understands_a_description_of_the_time():
+    """A time can be picked by part of the day and/or position instead of by clock value, in any wording."""
+    from agent_runtime.runtime.graph_builder import _named_part_of_day, _resolve_time_reference
+
+    day = "2026-11-18"
+    offered = _offered(day, "07:00", "08:00", "09:00", "11:00", "13:00", "15:00", "19:00", "20:00")
+
+    def pick(reply, within=None):
+        return _resolve_time_reference(reply, offered, day, within)
+
+    # position alone: over the whole day
+    assert pick("la primera") == "07:00"
+    assert pick("la última") == "20:00"
+    assert pick("lo más temprano") == "07:00"
+    assert pick("la más tarde") == "20:00"  # "later" is a position, not the afternoon
+    assert pick("la penúltima") == "19:00"
+    assert pick("the second one") == "08:00"
+    # position inside a part of the day
+    assert pick("la primera de la mañana") == "07:00"
+    assert pick("la última de la tarde") == "15:00"
+    assert pick("la segunda de la mañana") == "08:00"
+    assert pick("the last one in the afternoon") == "15:00"
+    assert pick("a primeira da manhã") == "07:00"
+    assert pick("la primera de la noche") == "19:00"
+    assert pick("la quinta de la noche") is None  # only two in the night
+    # a part of the day alone picks only when it leaves a single time
+    assert pick("por la tarde") is None
+    assert pick("en la madrugada") is None
+    assert _resolve_time_reference("por la noche", _offered(day, "07:00", "19:00"), day) == "19:00"
+    # a bare "mañana" is tomorrow, never the morning
+    assert pick("mañana") is None
+    # after the list was narrowed to a part of the day, a position refers to that list
+    assert pick("la primera", within="tarde") == "13:00"
+    assert pick("la última", within="tarde") == "15:00"
+    assert pick("la primera de la noche", within="tarde") == "19:00"  # an explicit part wins
+    # clock values keep working, with or without the part of the day
+    assert pick("a las 3 por la tarde") == "15:00"
+    assert pick("7 de la mañana") == "07:00"
+    assert pick("11:00") == "11:00"
+    # the part of the day named, only when the day has times in it
+    assert _named_part_of_day("por la tarde", offered, day) == "tarde"
+    assert _named_part_of_day("en la madrugada", offered, day) is None
+    assert _named_part_of_day("la primera", offered, day) is None
+
+
+def test_time_list_is_narrowed_to_the_part_of_the_day_the_contact_named():
+    from agent_runtime.runtime.graph_builder import _format_appointment_list
+
+    items = _offered("2026-11-18", "07:00", "08:00", "13:00", "15:00")
+    whole = _format_appointment_list(items, {"sc__day": "2026-11-18"}, "es")
+    assert "Mañana" in whole and "Tarde" in whole
+    narrowed = _format_appointment_list(items, {"sc__day": "2026-11-18", "sc__part_shown": "tarde"}, "es")
+    assert "Tarde" in narrowed and "Mañana" not in narrowed and "07:00" not in narrowed
+    # a part without times falls back to the whole day instead of an empty list
+    empty = _format_appointment_list(items, {"sc__day": "2026-11-18", "sc__part_shown": "noche"}, "es")
+    assert "Mañana" in empty and "Tarde" in empty
+
+
+def test_applying_time_part_and_resolve_within_store_lines():
+    slots = {
+        "available_slots": _offered("2026-11-18", "07:00", "13:00", "15:00"),
+        "day": "2026-11-18",
+        "slot": "por la tarde",
+        "part_shown": None,
+    }
+    _apply_store_line("[part_asked] = TIME_PART [slot] AMONG [available_slots] AT [day]", _ctx(slots), _FakeLLMClient())
+    assert slots["part_asked"] == "tarde"
+    slots["part_shown"] = slots["part_asked"]
+    slots["slot"] = "la primera"
+    _apply_store_line("[slot] = RESOLVE_TIME [slot] AMONG [available_slots] AT [day] WITHIN [part_shown]", _ctx(slots), _FakeLLMClient())
+    assert slots["slot"] == "13:00"
+
+
 def test_protect_figures_swaps_times_and_long_numbers_for_tokens_and_back():
     from agent_runtime.runtime.graph_builder import _protect_figures, _restore_contact_values
 

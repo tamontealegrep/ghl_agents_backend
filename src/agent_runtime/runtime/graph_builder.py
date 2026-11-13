@@ -142,7 +142,11 @@ _STORE_RESOLVE_DAY_RE = re.compile(
     r"^RESOLVE_DAY\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]\s+IN\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]\s+AMONG\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]$"
 )
 _STORE_RESOLVE_TIME_RE = re.compile(
-    r"^RESOLVE_TIME\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]\s+AMONG\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]\s+AT\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]$"
+    r"^RESOLVE_TIME\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]\s+AMONG\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]\s+AT\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]"
+    r"(?:\s+WITHIN\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\])?$"
+)
+_STORE_TIME_PART_RE = re.compile(
+    r"^TIME_PART\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]\s+AMONG\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]\s+AT\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]$"
 )
 _STORE_LOCATION_LABEL_RE = re.compile(r"^LOCATION_LABEL\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]$")
 _STORE_DAY_LABEL_RE = re.compile(r"^DAY_(LABEL|TITLE|FULL)\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]$")
@@ -246,7 +250,14 @@ def _apply_store_line(line: str, ctx: LLMContext, llm_client: LLMClient) -> None
     resolve_time = _STORE_RESOLVE_TIME_RE.match(rhs)
     if resolve_time:
         reply, offered, day = (slots.get(resolve_time.group(i)) for i in (1, 2, 3))
-        slots[name] = _resolve_time_reference(reply, offered, day)
+        within = slots.get(resolve_time.group(4)) if resolve_time.group(4) else None
+        slots[name] = _resolve_time_reference(reply, offered, day, within)
+        return
+
+    time_part = _STORE_TIME_PART_RE.match(rhs)
+    if time_part:
+        reply, offered, day = (slots.get(time_part.group(i)) for i in (1, 2, 3))
+        slots[name] = _named_part_of_day(reply, offered, day)
         return
 
     location_label = _STORE_LOCATION_LABEL_RE.match(rhs)
@@ -420,27 +431,103 @@ _UNPADDED_TIME_RE = re.compile(r"(?:[a-z ]*?)([1-9]):([0-5]\d)(?: ?h(?:rs?)?\.?)
 _BARE_HOUR_RE = re.compile(r"^\D*?(\d{1,2})\D*$")
 
 
-def _resolve_time_reference(reply: Any, offered: Any, day: Any) -> str | None:
+_PART_PATTERNS = (
+    ("madrugada", re.compile(r"\b(?:madrugada|early morning|dawn)\b")),
+    ("manana", re.compile(r"\bla manana\b|\bmorning\b|\bmanha\b")),
+    ("tarde", re.compile(r"\b(?:tardes?|afternoon)\b")),
+    ("noche", re.compile(r"\b(?:noches?|night|evening|noite)\b")),
+)
+"""The parts of the day a contact can name, in the language of the three conversations. A bare 'mañana' is
+tomorrow, not the morning, so only 'la mañana' (also 'por la', 'en la', 'de la') counts."""
+
+_ORDINAL_PATTERNS = (
+    (-1, re.compile(r"\b(?:mas|mais) (?:tarde|tardia|tardio)\b|\b(?:ultim[oa]s?|last|latest|final|derradeir[oa])\b")),
+    (-2, re.compile(r"\b(?:penultim[oa]|second to last|second-to-last|penultimate)\b")),
+    (0, re.compile(r"\b(?:primer[oa]?s?|primeir[oa]|first|earliest|1(?:ra|ro|st|era|ero))\b|\b(?:mas|mais) (?:temprano|temprana|cedo|pronto)\b")),
+    (1, re.compile(r"\b(?:segund[oa]|second|2(?:da|do|nd|nda))\b")),
+    (2, re.compile(r"\b(?:tercer[oa]?|terceir[oa]|third|3(?:ra|ro|rd|era|ero))\b")),
+    (3, re.compile(r"\b(?:cuart[oa]|fourth|4(?:ta|to|th))\b")),
+    (4, re.compile(r"\b(?:quint[oa]|fifth|5(?:ta|to|th))\b")),
+)
+"""A position among the offered times: 0 is the first, -1 the last, -2 the one before it."""
+
+
+def _describe_time_choice(reply: str) -> tuple[str | None, int | None]:
+    """
+    The part of the day and the position among the offered times a contact names in `reply`, either or both.
+
+    A contact does not always say a clock time: "por la tarde", "la primera", "la ultima de la manana" all
+    pick from the list by description. Returns (part, position): `part` is 'madrugada', 'manana', 'tarde' or
+    'noche'; `position` is 0 for the first, -1 for the last, -2 for the one before it, 1 for the second...
+    The position is matched first and removed, so "mas tarde" (later) is never read as the afternoon.
+    """
+    text = _fold(reply).replace(".", "")
+    position = None
+    for index, pattern in _ORDINAL_PATTERNS:
+        if pattern.search(text):
+            position = index
+            text = pattern.sub(" ", text)
+            break
+    part = next((key for key, pattern in _PART_PATTERNS if pattern.search(text)), None)
+    return part, position
+
+
+def _times_in_part(times: list[str], part: str | None) -> list[str]:
+    """`times` (sorted HH:MM) that fall in `part` ('madrugada', 'manana', 'tarde', 'noche'); all of them when it is None."""
+    if part is None:
+        return times
+    bounds = next(((start, end) for (start, end, _), key in zip(_PARTS_OF_DAY, _PART_KEYS) if key == part), None)
+    if bounds is None:
+        return times
+    return [t for t in times if bounds[0] <= _minutes(t) // 60 < bounds[1]]
+
+
+_PART_KEYS = ("madrugada", "manana", "tarde", "noche")
+
+
+def _offered_times(offered: Any, day: Any) -> list[str]:
+    """The sorted HH:MM start times offered on `day` (YYYY-MM-DD)."""
+    day_parts = _date_parts(day) if isinstance(day, str) else None
+    if day_parts is None or not isinstance(offered, list):
+        return []
+    return sorted(
+        {
+            _time_part(item["start_local"])
+            for item in offered
+            if isinstance(item, dict)
+            and isinstance(item.get("start_local"), str)
+            and _date_parts(item["start_local"]) == day_parts
+        }
+        - {None}
+    )
+
+
+def _named_part_of_day(reply: Any, offered: Any, day: Any) -> str | None:
+    """The part of the day `reply` names when the day has at least one offered time in it, else None."""
+    if not isinstance(reply, str):
+        return None
+    part, _ = _describe_time_choice(reply)
+    return part if part is not None and _times_in_part(_offered_times(offered, day), part) else None
+
+
+def _resolve_time_reference(reply: Any, offered: Any, day: Any, within: Any = None) -> str | None:
     """
     The offered HH:MM on `day` that `reply` unambiguously names, or None.
 
-    A time written in full ("10:30", "3 pm" already cleaned to 15:00) must be one of the offered
-    times. A bare hour ("a las 3") is accepted only when exactly one of that hour and its
-    afternoon twin is offered on the hour sharp: with both, or neither, the contact must say
-    which, instead of the agent guessing am or pm.
+    A contact picks a time by its clock value ("10:30", "3 pm" already cleaned to 15:00) or by
+    description: a part of the day ("por la tarde"), a position ("la primera", "la ultima") or both
+    ("la primera de la manana"). A clock time must be one of the offered times. A bare hour
+    ("a las 3") is accepted only when exactly one of that hour and its afternoon twin is offered on the
+    hour sharp: with both, or neither, the contact must say which, instead of the agent guessing am or pm.
+    A description picks from the times of the part of the day it names (else from `within`, the part
+    of the day of the list last shown, else from the whole day): a position picks one of them; a part of
+    the day alone picks only when a single time is left, so a wider choice is asked again.
     """
     if not isinstance(reply, str) or not isinstance(day, str) or not isinstance(offered, list):
         return None
-    day_parts = _date_parts(day)
-    if day_parts is None:
+    times = set(_offered_times(offered, day))
+    if not times:
         return None
-    times = {
-        _time_part(item["start_local"])
-        for item in offered
-        if isinstance(item, dict)
-        and isinstance(item.get("start_local"), str)
-        and _date_parts(item["start_local"]) == day_parts
-    } - {None}
     text = _clean_slot_time(reply.strip())
     full = re.fullmatch(r"(\d{1,2}):(\d{2})", text)
     if full is not None:
@@ -452,8 +539,22 @@ def _resolve_time_reference(reply: Any, offered: Any, day: Any) -> str | None:
             return matches[0] if len(matches) == 1 else None
         wanted = f"{int(full.group(1)):02d}:{full.group(2)}"
         return wanted if wanted in times else None
+
+    part, position = _describe_time_choice(text)
+    if part is not None or position is not None:
+        scope = part if part is not None else (within if within in _PART_KEYS else None)
+        candidates = _times_in_part(sorted(times), scope)
+        if not candidates:
+            return None
+        if position is not None:
+            try:
+                return candidates[position]
+            except IndexError:
+                return None
+        return candidates[0] if len(candidates) == 1 else None
+
     bare = _BARE_HOUR_RE.match(text)
-    if bare is None or re.search(r"\b(am|pm|manana|tarde|noche)\b", _fold(text).replace(".", "")):
+    if bare is None or re.search(r"\b(am|pm)\b", _fold(text).replace(".", "")):
         return None
     hour = int(bare.group(1))
     if hour > 23:
@@ -853,11 +954,11 @@ def _clean_phone(value: str) -> str | None:
 
 
 _SLOT_TIME_RE = re.compile(
-    r"(?<!\d)(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(?:([ap])\.?\s?m\b\.?|de la (ma[ñn]ana|tarde|noche)))?(?!\d)",
+    r"(?<!\d)(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(?:([ap])\.?\s?m\b\.?|(?:de|por|en) la (ma[ñn]ana|tarde|noche)))?(?!\d)",
     re.IGNORECASE,
 )
 _SLOT_HOUR_RE = re.compile(
-    r"(?<![\d:])(\d{1,2})\s*(?:([ap])\.?\s?m\b\.?|de la (ma[ñn]ana|tarde|noche))",
+    r"(?<![\d:])(\d{1,2})\s*(?:([ap])\.?\s?m\b\.?|(?:de|por|en) la (ma[ñn]ana|tarde|noche))",
     re.IGNORECASE,
 )
 
@@ -1045,7 +1146,7 @@ def _find_selected_date(slots: dict[str, Any], candidate_dates: set[_DateParts])
     ISO-normalized, so this loose fallback is what actually fires for real
     content; it only ever acts when the day-of-month is unambiguous among
     the dates on offer, so a coincidental number elsewhere (a retry count,
-    a phone digit run — `` never matches inside one) can't misfire into
+    a phone digit run — `\b` never matches inside one) can't misfire into
     a wrong single-day filter. Both passes only ever look at real captured
     slots (`_captured_string_values`), never compile-time constants.
     """
@@ -1136,7 +1237,10 @@ def _format_appointment_list(items: list[dict[str, Any]], slots: dict[str, Any],
     if selected_date is not None:
         times = sorted({t for date_parts, t in dated_items if date_parts == selected_date and t})
         if times:
-            return _times_by_part_of_day(times, step, language_code)
+            # After the contact named a part of the day ("por la tarde") only that part is listed again.
+            shown = next((v for k, v in slots.items() if k == "part_shown" or k.endswith("__part_shown")), None)
+            part_times = _times_in_part(times, shown) if shown in _PART_KEYS else times
+            return _times_by_part_of_day(part_times or times, step, language_code)
 
     lines = []
     for date_parts in sorted(candidate_dates):

@@ -6152,7 +6152,9 @@
           "[sc__ok] = NULL",
           "[sc__retry_ok] = NULL",
           "[user_timezone] = 'America/Bogota'",
-          "[sc__user_location] = 'Colombia, Bogota'"
+          "[sc__user_location] = 'Colombia, Bogota'",
+          "[sc__part_asked] = NULL",
+          "[sc__part_shown] = NULL"
         ],
         "capture": [],
         "eval": "code",
@@ -7029,6 +7031,8 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
+          "[sc__part_shown] = NULL",
+          "[sc__part_asked] = NULL",
           "[sc__day] = RESOLVE_DAY [sc__day] IN [sc__calendar] AMONG [sc__available_slots]",
           "[sc__day_label] = DAY_LABEL [sc__day]",
           "[sc__day_title] = DAY_TITLE [sc__day]",
@@ -7160,8 +7164,8 @@
         "node_id": "SC__SC_ASK_S",
         "node_type": "question",
         "goal": [
-          "Capture [sc__slot] as the time the contact chooses from the times offered for [sc__day] in [sc__available_slots]. Write it as HH:MM in 24-hour format only when they say am or pm, name a part of the day, or already write a 24-hour time (like '15:30' or '09:00'). When they give an hour with no am/pm and no part of the day (like 'a las 3', '3:00' or '10'), copy it exactly as they wrote it: never decide am or pm for them.",
-          "Capture [sc__new_day] only when the contact names a different day (as they wrote it: 'el viernes', 'Nov 5', 'el 3', 'mañana') instead of a time; a bare time is never a day. Otherwise leave [sc__new_day] empty.",
+          "Capture [sc__slot] as the time the contact picks from the times offered for [sc__day] in [sc__available_slots]. A clock time ('a las 3', '10:30', '3 pm'): write it as HH:MM in 24-hour format only when they say am or pm, give the hour together with a part of the day ('3 de la tarde'), or already write a 24-hour time (like '15:30' or '09:00'); a bare hour with no am/pm and no part of the day (like 'a las 3', '3:00' or '10') is copied exactly as they wrote it: never decide am or pm for them. A pick by DESCRIPTION instead of a clock time is copied exactly as the contact wrote it and never turned into a time, because the next step resolves it against the offered times: a part of the day ('por la mañana', 'en la tarde', 'en la noche', 'en la madrugada'), a position among the offered times ('la primera', 'la última', 'la segunda', 'la más temprana', 'la más tarde', 'la penúltima'), or both ('la primera de la mañana', 'la última de la tarde'). 'por la mañana' is the morning, while a bare 'mañana' means tomorrow and is a day, not a time.",
+          "Capture [sc__new_day] only when the contact names a different day (as they wrote it: 'el viernes', 'Nov 5', 'el 3', 'mañana') instead of a time; a bare time, a part of the day ('por la tarde') or a position ('la primera') is never a day. Otherwise leave [sc__new_day] empty.",
           "Capture [sc__more_days] as yes only when the contact asks to see other dates or the available days again."
         ],
         "do": [],
@@ -7227,7 +7231,7 @@
         "node_id": "SC__SC_RES_T",
         "node_type": "registration",
         "goal": [
-          "Turn the time the contact wrote into one of the offered times, or into nothing when it is not offered or could be am or pm: the resolution is mechanical, from the times offered on [sc__day]."
+          "Turn what the contact said into one of the offered times, or into nothing when it names none or names several: the resolution is mechanical, from the times offered on [sc__day]. A part of the day or a position works too (\"por la tarde\", \"la primera\", \"la última de la mañana\"); after the list was narrowed to a part of the day, a position refers to that list."
         ],
         "do": [],
         "trigger": [],
@@ -7236,7 +7240,8 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[sc__slot] = RESOLVE_TIME [sc__slot] AMONG [sc__available_slots] AT [sc__day]"
+          "[sc__part_asked] = TIME_PART [sc__slot] AMONG [sc__available_slots] AT [sc__day]",
+          "[sc__slot] = RESOLVE_TIME [sc__slot] AMONG [sc__available_slots] AT [sc__day] WITHIN [sc__part_shown]"
         ],
         "capture": [],
         "eval": "code",
@@ -7268,7 +7273,9 @@
           "[sc__new_day] = NULL",
           "[sc__more_days] = NULL",
           "[sc__slot] = NULL",
-          "[sc__slot_try] = 0"
+          "[sc__slot_try] = 0",
+          "[sc__part_asked] = NULL",
+          "[sc__part_shown] = NULL"
         ],
         "capture": [],
         "eval": "code",
@@ -7316,6 +7323,13 @@
             "reason": null
           },
           {
+            "target": "SC__SC_SET_PART",
+            "condition_text": "IF [sc__part_asked] IS NOT NULL -> GO_TO: SC__SC_SET_PART",
+            "is_mechanical": true,
+            "python_expression": "sc__part_asked is not None",
+            "reason": null
+          },
+          {
             "target": "SC__SC_BAD_TIME",
             "condition_text": "IF [sc__slot] IS NULL -> GO_TO: SC__SC_BAD_TIME",
             "is_mechanical": true,
@@ -7341,7 +7355,8 @@
         ],
         "do": [
           "[sc__fresh_available_slots] = NULL",
-          "[sc__start_date] = PICK [sc__available_slots].start_co AT [sc__day] [sc__slot]"
+          "[sc__start_date] = PICK [sc__available_slots].start_co AT [sc__day] [sc__slot]",
+          "[sc__part_shown] = NULL"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -7385,6 +7400,63 @@
         ]
       },
       {
+        "node_id": "SC__SC_SET_PART",
+        "node_type": "registration",
+        "goal": [
+          "The contact named a part of the day that still leaves several times: remember it so the list is narrowed to it and a following position (\"la primera\") refers to that list."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[sc__part_shown] = [sc__part_asked]",
+          "[sc__part_asked] = NULL"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_NARROW",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "SC__SC_NARROW",
+        "node_type": "message",
+        "goal": [
+          "Show only the offered times of the part of the day the contact named and ask which one they prefer."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "These are the times available in that part of the day:\n\n[sc__available_slots]"
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_ASK_S",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
         "node_id": "SC__SC_BAD_TIME",
         "node_type": "message",
         "goal": [
@@ -7394,7 +7466,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Sorry, I didn't understand that time. Please tell me one of the available times, and add am or pm if it helps."
+          "Sorry, I couldn't find that time among the available ones. Please tell me one of the times on the list, or say the first or the last one of the morning or the afternoon."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -7494,7 +7566,9 @@
           "[sc__ok_try] = 0",
           "[sc__book_try] = 0",
           "[sc__time_try] = 0",
-          "[sc__day_now_try] = 0"
+          "[sc__day_now_try] = 0",
+          "[sc__part_asked] = NULL",
+          "[sc__part_shown] = NULL"
         ],
         "capture": [],
         "eval": "code",
@@ -7531,7 +7605,9 @@
           "[sc__more_days] = NULL",
           "[sc__start_date] = NULL",
           "[sc__day_try] = 0",
-          "[sc__slot_try] = 0"
+          "[sc__slot_try] = 0",
+          "[sc__part_asked] = NULL",
+          "[sc__part_shown] = NULL"
         ],
         "capture": [],
         "eval": "code",
