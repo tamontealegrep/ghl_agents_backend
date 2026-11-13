@@ -1491,6 +1491,15 @@ def _protect_figures(text: str, protected: dict[str, str]) -> str:
 
 def _restore_contact_values(text: str, protected: dict[str, str]) -> str:
     for token, value in protected.items():
+        if token.startswith("<LIST_") and "\n" in value:
+            # A multi-line list (dates, times) always starts on its own line: the paraphrasing model often
+            # glues the token to the end of the sentence before it ("...fechas: <LIST_1>").
+            def put_list(match: re.Match[str], value: str = value) -> str:
+                before = match.string[: match.start()]
+                return value if not before or before.endswith("\n") else f"\n{value}"
+
+            text = re.sub(rf"[ \t]*{re.escape(token)}", put_list, text)
+            continue
         text = text.replace(token, value)
     return text
 

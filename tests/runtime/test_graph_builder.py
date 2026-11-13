@@ -2308,6 +2308,18 @@ def test_resolve_time_reference_understands_a_description_of_the_time():
     assert _named_part_of_day("la primera", offered, day) is None
 
 
+def test_restored_list_always_starts_on_its_own_line():
+    from agent_runtime.runtime.graph_builder import _restore_contact_values
+
+    lst = "\U0001F5D3️ Viernes 13\n └─ Tarde\n\U0001F5D3️ Miércoles 18"
+    protected = {"<LIST_1>": lst}
+    # the paraphrasing model glued the token to the sentence before it
+    assert _restore_contact_values("Tengo estas fechas: <LIST_1>", protected) == f"Tengo estas fechas:\n{lst}"
+    # lists that already start on their own line are left as they are
+    assert _restore_contact_values("Fechas:\n\n<LIST_1>\n\nQue dia?", protected) == f"Fechas:\n\n{lst}\n\nQue dia?"
+    assert _restore_contact_values("Fechas:\n<LIST_1>", protected) == f"Fechas:\n{lst}"
+
+
 def test_time_list_is_narrowed_to_the_part_of_the_day_the_contact_named():
     from agent_runtime.runtime.graph_builder import _format_appointment_list
 
