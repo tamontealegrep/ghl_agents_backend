@@ -8340,8 +8340,8 @@
         "node_type": "question",
         "goal": [
           "Stay available after a successful scheduling in case the contact has more questions. Never re-ask anything explicitly; only the global router (FAQs/handlers) should react to what the contact says.",
-          "When no FAQ or handler applies, close if the contact only thanks or says goodbye; otherwise send the contact back to the service question that follows the greeting.",
-          "Capture end_closing = 'yes' only when the contact's latest message just thanks, says goodbye or acknowledges (for example 'thanks', 'ok', 'bye') and asks or requests nothing new; capture 'no' for anything else."
+          "When no FAQ or handler applies, close if the contact only thanks or says goodbye; otherwise treat what they wrote as a new question: answer it from the knowledge base and come back here, so the contact stays in a question loop after booking (never restart the greeting or the service question).",
+          "Capture end_closing = 'yes' only when the contact's latest message just thanks, says goodbye or acknowledges (for example 'thanks', 'ok', 'bye') or says they have no more questions (for example 'no', 'nothing else', 'that's all', 'no tengo más preguntas') and asks or requests nothing new; capture 'no' for anything else."
         ],
         "do": [
           "[sc__end_try] = [sc__end_try] + 1"
@@ -8379,7 +8379,7 @@
         ],
         "fallback": [
           {
-            "target": "SC__SC_RESTART",
+            "target": "SC__SC_TO_KQ",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -8388,29 +8388,25 @@
         ]
       },
       {
-        "node_id": "SC__SC_RESTART",
+        "node_id": "SC__SC_TO_KQ",
         "node_type": "registration",
         "goal": [
-          "Send the contact back to the service question that follows the greeting, with its retry counter reset."
+          "After a successful scheduling the contact wrote something new: answer it from the knowledge base and come back to SC_LISTEN, which asks again whether there is anything else."
         ],
-        "do": [
-          "[o__svc_try] = 0",
-          "[svc] = NULL"
-        ],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[o__svc_try] = 0",
-          "[svc] = NULL"
+          "[current_state] = 'SC__SC_LISTEN'"
         ],
         "capture": [],
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_ASK",
+            "target": "KQ__KQ_SIDE",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
