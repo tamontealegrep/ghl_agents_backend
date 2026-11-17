@@ -52,3 +52,25 @@ class GhlCustomUpdateResponse(BaseModel):
     errors: str | None = None
 
     model_config = ConfigDict(populate_by_name=True)
+
+
+class GhlAddTags(BaseModel):
+    tags: list[str] | str = Field(
+        ...,
+        description="Etiquetas a agregar: una lista, o un texto con una lista o nombres separados por comas.",
+    )
+    contact_id: str = Field(..., alias="contactId", description="ID del contacto en GHL")
+    location_id: str | None = Field(
+        None,
+        alias="locationId",
+        description="ID de la ubicación (subcuenta) del contacto: elige el token que la administra",
+    )
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class GhlAddTagsResponse(BaseModel):
+    success: bool
+    tags: list[str] | None = Field(None, description="Todas las etiquetas que tiene el contacto ahora")
+    tags_added: list[str] | None = Field(None, description="Las etiquetas que se agregaron en esta llamada")
+    errors: str | None = None

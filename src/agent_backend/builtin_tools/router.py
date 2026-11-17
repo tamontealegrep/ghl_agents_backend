@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 # Utils tools (shared across agents)
 from agent_backend.builtin_tools.endpoints import (
+    add_tags,
     calculate_bmi,
     callback_request,
     check_days_elapsed,
@@ -21,7 +22,7 @@ from agent_backend.builtin_tools.endpoints import (
 from agent_backend.builtin_tools.endpoints import (
     update_custom_field as ucf_endpoint,
 )
-from agent_backend.builtin_tools.schemas.ghl import GhlCustomUpdateResponse
+from agent_backend.builtin_tools.schemas.ghl import GhlAddTagsResponse, GhlCustomUpdateResponse
 from agent_backend.builtin_tools.schemas.input_payload import InputPayloadResponse
 
 router = APIRouter()
@@ -61,6 +62,13 @@ router.add_api_route(
     methods=["POST"],
     response_model=GhlCustomUpdateResponse,
     tags=["utils.update_custom_field"],
+)
+router.add_api_route(
+    "/add-tags",
+    add_tags.add_tags,
+    methods=["POST"],
+    response_model=GhlAddTagsResponse,
+    tags=["utils.add_tags"],
 )
 router.add_api_route(
     "/echo",
