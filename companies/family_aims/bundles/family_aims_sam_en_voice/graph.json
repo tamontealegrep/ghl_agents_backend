@@ -7832,6 +7832,468 @@
       ]
     },
     {
+      "name": "add_tags",
+      "description": "Agrega una o varias etiquetas (tags) a un contacto de GoHighLevel.",
+      "inputs": [
+        {
+          "name": "tags",
+          "required": true,
+          "description": "Etiquetas a agregar. Una lista de nombres. Ejemplo: ['calificada', 'cita_agendada'].",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "contact_id",
+          "required": true,
+          "description": "ID del contacto en GHL (disponible en context.contact_id).",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "location_id",
+          "required": false,
+          "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token de la subcuenta.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "success",
+          "required": true,
+          "description": "Indica si GHL aceptó la operación.",
+          "type_expr": "bool",
+          "examples": []
+        },
+        {
+          "name": "tags",
+          "required": false,
+          "description": "Todas las etiquetas que tiene el contacto después de la operación.",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "tags_added",
+          "required": false,
+          "description": "Las etiquetas que se agregaron en esta llamada (vacía si el contacto ya las tenía todas).",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "errors",
+          "required": false,
+          "description": "Mensaje de error si la operación falló.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "notes": [
+        "MANDATORY EXECUTION: ejecútala cuando el flujo pida marcar al contacto con una etiqueta (por ejemplo al calificar, al agendar o al cerrar la conversación). Solo agrega etiquetas; nunca quita ninguna.",
+        "ARGUMENTS: tags (lista de nombres de etiqueta, tal como los define el flujo), contact_id y location_id (disponibles en el contexto del contacto).",
+        "BEHAVIOUR: GHL pasa las etiquetas a minúsculas, crea las que la subcuenta aún no tiene e ignora las que el contacto ya tiene, así que repetir la llamada es seguro.",
+        "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; tags_added dice cuáles se agregaron realmente (vacía si el contacto ya las tenía todas).",
+        "SILENT ACTION: nunca le digas a la persona que le estás agregando etiquetas."
+      ]
+    },
+    {
+      "name": "remove_tags",
+      "description": "Quita una o varias etiquetas (tags) de un contacto de GoHighLevel.",
+      "inputs": [
+        {
+          "name": "tags",
+          "required": true,
+          "description": "Etiquetas a quitar. Una lista de nombres. Ejemplo: ['contacted', 'nuevo'].",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "contact_id",
+          "required": true,
+          "description": "ID del contacto en GHL (disponible en context.contact_id).",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "location_id",
+          "required": false,
+          "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token de la subcuenta.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "success",
+          "required": true,
+          "description": "Indica si GHL aceptó la operación.",
+          "type_expr": "bool",
+          "examples": []
+        },
+        {
+          "name": "tags",
+          "required": false,
+          "description": "Las etiquetas que le quedan al contacto después de la operación.",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "tags_removed",
+          "required": false,
+          "description": "Las etiquetas que se quitaron en esta llamada (vacía si el contacto no tenía ninguna).",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "errors",
+          "required": false,
+          "description": "Mensaje de error si la operación falló.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "notes": [
+        "MANDATORY EXECUTION: ejecútala cuando el flujo pida quitarle una etiqueta al contacto (por ejemplo al pasar de una etapa a otra). Solo quita las etiquetas que nombra; las demás se conservan.",
+        "ARGUMENTS: tags (lista de nombres de etiqueta, tal como los define el flujo), contact_id y location_id (disponibles en el contexto del contacto).",
+        "BEHAVIOUR: GHL pasa las etiquetas a minúsculas antes de compararlas e ignora las que el contacto no tiene, así que pedir una que no está no es un error.",
+        "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; tags_removed dice cuáles se quitaron realmente (vacía si el contacto no tenía ninguna) y tags cuáles le quedan.",
+        "SILENT ACTION: nunca le digas a la persona que le estás quitando etiquetas."
+      ]
+    },
+    {
+      "name": "update_contact",
+      "description": "Actualiza los datos de un contacto de GoHighLevel (nombre, correo, teléfono, dirección, fecha de nacimiento, país, asignación, no molestar) y varios campos personalizados en una sola llamada.",
+      "inputs": [
+        {
+          "name": "contact_id",
+          "required": true,
+          "description": "ID del contacto en GHL (disponible en context.contact_id).",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "location_id",
+          "required": false,
+          "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token y permite buscar campos personalizados por nombre.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "first_name",
+          "required": false,
+          "description": "Nombre.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "last_name",
+          "required": false,
+          "description": "Apellido.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "name",
+          "required": false,
+          "description": "Nombre completo.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "email",
+          "required": false,
+          "description": "Correo electrónico principal.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "phone",
+          "required": false,
+          "description": "Teléfono principal, con indicativo de país. Ejemplo: '+573001112233'.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "address1",
+          "required": false,
+          "description": "Dirección.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "city",
+          "required": false,
+          "description": "Ciudad.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "state",
+          "required": false,
+          "description": "Estado o departamento.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "postal_code",
+          "required": false,
+          "description": "Código postal.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "country",
+          "required": false,
+          "description": "País como código ISO de dos letras. Ejemplo: 'CO'.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "website",
+          "required": false,
+          "description": "Sitio web.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "timezone",
+          "required": false,
+          "description": "Zona horaria IANA. Ejemplo: 'America/Bogota'.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "source",
+          "required": false,
+          "description": "Fuente del contacto.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "date_of_birth",
+          "required": false,
+          "description": "Fecha de nacimiento. Ejemplo: '1990-05-31'.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "assigned_to",
+          "required": false,
+          "description": "ID del usuario de GHL al que se asigna el contacto.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "dnd",
+          "required": false,
+          "description": "true para no molestar al contacto por ningún canal; false para quitarlo.",
+          "type_expr": "bool",
+          "examples": []
+        },
+        {
+          "name": "custom_fields",
+          "required": false,
+          "description": "Campos personalizados a cambiar, como textos 'nombre=valor'. Ejemplo: ['city_raw=Chía', 'surrogate_interest=interested'].",
+          "type_expr": "list[str]",
+          "examples": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "success",
+          "required": true,
+          "description": "Indica si GHL aceptó la operación.",
+          "type_expr": "bool",
+          "examples": []
+        },
+        {
+          "name": "contact_id",
+          "required": false,
+          "description": "Eco del ID del contacto.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "updated_fields",
+          "required": false,
+          "description": "Los campos que se enviaron a GHL.",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "errors",
+          "required": false,
+          "description": "Mensaje de error si la operación falló.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "notes": [
+        "MANDATORY EXECUTION: ejecútala cuando el flujo deba guardar o corregir varios datos del contacto a la vez. Para un solo campo personalizado también sirve update_custom_field.",
+        "ARGUMENTS: contact_id (obligatorio) y solo los datos que cambian; lo que no se envía no se modifica. Nunca envíes un dato que la persona no haya dado.",
+        "TAGS: esta herramienta no cambia las etiquetas; para eso están add_tags y remove_tags.",
+        "CUSTOM FIELDS: custom_fields es una lista de textos 'nombre=valor' (por ejemplo 'city=Bogotá'). Con location_id se buscan por nombre; un campo desplegable solo acepta una de sus opciones.",
+        "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; updated_fields dice qué se envió. Un correo o teléfono que ya pertenece a otro contacto puede ser rechazado: el motivo viene en errors.",
+        "SILENT ACTION: nunca le digas a la persona que estás guardando o actualizando sus datos."
+      ]
+    },
+    {
+      "name": "update_opportunity",
+      "description": "Actualiza los datos de una oportunidad de GoHighLevel: nombre, pipeline, etapa, estado, valor, previsión de cierre, asignación, motivo de pérdida y campos personalizados.",
+      "inputs": [
+        {
+          "name": "opportunity_id",
+          "required": true,
+          "description": "ID de la oportunidad en GHL.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "location_id",
+          "required": false,
+          "description": "ID de la ubicación (subcuenta) en GHL (disponible en context.location_id). Elige el token de la subcuenta.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "name",
+          "required": false,
+          "description": "Nombre de la oportunidad.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "pipeline_id",
+          "required": false,
+          "description": "ID del pipeline.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "pipeline_stage_id",
+          "required": false,
+          "description": "ID de la etapa del pipeline.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "status",
+          "required": false,
+          "description": "Estado de la oportunidad.",
+          "type_expr": "Literal[open, won, lost, abandoned]",
+          "examples": []
+        },
+        {
+          "name": "monetary_value",
+          "required": false,
+          "description": "Valor monetario, un número de 0 o más escrito como texto. Ejemplo: '1500.50'.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "forecast_expected_close_date",
+          "required": false,
+          "description": "Fecha esperada de cierre. Ejemplo: '2026-12-31'.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "forecast_probability",
+          "required": false,
+          "description": "Probabilidad de cierre, un número escrito como texto. Ejemplo: '75'.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "assigned_to",
+          "required": false,
+          "description": "ID del usuario de GHL al que se asigna la oportunidad.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "lost_reason_id",
+          "required": false,
+          "description": "ID del motivo de pérdida (de GHL). Solo cuenta si el estado es o pasa a lost.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "custom_fields",
+          "required": false,
+          "description": "Campos personalizados a cambiar, como textos 'clave=valor'. Ejemplo: ['source_detail=web'].",
+          "type_expr": "list[str]",
+          "examples": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "success",
+          "required": true,
+          "description": "Indica si GHL aceptó la operación.",
+          "type_expr": "bool",
+          "examples": []
+        },
+        {
+          "name": "opportunity_id",
+          "required": false,
+          "description": "Eco del ID de la oportunidad.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "updated_fields",
+          "required": false,
+          "description": "Los campos que se enviaron a GHL.",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "status",
+          "required": false,
+          "description": "Estado en que quedó la oportunidad.",
+          "type_expr": "Literal[open, won, lost, abandoned]",
+          "examples": []
+        },
+        {
+          "name": "pipeline_id",
+          "required": false,
+          "description": "Pipeline en que quedó la oportunidad.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "pipeline_stage_id",
+          "required": false,
+          "description": "Etapa en que quedó la oportunidad.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "name",
+          "required": false,
+          "description": "Nombre de la oportunidad.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "errors",
+          "required": false,
+          "description": "Mensaje de error si la operación falló.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "notes": [
+        "MANDATORY EXECUTION: ejecútala cuando el flujo deba mover la oportunidad de etapa, cambiar su estado o actualizar sus datos.",
+        "ARGUMENTS: opportunity_id (obligatorio) y solo los datos que cambian; lo que no se envía no se modifica.",
+        "STATUS: open, won, lost o abandoned. lost_reason_id solo cuenta cuando el estado es o pasa a lost.",
+        "PIPELINE AND STAGE: pipeline_id y pipeline_stage_id son IDs de GHL que define el flujo; nunca los inventes. Mover la oportunidad a un pipeline donde el contacto ya tiene otra puede ser rechazado: el motivo viene en errors.",
+        "CUSTOM FIELDS: custom_fields es una lista de textos 'clave=valor' con la clave del campo sin el prefijo 'opportunity.' (o su ID). Un campo que no existe en la subcuenta lo ignora GHL.",
+        "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; status, pipeline_id y pipeline_stage_id dicen cómo quedó la oportunidad.",
+        "SILENT ACTION: nunca le digas a la persona que estás actualizando la oportunidad."
+      ]
+    },
+    {
       "name": "check_visa",
       "description": "Checks whether one or more nationalities require a visa to enter Colombia as a tourist.",
       "inputs": [
@@ -8370,5 +8832,7 @@
     "Contact details (email, phone, nationality, service) must always be confirmed verbally; never invent or complete data.",
     "Normalize intents, FAQ, and semantic captures to the declared DSL literals, without changing slot names or state IDs, regardless of the language they ask in.",
     "If approved information is missing or there is a technical error, say so transparently, apologize in case of error, and offer to schedule an appointment, contact a specialist, or retry later."
-  ]
+  ],
+  "output_rules": [],
+  "forbidden_words": []
 }
