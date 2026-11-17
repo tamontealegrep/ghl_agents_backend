@@ -124,6 +124,26 @@ Output format for the auxiliary Reference Asset.
     JSON = "json"
 
 
+class GlobalRouterRule(str, Enum):
+    """
+One behaviour of the runtime's global router that can also be written into the single text prompt.
+
+    The runtime enforces these in code; a deployment that has no runtime (the prompt pasted into a platform)
+    needs them in the prompt, and a runtime agent benefits from knowing them while it writes.
+"""
+
+    RESPECT = "respect"
+    """Hate, vulgarity and insults from the contact get a courteous reminder and the pending question again."""
+    LANGUAGE = "language"
+    """Follow the contact's language and switch when they ask for it or cannot follow."""
+    INTERRUPTIONS = "interruptions"
+    """Handlers and FAQs are checked before a reply is taken as the answer; afterwards the pending question resumes."""
+    SIDE_QUESTIONS = "side_questions"
+    """A question asked in the middle of the flow is answered from the approved knowledge, then the flow resumes."""
+    OUTPUT_REVIEW = "output_review"
+    """The agent's output rules and forbidden words (``output_rules.yaml`` / ``forbidden_words.yaml``)."""
+
+
 class ComplianceSeverity(str, Enum):
     """
 Severity assigned to a compliance rule violation.
@@ -152,6 +172,9 @@ User-facing knobs that drive the compile pipeline.
     embed_subflows: bool = True
     """When True, all subflow states are rendered inline in the text prompt
     and no separate subflow reference documents are produced."""
+    global_router_rules: tuple[GlobalRouterRule, ...] | None = None
+    """Which global-router behaviours to write into the text prompt for this compile. ``None`` (default) takes
+    the agent's ``manifest.global_router_rules``; a tuple (possibly empty) replaces it."""
     bilingual_templates: bool = False
     """When True, render with ``system_prompt_bilingual.md.j2`` /
     ``system_prompt_bilingual_mini.md.j2`` instead of the standard pair —
@@ -274,10 +297,13 @@ Lists of relative paths referenced from the agent's ``manifest.yaml``.
     faqs: list[str] = Field(default_factory=list)
     states: list[str] = Field(default_factory=list)
     terminal_states: list[str] = Field(default_factory=list)
+    output_rules: list[str] = Field(default_factory=list)
+    forbidden_words: list[str] = Field(default_factory=list)
 
     @field_validator(
         "memory_slots", "flow_rules", "faq_policy", "policies",
         "tool_contracts", "handlers", "faqs", "states", "terminal_states",
+        "output_rules", "forbidden_words",
     )
     @classmethod
     def validate_paths(cls, v: list[str]) -> list[str]:
@@ -360,6 +386,10 @@ Top-level config loaded from each agent's ``manifest.yaml``.
     contract's fixed-vs-agent-decided split can differ per agent."""
     includes: ManifestIncludes = Field(default_factory=ManifestIncludes)
     subflow_instances: list[SubflowInstanceRef] = Field(default_factory=list)
+    global_router_rules: list[GlobalRouterRule] = Field(default_factory=list)
+    """Which global-router behaviours are written into the single text prompt (see ``GlobalRouterRule``). Empty
+    (default) writes none, so an agent that does not opt in compiles exactly as before. ``CompilationParams.
+    global_router_rules`` (the ``--global-router-rules`` flag) overrides it for one compile."""
     session_timeout_minutes: int | None = None
     """LangGraph target only — the text target ignores this. ``None``
     (default) means a session never goes stale. When set, a gap since the
@@ -764,6 +794,58 @@ Final merged policies after channel-profile validation.
 # ---------------------------------------------------------------------------
 # Flow rules and FAQ policy
 # ---------------------------------------------------------------------------
+
+
+class OutputRulesFile(StrictModel):
+    """
+Schema for an ``output_rules.yaml`` fragment: what the agent's messages must never say or imply.
+
+    The runtime's output review (``GLOBAL_ROUTER_OUTPUT_REVIEW``) checks every message the agent is
+    about to send against these rules and rewrites the ones that break any of them.
+"""
+
+    output_rules: list[str]
+
+    @field_validator("output_rules")
+    @classmethod
+    def validate_output_rules(cls, v: list[str]) -> list[str]:
+        return validate_non_empty_lines(v, "output_rules", allow_empty=False)
+
+
+class ForbiddenWord(StrictModel):
+    """
+One word or phrase the agent must never use in a message it sends.
+
+    ``word`` is matched ignoring case and accents, as a whole word or phrase. A trailing ``*`` stands for any ending
+    ("reclut*" is reclutar, reclutamiento...). ``use_instead`` is the wording the rewrite should prefer. A word is
+    forbidden as a way of describing, offering or promising something; whether a given use is one is judged by the
+    review model, not by the mere presence of the word.
+"""
+
+    word: str
+    use_instead: str | None = None
+    reason: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def accept_plain_string(cls, data: Any) -> Any:
+        return {"word": data} if isinstance(data, str) else data
+
+    @field_validator("word")
+    @classmethod
+    def validate_word(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("forbidden word must not be empty.")
+        return v
+
+
+class ForbiddenWordsFile(StrictModel):
+    """
+Schema for a ``forbidden_words.yaml`` fragment. Each entry is a plain string or a ``ForbiddenWord`` mapping.
+"""
+
+    forbidden_words: list[ForbiddenWord]
 
 
 class FlowRulesFile(StrictModel):
@@ -1301,6 +1383,10 @@ The fully merged agent specification fed into the rest of the pipeline.
     faqs: list[FAQModel]
     states: list[StateModel]
     terminal_states: list[StateModel]
+
+    output_rules: list[str] = Field(default_factory=list)
+    forbidden_words: list[ForbiddenWord] = Field(default_factory=list)
+    """Output review (runtime, opt-in per company): what a message must never say, and the words it must never use."""
 
     object_sources: dict[str, list[str]] = Field(default_factory=dict)
     instance_state_exports: dict[str, dict[str, str]] = Field(default_factory=dict)

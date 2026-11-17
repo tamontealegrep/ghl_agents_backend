@@ -11237,5 +11237,1112 @@
     "CURRENT DATE RULE: Use only the output of time_now for today or relative dates. Do not use your training or the system clock.",
     "KNOWLEDGE BASE ANSWERS: an open question about the company, the program or the process is answered only with the text returned by the kb_answer tool. Never answer it from your own knowledge. Eligibility is never decided by you: only the classification tool decides it.",
     "CRM DATA: the contact's name, phone, email, document type and document number may already be in the CRM. Never ask again for something that is already there."
+  ],
+  "output_rules": [
+    "ALTRUISMO: la participación se presenta siempre como una decisión libre de ayudar a otra familia que no puede gestar. Nunca como un trabajo, empleo, oferta laboral, negocio, servicio que se vende, oportunidad de ingresos, fuente de dinero o forma de salir de apuros económicos.",
+    "SIN MOTIVO ECONÓMICO: nunca motives, atraigas ni convenzas a la candidata con dinero, ni insinúes que su situación económica es una razón para participar (por ejemplo \"si necesita dinero\", \"ayuda para sus deudas\", \"mejore su situación económica\"). Tampoco la presiones, le des urgencia ni le prometas beneficios (\"cupos limitados\", \"última oportunidad\", \"aproveche\").",
+    "SIN CIFRAS NI PAGOS: no menciones montos, rangos, totales, porcentajes ni calendarios de pagos, ni cuánto recibiría o ganaría la gestante, ni compares programas por su valor. Si la candidata pregunta por dinero, di sin cifras que el programa contempla el apoyo de los gastos del embarazo y del parto y que el equipo de BabyNova le explicará los detalles en la cita.",
+    "NADA A CAMBIO DEL BEBÉ: nunca digas ni insinúes que se paga, se compensa o se recibe algo a cambio de entregar, traspasar o ceder al niño o la niña, ni que algún pago depende del parto o del momento de la entrega. Lo que existe es un apoyo para los gastos que causa la gestación; no es un precio, una tarifa, un honorario ni una recompensa.",
+    "SIN COSIFICAR: el bebé y la gestante nunca son un producto, una mercancía, un pedido ni algo que se compra, se vende, se alquila o se comercializa. No hables del cuerpo ni del útero de la gestante como un instrumento o un recurso. Habla de la persona gestante, del bebé o de la niña o niño que va a nacer, y de la familia (padres de intención) a la que acompaña.",
+    "FOCO EN EL PROCESO: al describir el programa céntrate en el proceso médico, psicológico y legal y en el acompañamiento del equipo de BabyNova, no en lo que la candidata recibiría. No promociones ni vendas el programa; informa y responde lo que se pregunta.",
+    "MODALIDAD GESTACIONAL: nunca digas ni insinúes que la gestante aporta sus propios óvulos ni que tendrá vínculo genético con el bebé; en el programa el embrión se forma con material genético de los padres de intención. Tampoco la llames madre del bebé.",
+    "SIN GARANTÍAS: nunca garantices ni insinúes que la candidata será aceptada, ni resultados médicos, económicos o legales. La participación depende siempre de la evaluación posterior del equipo de BabyNova.",
+    "SIN ASESORÍA LEGAL: no des opiniones ni seguridades jurídicas. No digas que el programa es \"totalmente legal\", que \"no tiene riesgos\" ni que está regulado por una ley específica. Si preguntan por lo legal, di que el equipo de BabyNova lo explicará en la cita y que hay acompañamiento legal en el proceso.",
+    "SIN INTERMEDIACIÓN LUCRATIVA: no digas que BabyNova o un tercero cobra, gana o recibe una comisión por buscar, contactar o conectar gestantes con familias, ni que ese contacto sea un servicio comercial.",
+    "LIBERTAD E INFORMACIÓN: la decisión es de la candidata y es libre e informada. Nunca la presiones, la apresures ni minimices los requisitos, evaluaciones o implicaciones del proceso.",
+    "VOCABULARIO: usa \"gestación subrogada\", \"persona gestante\" o \"mujer gestante\", \"padres de intención\" o \"familia\", \"apoyo para los gastos del embarazo\" y \"acompañamiento\". Evita las palabras de la lista de palabras prohibidas y cualquier sinónimo que diga lo mismo.",
+    "ALCANCE: estas reglas solo quitan o reemplazan lo que las incumple. No cambies datos, fechas, horas, nombres, teléfonos ni correos, y no agregues información nueva."
+  ],
+  "forbidden_words": [
+    {
+      "word": "alquil*",
+      "use_instead": "gestación subrogada",
+      "reason": "el cuerpo de la gestante no se alquila"
+    },
+    {
+      "word": "vientre de renta",
+      "use_instead": "gestación subrogada",
+      "reason": null
+    },
+    {
+      "word": "mercancia*",
+      "use_instead": null,
+      "reason": "el bebé y la gestante no son mercancía"
+    },
+    {
+      "word": "producto de la gestacion",
+      "use_instead": "el bebé que va a nacer",
+      "reason": null
+    },
+    {
+      "word": "bebe a pedido",
+      "use_instead": "el bebé que va a nacer",
+      "reason": null
+    },
+    {
+      "word": "comprar*",
+      "use_instead": null,
+      "reason": "nada se compra"
+    },
+    {
+      "word": "vender*",
+      "use_instead": null,
+      "reason": "nada se vende"
+    },
+    {
+      "word": "venta de",
+      "use_instead": null,
+      "reason": "nada se vende"
+    },
+    {
+      "word": "comercializ*",
+      "use_instead": null,
+      "reason": "verbo rector del art. 188-A"
+    },
+    {
+      "word": "mercantiliz*",
+      "use_instead": null,
+      "reason": "mercantilización de la vida (Auto A529/26)"
+    },
+    {
+      "word": "negocio*",
+      "use_instead": null,
+      "reason": "no es un negocio"
+    },
+    {
+      "word": "entregar al bebe",
+      "use_instead": "el nacimiento del bebé",
+      "reason": null
+    },
+    {
+      "word": "entrega del bebe",
+      "use_instead": "el nacimiento del bebé",
+      "reason": null
+    },
+    {
+      "word": "entregar al nino",
+      "use_instead": "el nacimiento del bebé",
+      "reason": null
+    },
+    {
+      "word": "a cambio de",
+      "use_instead": null,
+      "reason": "ningún pago es a cambio de la entrega del niño"
+    },
+    {
+      "word": "captar*",
+      "use_instead": null,
+      "reason": "verbo rector del art. 188-A"
+    },
+    {
+      "word": "captaci*",
+      "use_instead": null,
+      "reason": "verbo rector del art. 188-A"
+    },
+    {
+      "word": "reclut*",
+      "use_instead": null,
+      "reason": "la participación no se recluta"
+    },
+    {
+      "word": "promocion*",
+      "use_instead": null,
+      "reason": "verbo rector del art. 188-A; no se promociona el programa"
+    },
+    {
+      "word": "cupos limitados",
+      "use_instead": null,
+      "reason": "presión comercial"
+    },
+    {
+      "word": "cupo limitado",
+      "use_instead": null,
+      "reason": "presión comercial"
+    },
+    {
+      "word": "ultima oportunidad",
+      "use_instead": null,
+      "reason": "presión comercial"
+    },
+    {
+      "word": "aproveche",
+      "use_instead": null,
+      "reason": "presión comercial"
+    },
+    {
+      "word": "aprovecha",
+      "use_instead": null,
+      "reason": "presión comercial"
+    },
+    {
+      "word": "vacante*",
+      "use_instead": null,
+      "reason": "no es un empleo"
+    },
+    {
+      "word": "oferta laboral",
+      "use_instead": null,
+      "reason": "no es un empleo"
+    },
+    {
+      "word": "oferta de trabajo",
+      "use_instead": null,
+      "reason": "no es un empleo"
+    },
+    {
+      "word": "trabajo de gestante",
+      "use_instead": "participar en el programa",
+      "reason": null
+    },
+    {
+      "word": "trabajar como gestante",
+      "use_instead": "participar en el programa",
+      "reason": null
+    },
+    {
+      "word": "dinero facil",
+      "use_instead": null,
+      "reason": "no se motiva con dinero"
+    },
+    {
+      "word": "plata facil",
+      "use_instead": null,
+      "reason": "no se motiva con dinero"
+    },
+    {
+      "word": "dinero rapido",
+      "use_instead": null,
+      "reason": "no se motiva con dinero"
+    },
+    {
+      "word": "dinero extra",
+      "use_instead": null,
+      "reason": "no se motiva con dinero"
+    },
+    {
+      "word": "plata extra",
+      "use_instead": null,
+      "reason": "no se motiva con dinero"
+    },
+    {
+      "word": "ganar dinero",
+      "use_instead": null,
+      "reason": "no se motiva con dinero"
+    },
+    {
+      "word": "ganar plata",
+      "use_instead": null,
+      "reason": "no se motiva con dinero"
+    },
+    {
+      "word": "ganancia*",
+      "use_instead": null,
+      "reason": "no es una fuente de ingresos"
+    },
+    {
+      "word": "remuneraci*",
+      "use_instead": "apoyo para los gastos del embarazo",
+      "reason": null
+    },
+    {
+      "word": "retribuci*",
+      "use_instead": "apoyo para los gastos del embarazo",
+      "reason": null
+    },
+    {
+      "word": "honorario*",
+      "use_instead": "apoyo para los gastos del embarazo",
+      "reason": null
+    },
+    {
+      "word": "recompensa*",
+      "use_instead": null,
+      "reason": "nada se paga a cambio del bebé"
+    },
+    {
+      "word": "premio*",
+      "use_instead": null,
+      "reason": "nada se paga a cambio del bebé"
+    },
+    {
+      "word": "comision*",
+      "use_instead": null,
+      "reason": "no hay intermediación lucrativa"
+    },
+    {
+      "word": "bono*",
+      "use_instead": null,
+      "reason": "no se ofrecen bonos"
+    },
+    {
+      "word": "incentivo*",
+      "use_instead": null,
+      "reason": "no se ofrecen incentivos"
+    },
+    {
+      "word": "tarifa*",
+      "use_instead": null,
+      "reason": "no es un servicio con precio"
+    },
+    {
+      "word": "precio*",
+      "use_instead": null,
+      "reason": "no es un servicio con precio"
+    },
+    {
+      "word": "cobr*",
+      "use_instead": null,
+      "reason": "no hay intermediación lucrativa"
+    },
+    {
+      "word": "pago mensual",
+      "use_instead": null,
+      "reason": "sin calendarios de pagos"
+    },
+    {
+      "word": "pago unico",
+      "use_instead": null,
+      "reason": "sin calendarios de pagos"
+    },
+    {
+      "word": "pago total",
+      "use_instead": null,
+      "reason": "sin calendarios de pagos"
+    },
+    {
+      "word": "pago por",
+      "use_instead": null,
+      "reason": "no se paga por el bebé ni por el proceso"
+    },
+    {
+      "word": "pagos por",
+      "use_instead": null,
+      "reason": "no se paga por el bebé ni por el proceso"
+    },
+    {
+      "word": "le pagamos",
+      "use_instead": null,
+      "reason": "no se paga a la gestante por participar"
+    },
+    {
+      "word": "le pagaremos",
+      "use_instead": null,
+      "reason": "no se paga a la gestante por participar"
+    },
+    {
+      "word": "le pagan",
+      "use_instead": null,
+      "reason": "no se paga a la gestante por participar"
+    },
+    {
+      "word": "te pagamos",
+      "use_instead": null,
+      "reason": "no se paga a la gestante por participar"
+    },
+    {
+      "word": "pesos",
+      "use_instead": null,
+      "reason": "sin cifras de dinero"
+    },
+    {
+      "word": "dolares",
+      "use_instead": null,
+      "reason": "sin cifras de dinero"
+    },
+    {
+      "word": "euros",
+      "use_instead": null,
+      "reason": "sin cifras de dinero"
+    },
+    {
+      "word": "usd",
+      "use_instead": null,
+      "reason": "sin cifras de dinero"
+    },
+    {
+      "word": "millon*",
+      "use_instead": null,
+      "reason": "sin cifras de dinero"
+    },
+    {
+      "word": "totalmente legal",
+      "use_instead": null,
+      "reason": "sin seguridades jurídicas"
+    },
+    {
+      "word": "completamente legal",
+      "use_instead": null,
+      "reason": "sin seguridades jurídicas"
+    },
+    {
+      "word": "100% legal",
+      "use_instead": null,
+      "reason": "sin seguridades jurídicas"
+    },
+    {
+      "word": "sin riesgo*",
+      "use_instead": null,
+      "reason": "sin garantías de ningún tipo"
+    },
+    {
+      "word": "100% seguro",
+      "use_instead": null,
+      "reason": "sin garantías de ningún tipo"
+    },
+    {
+      "word": "empleo",
+      "use_instead": null,
+      "reason": "el programa no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "ingreso*",
+      "use_instead": null,
+      "reason": "el programa no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "sueldo*",
+      "use_instead": null,
+      "reason": "el programa no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "salario*",
+      "use_instead": null,
+      "reason": "el programa no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "womb rental",
+      "use_instead": "surrogacy",
+      "reason": "the surrogate's body is not rented"
+    },
+    {
+      "word": "rent* a womb",
+      "use_instead": "surrogacy",
+      "reason": null
+    },
+    {
+      "word": "rent* your womb",
+      "use_instead": "surrogacy",
+      "reason": null
+    },
+    {
+      "word": "womb for rent",
+      "use_instead": "surrogacy",
+      "reason": null
+    },
+    {
+      "word": "womb for hire",
+      "use_instead": "surrogacy",
+      "reason": null
+    },
+    {
+      "word": "surrogate for hire",
+      "use_instead": "gestational surrogate",
+      "reason": null
+    },
+    {
+      "word": "merchandise",
+      "use_instead": null,
+      "reason": "the baby and the surrogate are not merchandise"
+    },
+    {
+      "word": "product of the pregnancy",
+      "use_instead": "the baby who will be born",
+      "reason": null
+    },
+    {
+      "word": "baby on demand",
+      "use_instead": "the baby who will be born",
+      "reason": null
+    },
+    {
+      "word": "buy*",
+      "use_instead": null,
+      "reason": "nothing is bought"
+    },
+    {
+      "word": "sell*",
+      "use_instead": null,
+      "reason": "nothing is sold"
+    },
+    {
+      "word": "sale of",
+      "use_instead": null,
+      "reason": "nothing is sold"
+    },
+    {
+      "word": "commerciali*",
+      "use_instead": null,
+      "reason": "operative verb of art. 188-A"
+    },
+    {
+      "word": "commodif*",
+      "use_instead": null,
+      "reason": "commodification of life (Auto A529/26)"
+    },
+    {
+      "word": "business opportunity",
+      "use_instead": null,
+      "reason": "it is not a business"
+    },
+    {
+      "word": "lucrative business",
+      "use_instead": null,
+      "reason": "it is not a business"
+    },
+    {
+      "word": "hand over the baby",
+      "use_instead": "the birth of the baby",
+      "reason": null
+    },
+    {
+      "word": "handing over the baby",
+      "use_instead": "the birth of the baby",
+      "reason": null
+    },
+    {
+      "word": "deliver the baby to",
+      "use_instead": "the birth of the baby",
+      "reason": null
+    },
+    {
+      "word": "in exchange for",
+      "use_instead": null,
+      "reason": "no payment is in exchange for the child"
+    },
+    {
+      "word": "capture*",
+      "use_instead": null,
+      "reason": "operative verb of art. 188-A"
+    },
+    {
+      "word": "recruit*",
+      "use_instead": null,
+      "reason": "participation is not recruited"
+    },
+    {
+      "word": "promot*",
+      "use_instead": null,
+      "reason": "operative verb of art. 188-A; the program is not promoted"
+    },
+    {
+      "word": "limited spots",
+      "use_instead": null,
+      "reason": "commercial pressure"
+    },
+    {
+      "word": "limited places",
+      "use_instead": null,
+      "reason": "commercial pressure"
+    },
+    {
+      "word": "last chance",
+      "use_instead": null,
+      "reason": "commercial pressure"
+    },
+    {
+      "word": "take advantage",
+      "use_instead": null,
+      "reason": "commercial pressure"
+    },
+    {
+      "word": "vacanc*",
+      "use_instead": null,
+      "reason": "it is not a job"
+    },
+    {
+      "word": "job offer",
+      "use_instead": null,
+      "reason": "it is not a job"
+    },
+    {
+      "word": "job opening",
+      "use_instead": null,
+      "reason": "it is not a job"
+    },
+    {
+      "word": "surrogate job",
+      "use_instead": "taking part in the program",
+      "reason": null
+    },
+    {
+      "word": "work as a surrogate",
+      "use_instead": "take part in the program",
+      "reason": null
+    },
+    {
+      "word": "easy money",
+      "use_instead": null,
+      "reason": "no financial motivation"
+    },
+    {
+      "word": "quick money",
+      "use_instead": null,
+      "reason": "no financial motivation"
+    },
+    {
+      "word": "extra money",
+      "use_instead": null,
+      "reason": "no financial motivation"
+    },
+    {
+      "word": "extra cash",
+      "use_instead": null,
+      "reason": "no financial motivation"
+    },
+    {
+      "word": "earn* money",
+      "use_instead": null,
+      "reason": "no financial motivation"
+    },
+    {
+      "word": "make money",
+      "use_instead": null,
+      "reason": "no financial motivation"
+    },
+    {
+      "word": "profits",
+      "use_instead": null,
+      "reason": "it is not a source of income"
+    },
+    {
+      "word": "remuneration",
+      "use_instead": "support for pregnancy expenses",
+      "reason": null
+    },
+    {
+      "word": "retribution",
+      "use_instead": "support for pregnancy expenses",
+      "reason": null
+    },
+    {
+      "word": "fees",
+      "use_instead": null,
+      "reason": "not a service with a price"
+    },
+    {
+      "word": "fee",
+      "use_instead": null,
+      "reason": "not a service with a price"
+    },
+    {
+      "word": "reward*",
+      "use_instead": null,
+      "reason": "nothing is paid for the baby"
+    },
+    {
+      "word": "prize*",
+      "use_instead": null,
+      "reason": "nothing is paid for the baby"
+    },
+    {
+      "word": "commission*",
+      "use_instead": null,
+      "reason": "no profit-making intermediation"
+    },
+    {
+      "word": "bonus*",
+      "use_instead": null,
+      "reason": "no bonuses are offered"
+    },
+    {
+      "word": "incentive*",
+      "use_instead": null,
+      "reason": "no incentives are offered"
+    },
+    {
+      "word": "tariff*",
+      "use_instead": null,
+      "reason": "not a service with a price"
+    },
+    {
+      "word": "price*",
+      "use_instead": null,
+      "reason": "not a service with a price"
+    },
+    {
+      "word": "charge you",
+      "use_instead": null,
+      "reason": "no profit-making intermediation"
+    },
+    {
+      "word": "monthly payment*",
+      "use_instead": null,
+      "reason": "no payment schedules"
+    },
+    {
+      "word": "one-time payment",
+      "use_instead": null,
+      "reason": "no payment schedules"
+    },
+    {
+      "word": "total payment",
+      "use_instead": null,
+      "reason": "no payment schedules"
+    },
+    {
+      "word": "payment for",
+      "use_instead": null,
+      "reason": "nothing is paid for the baby or the process"
+    },
+    {
+      "word": "payments for",
+      "use_instead": null,
+      "reason": "nothing is paid for the baby or the process"
+    },
+    {
+      "word": "we pay",
+      "use_instead": null,
+      "reason": "the surrogate is not paid for taking part"
+    },
+    {
+      "word": "will pay",
+      "use_instead": null,
+      "reason": "the surrogate is not paid for taking part"
+    },
+    {
+      "word": "get paid",
+      "use_instead": null,
+      "reason": "the surrogate is not paid for taking part"
+    },
+    {
+      "word": "will be paid",
+      "use_instead": null,
+      "reason": "the surrogate is not paid for taking part"
+    },
+    {
+      "word": "pesos",
+      "use_instead": null,
+      "reason": "no money figures"
+    },
+    {
+      "word": "dollars",
+      "use_instead": null,
+      "reason": "no money figures"
+    },
+    {
+      "word": "euros",
+      "use_instead": null,
+      "reason": "no money figures"
+    },
+    {
+      "word": "usd",
+      "use_instead": null,
+      "reason": "no money figures"
+    },
+    {
+      "word": "million*",
+      "use_instead": null,
+      "reason": "no money figures"
+    },
+    {
+      "word": "totally legal",
+      "use_instead": null,
+      "reason": "no legal assurances"
+    },
+    {
+      "word": "completely legal",
+      "use_instead": null,
+      "reason": "no legal assurances"
+    },
+    {
+      "word": "100% legal",
+      "use_instead": null,
+      "reason": "no legal assurances"
+    },
+    {
+      "word": "risk-free",
+      "use_instead": null,
+      "reason": "no guarantees of any kind"
+    },
+    {
+      "word": "100% safe",
+      "use_instead": null,
+      "reason": "no guarantees of any kind"
+    },
+    {
+      "word": "job",
+      "use_instead": null,
+      "reason": "the program is not a job nor a source of income"
+    },
+    {
+      "word": "income",
+      "use_instead": null,
+      "reason": "the program is not a job nor a source of income"
+    },
+    {
+      "word": "salary",
+      "use_instead": null,
+      "reason": "the program is not a job nor a source of income"
+    },
+    {
+      "word": "wage*",
+      "use_instead": null,
+      "reason": "the program is not a job nor a source of income"
+    },
+    {
+      "word": "aluguel*",
+      "use_instead": "gestação de substituição",
+      "reason": "o corpo da gestante não se aluga"
+    },
+    {
+      "word": "alugar*",
+      "use_instead": "gestação de substituição",
+      "reason": null
+    },
+    {
+      "word": "barriga de aluguel",
+      "use_instead": "gestação de substituição",
+      "reason": null
+    },
+    {
+      "word": "ventre de aluguel",
+      "use_instead": "gestação de substituição",
+      "reason": null
+    },
+    {
+      "word": "mercadoria*",
+      "use_instead": null,
+      "reason": "o bebê e a gestante não são mercadoria"
+    },
+    {
+      "word": "produto da gestacao",
+      "use_instead": "o bebê que vai nascer",
+      "reason": null
+    },
+    {
+      "word": "bebe sob encomenda",
+      "use_instead": "o bebê que vai nascer",
+      "reason": null
+    },
+    {
+      "word": "comprar*",
+      "use_instead": null,
+      "reason": "nada se compra"
+    },
+    {
+      "word": "vender*",
+      "use_instead": null,
+      "reason": "nada se vende"
+    },
+    {
+      "word": "venda de",
+      "use_instead": null,
+      "reason": "nada se vende"
+    },
+    {
+      "word": "comercializ*",
+      "use_instead": null,
+      "reason": "verbo do art. 188-A"
+    },
+    {
+      "word": "mercantiliz*",
+      "use_instead": null,
+      "reason": "mercantilização da vida (Auto A529/26)"
+    },
+    {
+      "word": "negocio*",
+      "use_instead": null,
+      "reason": "não é um negócio"
+    },
+    {
+      "word": "entregar o bebe",
+      "use_instead": "o nascimento do bebê",
+      "reason": null
+    },
+    {
+      "word": "entrega do bebe",
+      "use_instead": "o nascimento do bebê",
+      "reason": null
+    },
+    {
+      "word": "entregar a crianca",
+      "use_instead": "o nascimento do bebê",
+      "reason": null
+    },
+    {
+      "word": "em troca de",
+      "use_instead": null,
+      "reason": "nenhum pagamento é em troca da criança"
+    },
+    {
+      "word": "captar*",
+      "use_instead": null,
+      "reason": "verbo do art. 188-A"
+    },
+    {
+      "word": "captac*",
+      "use_instead": null,
+      "reason": "verbo do art. 188-A"
+    },
+    {
+      "word": "recrut*",
+      "use_instead": null,
+      "reason": "a participação não é recrutada"
+    },
+    {
+      "word": "promoc*",
+      "use_instead": null,
+      "reason": "verbo do art. 188-A; o programa não é promovido"
+    },
+    {
+      "word": "vagas limitadas",
+      "use_instead": null,
+      "reason": "pressão comercial"
+    },
+    {
+      "word": "vaga limitada",
+      "use_instead": null,
+      "reason": "pressão comercial"
+    },
+    {
+      "word": "ultima chance",
+      "use_instead": null,
+      "reason": "pressão comercial"
+    },
+    {
+      "word": "aproveite",
+      "use_instead": null,
+      "reason": "pressão comercial"
+    },
+    {
+      "word": "vaga de emprego",
+      "use_instead": null,
+      "reason": "não é um emprego"
+    },
+    {
+      "word": "oferta de emprego",
+      "use_instead": null,
+      "reason": "não é um emprego"
+    },
+    {
+      "word": "oferta de trabalho",
+      "use_instead": null,
+      "reason": "não é um emprego"
+    },
+    {
+      "word": "trabalho de gestante",
+      "use_instead": "participar do programa",
+      "reason": null
+    },
+    {
+      "word": "trabalhar como gestante",
+      "use_instead": "participar do programa",
+      "reason": null
+    },
+    {
+      "word": "dinheiro facil",
+      "use_instead": null,
+      "reason": "sem motivação financeira"
+    },
+    {
+      "word": "grana facil",
+      "use_instead": null,
+      "reason": "sem motivação financeira"
+    },
+    {
+      "word": "dinheiro rapido",
+      "use_instead": null,
+      "reason": "sem motivação financeira"
+    },
+    {
+      "word": "dinheiro extra",
+      "use_instead": null,
+      "reason": "sem motivação financeira"
+    },
+    {
+      "word": "grana extra",
+      "use_instead": null,
+      "reason": "sem motivação financeira"
+    },
+    {
+      "word": "ganhar dinheiro",
+      "use_instead": null,
+      "reason": "sem motivação financeira"
+    },
+    {
+      "word": "ganhar grana",
+      "use_instead": null,
+      "reason": "sem motivação financeira"
+    },
+    {
+      "word": "lucros",
+      "use_instead": null,
+      "reason": "não é uma fonte de renda"
+    },
+    {
+      "word": "remuneracao",
+      "use_instead": "apoio às despesas da gestação",
+      "reason": null
+    },
+    {
+      "word": "retribuicao",
+      "use_instead": "apoio às despesas da gestação",
+      "reason": null
+    },
+    {
+      "word": "honorarios",
+      "use_instead": "apoio às despesas da gestação",
+      "reason": null
+    },
+    {
+      "word": "recompensa*",
+      "use_instead": null,
+      "reason": "nada se paga em troca do bebê"
+    },
+    {
+      "word": "premio*",
+      "use_instead": null,
+      "reason": "nada se paga em troca do bebê"
+    },
+    {
+      "word": "comissao",
+      "use_instead": null,
+      "reason": "não há intermediação lucrativa"
+    },
+    {
+      "word": "comissoes",
+      "use_instead": null,
+      "reason": "não há intermediação lucrativa"
+    },
+    {
+      "word": "bonus",
+      "use_instead": null,
+      "reason": "não se oferecem bônus"
+    },
+    {
+      "word": "incentivo*",
+      "use_instead": null,
+      "reason": "não se oferecem incentivos"
+    },
+    {
+      "word": "tarifa*",
+      "use_instead": null,
+      "reason": "não é um serviço com preço"
+    },
+    {
+      "word": "preco*",
+      "use_instead": null,
+      "reason": "não é um serviço com preço"
+    },
+    {
+      "word": "cobrar*",
+      "use_instead": null,
+      "reason": "não há intermediação lucrativa"
+    },
+    {
+      "word": "pagamento mensal",
+      "use_instead": null,
+      "reason": "sem calendários de pagamento"
+    },
+    {
+      "word": "pagamento unico",
+      "use_instead": null,
+      "reason": "sem calendários de pagamento"
+    },
+    {
+      "word": "pagamento total",
+      "use_instead": null,
+      "reason": "sem calendários de pagamento"
+    },
+    {
+      "word": "pagamento por",
+      "use_instead": null,
+      "reason": "nada se paga pelo bebê nem pelo processo"
+    },
+    {
+      "word": "pagamentos por",
+      "use_instead": null,
+      "reason": "nada se paga pelo bebê nem pelo processo"
+    },
+    {
+      "word": "lhe pagamos",
+      "use_instead": null,
+      "reason": "a gestante não é paga por participar"
+    },
+    {
+      "word": "vamos lhe pagar",
+      "use_instead": null,
+      "reason": "a gestante não é paga por participar"
+    },
+    {
+      "word": "voce sera paga",
+      "use_instead": null,
+      "reason": "a gestante não é paga por participar"
+    },
+    {
+      "word": "te pagamos",
+      "use_instead": null,
+      "reason": "a gestante não é paga por participar"
+    },
+    {
+      "word": "pesos",
+      "use_instead": null,
+      "reason": "sem cifras de dinheiro"
+    },
+    {
+      "word": "dolares",
+      "use_instead": null,
+      "reason": "sem cifras de dinheiro"
+    },
+    {
+      "word": "euros",
+      "use_instead": null,
+      "reason": "sem cifras de dinheiro"
+    },
+    {
+      "word": "usd",
+      "use_instead": null,
+      "reason": "sem cifras de dinheiro"
+    },
+    {
+      "word": "milhoes",
+      "use_instead": null,
+      "reason": "sem cifras de dinheiro"
+    },
+    {
+      "word": "totalmente legal",
+      "use_instead": null,
+      "reason": "sem seguranças jurídicas"
+    },
+    {
+      "word": "completamente legal",
+      "use_instead": null,
+      "reason": "sem seguranças jurídicas"
+    },
+    {
+      "word": "100% legal",
+      "use_instead": null,
+      "reason": "sem seguranças jurídicas"
+    },
+    {
+      "word": "sem risco*",
+      "use_instead": null,
+      "reason": "sem garantias de nenhum tipo"
+    },
+    {
+      "word": "100% seguro",
+      "use_instead": null,
+      "reason": "sem garantias de nenhum tipo"
+    },
+    {
+      "word": "emprego",
+      "use_instead": null,
+      "reason": "o programa não é um emprego nem uma fonte de renda"
+    },
+    {
+      "word": "renda",
+      "use_instead": null,
+      "reason": "o programa não é um emprego nem uma fonte de renda"
+    },
+    {
+      "word": "salario*",
+      "use_instead": null,
+      "reason": "o programa não é um emprego nem uma fonte de renda"
+    },
+    {
+      "word": "ordenado*",
+      "use_instead": null,
+      "reason": "o programa não é um emprego nem uma fonte de renda"
+    }
   ]
 }

@@ -1,7 +1,6 @@
 """
 Unit tests for agent_runtime.targets.langgraph.type_parser — capture.type_expr classification.
 """
-
 from __future__ import annotations
 
 from agent_runtime.targets.langgraph.type_parser import classify_type_expr
@@ -68,11 +67,11 @@ def test_semantic_registry_numeric_string_predicate_name_is_canonical():
 
 def test_opaque_object_reference_is_canonical():
     """
-    PascalCase names (Slot, Appointment) are canonical even with no object-types registry.
+PascalCase names (Slot, Appointment) are canonical even with no object-types registry.
 
-        Returns:
-            None.
-    """
+    Returns:
+        None.
+"""
     result = classify_type_expr("Appointment")
     assert result.category == "canonical"
 
@@ -139,10 +138,10 @@ def test_garbage_text_is_unrecognized():
 
 def test_lowercase_literal_keyword_is_unrecognized():
     """
-    `Literal` must be spelled exactly as Python's typing spells it — not a DSL keyword.
+`Literal` must be spelled exactly as Python's typing spells it — not a DSL keyword.
 
-        Returns:
-            None.
-    """
+    Returns:
+        None.
+"""
     result = classify_type_expr("literal[yes, no]")
     assert result.category == "unrecognized"

@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from agent_runtime.dsl.schemas import ConstantItem, HandlerModel, ToolContract
+from agent_runtime.dsl.schemas import ConstantItem, ForbiddenWord, ForbiddenWordsFile, HandlerModel, ToolContract
 from agent_runtime.targets.langgraph.runtime_artifact import (
     POLICY_SECTIONS_BY_CHANNEL,
     render_runtime_artifact,
@@ -202,17 +202,17 @@ _profiles_dir_required = pytest.mark.skipif(
 @_profiles_dir_required
 def test_every_real_channel_profile_has_a_policy_mapping():
     """
-    Guards the exact failure this mapping exists to prevent: a new
+Guards the exact failure this mapping exists to prevent: a new
 
-        `profiles/channels/*.yaml` added without a matching entry in
-            `POLICY_SECTIONS_BY_CHANNEL` would otherwise silently degrade — no
-            error, just fewer policy lines than the new channel's own sections
-            declare. This test fails loudly instead, at the moment the profile is
-            added, not months later against a real compiled agent.
+    `profiles/channels/*.yaml` added without a matching entry in
+        `POLICY_SECTIONS_BY_CHANNEL` would otherwise silently degrade — no
+        error, just fewer policy lines than the new channel's own sections
+        declare. This test fails loudly instead, at the moment the profile is
+        added, not months later against a real compiled agent.
 
-        Returns:
-            None.
-    """
+    Returns:
+        None.
+"""
     profile_names = {p.stem for p in _CHANNEL_PROFILES_DIR.glob("*.yaml")}
     assert profile_names, "No profiles/channels/*.yaml found — check _CHANNEL_PROFILES_DIR."
     missing = profile_names - set(POLICY_SECTIONS_BY_CHANNEL)
@@ -222,23 +222,53 @@ def test_every_real_channel_profile_has_a_policy_mapping():
 @_profiles_dir_required
 def test_channel_mapping_only_uses_sections_the_real_profile_declares():
     """
-    Cross-checks each `ChannelPolicyMapping` against the real channel
+Cross-checks each `ChannelPolicyMapping` against the real channel
 
-        profile's own declared `policy_sections` — catches a typo'd or
-            stale section name in the mapping (e.g. referencing a section a
-            profile used to have) that `_flatten_policy_sections` would otherwise
-            swallow silently (`get_section` returns `[]` for an unknown name,
-            it never raises).
+    profile's own declared `policy_sections` — catches a typo'd or
+        stale section name in the mapping (e.g. referencing a section a
+        profile used to have) that `_flatten_policy_sections` would otherwise
+        swallow silently (`get_section` returns `[]` for an unknown name,
+        it never raises).
 
-        Returns:
-            None.
-    """
+    Returns:
+        None.
+"""
     for profile_path in _CHANNEL_PROFILES_DIR.glob("*.yaml"):
         channel_name = profile_path.stem
-        declared = {
-            s["name"] for s in yaml.safe_load(profile_path.read_text(encoding="utf-8"))["policy_sections"]
-        }
+        declared = {s["name"] for s in yaml.safe_load(profile_path.read_text(encoding="utf-8"))["policy_sections"]}
         mapping = POLICY_SECTIONS_BY_CHANNEL[channel_name]
         used = set(mapping.say_sections) | set(mapping.judgment_sections)
         unknown = used - declared
         assert not unknown, f"{channel_name}: mapping references undeclared section(s) {unknown}"
+
+
+def test_output_rules_and_forbidden_words_survive_the_round_trip():
+    spec = build_minimal_agent_spec().model_copy(
+        update={
+            "output_rules": ["Never talk about money."],
+            "forbidden_words": [
+                ForbiddenWord(word="salary", use_instead="support for expenses", reason="not a job"),
+                ForbiddenWord(word="rent*"),
+            ],
+        }
+    )
+    artifact = render_runtime_artifact(spec)
+    assert artifact.output_rules == ["Never talk about money."]
+    assert artifact.forbidden_words[0] == {"word": "salary", "use_instead": "support for expenses", "reason": "not a job"}
+    assert artifact.forbidden_words[1] == {"word": "rent*", "use_instead": None, "reason": None}
+    again = runtime_artifact_from_dict(json.loads(json.dumps(artifact.to_dict())))
+    assert again.output_rules == artifact.output_rules
+    assert again.forbidden_words == artifact.forbidden_words
+
+
+def test_an_agent_without_output_review_has_empty_rules_and_words():
+    artifact = render_runtime_artifact(build_minimal_agent_spec())
+    assert artifact.output_rules == [] and artifact.forbidden_words == []
+    assert runtime_artifact_from_dict(artifact.to_dict()).forbidden_words == []
+
+
+def test_a_forbidden_word_may_be_a_plain_string_or_a_mapping():
+    file = ForbiddenWordsFile.model_validate({"forbidden_words": ["alquiler", {"word": "sueldo", "use_instead": "apoyo"}]})
+    assert [(w.word, w.use_instead) for w in file.forbidden_words] == [("alquiler", None), ("sueldo", "apoyo")]
+    with pytest.raises(ValueError):
+        ForbiddenWordsFile.model_validate({"forbidden_words": ["  "]})

@@ -316,7 +316,7 @@ python scripts/dev_tunnel.py --company family_aims
 
 `dev_tunnel.py` necesita el ejecutable `ngrok` en el PATH. Si el `.env` trae `ADMIN_TOKEN`, `send_request.py` lo envía como `Bearer` (para `reset` y `admin/reload`).
 
-**Variables del motor y de la persistencia** (que también faltaban en los `env.example`): `GLOBAL_ROUTER_RESPECT_FILTER` y `GLOBAL_ROUTER_LANGUAGE_DETECTION` (router global), `GHL_TEXT_HISTORY_MAX_DAYS` (días de inactividad antes de empezar una conversación nueva), `CLOSING_MESSAGE_SWEEP_INTERVAL_SECONDS` (cada cuánto corre el barrido del mensaje de cierre), `ECHO_ALLOWED_PHONES` (teléfonos permitidos para la herramienta `echo`) y `DATABASE_HOST`, `DATABASE_REGION`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`, `DATABASE_POOL_MAX_SIZE` (Postgres por piezas, con prioridad sobre `DATABASE_URL`).
+**Variables del motor y de la persistencia** (que también faltaban en los `env.example`): `GLOBAL_ROUTER_RESPECT_FILTER`, `GLOBAL_ROUTER_LANGUAGE_DETECTION` y `GLOBAL_ROUTER_OUTPUT_REVIEW` (router global; esta última revisa cada mensaje del agente contra las `output_rules` y `forbidden_words` de su definición antes de enviarlo, solo actúa en agentes que las declaran y está activa solo en `babynova`), `GHL_TEXT_HISTORY_MAX_DAYS` (días de inactividad antes de empezar una conversación nueva), `CLOSING_MESSAGE_SWEEP_INTERVAL_SECONDS` (cada cuánto corre el barrido del mensaje de cierre), `ECHO_ALLOWED_PHONES` (teléfonos permitidos para la herramienta `echo`) y `DATABASE_HOST`, `DATABASE_REGION`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`, `DATABASE_POOL_MAX_SIZE` (Postgres por piezas, con prioridad sobre `DATABASE_URL`).
 
 ---
 

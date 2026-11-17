@@ -98,6 +98,7 @@ from agent_runtime.runtime.knowledge_base import (
     make_knowledge_tool_executor,
 )
 from agent_runtime.runtime.llm_client import LLMClient, LLMContext
+from agent_runtime.runtime.output_review import OutputReview
 from agent_runtime.runtime.safe_expr import safe_eval
 from agent_runtime.runtime.tool_executor import ToolExecutionError, make_tool_executor
 from agent_runtime.targets.langgraph.condition_parser import NAMED_PREDICATES
@@ -1569,6 +1570,7 @@ def _drop_added_questions(candidate: str, original: str) -> str:
 
 def _make_render_say(
     llm_client: LLMClient,
+    output_review: OutputReview | None = None,
 ) -> Callable[[str, list[str], bool, str | None, dict[str, Any], list[str] | None], str]:
     """Build a `say`-rendering function.
     """
@@ -1620,6 +1622,10 @@ def _make_render_say(
             text = _protect_contact_values(text, contact, protected)
         raw = _interpolate_slots(text, slots, language_code, contact)
         if say_verbatim:
+            # Approved copy is never rewritten; a forbidden word in it is a defect of the definition.
+            if output_review is not None:
+                for term in output_review.find_forbidden(raw):
+                    logger.warning("verbatim message %s contains the listed word %r", node_id, term.word)
             return raw
         raw = _protect_lists(raw, protected)
         raw = _protect_place(raw, slots, protected)
@@ -1667,6 +1673,21 @@ def _make_render_say(
             ):
                 paraphrased = candidate
                 break
+        if output_review is not None:
+            # Reviewed with the code-written values still behind their tokens, so a rewrite cannot alter them.
+            kept = [
+                token
+                for token, value in protected.items()
+                if token.startswith(("<LIST_", "<CONTACT_")) or (token.startswith("<NUM_") and ":" in value)
+            ]
+            paraphrased = output_review.review(
+                llm_client,
+                paraphrased,
+                language=language_name,
+                required_tokens=kept,
+                node_id=node_id,
+                asked=user_message,
+            )
         return _restore_contact_values(paraphrased, protected)
 
     return render_say
@@ -2158,6 +2179,7 @@ def _make_node_fn(
             rendered_message = render_say(
                 node.node_id, node.say, node.say_verbatim, language_code, slots, say_policies,
                 contact=contact,
+                user_message=last_user_message,
             )
             say_callback(rendered_message)
             history = _append_history(history, f"agent: {rendered_message}")
@@ -2170,6 +2192,7 @@ def _make_node_fn(
             rendered_say = render_say(
                 node.node_id, node.say, node.say_verbatim, language_code, slots, say_policies,
                 contact=contact,
+                user_message=last_user_message,
             )
 
             # Global router: every reply is checked against every handler
@@ -2189,6 +2212,7 @@ def _make_node_fn(
                     slots,
                     say_policies,
                     contact=contact,
+                    user_message=reply,
                 )
                 say_callback(rendered)
                 history = _append_history(history, f"agent: {rendered}")
@@ -2240,6 +2264,7 @@ def _make_node_fn(
                             slots,
                             say_policies,
                             contact=contact,
+                            user_message=reply,
                         )
                         say_callback(ack)
                         history = _append_history(history, f"agent: {ack}")
@@ -2304,6 +2329,7 @@ def _make_node_fn(
                         slots,
                         say_policies,
                         contact=contact,
+                        user_message=last_user_message,
                     )
                     say_callback(ack)
                     history = _append_history(history, f"agent: {ack}")
@@ -2456,7 +2482,13 @@ def build_graph(
     node_by_id = {n.node_id: n for n in agent_graph.nodes}
     router = artifact.global_router
 
-    render_say = _make_render_say(llm_client)
+    output_review = OutputReview.from_artifact(artifact)
+    if output_review is not None:
+        logger.info(
+            "output review on for %s: %d rules, %d forbidden words",
+            artifact.agent_id, len(output_review.rules), len(output_review.terms),
+        )
+    render_say = _make_render_say(llm_client, output_review)
     resolve_edges = _make_resolve_edges(llm_client)
 
     contracts = {c.name: c for c in artifact.tool_contracts}

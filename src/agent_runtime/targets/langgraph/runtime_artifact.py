@@ -153,6 +153,10 @@ Everything `runtime.graph_builder.build_graph()` needs, and nothing else.
     session_timeout_minutes: int | None = None
     say_policies: list[str] = field(default_factory=list)
     judgment_policies: list[str] = field(default_factory=list)
+    output_rules: list[str] = field(default_factory=list)
+    forbidden_words: list[dict[str, Any]] = field(default_factory=list)
+    """Output review: what a message must never say, and the words it must never use (each
+    ``{"word", "use_instead", "reason"}``). Empty for an agent that declares none."""
 
     def to_dict(self) -> dict[str, Any]:
         """Plain-dict, JSON-serializable form — write this with `json.dump`.
@@ -166,6 +170,8 @@ Everything `runtime.graph_builder.build_graph()` needs, and nothing else.
             "session_timeout_minutes": self.session_timeout_minutes,
             "say_policies": list(self.say_policies),
             "judgment_policies": list(self.judgment_policies),
+            "output_rules": list(self.output_rules),
+            "forbidden_words": [dict(w) for w in self.forbidden_words],
         }
 
 
@@ -198,6 +204,8 @@ def render_runtime_artifact(spec: AgentSpec, channel_profile_name: str = "generi
         session_timeout_minutes=spec.manifest.session_timeout_minutes,
         say_policies=_flatten_policy_sections(spec, policy_mapping.say_sections),
         judgment_policies=_flatten_policy_sections(spec, policy_mapping.judgment_sections),
+        output_rules=list(spec.output_rules),
+        forbidden_words=[w.model_dump() for w in spec.forbidden_words],
     )
 
 
@@ -245,4 +253,6 @@ def runtime_artifact_from_dict(data: dict[str, Any]) -> RuntimeArtifact:
         session_timeout_minutes=data.get("session_timeout_minutes"),
         say_policies=list(data.get("say_policies", [])),
         judgment_policies=list(data.get("judgment_policies", [])),
+        output_rules=list(data.get("output_rules", [])),
+        forbidden_words=[dict(w) for w in data.get("forbidden_words", [])],
     )
