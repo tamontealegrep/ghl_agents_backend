@@ -11256,12 +11256,12 @@
   "forbidden_words": [
     {
       "word": "alquil*",
-      "use_instead": "gestación subrogada",
+      "use_instead": "portadoras de vida",
       "reason": "el cuerpo de la gestante no se alquila"
     },
     {
       "word": "vientre de renta",
-      "use_instead": "gestación subrogada",
+      "use_instead": "portadoras de vida",
       "reason": null
     },
     {
@@ -11885,6 +11885,26 @@
       "reason": "nothing is paid for the baby or the process"
     },
     {
+      "word": "surrogacy",
+      "use_instead": "life carriers",
+      "reason": null
+    },
+    {
+      "word": "surrogate mothers",
+      "use_instead": "life carriers",
+      "reason": null
+    },
+    {
+      "word": "gestational carriers",
+      "use_instead": "life carriers",
+      "reason": null
+    },
+    {
+      "word": "gestational surrogacy",
+      "use_instead": "life carriers",
+      "reason": null
+    },
+    {
       "word": "payments for",
       "use_instead": null,
       "reason": "nothing is paid for the baby or the process"
@@ -12127,6 +12147,21 @@
     {
       "word": "trabalhar como gestante",
       "use_instead": "participar do programa",
+      "reason": null
+    },
+    {
+      "word": "gestação subrogada",
+      "use_instead": "portadoras de vida",
+      "reason": null
+    },
+    {
+      "word": "maternidade de substituição",
+      "use_instead": "portadoras de vida",
+      "reason": null
+    },
+    {
+      "word": "vientre substituto",
+      "use_instead": "portadoras de vida",
       "reason": null
     },
     {
