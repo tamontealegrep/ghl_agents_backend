@@ -2,37 +2,12 @@
 
 import asyncio
 import json
-from types import SimpleNamespace
-
 import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from agent_backend.builtin_tools.services import ghl_tags
 from agent_backend.builtin_tools.services.ghl_tags import add_tags_service, normalize_tags
 from tests.builtin_tools.app_factory import app
-
-CONFIG = SimpleNamespace(base_url="https://ghl.test", version="v3", token="tok-123", send_message_timeout_seconds=5)
-
-
-@pytest.fixture
-def ghl(monkeypatch):
-    """Points the service at a fake GHL: records the requests and answers with `reply`."""
-    state = {"requests": [], "locations": [], "reply": lambda request: httpx.Response(201, json={"tags": ["vip"], "tagsAdded": ["vip"]})}
-    real_client = httpx.AsyncClient
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        state["requests"].append(request)
-        return state["reply"](request)
-
-    def config_for(location_id):
-        state["locations"].append(location_id)
-        return CONFIG
-
-    monkeypatch.setattr(ghl_tags, "ghl_client_config_for_location", config_for)
-    monkeypatch.setattr(ghl_tags.httpx, "AsyncClient", lambda **kw: real_client(transport=httpx.MockTransport(handler), **kw))
-    return state
-
 
 @pytest.mark.parametrize(
     ("raw", "expected"),
@@ -85,7 +60,7 @@ def test_nothing_new_means_an_empty_added_list(ghl):
 
 def test_a_missing_contact_or_empty_tags_never_reach_ghl(ghl):
     assert asyncio.run(add_tags_service(["vip"], "  ")) == {"success": False, "errors": "contact_id is required"}
-    assert asyncio.run(add_tags_service([" ", ""], "contact1"))["errors"] == "No tags to add"
+    assert asyncio.run(add_tags_service([" ", ""], "contact1"))["errors"] == "No tags"
     assert asyncio.run(add_tags_service(None, "contact1"))["success"] is False
     assert ghl["requests"] == []
 

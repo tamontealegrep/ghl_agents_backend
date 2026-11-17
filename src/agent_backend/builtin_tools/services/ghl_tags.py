@@ -2,22 +2,14 @@
 
 import ast
 import json
-import logging
 import re
 from typing import Any
 
-import httpx
-
-from agent_backend.channels.ghl.client import get_ghl_headers, ghl_client_config_for_location
-
-logger = logging.getLogger(__name__)
-
-_ERROR_BODY_CHARS = 300
-"""How much of GHL's error body goes back to the agent (enough to see why, never a page of HTML)."""
+from agent_backend.builtin_tools.services.ghl_http import ghl_call
 
 
 def normalize_tags(raw: Any) -> list[str]:
-    """Turns whatever the agent sent into the list of tags to add.
+    """Turns whatever the agent sent into the list of tags.
 
     The tags arrive as a list, or as a string when they come from a slot: a JSON or Python list
     (``'["vip", "nuevo"]'``) or names separated by commas or new lines. Each tag is trimmed, blanks are
@@ -50,6 +42,16 @@ def normalize_tags(raw: Any) -> list[str]:
     return tags
 
 
+def _check(tags: Any, contact_id: str) -> tuple[list[str], dict[str, Any] | None]:
+    """The clean tags, or the failure to report when there is no contact or nothing to do."""
+    clean = normalize_tags(tags)
+    if not (contact_id or "").strip():
+        return clean, {"success": False, "errors": "contact_id is required"}
+    if not clean:
+        return clean, {"success": False, "errors": "No tags"}
+    return clean, None
+
+
 async def add_tags_service(tags: Any, contact_id: str, location_id: str | None = None) -> dict[str, Any]:
     """Adds tags to a GoHighLevel contact (``POST /contacts/{contactId}/tags``).
 
@@ -66,25 +68,38 @@ async def add_tags_service(tags: Any, contact_id: str, location_id: str | None =
         ``success``; on success ``tags`` (every tag the contact has now) and ``tags_added`` (the new ones); on failure
         ``errors`` with the reason. It never raises: a failed call is reported, not thrown.
     """
-    clean = normalize_tags(tags)
-    if not (contact_id or "").strip():
-        return {"success": False, "errors": "contact_id is required"}
-    if not clean:
-        return {"success": False, "errors": "No tags to add"}
-
-    config = ghl_client_config_for_location(location_id)
-    url = f"{config.base_url}/contacts/{contact_id.strip()}/tags"
-    try:
-        async with httpx.AsyncClient(timeout=config.send_message_timeout_seconds) as client:
-            response = await client.post(url, headers=get_ghl_headers(config), json={"tags": clean})
-            response.raise_for_status()
-            body = response.json()
-    except httpx.HTTPStatusError as exc:
-        detail = exc.response.text[:_ERROR_BODY_CHARS]
-        logger.warning("GHL add tags failed for contact %s: HTTP %s %s", contact_id, exc.response.status_code, detail)
-        return {"success": False, "errors": f"GHL returned HTTP {exc.response.status_code}: {detail}"}
-    except (httpx.HTTPError, ValueError) as exc:
-        logger.warning("GHL add tags failed for contact %s: %s", contact_id, exc)
-        return {"success": False, "errors": str(exc) or exc.__class__.__name__}
-
+    clean, failure = _check(tags, contact_id)
+    if failure:
+        return failure
+    body, error = await ghl_call(
+        "POST", f"/contacts/{contact_id.strip()}/tags", location_id=location_id, body={"tags": clean}
+    )
+    if error or body is None:
+        return {"success": False, "errors": error or "Empty response"}
     return {"success": True, "tags": body.get("tags", []), "tags_added": body.get("tagsAdded", [])}
+
+
+async def remove_tags_service(tags: Any, contact_id: str, location_id: str | None = None) -> dict[str, Any]:
+    """Removes tags from a GoHighLevel contact (``DELETE /contacts/{contactId}/tags``).
+
+    GHL lower-cases the tags before matching and ignores the ones the contact does not have, so asking for a tag
+    that is not there is not an error. Only the tags named are removed. The call needs the ``contacts.write`` scope.
+
+    Args:
+        tags: The tags to remove (see ``normalize_tags`` for the accepted shapes).
+        contact_id: GHL id of the contact.
+        location_id: GHL location (sub-account) of the contact: it picks the token that owns it.
+
+    Returns:
+        ``success``; on success ``tags`` (the tags left on the contact) and ``tags_removed`` (the ones that were there
+        and are gone); on failure ``errors`` with the reason. It never raises.
+    """
+    clean, failure = _check(tags, contact_id)
+    if failure:
+        return failure
+    body, error = await ghl_call(
+        "DELETE", f"/contacts/{contact_id.strip()}/tags", location_id=location_id, body={"tags": clean}
+    )
+    if error or body is None:
+        return {"success": False, "errors": error or "Empty response"}
+    return {"success": True, "tags": body.get("tags", []), "tags_removed": body.get("tagsRemoved", [])}

@@ -8,7 +8,10 @@ from agent_backend.builtin_tools.endpoints import (
     calculate_bmi,
     callback_request,
     check_days_elapsed,
+    remove_tags,
     time_now,
+    update_contact,
+    update_opportunity,
 )
 from agent_backend.builtin_tools.endpoints import (
     echo as echo_endpoint,
@@ -22,7 +25,13 @@ from agent_backend.builtin_tools.endpoints import (
 from agent_backend.builtin_tools.endpoints import (
     update_custom_field as ucf_endpoint,
 )
-from agent_backend.builtin_tools.schemas.ghl import GhlAddTagsResponse, GhlCustomUpdateResponse
+from agent_backend.builtin_tools.schemas.ghl import (
+    GhlAddTagsResponse,
+    GhlCustomUpdateResponse,
+    GhlRemoveTagsResponse,
+    GhlUpdateContactResponse,
+    GhlUpdateOpportunityResponse,
+)
 from agent_backend.builtin_tools.schemas.input_payload import InputPayloadResponse
 
 router = APIRouter()
@@ -69,6 +78,27 @@ router.add_api_route(
     methods=["POST"],
     response_model=GhlAddTagsResponse,
     tags=["utils.add_tags"],
+)
+router.add_api_route(
+    "/remove-tags",
+    remove_tags.remove_tags,
+    methods=["POST"],
+    response_model=GhlRemoveTagsResponse,
+    tags=["utils.remove_tags"],
+)
+router.add_api_route(
+    "/update-contact",
+    update_contact.update_contact,
+    methods=["POST"],
+    response_model=GhlUpdateContactResponse,
+    tags=["utils.update_contact"],
+)
+router.add_api_route(
+    "/update-opportunity",
+    update_opportunity.update_opportunity,
+    methods=["POST"],
+    response_model=GhlUpdateOpportunityResponse,
+    tags=["utils.update_opportunity"],
 )
 router.add_api_route(
     "/echo",
