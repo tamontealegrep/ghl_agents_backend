@@ -511,60 +511,12 @@
     ]
   },
   {
-    "name": "check_visa",
-    "description": "Checks whether one or more nationalities require a visa to enter Colombia as a tourist.",
-    "notes": [
-      "MANDATORY EXECUTION TRIGGER: execute it when the contact mentions their nationality or asks whether they need a visa to travel to Colombia.",
-      "ARGUMENTS: nationalities as CSV or list; prefer ISO 3166-1 alpha-3 (UPPERCASE).",
-      "SOURCE OF TRUTH RULE: use nationality, requires_visa, and conditional_visa (not an array) to decide the outcome of the query. Check conditional_visa for cases like China or India where a visa is required unless they hold a US/Schengen visa."
-    ],
-    "inputs": [
-      {
-        "name": "nationalities",
-        "required": true,
-        "description": "One or more nationalities to check. Examples: 'USA', 'China, India', ['Spain', 'AFG']."
-      }
-    ],
-    "outputs": [
-      {
-        "name": "success",
-        "required": true,
-        "description": "Boolean indicating whether the tool executed correctly."
-      },
-      {
-        "name": "nationality",
-        "required": true,
-        "description": "Name of the nationality(ies) checked, trimmed of whitespace."
-      },
-      {
-        "name": "requires_visa",
-        "required": true,
-        "description": "Indicates whether the person requires a visa to enter Colombia (bool)."
-      },
-      {
-        "name": "conditional_visa",
-        "required": true,
-        "description": "Indicates whether the requirement is conditioned on a US/Schengen visa (bool)."
-      },
-      {
-        "name": "summary",
-        "required": true,
-        "description": "Human-readable summary of the requirements found."
-      },
-      {
-        "name": "errors",
-        "required": true,
-        "description": "Technical error message if the query failed. null on success."
-      }
-    ]
-  },
-  {
     "name": "get_available_slots",
     "description": "Authorized availability tool; source of truth for days and times.",
     "notes": [
-      "MANDATORY EXECUTION: on entering SC__SC_AV and any schedule/reschedule/see-more/retry intent.",
-      "ARGUMENTS: calendar_type = 'FT'; iana_timezone is a real IANA zone resolved in-flow (e.g., America/Bogota).",
-      "SOURCE OF TRUTH: use only available_slots with start_co/end_co and start_local/end_local.",
+      "MANDATORY EXECUTION: on entering SC__SC_AV_I or SC__SC_AV_S, or SC__SC_CHK_I or SC__SC_CHK_S to re-verify the chosen time, and on any intent to schedule/reschedule/see-more/retry.",
+      "ARGUMENTS: calendar_type = 'FT'; iana_timezone is a real IANA zone (e.g., America/Bogota) resolved in-flow.",
+      "SOURCE OF TRUTH: use only available_slots; each slot must include start_co/end_co and start_local/end_local.",
       "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal."
     ],
     "inputs": [
@@ -606,8 +558,8 @@
     "name": "book_appointment",
     "description": "Authorized booking tool; creates the appointment from a valid slot.",
     "notes": [
-      "MANDATORY EXECUTION: on entering SC__SC_BOOK; requires prior get_available_slots.",
-      "ARGUMENTS: start_date = slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT'}; iana_timezone = same as availability; calendar_type = 'FT'.",
+      "MANDATORY EXECUTION: on entering SC__SC_BOOK_I or SC__SC_BOOK_S; requires prior get_available_slots.",
+      "ARGUMENTS: start_date = chosen slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT'}; iana_timezone = same as availability; calendar_type = 'FT'.",
       "SOURCE OF TRUTH: success determines creation; do not confirm before success == true and event_id != null."
     ],
     "inputs": [
@@ -624,12 +576,12 @@
       {
         "name": "duration",
         "required": true,
-        "description": "Appointment duration in minutes, sent as a string. Fixed value for this flow: <APPOINTMENT_DURATION_MINUTES>."
+        "description": "Appointment duration in minutes, sent as a string. Fixed value: <APPOINTMENT_DURATION_MINUTES>."
       },
       {
         "name": "language",
         "required": true,
-        "description": "Language code for notifications, always 'PT' for this agent."
+        "description": "Two-letter uppercase language code, strictly 'EN', 'ES', or 'PT', for the confirmation and follow-up notifications. Selected from [preferred_language], the language in which the active conversation is being conducted."
       },
       {
         "name": "contact_name",
@@ -697,11 +649,11 @@
   },
   {
     "name": "find_appointment",
-    "description": "Authorized tool to search for a contact's existing appointments by name or email in the Family Aims calendars.",
+    "description": "Authorized search tool for existing appointments.",
     "notes": [
-      "MANDATORY EXECUTION TRIGGER: execute it when the contact wants to check, verify, or learn the details of an appointment they believe they already booked.",
-      "ARGUMENTS: contact_name and/or contact_email; calendar_type = 'FT'; optional iana_timezone/language.",
-      "SOURCE OF TRUTH RULE: the 'appointments' array contains the list of appointments found. If it is empty, tell the contact that no records were found under that name or email."
+      "MANDATORY EXECUTION: when the contact asks to check/verify appointment details.",
+      "ARGUMENTS: contact_name and/or contact_email; optional calendar_type = 'FT'; optional iana_timezone/language for formatting.",
+      "SOURCE OF TRUTH: appointments array; empty -> no records."
     ],
     "inputs": [
       {
@@ -712,7 +664,7 @@
       {
         "name": "contact_email",
         "required": false,
-        "description": "Contact's email address to perform the search."
+        "description": "Contact's email to perform the search."
       },
       {
         "name": "contact_id",
@@ -727,24 +679,24 @@
       {
         "name": "iana_timezone",
         "required": false,
-        "description": "IANA timezone to display the times of the appointments found. Default: America/Bogota."
+        "description": "IANA timezone to show the times of the appointments found. Default: America/Bogota."
       },
       {
         "name": "language",
         "required": false,
-        "description": "Two-letter uppercase code in {'ES','EN','PT'} to format results. Default: PT."
+        "description": "Two-letter uppercase code in {'ES','EN','PT'} to format results. Default: ES."
       }
     ],
     "outputs": [
       {
         "name": "success",
         "required": true,
-        "description": "Boolean indicating whether the search completed."
+        "description": "Boolean indicating if the search was completed."
       },
       {
         "name": "appointments",
         "required": true,
-        "description": "List of objects with information about the appointments found (event_id, summary, start_time, calendar_type)."
+        "description": "List of objects with information of the appointments found (event_id, summary, start_time, calendar_type)."
       },
       {
         "name": "errors",
@@ -755,18 +707,17 @@
   },
   {
     "name": "cancel_appointment",
-    "description": "Authorized tool to cancel/delete an existing appointment in the Family Aims calendars.",
+    "description": "Authorized cancellation tool for existing appointments.",
     "notes": [
-      "MANDATORY EXECUTION TRIGGER: execute it only when the contact explicitly requests to cancel their appointment and provides or confirms the event_id (previously obtained via find_appointment).",
-      "ABSOLUTE EXECUTION RULE: do not confirm the cancellation before receiving success == true.",
-      "ARGUMENTS: event_id exact; calendar_type = 'FT'; optional iana_timezone.",
+      "MANDATORY EXECUTION: only with a confirmed event_id (from find_appointment).",
+      "ARGUMENTS: event_id (exact), calendar_type = 'FT', optional iana_timezone.",
       "SOURCE OF TRUTH: use success as the only authorized verdict."
     ],
     "inputs": [
       {
         "name": "event_id",
         "required": true,
-        "description": "Unique Google Calendar event identifier to cancel."
+        "description": "Unique identifier of the Google Calendar event to cancel."
       },
       {
         "name": "calendar_type",
@@ -783,7 +734,7 @@
       {
         "name": "success",
         "required": true,
-        "description": "Boolean indicating whether the cancellation was successful."
+        "description": "Boolean indicating if the cancellation was successful."
       },
       {
         "name": "errors",
@@ -794,19 +745,17 @@
   },
   {
     "name": "edit_appointment",
-    "description": "Authorized tool to modify or reschedule an existing appointment in the Family Aims calendars.",
+    "description": "Authorized rescheduling/edit tool for existing appointments.",
     "notes": [
-      "MANDATORY EXECUTION TRIGGER: execute it when the contact requests to change the date, time, or duration of an already scheduled appointment.",
-      "ABSOLUTE EXECUTION RULE: do not confirm the change before receiving success == true.",
-      "ARGUMENTS: event_id; calendar_type = 'FT'; optional new_start_date (from availability), new_duration, iana_timezone/language.",
-      "VALIDATION RULE: the tool automatically checks availability and business hours before applying the change.",
+      "MANDATORY EXECUTION: when changing date/time/duration of a scheduled appointment.",
+      "ARGUMENTS: event_id (exact), calendar_type = 'FT', optional new_start_date (from availability), optional new_duration, optional iana_timezone/language.",
       "SOURCE OF TRUTH: use success as the only authorized verdict; message/new_start_time are supporting details."
     ],
     "inputs": [
       {
         "name": "event_id",
         "required": true,
-        "description": "Unique Google Calendar event identifier to modify."
+        "description": "Unique identifier of the Google Calendar event to modify."
       },
       {
         "name": "calendar_type",
@@ -816,12 +765,12 @@
       {
         "name": "new_start_date",
         "required": false,
-        "description": "New date and time in ISO 8601 with offset. Required if changing the time."
+        "description": "New date and time in ISO 8601 with offset. Required if changing the schedule."
       },
       {
         "name": "new_duration",
         "required": false,
-        "description": "New duration in minutes (as a string). Required if changing the duration."
+        "description": "New duration in minutes (as string). Required if changing the duration."
       },
       {
         "name": "iana_timezone",
@@ -831,29 +780,68 @@
       {
         "name": "language",
         "required": false,
-        "description": "Two-letter uppercase code in {'ES','EN','PT'} for confirmation. Default: PT."
+        "description": "Two-letter uppercase code in {'ES','EN','PT'} for confirmation. Default: ES."
       }
     ],
     "outputs": [
       {
         "name": "success",
         "required": true,
-        "description": "Boolean indicating whether the modification was successful."
+        "description": "Boolean indicating if the modification was successful."
       },
       {
         "name": "message",
         "required": false,
-        "description": "Confirmation message for the change made."
+        "description": "Confirmation message of the change made."
       },
       {
         "name": "new_start_time",
         "required": false,
-        "description": "Formatted date and time if the schedule changed."
+        "description": "Formatted date and time if there was a schedule change."
       },
       {
         "name": "errors",
         "required": true,
         "description": "Error message if the modification failed."
+      }
+    ]
+  },
+  {
+    "name": "kb_answer",
+    "description": "Authorized tool that answers an open question about the company and its services from the approved knowledge base. Its kb_answer output is the only source for the answer.",
+    "notes": [
+      "MANDATORY EXECUTION: on entering KQ__KQ_ANSWER.",
+      "ARGUMENTS: question is the contact's question and language is the conversation language.",
+      "history is added by the runtime; the flow never sets it.",
+      "SOURCE OF TRUTH: use kb_found as the only verdict. When kb_found is false the knowledge base does not cover the question: never answer it from your own knowledge."
+    ],
+    "inputs": [
+      {
+        "name": "question",
+        "required": true,
+        "description": "The contact's question, in their own words."
+      },
+      {
+        "name": "language",
+        "required": false,
+        "description": "Language of the answer: English, Spanish or Portuguese."
+      },
+      {
+        "name": "history",
+        "required": false,
+        "description": "Recent conversation, filled in by the runtime (never by the flow). It lets a follow-up question such as 'and how long does it take?' be understood."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "kb_answer",
+        "required": true,
+        "description": "The answer written in the requested language. Empty when kb_found is false."
+      },
+      {
+        "name": "kb_found",
+        "required": true,
+        "description": "Whether the knowledge base answered the question (true/false)."
       }
     ]
   }
