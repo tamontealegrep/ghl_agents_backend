@@ -302,6 +302,21 @@ def test_mechanical_arg_binding_skips_the_nationality_derivation_line():
     assert bindings == {}
 
 
+def test_a_computed_store_line_gets_its_constants_expanded_before_the_model_sees_it():
+    llm = _FakeLLMClient(reply="ask")
+    slots = {"OPTIONS": "schedule (wants to book) | ask (anything else)"}
+    _apply_store_line("[next_step] = which of: <OPTIONS>", _ctx(slots), llm)
+    assert slots["next_step"] == "ask"
+    assert "schedule (wants to book) | ask (anything else)" in llm.prompts[0]
+    assert "<OPTIONS>" not in llm.prompts[0]
+
+
+def test_a_computed_store_line_keeps_a_constant_that_has_no_value():
+    llm = _FakeLLMClient(reply="x")
+    _apply_store_line("[a] = from <UNKNOWN_CONST>", _ctx({}), llm)
+    assert "<UNKNOWN_CONST>" in llm.prompts[0]
+
+
 def test_bind_tool_inputs_prefers_exact_slot_name_match():
     fields = [ToolContractField(name="nationalities", required=True, description="d")]
     bound = _bind_tool_inputs(fields, _ctx({"nationalities": "USA"}), _FakeLLMClient())
@@ -322,6 +337,31 @@ def test_bind_tool_inputs_leaves_history_out_when_the_tool_does_not_declare_it()
     fields = [ToolContractField(name="question", required=True, description="d")]
     bound = _bind_tool_inputs(fields, _ctx({"question": "q"}, history=["user: hi"]), _FakeLLMClient())
     assert bound == {"question": "q"}
+
+
+def test_bind_tool_inputs_fills_the_conversation_ids_from_the_contact_without_a_do_line():
+    fields = [
+        ToolContractField(name="name", required=True, description="d"),
+        ToolContractField(name="contact_id", required=False, description="d"),
+        ToolContractField(name="location_id", required=False, description="d"),
+    ]
+    contact = {"contact_id": "C1", "location_id": "L1"}
+    bound = _bind_tool_inputs(fields, _ctx({"name": "age"}, contact=contact), _FakeLLMClient())
+    assert bound == {"name": "age", "contact_id": "C1", "location_id": "L1"}
+
+
+def test_bind_tool_inputs_leaves_the_ids_out_when_the_contact_has_none_or_the_tool_does_not_declare_them():
+    fields = [ToolContractField(name="name", required=True, description="d")]
+    bound = _bind_tool_inputs(fields, _ctx({"name": "age"}, contact={"contact_id": "C1"}), _FakeLLMClient())
+    assert bound == {"name": "age"}
+    with_ids = fields + [ToolContractField(name="contact_id", required=False, description="d")]
+    assert _bind_tool_inputs(with_ids, _ctx({"name": "age"}, contact={}), _FakeLLMClient()) == {"name": "age"}
+
+
+def test_bind_tool_inputs_keeps_an_id_a_do_line_binds_over_the_contact():
+    fields = [ToolContractField(name="contact_id", required=False, description="d")]
+    ctx = _ctx({"cid": "FROM_SLOT"}, do=["contact_id = [cid]"], contact={"contact_id": "FROM_CONTACT"})
+    assert _bind_tool_inputs(fields, ctx, _FakeLLMClient()) == {"contact_id": "FROM_SLOT"}
 
 
 def test_bind_tool_inputs_uses_mechanical_do_binding_when_no_exact_slot():

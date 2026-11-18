@@ -656,6 +656,11 @@ def _pick_appointment_field(items: Any, field: str, day: Any, time: Any) -> Any:
 
 
 def _llm_compute_store_value(llm_client: LLMClient, slot_name: str, instruction: str, ctx: LLMContext) -> Any:
+    # A constant written in the instruction (`<NEXT_STEP_CLASSES>`) is the text it stands for: the model never
+    # sees the bare name, so a long definition shared by several states can live once in constants.yaml.
+    instruction = _CONST_IN_TEXT_RE.sub(
+        lambda m: str(ctx.slots[m.group(1)]) if ctx.slots.get(m.group(1)) is not None else m.group(0), instruction
+    )
     policy_block = f"House rules:\n{chr(10).join(ctx.policies)}\n\n" if ctx.policies else ""
     prompt = (
         f"{ctx.block(instruction)}"
@@ -2004,6 +2009,12 @@ def _bind_tool_inputs(
     for name, value in mechanical.items():
         if name in input_names and name not in bound:
             bound[name] = value
+
+    # The conversation's own ids are never something a DO line or the model has to produce: a tool that declares
+    # `contact_id` / `location_id` receives them from the session's contact (a DO line that binds them still wins).
+    for key in ("contact_id", "location_id"):
+        if key in input_names and key not in bound and ctx.contact.get(key):
+            bound[key] = ctx.contact[key]
 
     # `history` is reserved: a tool that declares it receives the recent conversation as the runtime
     # holds it, never a value a DO line or the model has to produce.
