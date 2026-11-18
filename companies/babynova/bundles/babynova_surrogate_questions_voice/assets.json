@@ -687,7 +687,7 @@
       {
         "name": "contact_id",
         "required": false,
-        "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone."
+        "description": "CRM contact the appointment belongs to: the conversation's contact_id, which the platform provides in the contact. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone."
       },
       {
         "name": "iana_timezone",

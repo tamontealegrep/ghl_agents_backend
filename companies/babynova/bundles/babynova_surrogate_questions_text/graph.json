@@ -8114,7 +8114,7 @@
           "start_date = [sc__start_date]",
           "duration = <APPOINTMENT_DURATION_MINUTES>. iana_timezone = 'America/Bogota'.",
           "contact_name = [sc__c_name], contact_email = [sc__c_email], contact_phone = [sc__c_phone] (always in +57 format).",
-          "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it).",
+          "contact_id = [contact.contact_id] (required in every call to this tool; the tool fails without it).",
           "It is FORBIDDEN to write to the contact, confirm the appointment, run FAQs or handlers, or route before capturing [sc__success].",
           "If you do not execute book_appointment, STAY here and retry. NEVER continue with an empty or assumed [sc__success]."
         ],
@@ -8777,7 +8777,7 @@
           "calendar_type = 'FT' (required in every call to this tool).",
           "contact_name = [am__am_name] if not NULL, otherwise {{contact.first_name}}.",
           "contact_email = {{contact.email}} (optional). iana_timezone = 'America/Bogota' (optional).",
-          "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it)."
+          "contact_id = [contact.contact_id] (required in every call to this tool; the tool fails without it)."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -11050,7 +11050,7 @@
         {
           "name": "contact_id",
           "required": false,
-          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
+          "description": "CRM contact the appointment belongs to: the conversation's contact_id, which the GHL webhook provides in the contact. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
           "type_expr": "str",
           "examples": []
         },
@@ -11153,7 +11153,7 @@
         {
           "name": "contact_id",
           "required": false,
-          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
+          "description": "CRM contact the appointment belongs to: the conversation's contact_id, which the GHL webhook provides in the contact. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
           "type_expr": "str",
           "examples": []
         },

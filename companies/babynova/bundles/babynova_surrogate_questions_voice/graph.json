@@ -7,9 +7,7 @@
       {
         "node_id": "CALL_START",
         "node_type": "start",
-        "goal": [
-          "Punto de entrada de la llamada saliente."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -69,12 +67,8 @@
       {
         "node_id": "CALL_ANSWERED",
         "node_type": "subflow_change",
-        "goal": [
-          "Transición desde el flujo de llamada saliente al subflow de apertura cuando el usuario contesta."
-        ],
-        "do": [
-          "Cargar el documento de referencia del subflow OPENING antes de continuar."
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
@@ -97,9 +91,7 @@
       {
         "node_id": "C__CB_START",
         "node_type": "start",
-        "goal": [
-          "Punto de entrada del subflow de callback."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -123,13 +115,8 @@
       {
         "node_id": "C__CB_INIT_RETRY_COUNTS",
         "node_type": "registration",
-        "goal": [
-          "Inicializar en cero los contadores de reintento del subflow de callback antes de capturar datos."
-        ],
-        "do": [
-          "[c__callback_time_slot_retry_count] = 0",
-          "[c__callback_day_retry_count] = 0"
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
@@ -155,9 +142,7 @@
       {
         "node_id": "C__CB_ASK_TIME_SLOT",
         "node_type": "question",
-        "goal": [
-          "Capturar la franja horaria preferida para el callback."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -188,11 +173,8 @@
       {
         "node_id": "C__CB_DECIDE_TIME_SLOT",
         "node_type": "decision",
-        "goal": [
-          "Validar que la franja horaria capturada sea una de las opciones permitidas."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar [c__callback_time_slot].",
           "[c__callback_time_slot_retry_count] = [c__callback_time_slot_retry_count] + 1"
         ],
         "trigger": [],
@@ -239,9 +221,7 @@
       {
         "node_id": "C__CB_ASK_DAY",
         "node_type": "question",
-        "goal": [
-          "Capturar el día preferido para el callback."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -272,11 +252,8 @@
       {
         "node_id": "C__CB_DECIDE_DAY",
         "node_type": "decision",
-        "goal": [
-          "Validar que se haya capturado un día o fecha válido para el contacto."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar [c__callback_day].",
           "[c__callback_day_retry_count] = [c__callback_day_retry_count] + 1"
         ],
         "trigger": [],
@@ -323,9 +300,7 @@
       {
         "node_id": "C__CB_EXECUTE_CALLBACK",
         "node_type": "action",
-        "goal": [
-          "Registrar el callback en el sistema con todos los datos capturados."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -369,9 +344,7 @@
       {
         "node_id": "C__CB_HANDLE_TOOL_FAILURE",
         "node_type": "message",
-        "goal": [
-          "Informar de forma segura que no se pudo completar el callback y cerrar la llamada sin afirmar éxito."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -397,9 +370,7 @@
       {
         "node_id": "C__CB_FAREWELL",
         "node_type": "message",
-        "goal": [
-          "Despedirse confirmando que el callback quedó programado."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -425,9 +396,7 @@
       {
         "node_id": "O__OP_S",
         "node_type": "start",
-        "goal": [
-          "Punto de entrada del subflow de apertura."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -451,25 +420,14 @@
       {
         "node_id": "O__OP_INIT",
         "node_type": "registration",
-        "goal": [
-          "Inicializar en cero los contadores de reintento del subflow de apertura antes de empezar las preguntas."
-        ],
-        "do": [
-          "[o__who_try] = 0",
-          "[o__name_try] = 0",
-          "[o__interest_try] = 0",
-          "[o__prog_try] = 0",
-          "[o__talk_try] = 0",
-          "[o__consent_try] = 0",
-          "[o__stop_try] = 0"
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[o__who_try] = 0",
           "[o__name_try] = 0",
           "[o__interest_try] = 0",
           "[o__prog_try] = 0",
@@ -509,8 +467,8 @@
         "eval": "llm",
         "route": [
           {
-            "target": "O__OP_ASK_WHO",
-            "condition_text": "IF {{contact.first_name}} IS NOT NULL AND {{contact.first_name}} != '{{contact.first_name}}' -> GO_TO: O__OP_ASK_WHO",
+            "target": "O__OP_GREET",
+            "condition_text": "IF {{contact.first_name}} IS NOT NULL AND {{contact.first_name}} != '{{contact.first_name}}' -> GO_TO: O__OP_GREET",
             "is_mechanical": false,
             "python_expression": null,
             "reason": "disallowed syntax: Set"
@@ -527,30 +485,23 @@
         ]
       },
       {
-        "node_id": "O__OP_ASK_WHO",
-        "node_type": "question",
-        "goal": [
-          "Saludar y confirmar que se está hablando con el titular del número."
-        ],
+        "node_id": "O__OP_GREET",
+        "node_type": "message",
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Hola, le habla <AGENT_NAME>, agente de IA de <COMPANY_NAME>. ¿Hablo con {{contact.first_name}}?"
+          "Hola {{contact.first_name}}, le habla <AGENT_NAME>, agente de IA de <COMPANY_NAME>."
         ],
         "say_verbatim": false,
         "execute": null,
         "store": [],
-        "capture": [
-          [
-            "o__who",
-            "Literal[yes, no, wrong_number]"
-          ]
-        ],
+        "capture": [],
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_DEC_WHO",
+            "target": "O__OP_ASK_CONSENT",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -560,76 +511,9 @@
         "fallback": []
       },
       {
-        "node_id": "O__OP_DEC_WHO",
-        "node_type": "decision",
-        "goal": [
-          "Evaluar la confirmación de identidad para continuar, proteger privacidad o marcar número equivocado."
-        ],
-        "do": [
-          "Evaluar el valor de [o__who].",
-          "[o__who_try] = [o__who_try] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_BYE_WRONG",
-            "condition_text": "IF [o__who_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_BYE_WRONG",
-            "is_mechanical": true,
-            "python_expression": "o__who_try >= MAX_RETRY_ATTEMPTS",
-            "reason": null
-          },
-          {
-            "target": "O__OP_ASK_WHO",
-            "condition_text": "IF [o__who] IS NULL -> GO_TO: O__OP_ASK_WHO",
-            "is_mechanical": true,
-            "python_expression": "o__who is None",
-            "reason": null
-          },
-          {
-            "target": "O__OP_ASK_CONSENT",
-            "condition_text": "IF [o__who] == 'yes' -> GO_TO: O__OP_ASK_CONSENT",
-            "is_mechanical": true,
-            "python_expression": "o__who == 'yes'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_BYE_WRONG",
-            "condition_text": "IF [o__who] == 'wrong_number' -> GO_TO: O__OP_BYE_WRONG",
-            "is_mechanical": true,
-            "python_expression": "o__who == 'wrong_number'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_BYE_WRONG",
-            "condition_text": "IF [o__who] == 'no' -> GO_TO: O__OP_BYE_WRONG",
-            "is_mechanical": true,
-            "python_expression": "o__who == 'no'",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "O__OP_ASK_WHO",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
         "node_id": "O__OP_ASK_NAME",
         "node_type": "question",
-        "goal": [
-          "Capturar el nombre del usuario cuando no se tiene el dato en el CRM."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -660,11 +544,8 @@
       {
         "node_id": "O__OP_DEC_NAME",
         "node_type": "decision",
-        "goal": [
-          "Evaluar si se capturó un nombre para verificar si el número corresponde al usuario o continuar."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar si [o__name] fue capturado.",
           "[o__name_try] = [o__name_try] + 1"
         ],
         "trigger": [],
@@ -711,9 +592,7 @@
       {
         "node_id": "O__OP_ASK_PROG",
         "node_type": "question",
-        "goal": [
-          "Confirmar si la usuaria participa actualmente en algún programa con <COMPANY_NAME> antes de presentar una nueva oferta."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -744,11 +623,8 @@
       {
         "node_id": "O__OP_DEC_PROG",
         "node_type": "decision",
-        "goal": [
-          "Evaluar si la usuaria ya participa en un programa con <COMPANY_NAME> para decidir si se debe cerrar la llamada o continuar con la oferta."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar el valor de [o__prog].",
           "[o__prog_try] = [o__prog_try] + 1"
         ],
         "trigger": [],
@@ -802,9 +678,7 @@
       {
         "node_id": "O__OP_INTRO",
         "node_type": "message",
-        "goal": [
-          "Presentar el motivo de la llamada destacando la mejora de la oferta para motivar la participación."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -830,9 +704,7 @@
       {
         "node_id": "O__OP_ASK_INT",
         "node_type": "question",
-        "goal": [
-          "Preguntar si la candidata sigue interesada en el programa."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -863,11 +735,8 @@
       {
         "node_id": "O__OP_DEC_INT",
         "node_type": "decision",
-        "goal": [
-          "Evaluar si la candidata sigue interesada en el programa."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar el valor de [o__interest].",
           "[o__interest_try] = [o__interest_try] + 1"
         ],
         "trigger": [],
@@ -928,9 +797,7 @@
       {
         "node_id": "O__OP_ASK_NOI",
         "node_type": "question",
-        "goal": [
-          "Preguntar la razón por la cual la candidata ya no está interesada."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -964,9 +831,7 @@
       {
         "node_id": "O__OP_ASK_TALK",
         "node_type": "question",
-        "goal": [
-          "Verificar que el usuario puede hablar con privacidad y está dispuesto a responder una breve encuesta."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -997,11 +862,8 @@
       {
         "node_id": "O__OP_DEC_TALK",
         "node_type": "decision",
-        "goal": [
-          "Evaluar si el usuario puede hablar ahora o si rechaza continuar."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar el valor de [o__talk].",
           "[o__talk_try] = [o__talk_try] + 1"
         ],
         "trigger": [],
@@ -1062,9 +924,7 @@
       {
         "node_id": "O__OP_ASK_CONSENT",
         "node_type": "question",
-        "goal": [
-          "Obtener el consentimiento de tratamiento de datos personales antes de continuar."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -1095,11 +955,8 @@
       {
         "node_id": "O__OP_DEC_CONSENT",
         "node_type": "decision",
-        "goal": [
-          "Evaluar si el usuario otorgó consentimiento para continuar con la llamada."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar el valor de [o__consent].",
           "[o__consent_try] = [o__consent_try] + 1"
         ],
         "trigger": [],
@@ -1153,9 +1010,7 @@
       {
         "node_id": "O__OP_OK",
         "node_type": "message",
-        "goal": [
-          "Confirmar el consentimiento y continuar con la pregunta sobre participación en un programa."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -1181,12 +1036,8 @@
       {
         "node_id": "O__OP_TO_Q",
         "node_type": "subflow_change",
-        "goal": [
-          "Transición del subflow de apertura al subflow de preguntas de gestante subrogada."
-        ],
-        "do": [
-          "Cargar el documento de referencia del subflow SURROGATE_QUESTIONS antes de continuar."
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
@@ -1209,9 +1060,7 @@
       {
         "node_id": "O__OP_NO_CONSENT",
         "node_type": "message",
-        "goal": [
-          "Informar al usuario que no se continuará si no hay consentimiento."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -1237,9 +1086,7 @@
       {
         "node_id": "O__OP_ASK_STOP",
         "node_type": "question",
-        "goal": [
-          "Ofrecer al usuario la opción de registrar su solicitud de no ser contactado."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -1270,11 +1117,8 @@
       {
         "node_id": "O__OP_DEC_STOP",
         "node_type": "decision",
-        "goal": [
-          "Evaluar si el usuario desea registrar la preferencia de no ser contactado."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar el valor de [o__stop].",
           "[o__stop_try] = [o__stop_try] + 1"
         ],
         "trigger": [],
@@ -1328,9 +1172,7 @@
       {
         "node_id": "O__OP_BYE_PROG",
         "node_type": "message",
-        "goal": [
-          "Despedirse cuando la usuaria ya participa en un programa con <COMPANY_NAME>."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -1356,9 +1198,7 @@
       {
         "node_id": "O__OP_BYE_STOP",
         "node_type": "message",
-        "goal": [
-          "Despedirse cortésmente confirmando que no se volverá a contactar."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -1384,9 +1224,7 @@
       {
         "node_id": "O__OP_BYE_WRONG",
         "node_type": "message",
-        "goal": [
-          "Disculparse por la llamada equivocada y despedirse."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -1412,12 +1250,8 @@
       {
         "node_id": "O__OP_TO_C",
         "node_type": "subflow_change",
-        "goal": [
-          "Transición del subflow de apertura al subflow de callback."
-        ],
-        "do": [
-          "El usuario no puede hablar ahora o el titular no está disponible. Cargar el documento de referencia del subflow CALLBACK antes de continuar."
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
@@ -1440,14 +1274,9 @@
       {
         "node_id": "O__OP_SYNC_INT_YES",
         "node_type": "action",
-        "goal": [
-          "Sync surrogate_interest to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'surrogate_interest'",
-          "value = 'interested'",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'surrogate_interest', value = 'interested'"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -1471,14 +1300,9 @@
       {
         "node_id": "O__OP_SYNC_INT_MAYBE",
         "node_type": "action",
-        "goal": [
-          "Sync surrogate_interest to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'surrogate_interest'",
-          "value = 'unknown'",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'surrogate_interest', value = 'unknown'"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -1502,14 +1326,9 @@
       {
         "node_id": "O__OP_SYNC_INT_NO",
         "node_type": "action",
-        "goal": [
-          "Sync surrogate_interest to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'surrogate_interest'",
-          "value = 'not_interested'",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'surrogate_interest', value = 'not_interested'"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -1533,9 +1352,7 @@
       {
         "node_id": "Q__SQ_START",
         "node_type": "start",
-        "goal": [
-          "Punto de entrada del subflow de preguntas de gestante subrogada."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -1559,69 +1376,14 @@
       {
         "node_id": "Q__SQ_INIT_RETRY_COUNTS",
         "node_type": "registration",
-        "goal": [
-          "Inicializar en cero los contadores de reintento sensibles del formulario de precalificación."
-        ],
-        "do": [
-          "[q__nationality] = NULL",
-          "[q__classification_result] = NULL",
-          "[q__force_cls] = NULL",
-          "[q__surrogate_age] = NULL",
-          "[q__city_residence] = NULL",
-          "[q__children_count] = NULL",
-          "[q__last_birth_date] = NULL",
-          "[q__now] = NULL",
-          "[q__csections_count] = NULL",
-          "[q__abortos] = NULL",
-          "[q__pree] = NULL",
-          "[q__weight] = NULL",
-          "[q__height] = NULL",
-          "[q__imc] = NULL",
-          "[q__uses_drugs] = NULL",
-          "[q__birth_type] = NULL",
-          "[q__availability] = NULL",
-          "[q__nationality_try] = 0",
-          "[q__age_try] = 0",
-          "[q__city_try] = 0",
-          "[q__kids_try] = 0",
-          "[q__birth_try] = 0",
-          "[q__csec_try] = 0",
-          "[q__abort_try] = 0",
-          "[q__pree_try] = 0",
-          "[q__weight_try] = 0",
-          "[q__height_try] = 0",
-          "[q__drugs_try] = 0",
-          "[q__btype_try] = 0",
-          "[q__avail_try] = 0",
-          "[q__birth_window] = NULL",
-          "[q__missing_try] = 0",
-          "[q__city_raw] = NULL",
-          "[q__prop_auth] = NULL",
-          "[q__prop_auth_try] = 0"
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[q__nationality] = NULL",
-          "[q__classification_result] = NULL",
-          "[q__force_cls] = NULL",
-          "[q__surrogate_age] = NULL",
-          "[q__city_residence] = NULL",
-          "[q__children_count] = NULL",
-          "[q__last_birth_date] = NULL",
-          "[q__now] = NULL",
-          "[q__csections_count] = NULL",
-          "[q__abortos] = NULL",
-          "[q__pree] = NULL",
-          "[q__weight] = NULL",
-          "[q__height] = NULL",
-          "[q__imc] = NULL",
-          "[q__uses_drugs] = NULL",
-          "[q__birth_type] = NULL",
-          "[q__availability] = NULL",
           "[q__nationality_try] = 0",
           "[q__age_try] = 0",
           "[q__city_try] = 0",
@@ -1635,10 +1397,7 @@
           "[q__drugs_try] = 0",
           "[q__btype_try] = 0",
           "[q__avail_try] = 0",
-          "[q__birth_window] = NULL",
           "[q__missing_try] = 0",
-          "[q__city_raw] = NULL",
-          "[q__prop_auth] = NULL",
           "[q__prop_auth_try] = 0"
         ],
         "capture": [],
@@ -1657,9 +1416,7 @@
       {
         "node_id": "Q__SQ_ASK_AGE",
         "node_type": "question",
-        "goal": [
-          "Capturar la edad de la candidata."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -1690,12 +1447,9 @@
       {
         "node_id": "Q__SQ_DECIDE_AGE",
         "node_type": "decision",
-        "goal": [
-          "Validar que la edad haya sido capturada antes de continuar."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar si [q__surrogate_age] fue capturada correctamente.",
-          "Si [q__surrogate_age] es inválido o no se pudo parsear, incrementar [q__age_try]."
+          "IF [q__surrogate_age] IS NULL: [q__age_try] = [q__age_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -1749,10 +1503,7 @@
         "node_id": "Q__SQ_ASK_CITY",
         "node_type": "question",
         "goal": [
-          "Capturar la ciudad o municipio de residencia de la candidata.",
-          "Guarda en city_raw la ciudad exactamente como la dijo.",
-          "Una localidad o barrio de Bogotá (Kennedy, Usaquén, Suba, Engativá, Chapinero, Bosa, Fontibón, Ciudad Bolívar, Teusaquillo, etc.) o 'Bogotá D.C.' significa Bogotá.",
-          "Un lugar fuera de Colombia (por ejemplo 'Madrid, España') no es una ciudad colombiana."
+          "city_raw = ciudad tal como la dijo. Localidad o barrio de Bogotá (Kennedy, Usaquén, Suba, Engativá, Chapinero, Bosa, Fontibón, Ciudad Bolívar, Teusaquillo…) o 'Bogotá D.C.' = Bogotá. Fuera de Colombia (p. ej. 'Madrid, España') = no es ciudad colombiana."
         ],
         "do": [],
         "trigger": [],
@@ -1789,10 +1540,7 @@
         "node_id": "Q__SQ_ASK_CITY_RETRY",
         "node_type": "question",
         "goal": [
-          "Capturar la ciudad o municipio de residencia de la candidata.",
-          "Guarda en city_raw la ciudad exactamente como la dijo.",
-          "Una localidad o barrio de Bogotá (Kennedy, Usaquén, Suba, Engativá, Chapinero, Bosa, Fontibón, Ciudad Bolívar, Teusaquillo, etc.) o 'Bogotá D.C.' significa Bogotá.",
-          "Un lugar fuera de Colombia (por ejemplo 'Madrid, España') no es una ciudad colombiana."
+          "city_raw = ciudad tal como la dijo. Localidad o barrio de Bogotá (Kennedy, Usaquén, Suba, Engativá, Chapinero, Bosa, Fontibón, Ciudad Bolívar, Teusaquillo…) o 'Bogotá D.C.' = Bogotá. Fuera de Colombia (p. ej. 'Madrid, España') = no es ciudad colombiana."
         ],
         "do": [],
         "trigger": [],
@@ -1829,7 +1577,7 @@
         "node_id": "Q__SQ_NORM_CITY",
         "node_type": "registration",
         "goal": [
-          "Convertir la ciudad capturada al nombre exacto de la lista permitida (aceptando tildes, mayúsculas y errores pequeños), o a 'Otro' si no está en la lista."
+          "Tolerar tildes, mayúsculas y errores pequeños."
         ],
         "do": [],
         "trigger": [],
@@ -1856,12 +1604,9 @@
       {
         "node_id": "Q__SQ_DECIDE_CITY",
         "node_type": "decision",
-        "goal": [
-          "Validar que la ciudad de residencia haya sido capturada antes de continuar."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar si [q__city_residence] fue capturada correctamente.",
-          "Si [q__city_residence] es inválido o no se pudo parsear, incrementar [q__city_try]."
+          "IF [q__city_residence] IS NULL: [q__city_try] = [q__city_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -1921,9 +1666,7 @@
       {
         "node_id": "Q__SQ_ASK_CHILDREN",
         "node_type": "question",
-        "goal": [
-          "Capturar el número de hijos de la candidata."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -1954,12 +1697,9 @@
       {
         "node_id": "Q__SQ_DECIDE_CHILDREN",
         "node_type": "decision",
-        "goal": [
-          "Validar que se haya capturado el número de hijos antes de continuar."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar si [q__children_count] fue capturado correctamente.",
-          "Si [q__children_count] es inválido o no se pudo parsear, incrementar [q__kids_try]."
+          "IF [q__children_count] IS NULL: [q__kids_try] = [q__kids_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2012,9 +1752,7 @@
       {
         "node_id": "Q__SQ_ASK_LB",
         "node_type": "question",
-        "goal": [
-          "Capturar cuándo fue el último parto de la candidata, aceptando tanto una fecha exacta como una referencia relativa, para luego normalizarla antes de validar si ya transcurrió más de un año."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -2045,20 +1783,9 @@
       {
         "node_id": "Q__SQ_GET_CURRENT_TIME",
         "node_type": "action",
-        "goal": [
-          "Acción obligatoria e incondicional: ejecutar time_now en cuanto se entre a este estado para obtener la fecha actual de referencia.",
-          "La siguiente acción válida del asistente es exclusivamente la llamada real a time_now en este mismo turno.",
-          "No continuar al cálculo del último parto sin un valor real capturado en [q__now].",
-          "Esta llamada es obligatoria incluso si [q__last_birth_date] ya parece una fecha exacta o si el asistente cree conocer la fecha de hoy por el contexto."
-        ],
+        "goal": [],
         "do": [
-          "TOOL CALL ONLY: call time_now now.",
-          "La llamada a time_now es obligatoria en este estado y debe ocurrir en este turno.",
-          "Construye la decisión posterior usando únicamente la salida de esta llamada; no sustituyas la herramienta con razonamiento propio.",
-          "Usa la fecha actual devuelta por time_now como fuente de verdad para la fecha actual antes de normalizar expresiones como 'hace 8 meses' o 'hace 1 año'.",
-          "No uses la fecha actual implícita del modelo, la fecha de la conversación ni una estimación manual como sustituto de la fecha actual devuelta por time_now.",
-          "No respondas al usuario, no expliques la acción, no ejecutes FAQs ni handlers de conversación y no pases a otro estado sin antes llamar a la herramienta y capturar su resultado.",
-          "Si no se ejecuta la herramienta o [q__now] queda nulo, permanece en SQ_GET_CURRENT_TIME; no asumas la fecha actual ni derives fechas relativas por cuenta propia."
+          "TOOL CALL: time_now"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2095,14 +1822,11 @@
       {
         "node_id": "Q__SQ_DEC_LB",
         "node_type": "decision",
-        "goal": [
-          "Normalizar la fecha del último parto y continuar el formulario. La evaluación del tiempo transcurrido desde el parto la hace exclusivamente surrogate_classification; este nodo no decide elegibilidad."
-        ],
+        "goal": [],
         "do": [
-          "Normalizar [q__last_birth_date] a una fecha completa en formato YYYY/MM/DD. Si es una referencia relativa (por ejemplo 'hace 8 meses'), calcularla usando únicamente [q__now].",
-          "No digas a la candidata si cumple o no el tiempo desde el parto.",
-          "Si la información del último parto es inválida o no se pudo parsear, incrementar [q__birth_try].",
-          "Para una referencia relativa, resta el número indicado al año (hace N años) o al mes (hace N meses) de [q__now]. Ejemplo: si [q__now] es 2026-11-13, 'hace 2 años' es 2024/11/13 y 'hace 8 meses' es 2026/03/13."
+          "[q__last_birth_date] = fecha completa YYYY/MM/DD; una referencia relativa se calcula solo desde [q__now]: restar N al año ('hace N años') o al mes ('hace N meses'). Con [q__now] = 2026-11-13: 'hace 2 años' = 2024/11/13; 'hace 8 meses' = 2026/03/13",
+          "IF [q__last_birth_date] IS NULL: [q__birth_try] = [q__birth_try] + 1",
+          "No decir a la candidata si cumple el tiempo desde el parto (lo decide surrogate_classification)."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2155,9 +1879,7 @@
       {
         "node_id": "Q__SQ_BIRTH_WINDOW",
         "node_type": "registration",
-        "goal": [
-          "Clasificar hace cuánto fue el último parto, a partir de la fecha y de la fecha actual."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -2183,9 +1905,7 @@
       {
         "node_id": "Q__SQ_BIRTH_GATE",
         "node_type": "decision",
-        "goal": [
-          "El tipo de parto solo se pregunta cuando el último parto fue hace menos de 18 meses."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -2231,9 +1951,7 @@
       {
         "node_id": "Q__SQ_ASK_BIRTH_TYPE",
         "node_type": "question",
-        "goal": [
-          "Capturar si el último parto fue natural o por cesárea."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -2264,12 +1982,9 @@
       {
         "node_id": "Q__SQ_DEC_BIRTH_TYPE",
         "node_type": "decision",
-        "goal": [
-          "Validar que se haya capturado el tipo del último parto."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar [q__birth_type].",
-          "Si es inválido o no se pudo parsear, incrementar [q__btype_try]."
+          "IF [q__birth_type] IS NULL: [q__btype_try] = [q__btype_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2315,9 +2030,7 @@
       {
         "node_id": "Q__SQ_ASK_CSEC",
         "node_type": "question",
-        "goal": [
-          "Capturar el número de cesáreas de la candidata."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -2348,12 +2061,9 @@
       {
         "node_id": "Q__SQ_DEC_CSEC",
         "node_type": "decision",
-        "goal": [
-          "Validar que se haya capturado el número de cesáreas antes de continuar."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar [q__csections_count].",
-          "Si [q__csections_count] es inválido o no se pudo parsear, incrementar [q__csec_try]."
+          "IF [q__csections_count] IS NULL: [q__csec_try] = [q__csec_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2407,8 +2117,7 @@
         "node_id": "Q__SQ_ASK_ABORTIONS",
         "node_type": "question",
         "goal": [
-          "Preguntar si la candidata ha tenido abortos previos.",
-          "Si la candidata dice que no sabe o no está segura, captura 'unknown' en lugar de adivinar sí o no."
+          "'unknown' si dice que no sabe o no está segura (no adivines)."
         ],
         "do": [],
         "trigger": [],
@@ -2440,12 +2149,9 @@
       {
         "node_id": "Q__SQ_DECIDE_ABORTIONS",
         "node_type": "decision",
-        "goal": [
-          "Validar que se haya capturado correctamente la respuesta sobre abortos."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar [q__abortos].",
-          "Si [q__abortos] es inválido o no se pudo parsear, incrementar [q__abort_try]."
+          "IF [q__abortos] IS NULL: [q__abort_try] = [q__abort_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2499,8 +2205,7 @@
         "node_id": "Q__SQ_ASK_PREE",
         "node_type": "question",
         "goal": [
-          "Preguntar sobre antecedentes de preeclampsia de la candidata.",
-          "Si la candidata dice que no sabe o no está segura, captura 'unknown' en lugar de adivinar sí o no."
+          "'unknown' si dice que no sabe o no está segura (no adivines)."
         ],
         "do": [],
         "trigger": [],
@@ -2532,12 +2237,9 @@
       {
         "node_id": "Q__SQ_DEC_PREE",
         "node_type": "decision",
-        "goal": [
-          "Validar que la respuesta sobre preeclampsia haya sido capturada antes de continuar."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar el valor de [q__pree].",
-          "Si [q__pree] es inválido o no se pudo parsear, incrementar [q__pree_try]."
+          "IF [q__pree] IS NULL: [q__pree_try] = [q__pree_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2590,9 +2292,7 @@
       {
         "node_id": "Q__SQ_ASK_WEIGHT",
         "node_type": "question",
-        "goal": [
-          "Capturar el peso actual de la candidata."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -2623,12 +2323,9 @@
       {
         "node_id": "Q__SQ_DECIDE_WEIGHT",
         "node_type": "decision",
-        "goal": [
-          "Validar que se haya capturado correctamente el peso."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar [q__weight].",
-          "Si [q__weight] es inválido o no se pudo parsear, incrementar [q__weight_try]."
+          "IF [q__weight] IS NULL: [q__weight_try] = [q__weight_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2681,9 +2378,7 @@
       {
         "node_id": "Q__SQ_ASK_HEIGHT",
         "node_type": "question",
-        "goal": [
-          "Capturar la altura de la candidata."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -2714,12 +2409,9 @@
       {
         "node_id": "Q__SQ_DECIDE_HEIGHT",
         "node_type": "decision",
-        "goal": [
-          "Validar que se haya capturado correctamente la altura antes de calcular el IMC."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar [q__height].",
-          "Si [q__height] es inválida o no se pudo parsear, incrementar [q__height_try]."
+          "IF [q__height] IS NULL: [q__height_try] = [q__height_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2772,19 +2464,12 @@
       {
         "node_id": "Q__SQ_CALCULATE_BMI",
         "node_type": "action",
-        "goal": [
-          "Acción obligatoria e incondicional: ejecutar calculate_bmi cuando ya existen peso y altura capturados.",
-          "La siguiente acción válida del asistente es exclusivamente la llamada real a calculate_bmi en este mismo turno.",
-          "No continuar a SQ_DECIDE_BMI sin un resultado real capturado en [q__imc]."
-        ],
+        "goal": [],
         "do": [
-          "TOOL CALL ONLY: call calculate_bmi now.",
-          "La llamada a calculate_bmi es obligatoria en este estado y debe ocurrir en este turno.",
-          "Usa [q__weight] como weight_kg y [q__height] como height_cm para calcular el IMC.",
-          "Usa el valor de IMC devuelto por la herramienta (puede venir en el campo imc o bmi) como única salida autorizada para la decisión posterior. Si la estatura llegó en metros (por ejemplo uno sesenta), conviértela a centímetros (160) antes de llamar. Si ya tienes peso y estatura, no los vuelvas a preguntar por una falla de la herramienta: reintenta la herramienta; no reemplaces la herramienta con cálculo mental ni estimación.",
-          "No respondas al usuario, no expliques la acción, no ejecutes FAQs ni handlers de conversación y no pases a otro estado sin antes llamar a la herramienta y capturar su resultado.",
-          "Si [q__height] es inválido o no se pudo parsear, incrementar [q__height_try].",
-          "Si no se ejecuta la herramienta o [q__imc] queda nulo, permanece en SQ_CALCULATE_BMI; no deduzcas el IMC por tu cuenta."
+          "TOOL CALL: calculate_bmi",
+          "weight_kg = [q__weight], height_cm = [q__height]",
+          "Estatura en metros (1.60) → cm (160). IMC = campo imc o bmi. Si la herramienta falla: reintentar (no calcular a mano ni volver a preguntar peso o estatura).",
+          "IF [q__height] IS NULL: [q__height_try] = [q__height_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2821,12 +2506,9 @@
       {
         "node_id": "Q__SQ_DECIDE_BMI",
         "node_type": "decision",
-        "goal": [
-          "Validar que el IMC haya sido calculado antes de continuar."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar [q__imc] usando el resultado calculado previamente.",
-          "Si [q__height] es inválido o no se pudo parsear, incrementar [q__height_try]."
+          "IF [q__height] IS NULL: [q__height_try] = [q__height_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2880,9 +2562,7 @@
         "node_id": "Q__SQ_ASK_NATIONALITY",
         "node_type": "question",
         "goal": [
-          "Capturar la nacionalidad de la candidata para validar si puede continuar directamente o si requiere verificación documental.",
-          "Guarda la nacionalidad ya normalizada como código ISO 3166-1 alfa-3 en mayúsculas (Colombia -> COL, Venezuela -> VEN, Ecuador -> ECU).",
-          "Infiere el país solo de lo que la candidata dice, nunca por el acento ni por el número de teléfono."
+          "ISO 3166-1 alfa-3 en mayúsculas (Colombia = COL, Venezuela = VEN, Ecuador = ECU); país solo por lo que dice, nunca por acento ni teléfono."
         ],
         "do": [],
         "trigger": [],
@@ -2916,12 +2596,9 @@
       {
         "node_id": "Q__SQ_DECIDE_NATIONALITY",
         "node_type": "decision",
-        "goal": [
-          "Validar que la nacionalidad de la candidata haya sido capturada antes de ejecutar la verificación documental o pedir el documento si es extranjera."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar [q__nationality].",
-          "Si [q__nationality] es inválida o no se pudo parsear, incrementar [q__nationality_try]."
+          "IF [q__nationality] IS NULL: [q__nationality_try] = [q__nationality_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2975,8 +2652,7 @@
         "node_id": "Q__SQ_ASK_DRUGS",
         "node_type": "question",
         "goal": [
-          "Preguntar si la candidata usa drogas recreativas, incluso si el veredicto documental previo fue negativo.",
-          "Si la candidata dice que no sabe o no está segura, captura 'unknown' en lugar de adivinar sí o no."
+          "'unknown' si dice que no sabe o no está segura (no adivines)."
         ],
         "do": [],
         "trigger": [],
@@ -3008,13 +2684,9 @@
       {
         "node_id": "Q__SQ_DECIDE_DRUGS",
         "node_type": "decision",
-        "goal": [
-          "Validar que la respuesta sobre drogas recreativas haya sido capturada antes de ejecutar la clasificación central."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar el valor de [q__uses_drugs].",
-          "Si [q__uses_drugs] es inválido o no se pudo parsear, incrementar [q__drugs_try].",
-          "Está prohibido pasar a SQ_DEC_ELIGIBILITY directamente desde aquí. Antes es imperativo pasar por SQ_RUN_CLASSIFICATION para ejecutar surrogate_classification."
+          "IF [q__uses_drugs] IS NULL: [q__drugs_try] = [q__drugs_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3068,8 +2740,7 @@
         "node_id": "Q__SQ_ASK_AVAIL",
         "node_type": "question",
         "goal": [
-          "Capturar si la candidata tiene disponibilidad de tiempo para asistir a las citas y controles del proceso.",
-          "Si la candidata dice que no sabe o no está segura, captura 'unknown' en lugar de adivinar sí o no."
+          "'unknown' si dice que no sabe o no está segura (no adivines)."
         ],
         "do": [],
         "trigger": [],
@@ -3101,12 +2772,9 @@
       {
         "node_id": "Q__SQ_DEC_AVAIL",
         "node_type": "decision",
-        "goal": [
-          "Validar que se haya capturado la disponibilidad de tiempo."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar [q__availability].",
-          "Si es inválido o no se pudo parsear, incrementar [q__avail_try]."
+          "IF [q__availability] IS NULL: [q__avail_try] = [q__avail_try] + 1"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3152,12 +2820,8 @@
       {
         "node_id": "Q__SQ_FORCE_CLS",
         "node_type": "registration",
-        "goal": [
-          "Marcar que el flujo ya agotó intentos en al menos una pregunta y forzar una única clasificación con la información disponible para evitar bucles infinitos."
-        ],
-        "do": [
-          "[q__force_cls] = true"
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
@@ -3182,37 +2846,14 @@
       {
         "node_id": "Q__SQ_RUN_CLASSIFICATION",
         "node_type": "action",
-        "goal": [
-          "Llamar surrogate_classification como fuente única de verdad para la elegibilidad médica y demográfica de la candidata. Es imperativo y obligatorio ejecutar esta herramienta antes de alcanzar SQ_DEC_ELIGIBILITY.",
-          "La siguiente acción válida del asistente es exclusivamente la llamada real a surrogate_classification en este mismo turno.",
-          "No continuar a SQ_DEC_ELIGIBILITY sin un resultado real capturado en [q__classification_result].",
-          "La llamada a surrogate_classification es obligatoria en este estado y debe ocurrir en este turno.",
-          "Está prohibido hablar, decidir, enrutar a SQ_DEC_ELIGIBILITY, ejecutar FAQs o handlers de conversación, o continuar el subflujo sin haber ejecutado surrogate_classification y recibido una respuesta nueva.",
-          "Si [q__force_cls] == true, ejecuta igualmente la clasificación con la información parcial disponible en lugar de seguir insistiendo sobre la misma pregunta.",
-          "Envía siempre todos los datos ya capturados hasta este punto del flujo.",
-          "Usa si y no en minúscula y sin tilde.",
-          "No inventes valores. Si un dato todavía no existe, es ambiguo o no quedó confirmado, envía ese campo vacío.",
-          "Si llegas a esta acción después de una etapa avanzada, incluye también todos los parámetros de preguntas anteriores que ya estén capturados.",
-          "Usa classification_result como único veredicto autorizado para la decisión siguiente.",
-          "Si no se ejecuta la herramienta o [q__classification_result] queda nulo, permanece en SQ_RUN_CLASSIFICATION; no clasifiques por tu cuenta ni sustituyas la respuesta de la herramienta.",
-          "Captura también not_eligibility_reason tal como lo devuelve la herramienta (por ejemplo 'missing_data (document_type)').",
-          "No envíes document_type ni eps_active_affiliation: el canal de voz no captura el documento (y sin documento no se puede consultar la EPS), por eso la herramienta los reportará como datos faltantes.",
-          "Si un dato quedó en 'unknown', envíalo vacío."
-        ],
+        "goal": [],
         "do": [
-          "TOOL CALL: call surrogate_classification with all collected slots.",
-          "age = [q__surrogate_age]",
-          "city = [q__city_residence]",
-          "nationality = [q__nationality]",
-          "number_of_children = [q__children_count]",
-          "last_birth_date = [q__last_birth_date]",
-          "birth_type = [q__birth_type]",
-          "number_of_c_sections = [q__csections_count]",
-          "abortions = [q__abortos]",
-          "preeclampsia = [q__pree]",
-          "bmi = [q__imc]",
-          "drug_use = [q__uses_drugs]",
-          "availability = [q__availability]"
+          "TOOL CALL: surrogate_classification",
+          "age = [q__surrogate_age], city = [q__city_residence], nationality = [q__nationality], number_of_children = [q__children_count]",
+          "last_birth_date = [q__last_birth_date], birth_type = [q__birth_type], number_of_c_sections = [q__csections_count], abortions = [q__abortos]",
+          "preeclampsia = [q__pree], bmi = [q__imc], drug_use = [q__uses_drugs], availability = [q__availability]",
+          "si/no en minúscula sin tilde; dato vacío, ambiguo o 'unknown' → vacío; enviar todo lo ya capturado (también en reintentos); con [q__force_cls] == true ejecutar igual con datos parciales; no enviar document_type ni eps_active_affiliation (la voz no los captura: se reportan como faltantes)",
+          "Capturar también not_eligibility_reason tal cual (p. ej. 'missing_data (document_type)')"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3253,15 +2894,10 @@
       {
         "node_id": "Q__SQ_DEC_ELIGIBILITY",
         "node_type": "decision",
-        "goal": [
-          "Resolver el desenlace del subflujo usando el resultado centralizado de surrogate_classification y el veredicto documental ya capturado. Es obligatorio haber pasado por SQ_RUN_CLASSIFICATION antes de evaluar este nodo."
-        ],
+        "goal": [],
         "do": [
-          "Evaluar [q__classification_result] como fuente principal de verdad para aptitud, rechazo o espera temporal. Si la herramienta devuelve el resultado con otras palabras o en inglés, úsalo tal como lo devuelve la herramienta: Approved = apta; Rejected (Timing) = rechazo temporal por tiempo desde el parto; cualquier otro Rejected (...) = rechazo; Inconclusive = faltan datos.",
-          "Si [q__classification_result] es NULL, no se puede decidir nada todavía: es obligatorio volver a SQ_RUN_CLASSIFICATION y ejecutar surrogate_classification antes de continuar.",
-          "Excepción de seguridad: si [q__force_cls] == true y la clasificación sigue siendo inconclusa, no vuelvas a abrir preguntas; cierra el flujo para evitar bucles.",
-          "Excepción de documento: si la clasificación es Inconclusive solo porque falta el documento o la afiliación a EPS (not_eligibility_reason 'missing_data (document_type)'), la candidata se toma como aprobada, porque el canal de voz no captura el documento ni la EPS.",
-          "Si la clasificación es Inconclusive, SQ_DEC_MISSING vuelve a preguntar el dato faltante según not_eligibility_reason, un número limitado de veces."
+          "classification_result tal cual lo devuelve la herramienta: Approved = apta; Rejected (Timing) = rechazo temporal por tiempo desde el parto; otro Rejected (...) = rechazo; Inconclusive = faltan datos.",
+          "Inconclusive solo por falta de documento o de afiliación a EPS = aprobada (la voz no los captura)."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3350,7 +2986,7 @@
         "node_id": "Q__SQ_DEC_MISSING",
         "node_type": "decision",
         "goal": [
-          "La clasificación quedó inconclusa: not_eligibility_reason nombra el dato faltante como \"missing_data (<campo>)\". Ir directo a esa pregunta, un número limitado de veces, con reintentos nuevos para cada pregunta. birth_type es opcional y solo se pide cuando el último parto fue hace menos de 18 meses."
+          "Repite el dato que not_eligibility_reason nombra como missing_data (<campo>), con reintentos nuevos por pregunta; birth_type es opcional (solo si el último parto fue hace menos de 18 meses)."
         ],
         "do": [
           "[q__missing_try] = [q__missing_try] + 1",
@@ -3482,9 +3118,7 @@
       {
         "node_id": "Q__SQ_WAIT_1Y",
         "node_type": "message",
-        "goal": [
-          "Informar a la candidata que debe esperar a cumplir más de un año desde su último parto para continuar el proceso."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -3510,9 +3144,7 @@
       {
         "node_id": "Q__SQ_PASS",
         "node_type": "message",
-        "goal": [
-          "Confirmar que la candidata cumple con la precalificación e introducir la opción de agendar una cita."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -3538,9 +3170,7 @@
       {
         "node_id": "Q__SQ_ASK_PROP_AUTH",
         "node_type": "question",
-        "goal": [
-          "Ask for authorization to send the proposal information by WhatsApp to {{contact.phone}}."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -3571,9 +3201,7 @@
       {
         "node_id": "Q__SQ_DEC_PROP_AUTH",
         "node_type": "decision",
-        "goal": [
-          "Evaluate whether she authorizes sending the information."
-        ],
+        "goal": [],
         "do": [
           "[q__prop_auth_try] = [q__prop_auth_try] + 1"
         ],
@@ -3628,14 +3256,9 @@
       {
         "node_id": "Q__SQ_SYNC_PROP_AUTH_YES",
         "node_type": "action",
-        "goal": [
-          "Sync proposal_send_authorized to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'proposal_send_authorized'",
-          "value = 'yes'",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'proposal_send_authorized', value = 'yes'"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3659,14 +3282,9 @@
       {
         "node_id": "Q__SQ_SYNC_PROP_AUTH_NO",
         "node_type": "action",
-        "goal": [
-          "Sync proposal_send_authorized to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'proposal_send_authorized'",
-          "value = 'no'",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'proposal_send_authorized', value = 'no'"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3690,9 +3308,7 @@
       {
         "node_id": "Q__SQ_BYE_PROPOSAL",
         "node_type": "message",
-        "goal": [
-          "She does not agree or does not authorize the sending: thank her, close the call politely. No chasing."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -3718,9 +3334,7 @@
       {
         "node_id": "Q__SQ_BYE_NOFIT",
         "node_type": "message",
-        "goal": [
-          "Informar a la candidata que no cumple los criterios y despedirse con cortesía."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -3746,14 +3360,9 @@
       {
         "node_id": "Q__SQ_SYNC_AGE",
         "node_type": "action",
-        "goal": [
-          "Sync surrogate_age to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'surrogate_age'",
-          "value = [q__surrogate_age]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'surrogate_age', value = [q__surrogate_age]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3784,14 +3393,9 @@
       {
         "node_id": "Q__SQ_SYNC_NATIONALITY",
         "node_type": "action",
-        "goal": [
-          "Sync nationality to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'nationality'",
-          "value = [q__nationality]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'nationality', value = [q__nationality]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3815,14 +3419,9 @@
       {
         "node_id": "Q__SQ_SYNC_CITY",
         "node_type": "action",
-        "goal": [
-          "Sync city_residence to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'city_residence'",
-          "value = [q__city_residence]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'city_residence', value = [q__city_residence]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3846,14 +3445,9 @@
       {
         "node_id": "Q__SQ_SYNC_CHILDREN",
         "node_type": "action",
-        "goal": [
-          "Sync children_count to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'children_count'",
-          "value = [q__children_count]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'children_count', value = [q__children_count]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3884,14 +3478,9 @@
       {
         "node_id": "Q__SQ_SYNC_LAST_BIRTH",
         "node_type": "action",
-        "goal": [
-          "Sync last_birth_date to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'last_birth_date'",
-          "value = [q__last_birth_date]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'last_birth_date', value = [q__last_birth_date]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3915,14 +3504,9 @@
       {
         "node_id": "Q__SQ_SYNC_BTYPE",
         "node_type": "action",
-        "goal": [
-          "Sync birth_type to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'birth_type'",
-          "value = [q__birth_type]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'birth_type', value = [q__birth_type]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3953,14 +3537,9 @@
       {
         "node_id": "Q__SQ_SYNC_CSECTIONS",
         "node_type": "action",
-        "goal": [
-          "Sync csections_count to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'csections_count'",
-          "value = [q__csections_count]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'csections_count', value = [q__csections_count]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3991,14 +3570,9 @@
       {
         "node_id": "Q__SQ_SYNC_ABORTIONS",
         "node_type": "action",
-        "goal": [
-          "Sync abortions_history to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'abortions_history'",
-          "value = [q__abortos]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'abortions_history', value = [q__abortos]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4029,14 +3603,9 @@
       {
         "node_id": "Q__SQ_SYNC_PREE",
         "node_type": "action",
-        "goal": [
-          "Sync preeclampsia_history to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'preeclampsia_history'",
-          "value = [q__pree]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'preeclampsia_history', value = [q__pree]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4067,14 +3636,9 @@
       {
         "node_id": "Q__SQ_SYNC_WEIGHT",
         "node_type": "action",
-        "goal": [
-          "Sync weight_kg to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'weight_kg'",
-          "value = [q__weight]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'weight_kg', value = [q__weight]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4105,14 +3669,9 @@
       {
         "node_id": "Q__SQ_SYNC_HEIGHT",
         "node_type": "action",
-        "goal": [
-          "Sync height_cm to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'height_cm'",
-          "value = [q__height]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'height_cm', value = [q__height]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4136,14 +3695,9 @@
       {
         "node_id": "Q__SQ_SYNC_BMI",
         "node_type": "action",
-        "goal": [
-          "Sync bmi to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'bmi'",
-          "value = [q__imc]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'bmi', value = [q__imc]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4174,14 +3728,9 @@
       {
         "node_id": "Q__SQ_SYNC_DRUGS",
         "node_type": "action",
-        "goal": [
-          "Sync uses_drugs to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'uses_drugs'",
-          "value = [q__uses_drugs]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'uses_drugs', value = [q__uses_drugs]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4212,14 +3761,9 @@
       {
         "node_id": "Q__SQ_SYNC_AVAIL",
         "node_type": "action",
-        "goal": [
-          "Sync time_availability to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'time_availability'",
-          "value = [q__availability]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'time_availability', value = [q__availability]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4243,9 +3787,7 @@
       {
         "node_id": "Q__SQ_TIME_START",
         "node_type": "action",
-        "goal": [
-          "Capture the time the pre-qualification started."
-        ],
+        "goal": [],
         "do": [
           "iana_timezone = 'America/Bogota'"
         ],
@@ -4276,14 +3818,9 @@
       {
         "node_id": "Q__SQ_SYNC_STATUS_START",
         "node_type": "action",
-        "goal": [
-          "Sync screening_status to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'screening_status'",
-          "value = 'in_progress'",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'screening_status', value = 'in_progress'"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4307,14 +3844,9 @@
       {
         "node_id": "Q__SQ_SYNC_STARTED_AT",
         "node_type": "action",
-        "goal": [
-          "Sync screening_started_at to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'screening_started_at'",
-          "value = [q__now]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'screening_started_at', value = [q__now]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4338,14 +3870,9 @@
       {
         "node_id": "Q__SQ_SYNC_RESULT_PENDING",
         "node_type": "action",
-        "goal": [
-          "Sync eligibility_result to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'eligibility_result'",
-          "value = 'pending'",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'eligibility_result', value = 'pending'"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4369,14 +3896,9 @@
       {
         "node_id": "Q__SQ_SYNC_REASON_NONE",
         "node_type": "action",
-        "goal": [
-          "Sync not_eligibility_reason to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'not_eligibility_reason'",
-          "value = 'none'",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'not_eligibility_reason', value = 'none'"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4400,14 +3922,9 @@
       {
         "node_id": "Q__SQ_SYNC_ELIG_RESULT",
         "node_type": "action",
-        "goal": [
-          "Sync eligibility_result to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'eligibility_result'",
-          "value = [q__classification_result]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'eligibility_result', value = [q__classification_result]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4431,14 +3948,9 @@
       {
         "node_id": "Q__SQ_SYNC_ELIG_REASON",
         "node_type": "action",
-        "goal": [
-          "Sync not_eligibility_reason to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'not_eligibility_reason'",
-          "value = [q__not_eligibility_reason]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'not_eligibility_reason', value = [q__not_eligibility_reason]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4462,14 +3974,9 @@
       {
         "node_id": "Q__SQ_SYNC_STATUS_DONE",
         "node_type": "action",
-        "goal": [
-          "Sync screening_status to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'screening_status'",
-          "value = 'completed'",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'screening_status', value = 'completed'"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4493,9 +4000,7 @@
       {
         "node_id": "Q__SQ_TIME_DONE",
         "node_type": "action",
-        "goal": [
-          "Capture the time the pre-qualification finished."
-        ],
+        "goal": [],
         "do": [
           "iana_timezone = 'America/Bogota'"
         ],
@@ -4534,14 +4039,9 @@
       {
         "node_id": "Q__SQ_SYNC_COMPLETED_AT",
         "node_type": "action",
-        "goal": [
-          "Sync screening_completed_at to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'screening_completed_at'",
-          "value = [q__now]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'screening_completed_at', value = [q__now]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4565,14 +4065,9 @@
       {
         "node_id": "Q__SQ_SYNC_CITY_RAW",
         "node_type": "action",
-        "goal": [
-          "Sync city_raw (the city exactly as the candidate said it) to the contact's GHL custom field."
-        ],
+        "goal": [],
         "do": [
-          "name = 'city_raw'",
-          "value = [q__city_raw]",
-          "contact_id = [contact.contact_id]",
-          "location_id = [contact.location_id]"
+          "name = 'city_raw', value = [q__city_raw]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4603,9 +4098,7 @@
       {
         "node_id": "KQ__KQ_S",
         "node_type": "start",
-        "goal": [
-          "Enter the questions flow."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -4629,9 +4122,7 @@
       {
         "node_id": "KQ__KQ_INIT",
         "node_type": "registration",
-        "goal": [
-          "Reset the counters and the captured values of this subflow."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -4663,7 +4154,7 @@
         "node_id": "KQ__KQ_ASK_DOUBT",
         "node_type": "question",
         "goal": [
-          "Sandler up-front contract before scheduling: give the contact space to ask anything first, and make it clear that saying no to the appointment is also fine."
+          "Contrato inicial (Sandler): dar espacio para preguntar y dejar claro que decir no a la cita también está bien."
         ],
         "do": [],
         "trigger": [],
@@ -4690,9 +4181,7 @@
       {
         "node_id": "KQ__KQ_CLS_DOUBT",
         "node_type": "registration",
-        "goal": [
-          "Classify what the contact just wrote. Only a clear wish to schedule, or a clear 'nothing to ask', moves on to scheduling; everything else is answered or clarified first."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -4700,7 +4189,7 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[kq__next_step] = what the latest user message is, as exactly one of: schedule (the message is explicitly about scheduling: they clearly say they want to schedule, book or continue to the appointment, or clearly say they have nothing to ask: no, nothing else, that's all, I'm ready; a message that talks about anything else is not schedule), question (they only say they have a question or doubt without stating it: 'I have a question', 'tengo una duda', or a bare 'yes' to this question), ambiguous (a message with no content of its own that does not say whether they want to schedule or have something to ask: a bare 'ok', 'vale', 'bueno', 'mmm', 'maybe', 'tal vez', 'puede ser', 'no sé' or an emoji; these are ambiguous even though 'ok' can sound like agreement), ask (anything else that has content of its own, either a question or a request such as 'tell me about…', or a statement about themselves or their situation such as 'we are a same-sex couple'; a statement is answered like a question, and when in doubt between schedule and ask choose ask)"
+          "[kq__next_step] = what the latest user message is, as exactly one of: <NEXT_STEP_CLASSES>"
         ],
         "capture": [],
         "eval": "code",
@@ -4718,9 +4207,7 @@
       {
         "node_id": "KQ__KQ_DEC_ASK",
         "node_type": "decision",
-        "goal": [
-          "Answer a question already asked, ask for the question, or go to scheduling."
-        ],
+        "goal": [],
         "do": [
           "[kq__ask_try] = [kq__ask_try] + 1"
         ],
@@ -4782,9 +4269,7 @@
       {
         "node_id": "KQ__KQ_CONFIRM",
         "node_type": "question",
-        "goal": [
-          "The last reply could mean either going on to scheduling or wanting to keep talking: ask which, in one short sentence, and do not move on to scheduling until the contact says so."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -4810,9 +4295,7 @@
       {
         "node_id": "KQ__KQ_CLS_CONFIRM",
         "node_type": "registration",
-        "goal": [
-          "Classify what the contact just wrote. Only a clear wish to schedule, or a clear 'nothing to ask', moves on to scheduling; everything else is answered or clarified first."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -4820,7 +4303,7 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[kq__next_step] = what the latest user message is, as exactly one of: schedule (the message is explicitly about scheduling: they clearly say they want to schedule, book or continue to the appointment, or clearly say they have nothing to ask: no, nothing else, that's all, I'm ready; a message that talks about anything else is not schedule), question (they only say they have a question or doubt without stating it: 'I have a question', 'tengo una duda', or a bare 'yes' to this question), ambiguous (a message with no content of its own that does not say whether they want to schedule or have something to ask: a bare 'ok', 'vale', 'bueno', 'mmm', 'maybe', 'tal vez', 'puede ser', 'no sé' or an emoji; these are ambiguous even though 'ok' can sound like agreement), ask (anything else that has content of its own, either a question or a request such as 'tell me about…', or a statement about themselves or their situation such as 'we are a same-sex couple'; a statement is answered like a question, and when in doubt between schedule and ask choose ask)"
+          "[kq__next_step] = what the latest user message is, as exactly one of: <NEXT_STEP_CLASSES>"
         ],
         "capture": [],
         "eval": "code",
@@ -4838,9 +4321,7 @@
       {
         "node_id": "KQ__KQ_ASK_Q",
         "node_type": "question",
-        "goal": [
-          "Invite the contact to ask their question."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -4866,9 +4347,7 @@
       {
         "node_id": "KQ__KQ_CLS_Q",
         "node_type": "registration",
-        "goal": [
-          "Classify what the contact just wrote. Only a clear wish to schedule, or a clear 'nothing to ask', moves on to scheduling; everything else is answered or clarified first."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -4876,7 +4355,7 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[kq__next_step] = what the latest user message is, as exactly one of: schedule (the message is explicitly about scheduling: they clearly say they want to schedule, book or continue to the appointment, or clearly say they have nothing to ask: no, nothing else, that's all, I'm ready; a message that talks about anything else is not schedule), question (they only say they have a question or doubt without stating it: 'I have a question', 'tengo una duda', or a bare 'yes' to this question), ambiguous (a message with no content of its own that does not say whether they want to schedule or have something to ask: a bare 'ok', 'vale', 'bueno', 'mmm', 'maybe', 'tal vez', 'puede ser', 'no sé' or an emoji; these are ambiguous even though 'ok' can sound like agreement), ask (anything else that has content of its own, either a question or a request such as 'tell me about…', or a statement about themselves or their situation such as 'we are a same-sex couple'; a statement is answered like a question, and when in doubt between schedule and ask choose ask)"
+          "[kq__next_step] = what the latest user message is, as exactly one of: <NEXT_STEP_CLASSES>"
         ],
         "capture": [],
         "eval": "code",
@@ -4894,9 +4373,7 @@
       {
         "node_id": "KQ__KQ_DEC_Q",
         "node_type": "decision",
-        "goal": [
-          "The contact was just invited to ask: unless they said they have nothing to ask, whatever they wrote is the question to answer."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -4928,9 +4405,7 @@
       {
         "node_id": "KQ__KQ_FROM_MSG",
         "node_type": "registration",
-        "goal": [
-          "A question came up in the middle of the conversation and no FAQ covers it: keep it as the question to answer."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -4957,9 +4432,7 @@
       {
         "node_id": "KQ__KQ_SIDE",
         "node_type": "decision",
-        "goal": [
-          "A question came up in the middle of a conversation and no FAQ covers it. When it came up inside this subflow it is one more question of the funnel; when it interrupted another flow, remember where the contact was."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -4991,9 +4464,7 @@
       {
         "node_id": "KQ__KQ_SIDE_SAVE",
         "node_type": "registration",
-        "goal": [
-          "A question interrupted another flow: remember where the contact was and keep the message as the question to answer."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5022,9 +4493,7 @@
         "node_id": "KQ__KQ_ANSWER",
         "node_type": "action",
         "goal": [
-          "You MUST execute kb_answer this turn. It is mandatory and your only possible action here.",
-          "It is FORBIDDEN to answer the question from your own knowledge. The only source is the [kq__kb_answer] returned by kb_answer.",
-          "The answer is spoken aloud by the voice channel: it must come back short and plain."
+          "La respuesta se dice en voz alta: debe volver corta y llana."
         ],
         "do": [
           "TOOL CALL ONLY: call kb_answer now.",
@@ -5071,9 +4540,7 @@
       {
         "node_id": "KQ__KQ_SAY",
         "node_type": "message",
-        "goal": [
-          "Deliver the answer from the knowledge base exactly as returned."
-        ],
+        "goal": [],
         "do": [
           "[kq__doubt] = NULL",
           "[kq__next_step] = NULL"
@@ -5102,9 +4569,7 @@
       {
         "node_id": "KQ__KQ_NOANS",
         "node_type": "message",
-        "goal": [
-          "Say that the knowledge base does not cover it, that <COMPANY_NAME> focuses on fertility and surrogacy, and that the human team will clarify it during the appointment."
-        ],
+        "goal": [],
         "do": [
           "[kq__doubt] = NULL",
           "[kq__next_step] = NULL"
@@ -5133,9 +4598,7 @@
       {
         "node_id": "KQ__KQ_AFTER",
         "node_type": "decision",
-        "goal": [
-          "After an answer: go back to the interrupted state when the question came from another flow, otherwise ask whether there is any other question."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5181,9 +4644,7 @@
       {
         "node_id": "KQ__KQ_LIMIT",
         "node_type": "message",
-        "goal": [
-          "The question limit was reached: say the <COMPANY_NAME> team will cover the rest in the appointment and move on."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5209,9 +4670,7 @@
       {
         "node_id": "KQ__KQ_NUDGE",
         "node_type": "message",
-        "goal": [
-          "The contact keeps asking while scheduling: say, once, that the <COMPANY_NAME> team can go through every question in the appointment, then go back to the step they were in."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5237,9 +4696,7 @@
       {
         "node_id": "KQ__KQ_BACK",
         "node_type": "decision",
-        "goal": [
-          "Return to the question the contact was answering, without filler messages."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5263,9 +4720,7 @@
       {
         "node_id": "KQ__KQ_MORE",
         "node_type": "question",
-        "goal": [
-          "Ask only whether the contact has any other question."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5291,9 +4746,7 @@
       {
         "node_id": "KQ__KQ_CLS_MORE",
         "node_type": "registration",
-        "goal": [
-          "Classify what the contact just wrote. Only a clear wish to schedule, or a clear 'nothing to ask', moves on to scheduling; everything else is answered or clarified first."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5301,7 +4754,7 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[kq__next_step] = what the latest user message is, as exactly one of: schedule (the message is explicitly about scheduling: they clearly say they want to schedule, book or continue to the appointment, or clearly say they have nothing more to ask: no, nothing else, that's all, I'm ready; a message that talks about anything else is not schedule), question (they only say they have another question or doubt without stating it: 'I have a question', 'tengo una duda', or a bare 'yes' to this question), ambiguous (a message with no content of its own that does not say whether they want to schedule or have something to ask: a bare 'ok', 'vale', 'bueno', 'mmm', 'maybe', 'tal vez', 'puede ser', 'no sé' or an emoji; these are ambiguous even though 'ok' can sound like agreement), ask (anything else that has content of its own, either a question or a request such as 'tell me about…', or a statement about themselves or their situation such as 'we are a same-sex couple'; a statement is answered like a question, and when in doubt between schedule and ask choose ask)"
+          "[kq__next_step] = what the latest user message is, as exactly one of: <NEXT_STEP_CLASSES>"
         ],
         "capture": [],
         "eval": "code",
@@ -5319,9 +4772,7 @@
       {
         "node_id": "KQ__KQ_DEC_MORE",
         "node_type": "decision",
-        "goal": [
-          "Answer another question, ask for it, or go to scheduling. Stop answering after <MAX_KB_ROUNDS> questions."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5381,12 +4832,8 @@
       {
         "node_id": "KQ__KQ_TO_SCHED",
         "node_type": "subflow_change",
-        "goal": [
-          "Load the scheduling subflow."
-        ],
-        "do": [
-          "Load the SCHEDULING subflow reference document before continuing."
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
@@ -5409,9 +4856,7 @@
       {
         "node_id": "SC__SC_S",
         "node_type": "start",
-        "goal": [
-          "Enter scheduling."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5435,12 +4880,8 @@
       {
         "node_id": "SC__SC_INIT",
         "node_type": "registration",
-        "goal": [
-          "Reset scheduling counters and clear volatile data."
-        ],
-        "do": [
-          "Set every retry counter to 0 and every volatile scheduling slot to NULL. Contact data is resolved later against the CRM."
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
@@ -5494,9 +4935,7 @@
       {
         "node_id": "SC__SC_DEC_N",
         "node_type": "decision",
-        "goal": [
-          "Check if the name is already captured; otherwise check the CRM."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5564,12 +5003,8 @@
       {
         "node_id": "SC__SC_ST_N",
         "node_type": "registration",
-        "goal": [
-          "Use the CRM name for scheduling."
-        ],
-        "do": [
-          "[sc__c_name] = {{contact.first_name}}"
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
@@ -5594,9 +5029,7 @@
       {
         "node_id": "SC__SC_ASK_N",
         "node_type": "question",
-        "goal": [
-          "Ask for the contact's full name."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5629,9 +5062,7 @@
       {
         "node_id": "SC__SC_DEC_NC",
         "node_type": "decision",
-        "goal": [
-          "Confirm the contact's name was captured."
-        ],
+        "goal": [],
         "do": [
           "[sc__c_name_try] = [sc__c_name_try] + 1"
         ],
@@ -5679,9 +5110,7 @@
       {
         "node_id": "SC__SC_DEC_P",
         "node_type": "decision",
-        "goal": [
-          "Check if the phone number is already captured; otherwise check the CRM."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5749,12 +5178,8 @@
       {
         "node_id": "SC__SC_ST_P",
         "node_type": "registration",
-        "goal": [
-          "Use the CRM phone number for scheduling."
-        ],
-        "do": [
-          "[sc__c_phone] = {{contact.phone}}"
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
@@ -5780,7 +5205,7 @@
         "node_id": "SC__SC_ASK_P",
         "node_type": "question",
         "goal": [
-          "Ask for the contact's phone number without asking for a country code. Colombian phone numbers only, store it in international format with the +57 prefix. If the number has no country code, prepend +57 (for example 3219876543 is stored as +573219876543); if it already starts with 57 or +57, store it as +57 followed by the 10-digit number; keep digits only after the +."
+          "Sin pedir indicativo; solo números colombianos: se guarda como +57 y 10 dígitos (3219876543 → +573219876543; si ya empieza por 57 o +57, normalizar a +57 y los 10 dígitos; solo dígitos tras el +)."
         ],
         "do": [],
         "trigger": [],
@@ -5814,9 +5239,7 @@
       {
         "node_id": "SC__SC_DEC_PC",
         "node_type": "decision",
-        "goal": [
-          "Confirm the contact's phone number was captured."
-        ],
+        "goal": [],
         "do": [
           "[sc__c_phone_try] = [sc__c_phone_try] + 1"
         ],
@@ -5864,9 +5287,7 @@
       {
         "node_id": "SC__SC_DEC_E",
         "node_type": "decision",
-        "goal": [
-          "Check if the email is already captured; otherwise check the CRM."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -5941,12 +5362,8 @@
       {
         "node_id": "SC__SC_ST_E",
         "node_type": "registration",
-        "goal": [
-          "Use the CRM email for scheduling."
-        ],
-        "do": [
-          "[sc__c_email] = {{contact.email}}"
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
@@ -5971,9 +5388,7 @@
       {
         "node_id": "SC__SC_ASK_E",
         "node_type": "question",
-        "goal": [
-          "Ask for the contact's email address."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -6006,9 +5421,7 @@
       {
         "node_id": "SC__SC_DEC_EC",
         "node_type": "decision",
-        "goal": [
-          "Confirm the contact's email was captured."
-        ],
+        "goal": [],
         "do": [
           "[sc__c_email_try] = [sc__c_email_try] + 1"
         ],
@@ -6063,9 +5476,7 @@
       {
         "node_id": "SC__SC_DEC_T",
         "node_type": "decision",
-        "goal": [
-          "Run the availability tool."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -6090,15 +5501,13 @@
         "node_id": "SC__SC_AV",
         "node_type": "action",
         "goal": [
-          "You MUST execute get_available_slots this turn. It is mandatory and your only possible action here.",
-          "It is FORBIDDEN to mention, infer, or guess days, dates, times, or availability from your knowledge or context. The only source is the [sc__available_slots] returned by get_available_slots."
+          "Obtener la disponibilidad real: available_slots solo sale de get_available_slots."
         ],
         "do": [
           "TOOL CALL ONLY: call get_available_slots now.",
           "calendar_type = 'FT' (required in every call to this tool).",
           "iana_timezone = 'America/Bogota'.",
-          "It is FORBIDDEN to cite availability, run FAQs or handlers, or route before capturing [sc__available_slots].",
-          "[sc__available_slots] is valid only if it is a list of objects carrying start_co, end_co, start_local, and end_local and errors is null. If you do not execute the tool, STAY here and retry."
+          "[sc__available_slots] es válido solo si es una lista de objetos con start_co, end_co, start_local y end_local y errors es null."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -6137,9 +5546,7 @@
       {
         "node_id": "SC__SC_NO_AV",
         "node_type": "message",
-        "goal": [
-          "Report that there is no availability and close softly."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -6165,16 +5572,11 @@
       {
         "node_id": "SC__SC_CAL",
         "node_type": "action",
-        "goal": [
-          "You MUST execute time_now this turn to anchor today's date and weekdays before the contact chooses a day. It is mandatory and your only possible action here.",
-          "It is FORBIDDEN to deduce, estimate, or assume the current date or time from your knowledge, training, or context. The only valid reference is [sc__now] and [sc__calendar]."
-        ],
+        "goal": [],
         "do": [
           "[sc__day_now_try] = [sc__day_now_try] + 1",
           "TOOL CALL ONLY: call time_now now.",
-          "iana_timezone = [user_timezone].",
-          "It is FORBIDDEN to write to the contact, run FAQs or handlers, or route before capturing the 'now' and 'calendar' fields.",
-          "If you do not execute time_now, STAY here and retry."
+          "iana_timezone = [user_timezone]."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -6223,8 +5625,7 @@
         "node_id": "SC__SC_DAYS",
         "node_type": "message",
         "goal": [
-          "Present the available days from [sc__available_slots], each with the parts of the day (madrugada, mañana, tarde, noche) that have availability, and ask the contact to choose one.",
-          "Use only the date part of start_local; if [sc__available_slots] is stale, return to SC_DEC_T."
+          "Presentar los días de [sc__available_slots] (solo la parte de fecha de start_local), cada uno con las partes del día (madrugada, mañana, tarde, noche) con disponibilidad; si [sc__available_slots] quedó obsoleto, volver a SC_DEC_T."
         ],
         "do": [],
         "trigger": [],
@@ -6252,7 +5653,7 @@
         "node_id": "SC__SC_ASK_D",
         "node_type": "question",
         "goal": [
-          "Capture in [sc__day] the day the contact chooses, exactly as they wrote it ('el viernes', 'Nov 5', 'dia 3', 'mañana'). Do not convert it: the next step turns it into a calendar date. If the reply names no day, leave [sc__day] empty. A time ('a las 7', '7:00') or a part of the day ('en la mañana', 'por la tarde') is not a day: 'mañana' counts as a day only when it means tomorrow."
+          "[sc__day] = el día tal como lo escribió ('el viernes', 'Nov 5', 'dia 3', 'mañana'), sin convertirlo (el siguiente paso lo convierte). Sin día → vacío. Una hora ('a las 7', '7:00') o una parte del día ('en la mañana', 'por la tarde') no es un día; 'mañana' es día solo si significa el día siguiente."
         ],
         "do": [],
         "trigger": [],
@@ -6286,16 +5687,11 @@
       {
         "node_id": "SC__SC_DAY_NOW",
         "node_type": "action",
-        "goal": [
-          "You MUST execute time_now this turn to anchor today's date before converting the chosen day. It is mandatory and your only possible action here.",
-          "It is FORBIDDEN to deduce, estimate, or assume the current date or time from your knowledge, training, or context. The only valid reference is [sc__now]."
-        ],
+        "goal": [],
         "do": [
           "[sc__day_now_try] = [sc__day_now_try] + 1",
           "TOOL CALL ONLY: call time_now now.",
-          "iana_timezone = [user_timezone].",
-          "It is FORBIDDEN to write to the contact, run FAQs or handlers, or route before capturing the 'now' field into [sc__now].",
-          "If you do not execute time_now, STAY here and retry."
+          "iana_timezone = [user_timezone]."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -6344,7 +5740,7 @@
         "node_id": "SC__SC_NORM_D",
         "node_type": "registration",
         "goal": [
-          "Convert the day the contact chose into a calendar date and the label shown to them. The conversion is mechanical, from [sc__calendar] and the dates in [sc__available_slots]; [sc__day] becomes empty when it names no real date."
+          "Conversión mecánica del día elegido a fecha y etiqueta, desde [sc__calendar] y las fechas de [sc__available_slots]; [sc__day] queda vacío si no nombra una fecha real."
         ],
         "do": [],
         "trigger": [],
@@ -6382,7 +5778,7 @@
         ],
         "do": [
           "[sc__day_try] = [sc__day_try] + 1",
-          "First list the distinct dates (YYYY-MM-DD) of the start_local values in [sc__available_slots]. [sc__day] is valid only if it is exactly one of those dates. Do not accept approximate, inferred, or unlisted days: if [sc__day] is not in that list, do not go to SC_HOURS."
+          "[sc__day] es válido solo si es exactamente una de las fechas distintas (YYYY-MM-DD) de start_local en [sc__available_slots]; no aceptar días aproximados ni no listados (si no está, no ir a SC_HOURS)."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -6428,9 +5824,7 @@
       {
         "node_id": "SC__SC_DAY_NA",
         "node_type": "message",
-        "goal": [
-          "Tell the contact the day they asked for is not valid; the node that follows shows the valid days."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -6457,8 +5851,7 @@
         "node_id": "SC__SC_HOURS",
         "node_type": "message",
         "goal": [
-          "Present the available times for [sc__day], filtered from [sc__available_slots].",
-          "Show single times and ranges of consecutive times; if [sc__day] has no valid slots, return to SC_DEC_T."
+          "Horas de [sc__day] filtradas de [sc__available_slots]: horas sueltas y rangos de horas consecutivas; sin horas válidas, volver a SC_DEC_T."
         ],
         "do": [],
         "trigger": [],
@@ -6486,9 +5879,9 @@
         "node_id": "SC__SC_ASK_S",
         "node_type": "question",
         "goal": [
-          "Capture [sc__slot] as the time the contact picks from the times offered for [sc__day] in [sc__available_slots]. A clock time ('a las 3', '10:30', '3 pm'): write it as HH:MM in 24-hour format only when they say am or pm, give the hour together with a part of the day ('3 de la tarde'), or already write a 24-hour time (like '15:30' or '09:00'); a bare hour with no am/pm and no part of the day (like 'a las 3', '3:00' or '10') is copied exactly as they wrote it: never decide am or pm for them. A pick by DESCRIPTION instead of a clock time is copied exactly as the contact wrote it and never turned into a time, because the next step resolves it against the offered times: a part of the day ('por la mañana', 'en la tarde', 'en la noche', 'en la madrugada'), a position among the offered times ('la primera', 'la última', 'la segunda', 'la más temprana', 'la más tarde', 'la penúltima'), or both ('la primera de la mañana', 'la última de la tarde'). 'por la mañana' is the morning, while a bare 'mañana' means tomorrow and is a day, not a time.",
-          "Capture [sc__new_day] only when the contact names a different day (as they wrote it: 'el viernes', 'Nov 5', 'el 3', 'mañana') instead of a time; a bare time, a part of the day ('por la tarde') or a position ('la primera') is never a day. Otherwise leave [sc__new_day] empty.",
-          "Capture [sc__more_days] as yes only when the contact asks to see other dates or the available days again."
+          "[sc__slot] = hora elegida entre las ofrecidas para [sc__day]. Hora de reloj ('a las 3', '10:30', '3 pm') → HH:MM 24 h solo si dice am/pm, da la hora con una parte del día ('3 de la tarde') o ya la escribe en 24 h ('15:30', '09:00'); hora suelta sin am/pm ni parte del día ('a las 3', '3:00', '10') → copiarla tal cual, nunca decidir am o pm. Elección por DESCRIPCIÓN → copiarla tal cual, sin convertirla en hora (el siguiente paso la resuelve contra las ofrecidas): parte del día ('por la mañana', 'en la tarde', 'en la noche', 'en la madrugada'), posición ('la primera', 'la última', 'la segunda', 'la más temprana', 'la más tarde', 'la penúltima') o ambas ('la primera de la mañana'). 'por la mañana' es la franja; 'mañana' suelto es un día, no una hora.",
+          "[sc__new_day] = solo si nombra otro día (tal cual: 'el viernes', 'Nov 5', 'el 3', 'mañana') en vez de una hora; una hora, una parte del día ('por la tarde') o una posición ('la primera') nunca es un día. Si no, vacío.",
+          "[sc__more_days] = yes solo si pide ver otras fechas o los días disponibles otra vez."
         ],
         "do": [],
         "trigger": [],
@@ -6553,7 +5946,7 @@
         "node_id": "SC__SC_RES_T",
         "node_type": "registration",
         "goal": [
-          "Turn what the contact said into one of the offered times, or into nothing when it names none or names several: the resolution is mechanical, from the times offered on [sc__day]. A part of the day or a position works too (\"por la tarde\", \"la primera\", \"la última de la mañana\"); after the list was narrowed to a part of the day, a position refers to that list."
+          "Resolución mecánica de lo dicho → una de las horas ofrecidas en [sc__day], o nada si no nombra ninguna o nombra varias. También vale una parte del día o una posición ('por la tarde', 'la primera', 'la última de la mañana'); tras estrechar la lista a una parte del día, la posición se refiere a esa lista."
         ],
         "do": [],
         "trigger": [],
@@ -6582,7 +5975,7 @@
         "node_id": "SC__SC_SWAP_D",
         "node_type": "registration",
         "goal": [
-          "The contact named another day while choosing a time: make it the day to validate and forget the time of the previous day."
+          "Otro día nombrado al elegir hora: pasa a ser el día a validar; olvidar la hora del día anterior."
         ],
         "do": [],
         "trigger": [],
@@ -6615,9 +6008,7 @@
       {
         "node_id": "SC__SC_DEC_S",
         "node_type": "decision",
-        "goal": [
-          "Check that the time was understood: [sc__slot] holds one offered time on [sc__day], or nothing."
-        ],
+        "goal": [],
         "do": [
           "[sc__slot_try] = [sc__slot_try] + 1"
         ],
@@ -6672,9 +6063,7 @@
       {
         "node_id": "SC__SC_DEC_CHK",
         "node_type": "decision",
-        "goal": [
-          "Resolve the Colombia-time start of the chosen slot and re-verify it is still free."
-        ],
+        "goal": [],
         "do": [
           "[sc__fresh_available_slots] = NULL",
           "[sc__start_date] = PICK [sc__available_slots].start_co AT [sc__day] [sc__slot]",
@@ -6725,7 +6114,7 @@
         "node_id": "SC__SC_SET_PART",
         "node_type": "registration",
         "goal": [
-          "The contact named a part of the day that still leaves several times: remember it so the list is narrowed to it and a following position (\"la primera\") refers to that list."
+          "Parte del día que aún deja varias horas: recordarla para estrechar la lista y que una posición ('la primera') se refiera a esa lista."
         ],
         "do": [],
         "trigger": [],
@@ -6753,9 +6142,7 @@
       {
         "node_id": "SC__SC_NARROW",
         "node_type": "message",
-        "goal": [
-          "Show only the offered times of the part of the day the contact named and ask which one they prefer."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -6781,9 +6168,7 @@
       {
         "node_id": "SC__SC_BAD_TIME",
         "node_type": "message",
-        "goal": [
-          "Tell the contact the time was not understood (it is not offered, or it could be morning or afternoon) and ask again; the offered times are already on screen."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -6810,13 +6195,12 @@
         "node_id": "SC__SC_CHK",
         "node_type": "action",
         "goal": [
-          "You MUST execute get_available_slots this turn to confirm the chosen time is still free. It is mandatory and your only possible action here."
+          "Reconfirmar que la hora elegida sigue libre."
         ],
         "do": [
           "TOOL CALL ONLY: call get_available_slots now.",
           "calendar_type = 'FT' (required in every call to this tool).",
-          "iana_timezone = 'America/Bogota'.",
-          "It is FORBIDDEN to write to the contact, run FAQs or handlers, or route before capturing [sc__fresh_available_slots]."
+          "iana_timezone = 'America/Bogota'."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -6861,7 +6245,7 @@
         "node_id": "SC__SC_CLR",
         "node_type": "registration",
         "goal": [
-          "Start a new availability search from a clean slate: the day, time and booking result of the previous attempt must not leak into the new day list."
+          "Nueva búsqueda desde cero: nada del intento anterior pasa al nuevo listado de días."
         ],
         "do": [],
         "trigger": [],
@@ -6909,7 +6293,7 @@
         "node_id": "SC__SC_CLR_D",
         "node_type": "registration",
         "goal": [
-          "Offer the days again from the same availability: forget the day and time of the previous pick so the list shows days, not the times of one day."
+          "Volver a ofrecer los días con la misma disponibilidad: olvidar el día y la hora anteriores."
         ],
         "do": [],
         "trigger": [],
@@ -6947,9 +6331,7 @@
       {
         "node_id": "SC__SC_TAKEN",
         "node_type": "message",
-        "goal": [
-          "Tell the contact the chosen time is no longer available and go get the current availability."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7009,16 +6391,11 @@
       {
         "node_id": "SC__SC_TIME",
         "node_type": "action",
-        "goal": [
-          "You MUST execute time_now this turn to anchor the current date and time before the summary. It is mandatory and your only possible action here.",
-          "It is FORBIDDEN to deduce, estimate, or assume the current date or time from your knowledge, training, or context. The only valid reference is [sc__now]."
-        ],
+        "goal": [],
         "do": [
           "[sc__time_try] = [sc__time_try] + 1",
           "TOOL CALL ONLY: call time_now now.",
-          "iana_timezone = [user_timezone].",
-          "It is FORBIDDEN to write to the contact, run FAQs or handlers, or route before capturing the 'now' field into [sc__now].",
-          "If you do not execute time_now, STAY here and retry."
+          "iana_timezone = [user_timezone]."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -7063,8 +6440,7 @@
         "node_id": "SC__SC_SUM",
         "node_type": "message",
         "goal": [
-          "Present the appointment summary before confirmation.",
-          "The time must come from the exact object in [sc__available_slots] chosen in [sc__slot]. If it is not traceable, return to SC_DEC_T."
+          "La hora sale del objeto exacto de [sc__available_slots] elegido en [sc__slot]; si no es rastreable, volver a SC_DEC_T."
         ],
         "do": [],
         "trigger": [],
@@ -7092,8 +6468,7 @@
         "node_id": "SC__SC_ASK_OK",
         "node_type": "question",
         "goal": [
-          "Ask for confirmation of the summary before creating the appointment.",
-          "Also capture [sc__fix] when the reply asks to change or gives a new value for the name, phone, email, day or time; otherwise leave [sc__fix] null."
+          "[sc__fix] = también cuando pide cambiar o da un valor nuevo de nombre, teléfono, correo, día u hora; si no, null."
         ],
         "do": [],
         "trigger": [],
@@ -7132,9 +6507,7 @@
       {
         "node_id": "SC__SC_DEC_OK",
         "node_type": "decision",
-        "goal": [
-          "Evaluate the summary confirmation before creating the appointment."
-        ],
+        "goal": [],
         "do": [
           "[sc__ok_try] = [sc__ok_try] + 1"
         ],
@@ -7196,9 +6569,7 @@
       {
         "node_id": "SC__SC_ASK_FIX",
         "node_type": "question",
-        "goal": [
-          "Ask which detail the contact wants to correct."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7231,9 +6602,7 @@
       {
         "node_id": "SC__SC_DEC_FIX",
         "node_type": "decision",
-        "goal": [
-          "Evaluate whether the contact indicated a detail to correct."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7265,13 +6634,11 @@
       {
         "node_id": "SC__SC_FIX",
         "node_type": "registration",
-        "goal": [
-          "Apply the correction indicated by the contact."
-        ],
+        "goal": [],
         "do": [
-          "If the contact gives a new name, phone, or email, set [sc__c_name], [sc__c_phone], or [sc__c_email] to it. If they only say they want to change one of them, set it to NULL.",
-          "If the contact gives a new time, set [sc__slot] to it written as 24-hour HH:MM when they give minutes or am/pm (3 pm is 15:00); a bare hour with no minutes and no am/pm (like 'a las 3') is copied as the number they wrote, never as am or pm. If they only say they want to change the time, set [sc__slot] to NULL.",
-          "If the contact gives a new day, set [sc__day] to it written as YYYY-MM-DD and [sc__slot] to NULL. If they only say they want to change the day, set [sc__day] and [sc__slot] to NULL."
+          "Nuevo nombre/teléfono/correo → [sc__c_name]/[sc__c_phone]/[sc__c_email]; si solo dice que quiere cambiarlo → NULL.",
+          "Nueva hora → [sc__slot] en HH:MM 24 h si da minutos o am/pm (3 pm = 15:00); hora suelta ('a las 3') → copiar el número, nunca decidir am/pm; si solo quiere cambiarla → NULL.",
+          "Nuevo día → [sc__day] en YYYY-MM-DD y [sc__slot] = NULL; si solo quiere cambiarlo → [sc__day] y [sc__slot] = NULL."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -7308,9 +6675,7 @@
       {
         "node_id": "SC__SC_DEC_FIX_R",
         "node_type": "decision",
-        "goal": [
-          "Send the correction back to the step it affects: ask again for a detail that was cleared, show the days or times again when they were cleared, and validate a new time before re-presenting the summary."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7384,9 +6749,7 @@
       {
         "node_id": "SC__SC_DEC_BT",
         "node_type": "decision",
-        "goal": [
-          "Book the appointment."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7426,8 +6789,7 @@
         "node_id": "SC__SC_BOOK",
         "node_type": "action",
         "goal": [
-          "You MUST execute book_appointment this turn. It is mandatory and your only possible action here.",
-          "It is FORBIDDEN to say the appointment is scheduled, booked, or confirmed, or to assume it, before capturing [sc__success] == true. The only valid [sc__success] is the one returned by book_appointment."
+          "Agendada solo si book_appointment devuelve [sc__success] == true."
         ],
         "do": [
           "[sc__book_try] = [sc__book_try] + 1",
@@ -7436,9 +6798,7 @@
           "start_date = [sc__start_date]",
           "duration = <APPOINTMENT_DURATION_MINUTES>. iana_timezone = 'America/Bogota'.",
           "contact_name = [sc__c_name], contact_email = [sc__c_email], contact_phone = [sc__c_phone] (always in +57 format).",
-          "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it).",
-          "It is FORBIDDEN to write to the contact, confirm the appointment, run FAQs or handlers, or route before capturing [sc__success].",
-          "If you do not execute book_appointment, STAY here and retry. NEVER continue with an empty or assumed [sc__success]."
+          "contact_id = [contact.contact_id] (required in every call to this tool; the tool fails without it)."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -7501,9 +6861,7 @@
       {
         "node_id": "SC__SC_DEC_BOOK",
         "node_type": "decision",
-        "goal": [
-          "Determine whether the appointment was created and, if not, route by [sc__reason]."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7556,9 +6914,7 @@
       {
         "node_id": "SC__SC_ERR",
         "node_type": "message",
-        "goal": [
-          "Inform the contact that the appointment could not be created at this moment."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7584,9 +6940,7 @@
       {
         "node_id": "SC__SC_ASK_AGAIN",
         "node_type": "question",
-        "goal": [
-          "Ask whether the contact wants to try another availability option."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7619,9 +6973,7 @@
       {
         "node_id": "SC__SC_DEC_AGAIN",
         "node_type": "decision",
-        "goal": [
-          "Evaluate whether the contact wants to look for another availability option."
-        ],
+        "goal": [],
         "do": [
           "[sc__retry_try] = [sc__retry_try] + 1"
         ],
@@ -7662,9 +7014,7 @@
       {
         "node_id": "SC__SC_DONE",
         "node_type": "message",
-        "goal": [
-          "Confirm the scheduled appointment only after book_appointment returns success == true."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7690,9 +7040,7 @@
       {
         "node_id": "SC__SC_EMAIL",
         "node_type": "message",
-        "goal": [
-          "No link came back: say that an email with the appointment information is on its way and ask to check the spam folder."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7718,9 +7066,7 @@
       {
         "node_id": "SC__SC_COMMIT",
         "node_type": "message",
-        "goal": [
-          "Very short Sandler close: the appointment is a commitment, so the opportunity should not be lost."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7746,9 +7092,7 @@
       {
         "node_id": "SC__SC_BYE",
         "node_type": "message",
-        "goal": [
-          "Say goodbye after a successful scheduling."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7775,8 +7119,8 @@
         "node_id": "SC__SC_LISTEN",
         "node_type": "question",
         "goal": [
-          "Stay available after a successful scheduling in case the contact has more questions. Never re-ask anything explicitly; only the global router (FAQs/handlers) should react to what the contact says.",
-          "Capture end_closing = 'yes' only when the contact's latest message just thanks, says goodbye or acknowledges (for example 'thanks', 'ok', 'bye') and asks or requests nothing new; capture 'no' for anything else."
+          "Tras agendar, seguir disponible: nada se repregunta; solo el router global (FAQs/handlers) reacciona a lo que diga.",
+          "end_closing = 'yes' solo si el último mensaje solo agradece, se despide o asiente ('gracias', 'ok', 'chao') y no pide nada nuevo; si no, 'no'."
         ],
         "do": [
           "[sc__end_try] = [sc__end_try] + 1"
@@ -7826,7 +7170,7 @@
         "node_id": "SC__SC_NO_BOOK",
         "node_type": "message",
         "goal": [
-          "Sandler soft close: scheduling could not be completed. No chasing and no pressure: leave the door open and let the contact come back when it suits them."
+          "Cierre suave: la cita no se pudo completar; sin presionar, dejando la puerta abierta."
         ],
         "do": [],
         "trigger": [],
@@ -7853,12 +7197,8 @@
       {
         "node_id": "SC__SC_TO_C",
         "node_type": "subflow_change",
-        "goal": [
-          "Transición del subflow de agendamiento al subflow de callback."
-        ],
-        "do": [
-          "Cargar el documento de referencia del subflow CALLBACK antes de continuar."
-        ],
+        "goal": [],
+        "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
@@ -7881,9 +7221,7 @@
       {
         "node_id": "CALL_END_NO_ANSWER",
         "node_type": "terminal",
-        "goal": [
-          "Estado terminal cuando la llamada no fue contestada."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7899,9 +7237,7 @@
       {
         "node_id": "TERMINAL_NO_INPUT",
         "node_type": "terminal",
-        "goal": [
-          "Finaliza la llamada tras múltiples intentos fallidos por ausencia de input comprensible."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7919,9 +7255,7 @@
       {
         "node_id": "CALL_END",
         "node_type": "terminal",
-        "goal": [
-          "Generic call closure."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7939,9 +7273,7 @@
       {
         "node_id": "C__CB_END",
         "node_type": "terminal",
-        "goal": [
-          "Cerrar la llamada."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7959,9 +7291,7 @@
       {
         "node_id": "O__OP_END_NO",
         "node_type": "terminal",
-        "goal": [
-          "Cerrar la llamada cuando no hay consentimiento o el usuario no quiere continuar."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7979,9 +7309,7 @@
       {
         "node_id": "O__OP_END_STOP",
         "node_type": "terminal",
-        "goal": [
-          "Cerrar la llamada después de registrar la oposición al contacto."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7999,9 +7327,7 @@
       {
         "node_id": "O__OP_END_WRONG",
         "node_type": "terminal",
-        "goal": [
-          "Cerrar la llamada después de detectar número equivocado."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -8017,9 +7343,7 @@
       {
         "node_id": "O__OP_END_PROG",
         "node_type": "terminal",
-        "goal": [
-          "Cerrar la llamada después de confirmar que la usuaria ya participa en otro programa."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -8035,9 +7359,7 @@
       {
         "node_id": "Q__SQ_END",
         "node_type": "terminal",
-        "goal": [
-          "Cerrar la llamada al finalizar el subflow de preguntas de gestante."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -8053,9 +7375,7 @@
       {
         "node_id": "SC__SC_TRUE_END",
         "node_type": "terminal",
-        "goal": [
-          "Formal exit point for the scheduling subflow. Reached only when SC_LISTEN closes (the contact says thanks or goodbye) or its safety valve trips; SC_LISTEN otherwise stays open so the contact can keep asking questions after booking; this only exists to satisfy the compiler's requirement of a real terminal state."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -8191,21 +7511,13 @@
         "route": [
           {
             "target": "O__OP_TO_C",
-            "condition_text": "IF [o__who] != 'yes' -> GO_TO: O__OP_TO_C",
-            "is_mechanical": true,
-            "python_expression": "o__who != 'yes'",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "[current_state]",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
             "reason": null
           }
-        ]
+        ],
+        "fallback": []
       },
       {
         "node_id": "HNDLR_CANNOT_TALK_NOW",
@@ -8247,9 +7559,7 @@
         "do": [],
         "trigger": [
           "quiero agendar una cita",
-          "quiero agendar cita",
           "quiero una cita",
-          "quiero programar una cita",
           "agendar una cita de una vez",
           "agendemos una cita",
           "agendar cita"
@@ -8391,7 +7701,6 @@
         "trigger": [
           "no quiero agendar",
           "no quiero la cita",
-          "no quiero agendar la cita",
           "the contact says they do not want to schedule the appointment (never a plain no to a yes/no question about their data)"
         ],
         "disabled_in": [],
@@ -8420,7 +7729,7 @@
         "goal": [],
         "do": [],
         "trigger": [
-          "an open question about the company, the surrogacy program, requirements, the process, the appointment or how things work that is not answered by any FAQ or other handler (never the answer to what the agent just asked, never a request to book an appointment, never a question about which dates or times are available for the appointment, such as 'qué fechas tienes' or 'qué otros días hay', which belongs to the scheduling)"
+          "an open question about the company, the program, requirements, the process, the appointment or how things work that no FAQ or other handler answers (never the answer to what the agent just asked, never a request to book, never a question about which dates or times are available, such as 'qué fechas tienes' or 'qué otros días hay', which belongs to scheduling)"
         ],
         "disabled_in": [],
         "say": [],
@@ -8446,10 +7755,8 @@
         "goal": [],
         "do": [],
         "trigger": [
-          "donde estan ubicados",
           "dónde están ubicados",
           "en qué ciudad están",
-          "donde queda",
           "ubicación"
         ],
         "disabled_in": [
@@ -8480,8 +7787,6 @@
         "goal": [],
         "do": [],
         "trigger": [
-          "de cuanto es la duracion de la cita",
-          "cuanto dura la cita",
           "de cuánto es la duración de la cita",
           "cuánto dura la cita",
           "cuanto tiempo dura la cita"
@@ -9836,7 +9141,7 @@
         {
           "name": "contact_id",
           "required": false,
-          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
+          "description": "CRM contact the appointment belongs to: the conversation's contact_id, which the platform provides in the contact. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
           "type_expr": "str",
           "examples": []
         },
@@ -10151,61 +9456,31 @@
     "CLINIC_EMAIL": "contacto arroba babynovaclinic punto com",
     "CLINIC_WEBSITE": "babynovaclinic punto com",
     "CLINIC_HOURS": "lunes a viernes de siete de la mañana a cuatro de la tarde, y sábados de ocho a once de la mañana",
-    "CLINIC_SERVICES": "donación de óvulos, gestación subrogada, método ROPA, inseminación artificial, fertilización in vitro, consultas de fertilidad y programas para pacientes internacionales",
-    "CLINIC_ABOUT": "BabyNova Clinic by Novafem es una clínica especializada en fertilidad y reproducción asistida en Bogotá, con un equipo médico de amplia experiencia, tecnología de vanguardia y protocolos personalizados. Atiende pacientes de Colombia y del exterior.",
     "MAX_KB_ROUNDS": "8",
     "KB_SIDE_NUDGE_AFTER": "2",
-    "END_LISTEN_MAX_ATTEMPTS": "3"
+    "END_LISTEN_MAX_ATTEMPTS": "3",
+    "NEXT_STEP_CLASSES": "schedule: quiere agendar, reservar o seguir con la cita, o dice claramente que no tiene nada (más) que preguntar ('no', 'nada más', 'eso es todo', 'estoy listo'); un mensaje sobre cualquier otra cosa no es schedule. question: dice que tiene una pregunta o duda sin decirla ('tengo una duda', 'I have a question') o un 'sí' suelto a esta pregunta. ambiguous: sin contenido propio que no aclara si agenda o pregunta ('ok', 'vale', 'bueno', 'mmm', 'maybe', 'tal vez', 'puede ser', 'no sé', un emoji), aunque 'ok' suene a acuerdo. ask: cualquier otra cosa con contenido: pregunta, petición ('cuénteme de…') o afirmación sobre sí misma o su situación ('somos pareja del mismo sexo'), que se responde como una pregunta. Entre schedule y ask, ante la duda: ask. Solo un deseo claro de agendar o un 'nada que preguntar' claro pasa al agendamiento; todo lo demás se responde o aclara primero"
   },
   "session_timeout_minutes": null,
   "say_policies": [
-    "Habla de forma natural y conversacional, como una asesora real. Evita sonar robótica o excesivamente formal.",
+    "Habla de forma natural y conversacional, como una asesora real; sin sonar robótica ni excesivamente formal. Frases cortas; sin listas ni bullets (varias opciones se presentan en forma oral: 'La primera opción es... la segunda es...').",
     "REGLA IMPERATIVA DE TRATO: Usa siempre \"usted\" con la candidata y con cualquier persona que conteste. Nunca tutees. Las líneas SAY flex deben decirse en usted. No uses emojis, símbolos ni formato de texto: todo se dice en voz.",
-    "REGLA IMPERATIVA DE ACCIONES SILENCIOSAS: Nunca le digas a la usuaria que estás guardando, registrando, actualizando, calculando, verificando, consultando o procesando información, ni menciones herramientas, sistemas, campos, el CRM o el IMC como cálculo. Ejecuta las acciones en silencio. Después de cada respuesta de la usuaria, como máximo di un acuse breve y natural (por ejemplo \"Perfecto\", \"Listo\", \"Entiendo\") y pasa directo a la siguiente pregunta.",
-    "Usa frases cortas. En voz, las oraciones largas son difíciles de seguir.",
-    "No uses listas ni bullets en voz. Si tienes varias opciones, preséntales de forma oral: 'La primera opción es... la segunda es...'.",
-    "Cuando el usuario haga una pausa larga, espera antes de interrumpir. Puede estar pensando.",
-    "Si el usuario pide que repitas algo, repítelo con las mismas palabras clave pero con entonación ligeramente diferente.",
-    "Confirma lo que escuchaste antes de continuar cuando la información es crítica (número de teléfono, fecha, nombre).",
-    "Prioriza siempre la voz del usuario. Si detectas audio del usuario mientras estás hablando, detén tu salida de voz inmediatamente (Barge-in activo).",
-    "No retomes la frase que estabas diciendo si el usuario ya respondió a la intención de la pregunta. Salta directamente a procesar la nueva información.",
-    "Si la interrupción del usuario fue solo un ruido o una palabra breve de afirmación (ej. 'ajá', 'sí', 'entiendo'), haz una breve pausa y continúa de forma fluida sin reiniciar la frase.",
-    "Mantén un estado de escucha activa: si el usuario interrumpe con una pregunta nueva, descarta tu respuesta anterior y prioriza resolver su duda actual.",
-    "Reduce la latencia de respuesta tras una interrupción para que el usuario sienta que le estás poniendo atención inmediata.",
-    "Si el usuario responde antes de que termines una pregunta, valida solo la información nueva y pasa al siguiente paso. No repitas lo que el usuario ya dio por sentado.",
-    "En caso de interrupción por ruido ambiental persistente, detente y pregunta amablemente: 'Disculpe, no le escuché bien, ¿me lo repite?' en lugar de seguir hablando al vacío.",
-    "Usa marcadores discursivos de transición tras una interrupción (ej. 'Entiendo', 'Perfecto', 'Ah, vale') para demostrar que procesaste lo que el usuario dijo mientras hablabas.",
-    "Si el usuario te interrumpe para corregir un dato, prioriza la corrección inmediatamente y confirma el cambio antes de seguir con el flujo principal.",
-    "Evita los 'choques de voz': si ambos comienzan a hablar al mismo tiempo, cede el turno al usuario de inmediato y espera 1.5 segundos de silencio antes de intentar retomar.",
-    "REGLA IMPERATIVA DE DISPONIBILIDAD: Está prohibido ofrecer, sugerir, inferir, resumir o prometer días, horas, rangos de agenda o disponibilidad si antes no ejecutaste get_available_slots y recibiste available_slots como lista real, no vacía y parseable de slots devueltos por la herramienta.",
-    "REGLA IMPERATIVA DE NO ALUCINACIÓN DE AGENDA: Nunca inventes fechas, horas, rangos, turnos aproximados, disponibilidad tentativa ni expresiones como 'podría ser' o 'tenemos espacio' usando conocimiento general, memoria, preferencia del usuario o contexto conversacional. La única fuente autorizada para disponibilidad es la salida literal más reciente de get_available_slots.",
-    "Si estás en agendamiento y get_available_slots no fue llamada, falló, devolvió datos nulos, devolvió un formato inválido, devolvió available_slots vacía o no hay una lista de slots trazable a la herramienta, detén la selección de día/hora: no respondas con opciones, no improvises y vuelve inmediatamente a SC_AVAIL para ejecutar get_available_slots otra vez.",
-    "Solo puedes aceptar un día si existe literalmente en los campos fecha de start_local de available_slots. Si el usuario pide un día que no aparece en available_slots, indica que no está entre las opciones consultadas y vuelve a ofrecer únicamente los días devueltos por get_available_slots.",
-    "Solo puedes aceptar una hora si corresponde literalmente a un slot dentro de available_slots para el día elegido. Si el usuario propone una hora que no está en la salida de get_available_slots, no la ajustes ni busques una aproximación: vuelve a las opciones disponibles de la herramienta.",
-    "REGLA IMPERATIVA DE RESERVA: Está prohibido decir que una cita quedó agendada, reservada, separada, confirmada o creada antes de ejecutar book_appointment y recibir success == true. Antes de esa respuesta solo puedes decir que vas a crear la cita o que estás verificando el agendamiento.",
-    "Para llamar book_appointment, usa exclusivamente el slot confirmado que proviene de available_slots: start_date debe ser el start_co literal del objeto seleccionado, el calendario, la duración y los datos del contacto ya van configurados en la herramienta. Nunca fabriques start_date, end_date, correo, teléfono ni nombre.",
+    "REGLA IMPERATIVA DE ACCIONES SILENCIOSAS: Nunca digas que estás guardando, registrando, actualizando, calculando, verificando, consultando o procesando información, ni menciones herramientas, sistemas, campos, el CRM o el IMC como cálculo; ejecuta las acciones en silencio. Tras cada respuesta de la usuaria, como máximo un acuse breve y natural ('Perfecto', 'Listo', 'Entiendo') y pasa directo a la siguiente pregunta.",
+    "Escucha: si el usuario hace una pausa larga, espera (puede estar pensando). Si pide que repitas algo, repite las mismas palabras clave con entonación ligeramente diferente. Confirma lo que escuchaste antes de continuar cuando la información es crítica (teléfono, fecha, nombre).",
+    "Interrupciones (barge-in activo): si el usuario habla mientras hablas, detén tu voz de inmediato y cédele el turno (si ambos empiezan a la vez, espera 1.5 segundos de silencio antes de retomar); no retomes la frase si ya respondió a la intención de la pregunta. Ruido o asentimiento breve ('ajá', 'sí', 'entiendo'): pausa breve y continúa sin reiniciar la frase. Pregunta nueva o corrección de un dato: descarta tu respuesta anterior, resuélvelo y confirma el cambio antes de seguir. Si responde antes de que termines la pregunta, valida solo lo nuevo y avanza. Tras una interrupción usa un marcador de transición ('Entiendo', 'Perfecto', 'Ah, vale') y responde con la menor latencia posible.",
+    "Ruido ambiental persistente: detente y pregunta amablemente 'Disculpe, no le escuché bien, ¿me lo repite?' en lugar de seguir hablando al vacío.",
+    "REGLA IMPERATIVA DE DISPONIBILIDAD: Está prohibido ofrecer, sugerir, inferir, resumir o prometer días, horas, rangos de agenda o disponibilidad (tampoco 'podría ser' ni 'tenemos espacio') sin haber ejecutado get_available_slots y recibido available_slots como lista real, no vacía y parseable; la única fuente es su salida literal más reciente. Solo aceptas un día presente en las fechas de start_local de available_slots y una hora que sea un slot de ese día; si el usuario propone otro, no lo ajustes ni lo aproximes: dile que no está entre las opciones consultadas y vuelve a ofrecer solo lo que devolvió la herramienta. Si get_available_slots no se llamó, falló o devolvió nulos, formato inválido o lista vacía: detén la selección de día/hora, no respondas con opciones ni improvises, y vuelve a SC_DEC_T para ejecutarla otra vez.",
+    "REGLA IMPERATIVA DE RESERVA: Está prohibido decir que una cita quedó agendada, reservada, separada, confirmada o creada antes de ejecutar book_appointment y recibir success == true; antes solo puedes decir que vas a crear la cita o que estás verificando el agendamiento. start_date es el start_co literal del slot elegido de available_slots; el calendario, la duración y los datos del contacto ya van configurados en la herramienta; nunca fabriques start_date, end_date, correo, teléfono ni nombre.",
     "Antes de decir que hubo cambios en el programa, verifica primero si la persona ya está en algún proceso con <COMPANY_NAME>; solo informa cambios si esa verificación confirma que aplica a su caso.",
-    "Manejar la asignación en dos pasos consecutivos: primero presentar los días disponibles para que el usuario elija uno y, solo después de que haya seleccionado la fecha, proceder a ofrecer las opciones de horas correspondientes a ese día.",
-    "Al listar opciones de citas, mencionar únicamente la hora de inicio, omitiendo cualquier detalle adicional como la duración o el lugar, para asegurar una comunicación clara y sin información superflua.",
-    "Al presentar la disponibilidad horaria, no leas la lista de forma literal si eso suena mecánico: primero agrupa las horas consecutivas y luego exprésalas en el formato más natural para el usuario.",
-    "Si el día tiene 3 opciones o menos, menciona cada hora de forma individual y en orden, por ejemplo: 'dos de la tarde, dos y veinte de la tarde y dos y cuarenta de la tarde'.",
-    "Si el día tiene más de 3 opciones y todas forman un único bloque continuo, resume ese bloque como un solo rango, por ejemplo: 'tenemos disponibilidad de dos a tres y cuarenta de la tarde'.",
-    "Si el día tiene más de 3 opciones y están separadas en varios bloques, describe cada bloque como un rango independiente y únelos con 'y', por ejemplo: 'tenemos disponibilidad de dos a dos y cuarenta y de cuatro a cinco y cuarenta de la tarde'.",
-    "Presentar fechas usando día de semana, número de día y nombre del mes de forma natural y fluida, por ejemplo: 'lunes 5 de julio'.",
-    "Indicar horas en formato de 12 horas, expresándolas siempre en palabras y nunca de forma numérica (por ejemplo: 'tres y veinte de la tarde' en lugar de '3:20 de la tarde'), detallando 'de la mañana' para am y 'de la tarde' para pm, siguiendo la costumbre de Colombia.",
-    "Nunca hagas diagnósticos médicos ni recomiendes tratamientos específicos.",
-    "No garantices la participación de la candidata en el programa. Aclara que la decisión depende de una evaluación posterior.",
-    "No compartas información médica o personal de la candidata con terceros sin autorización explícita.",
+    "Agendamiento en dos pasos: primero los días disponibles y, solo después de que elija fecha, las horas de ese día. Al listar horas menciona solo la hora de inicio (sin duración ni lugar) y no leas la lista de forma literal si suena mecánico: agrupa las horas consecutivas. Hasta 3 opciones: cada hora en orden ('dos de la tarde, dos y veinte de la tarde y dos y cuarenta de la tarde'). Más de 3 en un solo bloque continuo: un único rango ('tenemos disponibilidad de dos a tres y cuarenta de la tarde'). Más de 3 en varios bloques: un rango por bloque unidos con 'y' ('de dos a dos y cuarenta y de cuatro a cinco y cuarenta de la tarde'). Fechas con día de semana, número y mes ('lunes 5 de julio'). Horas en formato de 12 horas, siempre en palabras y nunca numéricas ('tres y veinte de la tarde', no '3:20 de la tarde'), con 'de la mañana' para am y 'de la tarde' para pm (costumbre de Colombia).",
+    "Nunca hagas diagnósticos médicos ni recomiendes tratamientos específicos. No garantices la participación: depende de una evaluación posterior.",
+    "No compartas información médica o personal de la candidata con terceros sin autorización explícita, ni reveles el motivo de la llamada (programa de gestantes) a quien conteste el teléfono si no es ella.",
     "No aceptes pagos ni datos bancarios durante la llamada.",
-    "Si la candidata menciona una emergencia médica, deriva inmediatamente a servicios de urgencias y termina la llamada.",
-    "Respeta el derecho del usuario a no ser contactado. Si lo solicita, registra la oposición y cierra la llamada con cortesía.",
-    "No reveles el motivo específico de la llamada (programa de gestantes) a terceros que contesten el teléfono.",
-    "En cada question, usa un retry counter dedicado: si la respuesta es inválida o no parseable, incrementa el contador y vuelve a preguntar; si la respuesta es válida pero negativa para la regla de negocio, sigue la rama de exclusión; si se supera <MAX_RETRY_ATTEMPTS>, usa el fallback seguro sin mezclar ambos casos."
+    "Si la candidata menciona una emergencia médica, deriva de inmediato a servicios de urgencias y termina la llamada.",
+    "Respeta el derecho a no ser contactada: si lo solicita, registra la oposición y cierra la llamada con cortesía."
   ],
   "judgment_policies": [
-    "Los slots de memoria se referencian con corchetes en el DSL. No inventes slots no declarados.",
-    "Nunca verbalices el contenido de variables internas, slots de memoria ni IDs de estado.",
-    "REGLA DE GUARDADO EN CRM: Cada vez que captures una respuesta válida del formulario, ejecuta update_custom_field en silencio, una vez por dato, con name y value así: [o__interest] → surrogate_interest (si/no); [q__surrogate_age] → surrogate_age (solo el número); [q__city_residence] → city_residence (ciudad bien escrita); [q__children_count] → children_count; [q__last_birth_date] → last_birth_date (formato año-mes-día, por ejemplo 2024-05-15); [q__csections_count] → csections_count; [q__abortos] → abortions_history (si/no); [q__pree] → preeclampsia_history (si/no); [q__weight] → weight_kg; [q__height] → height_cm (en centímetros); [q__imc] → bmi; [q__nationality] → nationality; [q__classification_result] → screening_status (el resultado tal como lo devolvió la herramienta). Nunca menciones este guardado a la candidata. Si update_custom_field falla, continúa la conversación normalmente.",
+    "REGLA DE GUARDADO EN CRM: cada respuesta válida del formulario se guarda en silencio con update_custom_field (estados SQ_SYNC_* y OP_SYNC_*), una vez por dato. Formato de value: si/no para abortions_history y preeclampsia_history; solo el número en surrogate_age; ciudad bien escrita en city_residence; last_birth_date en año-mes-día (2024-05-15); height_cm en centímetros; screening_status = el resultado tal como lo devolvió la herramienta. Si update_custom_field falla, continúa normalmente.",
     "RESPUESTAS DE BASE DE CONOCIMIENTO: una pregunta abierta sobre la empresa, el programa o el proceso se responde únicamente con el texto que devuelve kb_answer. Nunca la respondas con tu propio conocimiento. La elegibilidad nunca la decides tú: solo la herramienta de clasificación la decide."
   ],
   "output_rules": [
