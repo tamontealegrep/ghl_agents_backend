@@ -41,7 +41,11 @@ def test_every_booking_and_finding_step_sends_the_contact_id(company, slug):
 
     assert {n["execute"] for n in steps} == set(_tools_of(slug))
     for step in steps:
-        assert any("contact_id = {{contact.contact_id}}" in line for line in step["do"]), step["do"]
+        # `{{contact.contact_id}}` where the agent declares the input variable, `[contact.contact_id]` where the
+        # platform provides it without the agent declaring it (BabyNova voice).
+        assert any(
+            line.startswith("contact_id = ") and "contact.contact_id" in line for line in step["do"]
+        ), step["do"]
 
 
 @pytest.mark.parametrize(("company", "slug"), SCHEDULING_AGENTS)
