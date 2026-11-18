@@ -15,7 +15,7 @@ Agentes de BabyNova y sus rutas:
 |---|---|---|
 | `babynova_triage_obstetrico_text` | Texto (GoHighLevel) | `POST /agents/babynova/triage-text` (webhook) |
 | `babynova_surrogate_questions_text` | Texto (GoHighLevel) | `POST /agents/babynova/surrogate-questions-text` (webhook) |
-| `babynova_surrogate_questions_voice`, `babynova_surrogate_questions_voice_v2` | Voz | `POST /agents/<agente>/chat` |
+| `babynova_surrogate_questions_voice` | Voz | `POST /agents/<agente>/chat` |
 | (herramientas del plugin `surrogacy`) | Ambos | `POST /agents/babynova/tools/<herramienta>-ghl` y `-sur` |
 | (herramientas built-in de GHL: `add-tags`, `remove-tags`, `update-contact`, `update-opportunity`, `update-custom-field`, ...) | Ambos | `POST /builtin-tools/<herramienta>` |
 
@@ -94,12 +94,12 @@ Guarda los cambios: Render reinicia el servicio.
    curl https://<servicio>.onrender.com/health
    ```
 
-   Debe listar los cuatro agentes: `babynova_triage_obstetrico_text`, `babynova_surrogate_questions_text`, `babynova_surrogate_questions_voice` y `babynova_surrogate_questions_voice_v2`. Si `agents` viene vacío, la imagen no trae bundles (revisa que `companies/babynova/bundles` esté en el commit desplegado).
+   Debe listar los tres agentes: `babynova_triage_obstetrico_text`, `babynova_surrogate_questions_text` y `babynova_surrogate_questions_voice`. Si `agents` viene vacío, la imagen no trae bundles (revisa que `companies/babynova/bundles` esté en el commit desplegado).
 
 3. Prueba un agente de voz o de chat:
 
    ```bash
-   curl -X POST https://<servicio>.onrender.com/agents/babynova_surrogate_questions_voice_v2/chat \
+   curl -X POST https://<servicio>.onrender.com/agents/babynova_surrogate_questions_voice/chat \
      -H "X-API-Key: <API_TOKEN>" -H "Content-Type: application/json" \
      -d '{"message": "Hola", "contact": {"contact_id": "<id de un contacto de prueba>"}}'
    ```
