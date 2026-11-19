@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conferma della tua consulenza con Family Aims</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f7f9fb; font-family: Arial, Helvetica, sans-serif; color:#243447;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f7f9fb; padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; background-color:#ffffff; border-radius:14px; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,0.06);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color:#eaf4ff; padding:28px 32px; text-align:center;">
+              <h1 style="margin:0; font-size:24px; color:#1f6fb2; font-weight:700;">
+                🎉 La tua consulenza è confermata!
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              <p style="font-size:16px; line-height:1.6; margin:0 0 18px;">
+                Ciao <strong>${contact_name}</strong>,
+              </p>
+
+              <p style="font-size:16px; line-height:1.6; margin:0 0 18px;">
+                La tua consulenza è stata prenotata con successo! Siamo molto felici di avere l'opportunità di parlare con te.
+              </p>
+
+              <p style="font-size:16px; line-height:1.6; margin:0 0 18px;">
+                Vogliamo conoscerti meglio, capire le tue esigenze e vedere come possiamo sostenerti nei primi passi di questo percorso.
+              </p>
+
+              <!-- Dettagli della consulenza -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f8ff; border-radius:10px; padding:18px; margin:24px 0;">
+                <tr>
+                  <td style="font-size:16px; line-height:1.8; color:#243447;">
+                    📅 <strong>Data:</strong> ${booking_date}<br />
+                    ⏰ <strong>Orario:</strong> ${booking_time}<br />
+                    📍 <strong>Piattaforma:</strong> Videochiamata online<br />
+                    🎥 <strong>Google Meet:</strong> <a href="${meet_link}" style="color:#1f6fb2;">Partecipa alla videochiamata</a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size:16px; line-height:1.6; margin:0 0 22px;">
+                Usa i pulsanti qui sotto per confermare la tua presenza e partecipare alla videochiamata:
+              </p>
+
+              <!-- Pulsante calendario -->
+              <table cellpadding="0" cellspacing="0" style="margin:0 0 12px;">
+                <tr>
+                  <td align="center" bgcolor="#1f6fb2" style="border-radius:8px;">
+                    <a href="${calendar_link}" target="_blank" style="display:inline-block; padding:14px 24px; font-size:16px; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px;">
+                      📆 Aggiungi al mio calendario
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Pulsante Google Meet -->
+              <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+                <tr>
+                  <td align="center" bgcolor="#34a853" style="border-radius:8px;">
+                    <a href="${meet_link}" target="_blank" style="display:inline-block; padding:14px 24px; font-size:16px; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px;">
+                      🎥 Partecipa a Google Meet
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size:16px; line-height:1.6; margin:0 0 18px;">
+                In Family Aims sappiamo quanto sia importante questo momento e ci impegniamo a camminare al tuo fianco in ogni fase di questo percorso così speciale verso la creazione della tua famiglia. ✨
+              </p>
+
+              <p style="font-size:16px; line-height:1.6; margin:0 0 18px;">
+                Se per qualsiasi motivo dovessi apportare modifiche o riprogrammare la data, puoi farlo tramite il link di conferma che hai ricevuto o rispondendo a questa e-mail con anticipo.
+              </p>
+
+              <p style="font-size:16px; line-height:1.6; margin:0 0 24px;">
+                A presto! 💙
+              </p>
+
+              <p style="font-size:16px; line-height:1.6; margin:0;">
+                Un caro saluto,<br />
+                <strong>Il team di Family Aims</strong>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#f7f9fb; padding:22px 32px; text-align:center;">
+              <p style="font-size:13px; line-height:1.5; color:#6b7c8f; margin:0 0 10px;">
+                Family Aims · Al tuo fianco nel percorso per formare una famiglia
+              </p>
+              <p style="font-size:13px; line-height:1.5; margin:0;">
+                <a href="https://familyaims.com/" target="_blank" style="color:#1f6fb2; text-decoration:none;">
+                  Visita il nostro sito
+                </a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

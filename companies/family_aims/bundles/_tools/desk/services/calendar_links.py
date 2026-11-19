@@ -14,11 +14,17 @@ TITLES = {
     "ES": "Cita con Family Aims",
     "EN": "Appointment with Family Aims",
     "PT": "Consulta com a Family Aims",
+    "FR": "Consultation avec Family Aims",
+    "DE": "Beratung bei Family Aims",
+    "IT": "Consulenza con Family Aims",
 }
 DETAILS = {
     "ES": "Enlace de la videollamada: {meet}",
     "EN": "Video call link: {meet}",
     "PT": "Link da videochamada: {meet}",
+    "FR": "Lien de la visioconférence : {meet}",
+    "DE": "Link zur Videokonferenz: {meet}",
+    "IT": "Link della videochiamata: {meet}",
 }
 
 
@@ -30,7 +36,7 @@ def build_add_to_calendar_link(
     Args:
         start_dt: Appointment start, timezone-aware.
         end_dt: Appointment end, timezone-aware.
-        language: ``ES``, ``EN`` or ``PT`` (any case); anything else falls back to ``ES``.
+        language: a key of ``TITLES`` (``ES``, ``EN``, ``PT``, ``FR``, ``DE``, ``IT``; any case); anything else falls back to ``ES``.
         meet_link: Video-call link, put in the location and the description when there is one.
 
     Returns:

@@ -47,7 +47,7 @@ class FindAppointmentRequest(BaseModel):
     )
     calendar_type: str = Field(examples=["FT"], description="Calendar key (see GET /calendars), e.g. 'FT'")
     iana_timezone: str = Field(default="America/Bogota", examples=["America/Bogota"])
-    language: str = Field(default="ES", examples=["ES", "EN", "PT"])
+    language: str = Field(default="ES", examples=["ES", "EN", "PT", "FR", "DE", "IT"])
 
 
 class AppointmentInfo(BaseModel):
@@ -81,7 +81,7 @@ class EditAppointmentRequest(BaseModel):
     new_start_date: str | None = Field(default=None, examples=["2026-08-28T10:00:00-05:00"])
     new_duration: str | None = Field(default=None, examples=["30"])
     iana_timezone: str = Field(default="America/Bogota", examples=["America/Bogota"])
-    language: str = Field(default="ES", examples=["ES", "EN", "PT"])
+    language: str = Field(default="ES", examples=["ES", "EN", "PT", "FR", "DE", "IT"])
 
 
 class EditAppointmentResponse(BaseModel):
