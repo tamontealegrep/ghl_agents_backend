@@ -4727,13 +4727,13 @@
         "node_id": "LM__LM_ASK_LANG",
         "node_type": "question",
         "goal": [
-          "Ask the user which language they prefer to continue in using a six-language message."
+          "Ask the user which language they prefer to continue in using one short question in each language followed by the language names."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Te puedo atender en español. I can assist you in English. Posso atender em português. Je peux vous répondre en français. Ich kann Ihnen auf Deutsch helfen. Posso risponderti in italiano. ¿En qué idioma prefieres continuar? / Which language do you prefer? / Em qual idioma você prefere conversar? / Dans quelle langue préférez-vous continuer ? / Welche Sprache bevorzugen Sie? / Quale lingua preferisci?"
+          "¿En qué idioma prefieres continuar? / Which language do you prefer? / Em qual idioma prefere continuar? / Dans quelle langue préférez-vous continuer ? / In welcher Sprache möchten Sie fortfahren? / In quale lingua preferisci continuare?\n\nEspañol · English · Português · Français · Deutsch · Italiano"
         ],
         "say_verbatim": false,
         "execute": null,
