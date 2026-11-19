@@ -155,6 +155,7 @@ _STORE_DAY_LABEL_RE = re.compile(r"^DAY_(LABEL|TITLE|FULL)\s+\[([a-zA-Z_][a-zA-Z
 _STORE_CONTACT_RE = re.compile(r"^\{\{contact\.([a-zA-Z_][a-zA-Z0-9_]*)\}\}$")
 _STORE_LANGUAGE_NAME_RE = re.compile(r"^LANGUAGE_NAME\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]$")
 _STORE_MESSAGE_LANGUAGE_RE = re.compile(r"^(MESSAGE_LANGUAGE|REQUESTED_LANGUAGE)$")
+_STORE_BARE_REPLY_RE = re.compile(r"^BARE_REPLY$")
 _STORE_FIRST_WORD_RE = re.compile(r"^FIRST_WORD\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]$")
 _STORE_FIND_DAY_RE = re.compile(r"^FIND_DAY\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]\s+IN\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]$")
 _STORE_PICK_RE = re.compile(
@@ -319,6 +320,11 @@ def _apply_store_line(line: str, ctx: LLMContext, llm_client: LLMClient) -> None
     language_name = _STORE_LANGUAGE_NAME_RE.match(rhs)
     if language_name:
         slots[name] = languages.resolve(slots.get(language_name.group(1))).name
+        return
+
+    if _STORE_BARE_REPLY_RE.match(rhs):
+        # 'yes' when the latest message is only a yes, a no or an acknowledgement ("sí", "vale"): it picks nothing
+        slots[name] = "yes" if _is_bare_yes_no(ctx.last_user_message) else None
         return
 
     detection = _STORE_MESSAGE_LANGUAGE_RE.match(rhs)
