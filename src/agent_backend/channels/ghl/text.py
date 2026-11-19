@@ -4,6 +4,8 @@ import re
 import unicodedata
 from typing import Any
 
+from agent_runtime import languages
+
 
 def normalize_channel(value: str | None) -> str:
     """Upper-cases a channel name and turns dashes into underscores."""
@@ -21,35 +23,11 @@ def normalize_text(value: Any) -> str:
     return strip_accents(str(value or "")).lower().strip()
 
 
-# Every alias a CRM/webhook might send for one of the 3 languages every
-# text agent actually supports (see e.g. opening.yaml's
-# "[preferred_language] = 'es' | 'en' | 'pt'") -- keys are already
-# accent-stripped/lowercased, matched against normalize_text's own output,
-# so "Español"/"espanol" and "Português"/"portugues" share one entry each
-# instead of needing both spellings listed.
-_LANGUAGE_ALIASES = {
-    "en": "en",
-    "eng": "en",
-    "english": "en",
-    "ingles": "en",
-    "es": "es",
-    "esp": "es",
-    "spa": "es",
-    "spanish": "es",
-    "espanol": "es",
-    "castellano": "es",
-    "pt": "pt",
-    "por": "pt",
-    "portuguese": "pt",
-    "portugues": "pt",
-}
-
-
-DEFAULT_LANGUAGE = "en"
+DEFAULT_LANGUAGE = languages.FALLBACK_CODE
 
 
 def normalize_language(value: Any) -> str | None:
-    """Normalizes a free-form language value (GHL's `contact_language` or `customData.language`, or anywhere else) to this project's canonical 2-letter code -- "es"/"en"/"pt", never anything else.
+    """Normalizes a free-form language value (GHL's `contact_language` or `customData.language`, or anywhere else) to this project's canonical 2-letter code -- the code of one of the languages in `agent_runtime.languages`, never anything else.
 
     Case- and accent-insensitive, and accepts locale-style codes (en-US, es_CO, pt-BR -- only the primary subtag matters).
 
@@ -63,15 +41,13 @@ def normalize_language(value: Any) -> str | None:
       with its own fallback (like opening.yaml's "if [contact.language]
       is missing, infer it from the user's latest message") needs to know
       nothing was said, not silently get handed a default.
-    - A real value that just isn't one of the 3 supported languages (e.g.
-      French, German) -> returns DEFAULT_LANGUAGE ("en").
+    - A real value that just isn't one of the supported languages (e.g.
+      one with no file in `agent_runtime/languages/data`) -> returns DEFAULT_LANGUAGE ("en").
     """
     text = normalize_text(value)
     if not text or "[" in text or "]" in text or "{{" in text:
         return None
-    # Split on any non-alphanumeric character (covers spaces, parens, dashes, etc.)
-    primary = re.split(r"[^a-z0-9]", text)[0]
-    return _LANGUAGE_ALIASES.get(primary, DEFAULT_LANGUAGE)
+    return languages.resolve(text, default=DEFAULT_LANGUAGE).code
 
 
 def is_affirmative_message(message: str) -> bool:

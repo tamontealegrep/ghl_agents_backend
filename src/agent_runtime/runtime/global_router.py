@@ -9,11 +9,11 @@ from __future__ import annotations
 
 import os
 import re
-import unicodedata
 from collections.abc import Callable
 from dataclasses import replace
 from typing import Any
 
+from agent_runtime import languages
 from agent_runtime.dsl.utils import is_dynamic_target
 from agent_runtime.runtime.llm_client import LLMClient, LLMContext
 from agent_runtime.targets.langgraph.graph_renderer import (
@@ -38,48 +38,57 @@ def language_detection_by_model() -> bool:
     return os.environ.get(LANGUAGE_DETECTION_ENV, "false").strip().lower() in {"true", "1", "yes", "on"}
 
 
-_SUPPORTED_LANGUAGE_NAMES = {"English", "Spanish", "Portuguese"}
-_LANGUAGE_NAMES_BY_CODE = {"en": "English", "es": "Spanish", "pt": "Portuguese"}
+LANGUAGES_ENV = languages.LANGUAGES_ENV
+"""The languages the router lets a conversation switch to (see `agent_runtime.languages`)."""
+
+
+def supported_languages() -> tuple[str, ...]:
+    """The names of the languages a conversation may switch to, in the order `GLOBAL_ROUTER_LANGUAGES` lists them."""
+    return tuple(language.name for language in languages.enabled_languages())
+
+
+def _join_languages(names: tuple[str, ...], word: str = "or", oxford: bool = True) -> str:
+    """'Spanish, English, or Portuguese' / 'Spanish or English' / 'Spanish' (no comma before the word when `oxford` is false)."""
+    if len(names) <= 2:
+        return f" {word} ".join(names)
+    return f"{', '.join(names[:-1])}{',' if oxford else ''} {word} {names[-1]}"
 
 
 def _language_name_from_slots(slots: dict[str, Any] | None, fallback: str | None = None) -> str | None:
-    """Resolve full language name from ``slots['preferred_language']``."""
-    if not slots:
-        return fallback
-    value = slots.get("preferred_language")
-    if not isinstance(value, str):
-        return fallback
-    value = value.strip()
-    if value.lower() in _LANGUAGE_NAMES_BY_CODE:
-        return _LANGUAGE_NAMES_BY_CODE[value.lower()]
-    return value if value in _SUPPORTED_LANGUAGE_NAMES else fallback
+    """The name of the allowed language held by ``slots['preferred_language']`` (a name or a code), else `fallback`."""
+    value = (slots or {}).get("preferred_language")
+    language = languages.get(value) if isinstance(value, str) else None
+    return language.name if language is not None and languages.is_enabled(language) else fallback
 
 
-_BARE_REPLY_WORDS_ES = (
-    "si no claro ok vale dale listo bueno bien correcto exacto afirmativo negativo por supuesto favor gracias "
-    "de acuerdo obvio seguro porfa tambien perfecto genial adelante efectivamente asi"
-)
-_BARE_REPLY_WORDS_EN = (
-    "yes no yeah yep yup nope nah ok okay sure please thanks thank you right correct exactly absolutely of course "
-    "definitely certainly fine great good alright all also too affirmative negative go ahead sounds"
-)
-_BARE_REPLY_WORDS_PT = (
-    "sim nao claro ok certo pode quero tambem obrigado obrigada com certeza exatamente perfeito beleza tudo bem "
-    "legal isso mesmo aceito por favor positivo negativo combinado otimo pode ser"
-)
-_BARE_REPLY_WORDS = frozenset(f"{_BARE_REPLY_WORDS_ES} {_BARE_REPLY_WORDS_EN} {_BARE_REPLY_WORDS_PT}".split())
+def _language_from_decision(decision: str) -> str | None:
+    """The allowed language the model named in a ``LANGUAGE_CHANGE`` decision, if any."""
+    written = languages.fold(decision).upper()
+    for language in languages.enabled_languages():
+        if any(name in written for name in language.message_names):
+            return language.name
+    return None
 
 
-def _fold(text: str) -> str:
-    """Accent- and case-insensitive comparison key."""
-    decomposed = unicodedata.normalize("NFD", text)
-    return "".join(c for c in decomposed if unicodedata.category(c) != "Mn").casefold().strip()
+def _language_menu() -> str:
+    """The fixed message that offers the allowed languages: one sentence in each, naming them in their own words."""
+    enabled = languages.enabled_languages()
+    labels = tuple(language.native_name for language in enabled)
+    return " / ".join(
+        language.messages["menu_offer"].format(
+            languages=_join_languages(labels, language.messages["menu_or"], oxford=False)
+        )
+        for language in enabled
+    )
+
+
+_fold = languages.fold
 
 
 def is_bare_yes_no(reply: str) -> bool:
     """True for a reply that is only a yes, a no or an acknowledgement ("sí", "claro, por favor")."""
     words = re.findall(r"[a-z]+", _fold(reply or ""))
-    return 0 < len(words) <= 4 and all(word in _BARE_REPLY_WORDS for word in words)
+    return 0 < len(words) <= 4 and all(word in languages.bare_reply_words() for word in words)
 
 
 def _is_trigger_phrase(reply: str, candidates: list[RouterMatch]) -> bool:
@@ -163,7 +172,7 @@ def is_disrespectful(llm_client: LLMClient, ctx: LLMContext) -> bool:
         "Decide whether the customer's latest message is DISRESPECTFUL: it insults, name-calls or demeans a "
         "person or a group (the assistant, the clinic or its staff, or anyone else), uses vulgar or obscene "
         "words AT someone, makes crude or sexual remarks, makes threats, or expresses hate. The message may be "
-        "in Spanish, English or Portuguese, and may be misspelled or censored (like 'p***a').\n\n"
+        f"in {_join_languages(supported_languages(), 'or')}, and may be misspelled or censored (like 'p***a').\n\n"
         "Being upset is NOT being disrespectful. It is NOT disrespectful when the customer is frustrated, "
         "impatient, angry, desperate or sad but insults no one: complaining about the service, the wait, the "
         "price or having to repeat themselves ('this is taking forever', 'I already told you that', 'esto es "
@@ -210,90 +219,51 @@ def _detect_language_and_intent(message: str, current_lang: str) -> tuple[str | 
     Analyzes `message` for language intent.
     Returns `(detected_language, intent_kind)` where:
       intent_kind is one of: "explicit", "inability_clear", "inability_unclear", "content_answer", "none"
+
+    A language that `GLOBAL_ROUTER_LANGUAGES` does not allow is never returned.
     """
-    msg = (message or "").lower().strip()
+    language, intent = _detect_fixed_phrases(message, current_lang)
+    if language is not None and language not in supported_languages():
+        return None, "none"
+    return language, intent
+
+
+def _detect_fixed_phrases(message: str, current_lang: str) -> tuple[str | None, str]:
+    """The language intent of `message` by the phrases and words in the language files (every language, not only the allowed)."""
+    msg = languages.fold(message)
     if not msg:
         return None, "none"
+    every = languages.available_languages()
 
-    # Explicit requests
-    explicit_es = any(p in msg for p in [
-        "hablame en español", "háblame en español", "habla en español", "habla español",
-        "en español por favor", "espanol por favor", "español por favor",
-        "cambiar a español", "cambia a español", "escribe en español", "prefiero español",
-        "responde en español",
-    ]) or msg in {"español", "espanol", "spanish"}
+    def has_any(phrases: tuple[str, ...]) -> bool:
+        return any(phrase in msg for phrase in phrases)
 
-    explicit_pt = any(p in msg for p in [
-        "fale em português", "fale em portugues", "em português por favor", "em portugues por favor",
-        "mudar para português", "mude para português", "escreva em português", "prefiro português",
-        "responda em português",
-    ]) or msg in {"português", "portugues", "portuguese"}
+    def asks_for(language: languages.Language) -> bool:
+        return has_any(language.explicit_phrases) or msg in language.exact_names
 
-    explicit_en = any(p in msg for p in [
-        "speak in english", "speak english", "in english please", "switch to english",
-        "write in english", "prefer english", "answer in english",
-    ]) or msg in {"english", "inglés", "ingles"}
+    # A language that does not say which one the contact wants when they cannot speak it ("I don't speak
+    # English") is checked between the explicit requests: that phrase contains its own "speak english".
+    clear = [language for language in every if language.inability_identifies_language]
+    unclear = [language for language in every if not language.inability_identifies_language]
 
-    if explicit_es:
-        return "Spanish", "explicit"
-    if explicit_pt:
-        return "Portuguese", "explicit"
-    # Checked before `explicit_en`: "i dont speak english" contains "speak english".
-    if any(p in msg for p in [
-        "i don't speak english", "i dont speak english", "i don't understand english", "i dont understand english",
-    ]):
+    for language in clear:
+        if asks_for(language):
+            return language.name, "explicit"
+    if any(has_any(language.inability_phrases) for language in unclear):
         return None, "inability_unclear"
-    if explicit_en:
-        return "English", "explicit"
+    for language in unclear:
+        if asks_for(language):
+            return language.name, "explicit"
+    for language in clear:
+        if has_any(language.inability_phrases):
+            return language.name, "inability_clear"
 
-    # Declared inability
-    inability_es = any(p in msg for p in [
-        "no hablo ingles", "no hablo inglés", "no entiendo ingles", "no entiendo inglés",
-        "no hablo este idioma", "no entiendo este idioma",
-    ])
-    inability_pt = any(p in msg for p in [
-        "nao falo ingles", "não falo inglês", "nao entendo ingles", "não entendo inglês",
-        "nao falo este idioma", "não entendo este idioma",
-    ])
-    inability_en = any(p in msg for p in [
-        "i don't speak english", "i dont speak english", "i don't understand english", "i dont understand english",
-        "i don't speak spanish", "i dont speak spanish", "i don't understand spanish", "i dont understand spanish",
-    ])
-
-    if inability_es:
-        return "Spanish", "inability_clear"
-    if inability_pt:
-        return "Portuguese", "inability_clear"
-    if inability_en:
-        return None, "inability_unclear"
-
-    # Content answers / general sentences in another language
-    es_score = sum(1 for w in [
-        "hola", "gracias", "por favor", "español", "espanol", "subrogacion", "subrrogacion",
-        "gestacion", "maternidad", "fertilización", "fertilizacion", "interesa", "quiero",
-        "método", "metodo", "ropa", "embarazo", "pareja", "nombre", "correo", "viajar",
-    ] if w in msg)
-
-    pt_score = sum(1 for w in [
-        "olá", "obrigado", "obrigada", "por favor", "português", "barriga", "maternidade",
-        "interessa", "quero", "voce", "você", "embrião",
-    ] if w in msg)
-
-    en_score = sum(1 for w in [
-        "hello", "thanks", "thank you", "please", "surrogacy", "fertility", "interested",
-        "looking", "treatment", "method", "process",
-    ] if w in msg)
-
-    if es_score >= 1 and es_score > max(pt_score, en_score):
-        if current_lang != "Spanish":
-            return "Spanish", "content_answer"
-    elif pt_score >= 1 and pt_score > max(es_score, en_score):
-        if current_lang != "Portuguese":
-            return "Portuguese", "content_answer"
-    elif en_score >= 1 and en_score > max(es_score, pt_score):
-        if current_lang != "English":
-            return "English", "content_answer"
-
+    # Content answers / general sentences in another language: the one with the most of its own words wins.
+    scores = {language: sum(1 for word in language.content_words if word in msg) for language in every}
+    best = max(scores.values(), default=0)
+    winners = [language for language, score in scores.items() if score == best]
+    if best >= 1 and len(winners) == 1 and winners[0].name != current_lang:
+        return winners[0].name, "content_answer"
     return None, "none"
 
 
@@ -319,6 +289,9 @@ def _classify_reply(
         f"The agent just asked (in {current_lang}): {ctx.pending_question!r}\n\n" if ctx.pending_question else ""
     )
     language_priority = ""
+    languages = supported_languages()
+    language_list = _join_languages(languages, "or")
+    language_options = " / ".join(f"LANGUAGE_CHANGE: {name}" for name in languages)
     if language_handler is not None:
         language_priority = (
             "LANGUAGE PRIORITY & ALIGNMENT CHECK (HIGHEST PRIORITY):\n"
@@ -329,13 +302,14 @@ def _classify_reply(
             "Rules for language update (in order of priority):\n"
             "Priority 1 - Explicit Request: If the user explicitly asks to switch language "
             "(\"háblame en español\", \"speak English\", \"prefiero portugués\", \"in English please\", \"responde en X\", etc.), "
-            "you MUST reply LANGUAGE_CHANGE (or LANGUAGE_CHANGE: Spanish / LANGUAGE_CHANGE: English / LANGUAGE_CHANGE: Portuguese).\n"
+            f"you MUST reply LANGUAGE_CHANGE (or {language_options}).\n"
             "If the reply is written in another supported language but ALSO answers the pending question (even misspelled, "
             "e.g. 'subrrogacion' to a service question), reply LANGUAGE_CHANGE_ANSWER: <LanguageName> instead, so the answer is kept.\n"
             "Priority 2 - Declared Inability: If the user states they cannot speak or understand the current language "
-            "(\"no hablo inglés\", \"I don't speak Spanish\", \"não falo inglês\"), infer the target language from the message if clearly written in another supported language (Spanish, English, or Portuguese). Reply LANGUAGE_CHANGE.\n"
+            "(\"no hablo inglés\", \"I don't speak Spanish\", \"não falo inglês\", \"je ne parle pas anglais\"), "
+            f"infer the target language from the message if clearly written in another supported language ({language_list}). Reply LANGUAGE_CHANGE.\n"
             "Priority 3 - Automatic Detection: If the user's latest message is clearly written in "
-            "Spanish, English, or Portuguese, and its language differs from the agent's current language "
+            f"{language_list}, and its language differs from the agent's current language "
             f"({current_lang}), reply LANGUAGE_CHANGE_ANSWER: <LanguageName>. The user is simply writing in "
             "their own language, so what they said must still be processed: never use plain LANGUAGE_CHANGE "
             "for this, which is reserved for a request to switch language (Priority 1 and 2) and discards the message.\n\n"
@@ -469,11 +443,7 @@ def match_global_router(
             ask = GraphNode(
                 node_id="H_LANG_ASK",
                 node_type="message",
-                say=[
-                    "Puedo atenderte en español, English o português. / "
-                    "I can assist you in Spanish, English or Portuguese. / "
-                    "Posso atendê-lo em espanhol, inglês ou português."
-                ],
+                say=[_language_menu()],
                 say_verbatim=True,
                 route=[],
                 fallback=[],
@@ -493,25 +463,16 @@ def match_global_router(
     decision = _classify_reply(llm_client, ctx, lines, None if language_resolved else language_handler)
     if decision.startswith("LANGUAGE_CHANGE") and language_handler is not None:
         upper_dec = decision.upper()
-        new_lang = None
-        if "SPANISH" in upper_dec or "ESPAÑOL" in upper_dec:
-            new_lang = "Spanish"
-        elif "ENGLISH" in upper_dec or "INGLÉS" in upper_dec or "INGLES" in upper_dec:
-            new_lang = "English"
-        elif "PORTUGUESE" in upper_dec or "PORTUGUÉS" in upper_dec or "PORTUGUES" in upper_dec:
-            new_lang = "Portuguese"
-        elif det_lang:
-            new_lang = det_lang
+        new_lang = _language_from_decision(upper_dec) or det_lang
 
         if new_lang and ctx.slots is not None:
             ctx.slots["preferred_language"] = new_lang
 
         # Check if the user message is a content answer
         last_msg = (ctx.last_user_message or "").lower()
-        is_content = "_ANSWER" in upper_dec or (not language_detection_by_model() and any(w in last_msg for w in [
-            "subrogacion", "subrrogacion", "fiv", "ivf", "ropa", "in vitro", "gestacion",
-            "maternidad", "pareja", "mi nombre", "me interesa", "quiero",
-        ]))
+        is_content = "_ANSWER" in upper_dec or (
+            not language_detection_by_model() and any(word in languages.fold(last_msg) for word in languages.topic_words())
+        )
         if is_content:
             return None  # Continue with answer!
 

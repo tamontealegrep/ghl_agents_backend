@@ -1,0 +1,92 @@
+code: it
+name: Italian
+native_name: italiano
+aliases: [ita]
+default_enabled: false
+
+calendar:
+  weekdays: [lunedì, martedì, mercoledì, giovedì, venerdì, sabato, domenica]
+  months: [gennaio, febbraio, marzo, aprile, maggio, giugno, luglio, agosto, settembre, ottobre, novembre, dicembre]
+  month_abbreviations: [gen, feb, mar, apr, mag, giu, lug, ago, set, ott, nov, dic]
+  parts_of_day: [alba, mattina, pomeriggio, sera]
+  range_word: alle
+  clock: 24
+  formats:
+    date: "{day} {month} {year}"
+    day_label: "{weekday} {day} {month}"
+    weekday_date: "{weekday} {date}"
+    full_date: "{weekday} {date}"
+    day_title: "{weekday}. {day} {month_abbr}"
+
+messages:
+  closing: "Grazie per averci contattato. Se hai altre domande, non esitare a scriverci in qualsiasi momento. Buona giornata!"
+  unsupported_media: "Non sono riuscito a capire quel messaggio. Per ora posso rispondere solo a messaggi di testo."
+  menu_offer: "Posso risponderti in {languages}."
+  menu_or: o
+
+router:
+  explicit_phrases:
+    - parla in italiano
+    - parla italiano
+    - parliamo in italiano
+    - puoi parlare italiano
+    - in italiano per favore
+    - in italiano per piacere
+    - passa all'italiano
+    - passiamo all'italiano
+    - scrivi in italiano
+    - rispondi in italiano
+    - preferisco l'italiano
+    - speak italian
+    - speak in italian
+    - italian please
+    - in italian please
+    - switch to italian
+  inability_phrases:
+    - non parlo inglese
+    - non parlo l'inglese
+    - non capisco l'inglese
+    - non capisco inglese
+    - non parlo questa lingua
+    - non capisco questa lingua
+  content_words:
+    - ciao
+    - buongiorno
+    - buonasera
+    - salve
+    - grazie
+    - per favore
+    - maternità surrogata
+    - gestazione per altri
+    - utero in affitto
+    - fertilità
+    - vorrei
+    - mi interessa
+    - sono interessato
+    - sono interessata
+    - trattamento
+    - fecondazione
+    - incinta
+    - avete
+  topic_words: [maternità surrogata, gestazione per altri, vorrei, mi interessa]
+  bare_reply_words: >-
+    si no certo ok va bene perfetto grazie mille giusto esatto esattamente assolutamente naturalmente
+    sicuro sicuramente volentieri favore per d accordo d'accordo ottimo
+
+scheduling:
+  today: [oggi]
+  tomorrow: [domani]
+  day_after_tomorrow: [dopodomani]
+  part_words:
+    early_morning: [alba, mattina presto, all'alba]
+    morning: [mattina, mattino, stamattina]
+    afternoon: [pomeriggio, pomeriggi]
+    night: [sera, stasera, notte, serata]
+  ordinals:
+    last: [ultimo, ultima, ultimi, ultime, più tardi]
+    second_to_last: [penultimo, penultima, penultimi, penultime]
+    first: [primo, la prima, primi, più presto]
+    second: [secondo, seconda]
+    third: [terzo, terza]
+    fourth: [quarto, quarta]
+    fifth: [quinto, quinta]

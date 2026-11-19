@@ -1,0 +1,83 @@
+# English. This file documents every field a language file has; copy it to start a new language
+# (or run `python scripts/add_language.py <code> <Name>` to have a model draft the file).
+# The file is named after the code: `en.yaml`.
+
+code: en
+name: English            # in English: what `[preferred_language]` holds and what prompts to the model say
+native_name: English     # in the language itself: how the language menu shows it
+aliases: [eng, ingles]   # other spellings a CRM sends; the code, name and native name are matched without listing them
+default_enabled: true    # true: a conversation may switch to it when GLOBAL_ROUTER_LANGUAGES is empty
+
+calendar:
+  weekdays: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]   # Monday first
+  months: [January, February, March, April, May, June, July, August, September, October, November, December]
+  month_abbreviations: [Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec]
+  parts_of_day: [early morning, morning, afternoon, night]   # 00-06, 06-12, 12-19, 19-24
+  range_word: to           # "09:00 to 11:30"
+  clock: 24                # 12 writes "03:30 pm" in the e-mails, 24 writes "15:30"
+  formats:                 # {weekday} {day} {month} {month_abbr} {year}; {date} is the full `date` format
+    date: "{month} {day}, {year}"
+    day_label: "{weekday}, {month} {day}"
+    weekday_date: "{weekday}, {date}"   # the date of an appointment in a list
+    full_date: "{weekday}, {date}"      # the date in an e-mail
+    day_title: "{weekday}. {month_abbr} {day}"
+
+messages:
+  closing: "Thank you for reaching out to us. If you have any other questions, feel free to write to us anytime. Have a great day!"
+  unsupported_media: "I couldn't understand that message. For now I can only reply to text."
+  menu_offer: "I can assist you in {languages}."   # the language menu: {languages} is the list of native names
+  menu_or: or                                      # the word before the last language of that list
+
+router:                    # compared without accents or capitals, as part of the contact's message
+  explicit_phrases:        # asking to switch to THIS language
+    - speak in english
+    - speak english
+    - in english please
+    - switch to english
+    - write in english
+    - prefer english
+    - answer in english
+  inability_phrases:       # "I don't speak <another language>": the contact needs THIS language
+    - i don't speak english
+    - i dont speak english
+    - i don't understand english
+    - i dont understand english
+    - i don't speak spanish
+    - i dont speak spanish
+    - i don't understand spanish
+    - i dont understand spanish
+  inability_identifies_language: false   # false: saying so in English does not say which language they want
+  content_words:          # words that show a whole message is written in this language
+    - hello
+    - thanks
+    - thank you
+    - please
+    - surrogacy
+    - fertility
+    - interested
+    - looking
+    - treatment
+    - method
+    - process
+  topic_words: [ivf]
+  bare_reply_words: >-
+    yes no yeah yep yup nope nah ok okay sure please thanks thank you right correct exactly absolutely of course
+    definitely certainly fine great good alright all also too affirmative negative go ahead sounds
+
+scheduling:                # how a contact picks a day or a time of day when choosing an appointment
+  today: [today]
+  tomorrow: [tomorrow]
+  day_after_tomorrow: [after tomorrow]
+  part_words:
+    early_morning: [early morning, dawn]
+    morning: [morning]
+    afternoon: [afternoon]
+    night: [night, evening]
+  ordinals:                # a position among the times offered
+    last: [last, latest, final]
+    second_to_last: [second to last, second-to-last, penultimate]
+    first: [first, earliest, 1st]
+    second: [second, 2nd]
+    third: [third, 3rd]
+    fourth: [fourth, 4th]
+    fifth: [fifth, 5th]

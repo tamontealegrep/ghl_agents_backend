@@ -1,0 +1,88 @@
+code: fr
+name: French
+native_name: français
+aliases: [fra, fre, francais, francés, frances]
+default_enabled: false
+
+calendar:
+  weekdays: [lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche]
+  months: [janvier, février, mars, avril, mai, juin, juillet, août, septembre, octobre, novembre, décembre]
+  month_abbreviations: [janv, févr, mars, avr, mai, juin, juil, août, sept, oct, nov, déc]
+  parts_of_day: [petit matin, matin, après-midi, soir]
+  range_word: à
+  clock: 24
+  formats:
+    date: "{day} {month} {year}"
+    day_label: "{weekday} {day} {month}"
+    weekday_date: "{weekday} {date}"
+    full_date: "{weekday} {date}"
+    day_title: "{weekday}. {day} {month_abbr}"
+
+messages:
+  closing: "Merci de nous avoir contactés. Si vous avez d'autres questions, n'hésitez pas à nous écrire. Bonne journée !"
+  unsupported_media: "Je n'ai pas pu comprendre ce message. Pour le moment, je ne peux répondre que par texte."
+  menu_offer: "Je peux vous répondre en {languages}."
+  menu_or: ou
+
+router:
+  explicit_phrases:
+    - parlez en français
+    - parle en français
+    - parlez-moi en français
+    - parle-moi en français
+    - en français s'il vous plaît
+    - en français svp
+    - passer en français
+    - passez en français
+    - répondez en français
+    - écrivez en français
+    - je préfère le français
+    - speak in french
+    - speak french
+    - in french please
+    - french please
+    - switch to french
+    - answer in french
+  inability_phrases:
+    - je ne parle pas anglais
+    - je ne comprends pas l'anglais
+    - je ne comprends pas l anglais
+    - je ne parle pas cette langue
+    - je ne comprends pas cette langue
+  content_words:
+    - bonjour
+    - bonsoir
+    - merci
+    - s'il vous plaît
+    - français
+    - gestation pour autrui
+    - mère porteuse
+    - m'intéresse
+    - je voudrais
+    - je veux
+    - avez-vous
+    - combien
+    - fécondation
+    - enceinte
+  topic_words: [gestation pour autrui, mère porteuse, m'intéresse, je voudrais, je veux]
+  bare_reply_words: >-
+    oui non bien sur merci parfait volontiers exactement absolument evidemment daccord ok bon d accord tout
+    a fait svp plait vous peut etre positif negatif
+
+scheduling:
+  today: [aujourd'hui, aujourd hui]
+  tomorrow: [demain]
+  day_after_tomorrow: [après-demain, après demain]
+  part_words:
+    early_morning: [petit matin, aube]
+    morning: [matin, matinée]
+    afternoon: [après-midi, après midi]
+    night: [soir, soirée, nuit]
+  ordinals:
+    last: [plus tard, dernier, dernière, derniers, dernières]
+    second_to_last: [avant-dernier, avant-dernière, avant dernier, avant dernière]
+    first: [premier, première, premiers, premières, plus tôt, 1er, 1ère, 1re]
+    second: [deuxième, second, seconde, 2e, 2ème]
+    third: [troisième, 3e, 3ème]
+    fourth: [quatrième, 4e, 4ème]
+    fifth: [cinquième, 5e, 5ème]

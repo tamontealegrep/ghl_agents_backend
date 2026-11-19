@@ -79,6 +79,7 @@ Revisa estas:
 | `CROMA_BASE_URL`, `CROMA_TIMEOUT_SECONDS` | Opcionales (`https://api.croma.run`, 60 s) |
 | `GLOBAL_ROUTER_RESPECT_FILTER` | `true` = el agente responde con cortesía ante insultos o discurso de odio |
 | `GLOBAL_ROUTER_LANGUAGE_DETECTION` | `false` = frases fijas primero; `true` = el modelo detecta el cambio de idioma |
+| `GLOBAL_ROUTER_LANGUAGES` | Idiomas a los que puede cambiar una conversación, separados por comas y por nombre o código (`English,Spanish,Portuguese,French`). Vacío = `English,Spanish,Portuguese` |
 | `GLOBAL_ROUTER_OUTPUT_REVIEW` | `true` = antes de enviar, cada mensaje se revisa contra las reglas de salida y las palabras prohibidas del agente (cuesta **una llamada al modelo por mensaje**). Solo actúa en los agentes `surrogate_questions`; el de triaje no declara reglas |
 | `GHL_VERSION` | `v3` |
 

@@ -736,3 +736,81 @@ def test_a_language_request_is_still_a_language_change_not_content():
     )
     assert slots["preferred_language"] == "English"
     assert match is not None and match[1].node_id == "H_LANG_REASK"
+
+
+# ---------------------------------------------------------------------------
+# GLOBAL_ROUTER_LANGUAGES — the languages a conversation may switch to
+# ---------------------------------------------------------------------------
+
+
+def test_the_default_languages_are_those_marked_default_enabled(monkeypatch):
+    from agent_runtime.runtime.global_router import supported_languages
+
+    monkeypatch.delenv("GLOBAL_ROUTER_LANGUAGES", raising=False)
+    assert supported_languages() == ("English", "Spanish", "Portuguese")
+
+
+def test_the_languages_are_written_by_name_or_code_in_the_env(monkeypatch):
+    from agent_runtime.runtime.global_router import supported_languages
+
+    monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGES", "English, es; Portuguese|fr, french, Klingon")
+    # The order is the env's own; "Klingon" has no file in agent_runtime/languages/data, so it is ignored.
+    assert supported_languages() == ("English", "Spanish", "Portuguese", "French")
+
+
+def test_a_language_the_env_does_not_allow_is_not_resolved(monkeypatch):
+    from agent_runtime.runtime.global_router import _language_name_from_slots
+
+    monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGES", "English,Spanish")
+    assert _language_name_from_slots({"preferred_language": "French"}, fallback="English") == "English"
+    assert _language_name_from_slots({"preferred_language": "fr"}, fallback="English") == "English"
+    monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGES", "English,Spanish,French")
+    assert _language_name_from_slots({"preferred_language": "French"}) == "French"
+    assert _language_name_from_slots({"preferred_language": "fr"}) == "French"
+
+
+def test_french_is_detected_only_when_the_env_allows_it(monkeypatch):
+    from agent_runtime.runtime.global_router import _detect_language_and_intent
+
+    monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGES", "English,Spanish,Portuguese")
+    assert _detect_language_and_intent("en français s'il vous plaît", "English") == (None, "none")
+    monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGES", "English,Spanish,Portuguese,French")
+    assert _detect_language_and_intent("en français s'il vous plaît", "English") == ("French", "explicit")
+    assert _detect_language_and_intent("je ne parle pas anglais", "English") == ("French", "inability_clear")
+    assert _detect_language_and_intent("Bonjour, je voudrais des informations", "English") == ("French", "content_answer")
+    assert _detect_language_and_intent("Bonjour, je voudrais des informations", "French") == (None, "none")
+
+
+def test_the_model_prompt_and_the_decision_follow_the_allowed_languages(monkeypatch):
+    monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGE_DETECTION", "true")
+    monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGES", "English,Spanish,Portuguese,French")
+    router = GlobalRouterDefinition(handlers=[_handler_node("H_LANG_CHANGE", trigger=["en français"])], faqs=[])
+    client = _FakeLLMClient(replies=["LANGUAGE_CHANGE: French"])
+    slots = {"preferred_language": "Spanish"}
+    match = match_global_router(client, router, _ctx("pouvez-vous me parler en français", slots=slots, pending_question="?"))
+    assert "English, Spanish, Portuguese, or French" in client.prompts[0]
+    assert "LANGUAGE_CHANGE: French" in client.prompts[0]
+    assert slots["preferred_language"] == "French"
+    assert match is not None and match[1].node_id == "H_LANG_REASK"
+
+
+def test_the_language_menu_lists_only_the_allowed_languages(monkeypatch):
+    from agent_runtime.runtime.global_router import _language_menu
+
+    monkeypatch.delenv("GLOBAL_ROUTER_LANGUAGES", raising=False)
+    assert _language_menu() == (
+        "I can assist you in English, español or português. / Puedo atenderte en English, español o português. / "
+        "Posso atendê-lo em English, español ou português."
+    )
+    monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGES", "English,Spanish,Portuguese,French")
+    menu = _language_menu()
+    assert "Puedo atenderte en English, español, português o français." in menu
+    assert menu.endswith("Je peux vous répondre en English, español, português ou français.")
+
+
+def test_bare_french_replies_continue_without_the_model():
+    client = _FakeLLMClient(replies=["INTERRUPT"])
+    router = GlobalRouterDefinition(handlers=[_handler_node()], faqs=[])
+    for reply in ("oui", "Non", "bien sûr", "d'accord", "oui, merci", "parfait"):
+        assert match_global_router(client, router, _ctx(reply)) is None, reply
+    assert client.prompts == []
