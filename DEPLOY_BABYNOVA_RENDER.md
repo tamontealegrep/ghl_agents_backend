@@ -15,6 +15,7 @@ Agentes de BabyNova y sus rutas:
 |---|---|---|
 | `babynova_triage_obstetrico_text` | Texto (GoHighLevel) | `POST /agents/babynova/triage-text` (webhook) |
 | `babynova_surrogate_questions_text` | Texto (GoHighLevel) | `POST /agents/babynova/surrogate-questions-text` (webhook) |
+| `babynova_donor_questions_text` | Texto (GoHighLevel) | `POST /agents/babynova/donor-questions-text` (webhook) |
 | `babynova_surrogate_questions_voice` | Voz | `POST /agents/<agente>/chat` |
 | (herramientas del plugin `surrogacy`) | Ambos | `POST /agents/babynova/tools/<herramienta>-ghl` y `-sur` |
 | (herramientas built-in de GHL: `add-tags`, `remove-tags`, `update-contact`, `update-opportunity`, `update-custom-field`, ...) | Ambos | `POST /builtin-tools/<herramienta>` |
@@ -109,6 +110,7 @@ Guarda los cambios: Render reinicia el servicio.
 1. **Webhooks de los agentes de texto.** En el workflow de GHL, acción *Webhook*, una por agente:
    - Triaje obstétrico: `https://<servicio>.onrender.com/agents/babynova/triage-text`
    - Surrogate questions: `https://<servicio>.onrender.com/agents/babynova/surrogate-questions-text`
+   - Donor questions: `https://<servicio>.onrender.com/agents/babynova/donor-questions-text`
    - Método `POST`, con la cabecera personalizada `X-Webhook-Token: <WEBHOOK_TOKEN>`.
    - El payload debe traer `contact_id` y `location_id`; sin ellos el webhook lo ignora.
 2. **Workflows que llamen herramientas** (`/agents/babynova/tools/...` o `/builtin-tools/...`) necesitan la cabecera `X-API-Key: <API_TOKEN>`.

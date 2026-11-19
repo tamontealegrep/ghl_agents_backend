@@ -1,0 +1,350 @@
+[
+  {
+    "name": "end_call",
+    "description": "Closes the call session in an orderly way.",
+    "notes": [
+      "This is always the last tool executed in any terminal flow.",
+      "Make sure all required updates have been completed before end_call."
+    ],
+    "inputs": [],
+    "outputs": []
+  },
+  {
+    "name": "update_custom_field",
+    "description": "Actualiza un campo personalizado (Custom Field de contacto) o un valor personalizado (Custom Value global) en GoHighLevel.",
+    "notes": [
+      "MANDATORY EXECUTION: cuando el usuario pide cambiar una preferencia personalizada como su idioma, o una configuración global de la subcuenta.",
+      "ARGUMENTS: name (nombre legible como 'language' o ID técnico), value (nuevo valor).",
+      "CONTEXT RULE: provee contactId para cambios específicos del usuario; si se omite pero se da locationId, actualiza un valor global (Custom Value).",
+      "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio."
+    ],
+    "inputs": [
+      {
+        "name": "name",
+        "required": true,
+        "description": "Nombre o ID del campo/valor a actualizar. Ejemplo: 'language', 'uWLes...'."
+      },
+      {
+        "name": "value",
+        "required": true,
+        "description": "Nuevo valor a asignar. Ejemplo: 'Spanish', 'English'."
+      },
+      {
+        "name": "contact_id",
+        "required": false,
+        "description": "ID del contacto en GHL (disponible en context.contact_id). Si se provee, se actualiza su campo personalizado."
+      },
+      {
+        "name": "location_id",
+        "required": false,
+        "description": "ID de la ubicación en GHL (disponible en context.location_id). Necesario para valores globales o para buscar campos por nombre."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Indica si la operación fue exitosa."
+      },
+      {
+        "name": "type",
+        "required": true,
+        "description": "Indica qué se actualizó: 'contact' (campo de usuario) o 'custom_value' (global)."
+      },
+      {
+        "name": "field_id",
+        "required": false,
+        "description": "ID técnico del campo/valor actualizado."
+      },
+      {
+        "name": "field_name",
+        "required": false,
+        "description": "Eco del nombre del campo solicitado."
+      },
+      {
+        "name": "value",
+        "required": false,
+        "description": "Eco del valor asignado."
+      },
+      {
+        "name": "errors",
+        "required": false,
+        "description": "Mensaje de error si la operación falló."
+      }
+    ]
+  },
+  {
+    "name": "add_tags",
+    "description": "Agrega una o varias etiquetas (tags) a un contacto de GoHighLevel.",
+    "notes": [
+      "MANDATORY EXECUTION: ejecútala cuando el flujo pida marcar al contacto con una etiqueta (por ejemplo al calificar, al agendar o al cerrar la conversación). Solo agrega etiquetas; nunca quita ninguna.",
+      "ARGUMENTS: tags (lista de nombres de etiqueta, tal como los define el flujo), contact_id y location_id (disponibles en el contexto del contacto).",
+      "BEHAVIOUR: GHL pasa las etiquetas a minúsculas, crea las que la subcuenta aún no tiene e ignora las que el contacto ya tiene, así que repetir la llamada es seguro.",
+      "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; tags_added dice cuáles se agregaron realmente (vacía si el contacto ya las tenía todas).",
+      "SILENT ACTION: nunca le digas a la persona que le estás agregando etiquetas."
+    ],
+    "inputs": [
+      {
+        "name": "tags",
+        "required": true,
+        "description": "Etiquetas a agregar. Una lista de nombres. Ejemplo: ['calificada', 'cita_agendada']."
+      },
+      {
+        "name": "contact_id",
+        "required": true,
+        "description": "ID del contacto en GHL (disponible en context.contact_id)."
+      },
+      {
+        "name": "location_id",
+        "required": false,
+        "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token de la subcuenta."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Indica si GHL aceptó la operación."
+      },
+      {
+        "name": "tags",
+        "required": false,
+        "description": "Todas las etiquetas que tiene el contacto después de la operación."
+      },
+      {
+        "name": "tags_added",
+        "required": false,
+        "description": "Las etiquetas que se agregaron en esta llamada (vacía si el contacto ya las tenía todas)."
+      },
+      {
+        "name": "errors",
+        "required": false,
+        "description": "Mensaje de error si la operación falló."
+      }
+    ]
+  },
+  {
+    "name": "calculate_bmi",
+    "description": "Authorized tool to calculate BMI. Its result is the source of truth for eligibility.",
+    "notes": [
+      "MANDATORY EXECUTION: trigger upon entering node Q__DQ_CALC_BMI.",
+      "ABSOLUTE RULE: do not calculate manually. Do not speak before capturing [imc].",
+      "ARGUMENTS: weight_kg (kg), height_cm (cm). If captured in lbs/ft, convert before calling (1 lb = 0.4536 kg; 1 in = 2.54 cm).",
+      "SOURCE OF TRUTH: use [imc] only; do not recompute manually."
+    ],
+    "inputs": [
+      {
+        "name": "weight_kg",
+        "required": true,
+        "description": "Candidate's current weight in kilograms."
+      },
+      {
+        "name": "height_cm",
+        "required": true,
+        "description": "Candidate's current height in centimeters."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Execution status (bool)."
+      },
+      {
+        "name": "imc",
+        "required": true,
+        "description": "Decimal BMI value. null if inputs were invalid."
+      }
+    ]
+  },
+  {
+    "name": "kb_answer",
+    "description": "Authorized tool that answers an open question about the company and its services from the approved knowledge base. Its kb_answer output is the only source for the answer.",
+    "notes": [
+      "MANDATORY EXECUTION: on entering KQ__KQ_ANSWER.",
+      "ARGUMENTS: question is the contact's question and language is the conversation language.",
+      "history is added by the runtime; the flow never sets it.",
+      "SOURCE OF TRUTH: use kb_found as the only verdict. When kb_found is false the knowledge base does not cover the question: never answer it from your own knowledge."
+    ],
+    "inputs": [
+      {
+        "name": "question",
+        "required": true,
+        "description": "The contact's question, in their own words."
+      },
+      {
+        "name": "language",
+        "required": false,
+        "description": "Language of the answer. Always Spanish in this agent."
+      },
+      {
+        "name": "history",
+        "required": false,
+        "description": "Recent conversation, filled in by the runtime (never by the flow). It lets a follow-up question such as 'and how long does it take?' be understood."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "kb_answer",
+        "required": true,
+        "description": "The answer written in the requested language. Empty when kb_found is false."
+      },
+      {
+        "name": "kb_found",
+        "required": true,
+        "description": "Whether the knowledge base answered the question (true/false)."
+      }
+    ]
+  },
+  {
+    "name": "check_adres",
+    "description": "Authorized tool that checks the health-system (EPS) affiliation of a person in ADRES/BDUA from the identity document. Its output is the source of truth for the affiliation.",
+    "notes": [
+      "MANDATORY EXECUTION: trigger on entering node Q__DQ_CHECK_ADRES, and only when document_type and document_number are both known.",
+      "ARGUMENT RULE: document_type is 'CC' for a cédula de ciudadanía and 'PPT' for a permiso por protección temporal. document_number is sent as the person gave it (3 to 30 characters); spaces, dots and dashes are ignored.",
+      "SOURCE OF TRUTH RULE: use found, has_active_affiliation and affiliations as the only affiliation data. An affiliation is active when its active field is true.",
+      "POST-EXECUTION RULE: found == false means the document is not registered in BDUA; it is not an error and means no active affiliation.",
+      "POST-EXECUTION RULE: if success == true and errors has text, the input was invalid; if success == false it is a technical failure. In both cases conclude nothing about the affiliation (the flow records unknown).",
+      "PRIVACY RULE: the result includes personal data (name, municipality, EPS); use it only for this flow and never repeat it to the candidate."
+    ],
+    "inputs": [
+      {
+        "name": "document_type",
+        "required": true,
+        "description": "Document type: CC or PPT."
+      },
+      {
+        "name": "document_number",
+        "required": true,
+        "description": "Document number, 3 to 30 characters."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Whether the lookup ran correctly from the technical point of view."
+      },
+      {
+        "name": "found",
+        "required": true,
+        "description": "false when the document is not registered in BDUA; null when it could not be checked."
+      },
+      {
+        "name": "has_active_affiliation",
+        "required": true,
+        "description": "true when any affiliation is still active; null when it could not be checked."
+      },
+      {
+        "name": "affiliations",
+        "required": true,
+        "description": "List of affiliations; each one has entity (EPS name), regime (CONTRIBUTIVO or SUBSIDIADO), status, effective_date, termination_date, affiliate_type and active. Empty when found is false."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Technical or validation error message. null on success."
+      }
+    ]
+  },
+  {
+    "name": "donor_classification",
+    "description": "Final egg-donor classification. Source of truth for result.",
+    "notes": [
+      "MANDATORY EXECUTION TRIGGER: run it as soon as every pre-qualification question has been answered.",
+      "ARGUMENT RULE: never invent values; send an empty field when the data is missing.",
+      "ARGUMENT RULE: nationality is the ISO 3166-1 alpha-3 code and is only recorded. document_type is cedula_ciudadania, ppt or other; only the first two are accepted.",
+      "RULES, evaluated in this order: age 20-32 (19 and 33 go to the team); city from the enabled list; nationality (recorded only); sexual life started; height of at least 150 cm; BMI 17.9-27.9 (17.0-17.9 and 27.9-28.0 go to the team, outside 17.0-28.0 rejects); no drug use; pregnancies, abortions and breastfeeding (recorded only, but required); CC or PPT; active EPS.",
+      "SOURCE OF TRUTH RULE: use result as the only verdict."
+    ],
+    "inputs": [
+      {
+        "name": "age",
+        "required": false,
+        "description": "Candidate age in years."
+      },
+      {
+        "name": "city",
+        "required": false,
+        "description": "City or municipality of residence, as in the enabled list, or 'Otro'."
+      },
+      {
+        "name": "nationality",
+        "required": false,
+        "description": "Nationality (ISO 3166-1 alpha-3)."
+      },
+      {
+        "name": "sexual_life",
+        "required": false,
+        "description": "Whether she has started her sexual life (yes/no)."
+      },
+      {
+        "name": "height_cm",
+        "required": false,
+        "description": "Height in centimeters."
+      },
+      {
+        "name": "bmi",
+        "required": false,
+        "description": "BMI calculated by calculate_bmi."
+      },
+      {
+        "name": "drug_use",
+        "required": false,
+        "description": "Whether she uses recreational drugs (yes/no)."
+      },
+      {
+        "name": "pregnancies",
+        "required": false,
+        "description": "Whether she has had previous pregnancies (yes/no). Recorded only."
+      },
+      {
+        "name": "abortions",
+        "required": false,
+        "description": "Whether she has had abortions (yes/no). Recorded only."
+      },
+      {
+        "name": "lactating",
+        "required": false,
+        "description": "Whether she is currently breastfeeding (yes/no). Recorded only."
+      },
+      {
+        "name": "document_type",
+        "required": false,
+        "description": "Identity document: cedula_ciudadania, ppt or other."
+      },
+      {
+        "name": "eps_active_affiliation",
+        "required": false,
+        "description": "Whether the candidate has an active EPS affiliation (asked, not verified in ADRES)."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Whether the classification ran correctly."
+      },
+      {
+        "name": "result",
+        "required": true,
+        "description": "'Approved', 'Inconclusive', 'To Validate (Age|BMI)' or 'Rejected (Age|City|Sexual Life|Height|BMI|Drug Use|Documentation|EPS)'."
+      },
+      {
+        "name": "eligibility_result",
+        "required": true,
+        "description": "eligible, to_validate, not_eligible or incomplete."
+      },
+      {
+        "name": "not_eligibility_reason",
+        "required": true,
+        "description": "Rejection criterion, \"<criterion>_to_validate\", \"missing_data (<field>)\" naming the first missing field, or none."
+      },
+      {
+        "name": "errors",
+        "required": true,
+        "description": "Technical error message when the classification failed. null on success."
+      }
+    ]
+  }
+]
