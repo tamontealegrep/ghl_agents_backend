@@ -335,3 +335,65 @@ tool_contracts:
       - name: errors
         required: true
         description: "Technical error message when the classification failed. null on success."
+
+  - name: donor_classification
+    description: "Final egg-donor classification. Source of truth for result."
+    notes:
+      - "MANDATORY EXECUTION TRIGGER: run it as soon as every pre-qualification question has been answered."
+      - "ARGUMENT RULE: never invent values; send an empty field when the data is missing."
+      - "ARGUMENT RULE: nationality is the ISO 3166-1 alpha-3 code and is only recorded. document_type is cedula_ciudadania, ppt or other; only the first two are accepted."
+      - "RULES, evaluated in this order: age 20-32 (19 and 33 go to the team); city from the enabled list; nationality (recorded only); sexual life started; height of at least 150 cm; BMI 17.9-27.9 (17.0-17.9 and 27.9-28.0 go to the team, outside 17.0-28.0 rejects); no drug use; pregnancies, abortions and breastfeeding (recorded only, but required); CC or PPT; active EPS."
+      - "SOURCE OF TRUTH RULE: use result as the only verdict."
+    inputs:
+      - name: age
+        required: false
+        description: "Candidate age in years."
+      - name: city
+        required: false
+        description: "City or municipality of residence, as in the enabled list, or 'Otro'."
+      - name: nationality
+        required: false
+        description: "Nationality (ISO 3166-1 alpha-3)."
+      - name: sexual_life
+        required: false
+        description: "Whether she has started her sexual life (yes/no)."
+      - name: height_cm
+        required: false
+        description: "Height in centimeters."
+      - name: bmi
+        required: false
+        description: "BMI calculated by calculate_bmi."
+      - name: drug_use
+        required: false
+        description: "Whether she uses recreational drugs (yes/no)."
+      - name: pregnancies
+        required: false
+        description: "Whether she has had previous pregnancies (yes/no). Recorded only."
+      - name: abortions
+        required: false
+        description: "Whether she has had abortions (yes/no). Recorded only."
+      - name: lactating
+        required: false
+        description: "Whether she is currently breastfeeding (yes/no). Recorded only."
+      - name: document_type
+        required: false
+        description: "Identity document: cedula_ciudadania, ppt or other."
+      - name: eps_active_affiliation
+        required: false
+        description: "Whether the candidate has an active EPS affiliation (asked, not verified in ADRES)."
+    outputs:
+      - name: success
+        required: true
+        description: "Whether the classification ran correctly."
+      - name: result
+        required: true
+        description: "'Approved', 'Inconclusive', 'To Validate (Age|BMI)' or 'Rejected (Age|City|Sexual Life|Height|BMI|Drug Use|Documentation|EPS)'."
+      - name: eligibility_result
+        required: true
+        description: "eligible, to_validate, not_eligible or incomplete."
+      - name: not_eligibility_reason
+        required: true
+        description: 'Rejection criterion, "<criterion>_to_validate", "missing_data (<field>)" naming the first missing field, or none.'
+      - name: errors
+        required: true
+        description: "Technical error message when the classification failed. null on success."
