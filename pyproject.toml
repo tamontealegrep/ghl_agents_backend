@@ -39,6 +39,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 agent_backend = ["defaults/*.json"]
+agent_runtime = ["languages/data/*.yaml"]
 
 [tool.ruff]
 line-length = 110

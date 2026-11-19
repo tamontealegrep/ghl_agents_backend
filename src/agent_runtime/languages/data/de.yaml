@@ -1,0 +1,94 @@
+code: de
+name: German
+native_name: Deutsch
+aliases: [deu, ger, german]
+default_enabled: false
+
+calendar:
+  weekdays: [Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag, Sonntag]
+  months: [Januar, Februar, März, April, Mai, Juni, Juli, August, September, Oktober, November, Dezember]
+  month_abbreviations: [Jan, Feb, Mär, Apr, Mai, Jun, Jul, Aug, Sep, Okt, Nov, Dez]
+  parts_of_day: [Früher Morgen, Vormittag, Nachmittag, Abend]
+  range_word: bis
+  clock: 24
+  formats:
+    date: "{day}. {month} {year}"
+    day_label: "{weekday}, {day}. {month}"
+    weekday_date: "{weekday}, {date}"
+    full_date: "{weekday}, {date}"
+    day_title: "{weekday}. {day}. {month_abbr}"
+
+messages:
+  closing: "Vielen Dank, dass Sie uns kontaktiert haben. Wenn Sie weitere Fragen haben, schreiben Sie uns jederzeit. Einen schönen Tag noch!"
+  unsupported_media: "Ich konnte diese Nachricht nicht verstehen. Im Moment kann ich nur auf Textnachrichten antworten."
+  menu_offer: "Ich kann Ihnen auf {languages} helfen."
+  menu_or: oder
+
+router:
+  explicit_phrases:
+    - auf deutsch
+    - bitte deutsch
+    - deutsch bitte
+    - sprechen sie deutsch
+    - sprich deutsch
+    - können wir deutsch sprechen
+    - wechsle zu deutsch
+    - wechseln sie zu deutsch
+    - schreiben sie auf deutsch
+    - antworten sie auf deutsch
+    - ich bevorzuge deutsch
+    - speak german
+    - speak in german
+    - german please
+    - in german please
+    - switch to german
+  inability_phrases:
+    - ich spreche kein englisch
+    - ich verstehe kein englisch
+    - ich spreche nicht englisch
+    - ich verstehe nicht englisch
+    - ich spreche kein spanisch
+    - ich verstehe kein spanisch
+    - ich spreche diese sprache nicht
+    - ich verstehe diese sprache nicht
+  content_words:
+    - hallo
+    - guten tag
+    - guten morgen
+    - guten abend
+    - danke
+    - vielen dank
+    - bitte
+    - leihmutterschaft
+    - kinderwunsch
+    - fruchtbarkeit
+    - ich möchte
+    - ich suche
+    - ich interessiere
+    - interessiert
+    - behandlung
+    - schwanger
+    - eizellspende
+    - haben sie
+  topic_words: [leihmutterschaft, kinderwunsch, ich möchte, ich interessiere]
+  bare_reply_words: >-
+    ja nein klar ok okay sicher gerne bitte danke genau natürlich richtig stimmt gut einverstanden
+    selbstverständlich jederzeit auf jeden fall in ordnung passt super perfekt vielen
+
+scheduling:
+  today: [heute]
+  tomorrow: [morgen]
+  day_after_tomorrow: [übermorgen]
+  part_words:
+    early_morning: [früh morgens, in der früh, frühmorgens, dämmerung]
+    morning: [vormittag, vormittags, morgens, am morgen]
+    afternoon: [nachmittag, nachmittags]
+    night: [abend, abends, nacht, nachts]
+  ordinals:
+    last: [letzte, letzten, letzter, letztes, späteste, spätesten]
+    second_to_last: [vorletzte, vorletzten, vorletzter, vorletztes]
+    first: [erste, ersten, erster, erstes, früheste, frühesten]
+    second: [zweite, zweiten, zweiter, zweites]
+    third: [dritte, dritten, dritter, drittes]
+    fourth: [vierte, vierten, vierter, viertes]
+    fifth: [fünfte, fünften, fünfter, fünftes]

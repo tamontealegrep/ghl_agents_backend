@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from agent_backend.channels.ghl.client import (
     GhlClientConfig,
 )
+from agent_runtime import languages
 
 
 @dataclass(frozen=True)
@@ -45,7 +46,7 @@ class CompiledAgentGhlConfig:
     closing_message: str | dict[str, str] | None = None
     """Override for the text sent by the closing sweep. A plain string
     always wins; a dict is looked up by the thread's preferred_language
-    (stored as "English"/"Spanish"/"Portuguese" or as a code; English when
+    (stored as a language name or as a code; English when
     the language is unknown or missing). None uses the built-in
     default entirely -- deliberately generic ("puede ser de cualquiera"),
     since the sweep's only job is to get *something* out before Meta's 24h
@@ -59,7 +60,7 @@ class CompiledAgentGhlConfig:
     video, audio or sticker reaches GHL with an empty body) in the middle of
     a conversation. Same shape as `closing_message`: a plain string always
     wins; a dict is looked up by the conversation's language (falls back to
-    the built-in ES/EN/PT default). The graph is not invoked, so the pending
+    the language's own built-in message). The graph is not invoked, so the pending
     question stays pending."""
     turn_lock_timeout_seconds: float = field(
         default_factory=lambda: float(os.getenv("GHL_TURN_LOCK_TIMEOUT_SECONDS", "60"))
@@ -72,42 +73,25 @@ class CompiledAgentGhlConfig:
     for all with GHL_TURN_LOCK_TIMEOUT_SECONDS."""
 
 
-_DEFAULT_CLOSING_MESSAGES: dict[str, str] = {
-    "es": "Gracias por contactarte con nosotros. Si tienes alguna otra pregunta, no dudes en escribirnos. ¡Que tengas un buen día!",
-    "en": "Thank you for reaching out to us. If you have any other questions, feel free to write to us anytime. Have a great day!",
-    "pt": "Obrigado por entrar em contato conosco. Se tiver mais alguma pergunta, não hesite em nos escrever. Tenha um ótimo dia!",
-}
+def _message_text(overrides: str | dict[str, str] | None, key: str, language: str | None, default_code: str) -> str:
+    """A fixed message: a plain string override always wins; a dict override is looked up by language code;
+    otherwise the language's own `messages.<key>` (in `agent_runtime/languages/data`). An unknown language
+    gets `default_code`'s."""
+    if isinstance(overrides, str):
+        return overrides
+    chosen = languages.resolve(language, default=default_code)
+    if isinstance(overrides, dict):
+        raw = str(language or "").strip().lower()
+        return overrides.get(chosen.code) or overrides.get(raw) or overrides.get(default_code) or next(iter(overrides.values()))
+    return chosen.messages[key]
 
 
 def _closing_message_text(cfg: CompiledAgentGhlConfig, preferred_language: str | None) -> str:
-    if isinstance(cfg.closing_message, str):
-        return cfg.closing_message
-    messages = cfg.closing_message if isinstance(cfg.closing_message, dict) else _DEFAULT_CLOSING_MESSAGES
-    raw = (preferred_language or "en").strip().lower()
-    code = _LANGUAGE_CODES.get(raw, raw)
-    return messages.get(code) or messages.get("en") or next(iter(messages.values()))
-
-
-_DEFAULT_UNSUPPORTED_MEDIA_MESSAGES: dict[str, str] = {
-    "es": "No pude entender ese mensaje. Por ahora solo puedo responderte por texto.",
-    "en": "I couldn't understand that message. For now I can only reply to text.",
-    "pt": "Não consegui entender essa mensagem. Por enquanto só posso responder por texto.",
-}
-
-_LANGUAGE_CODES = {"spanish": "es", "english": "en", "portuguese": "pt"}
+    return _message_text(cfg.closing_message, "closing", preferred_language, default_code="en")
 
 
 def _unsupported_media_text(cfg: CompiledAgentGhlConfig, language: str | None) -> str:
-    if isinstance(cfg.unsupported_media_message, str):
-        return cfg.unsupported_media_message
-    messages = (
-        cfg.unsupported_media_message
-        if isinstance(cfg.unsupported_media_message, dict)
-        else _DEFAULT_UNSUPPORTED_MEDIA_MESSAGES
-    )
-    raw = (language or "es").strip().lower()
-    code = _LANGUAGE_CODES.get(raw, raw)
-    return messages.get(code) or messages.get("es") or next(iter(messages.values()))
+    return _message_text(cfg.unsupported_media_message, "unsupported_media", language, default_code="es")
 
 
 def _normalize_phone(raw: object) -> str:

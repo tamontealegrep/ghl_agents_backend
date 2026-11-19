@@ -610,11 +610,39 @@ def test_store_language_name_maps_codes_and_names_and_defaults_to_english():
         ("EN", "English"),
         ("Spanish", "Spanish"),
         (None, "English"),
-        ("fr", "English"),
+        ("fr", "French"),
+        ("tlh", "English"),
     ):
         ctx.slots["code"] = code
         _apply_store_line("[preferred_language] = LANGUAGE_NAME [code]", ctx, _FakeLLMClient())
         assert ctx.slots["preferred_language"] == expected
+
+
+def test_store_message_language_asks_a_clean_question_and_keeps_only_an_allowed_language(monkeypatch):
+    monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGES", "English,Spanish,German")
+    contact = {"language": "es"}
+    for reply, expected in (("English", "English"), (" german. ", "German"), ("NULL", None), ("French", None), ("", None)):
+        ctx = _ctx({"preferred_language": "Spanish"}, last_user_message="Hello, I want information", contact=contact)
+        client = _FakeLLMClient(reply)
+        _apply_store_line("[msg_language] = MESSAGE_LANGUAGE", ctx, client)
+        assert ctx.slots["msg_language"] == expected, reply
+        # only the message and the allowed languages reach the model: not the CRM language nor the stored preference
+        assert "Hello, I want information" in client.prompts[0] and "English, Spanish, German" in client.prompts[0]
+        assert '"es"' not in client.prompts[0] and "preferred_language" not in client.prompts[0]
+    ctx = _ctx({}, last_user_message="  ")
+    client = _FakeLLMClient("English")
+    _apply_store_line("[msg_language] = MESSAGE_LANGUAGE", ctx, client)
+    assert ctx.slots["msg_language"] is None and client.prompts == []
+
+
+def test_store_requested_language_asks_for_the_language_the_contact_wants(monkeypatch):
+    monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGES", "English,Spanish,French")
+    ctx = _ctx({"preferred_language": "Spanish"}, last_user_message="parlez-moi en français", contact={"language": "es"})
+    client = _FakeLLMClient("French")
+    _apply_store_line("[requested_language] = REQUESTED_LANGUAGE", ctx, client)
+    assert ctx.slots["requested_language"] == "French"
+    assert "parlez-moi en français" in client.prompts[0] and "ask to switch" in client.prompts[0]
+    assert '"es"' not in client.prompts[0] and "English, Spanish, French" in client.prompts[0]
 
 
 def test_store_find_day_returns_the_day_only_when_it_is_offered():
@@ -2549,3 +2577,15 @@ def test_session_history_keeps_ten_lines_but_prompts_show_the_last_five():
     assert "message 13" in shown and "message 9" in shown
     assert "message 8" not in shown
     assert PROMPT_HISTORY_LINES == 5
+
+
+def test_dates_and_times_are_written_in_french():
+    import datetime
+
+    from agent_runtime import languages
+    from agent_runtime.runtime.graph_builder import _day_full, _day_label, _day_title
+
+    assert _day_label("2026-11-10", "French") == "mardi 10 novembre"
+    assert _day_full("2026-11-10", "French") == "Mardi 10 novembre"
+    assert _day_title("2026-11-04", "fr") == "Mercredi. 4 nov"
+    assert languages.resolve("fr").format_date(datetime.date(2026, 11, 10)) == "10 novembre 2026"

@@ -766,7 +766,7 @@
           "new_start_date = [am__new_slot].start_co",
           "If [am__new_slot] is not itself an object, take new_start_date from the start_co of the matching object in [am__available_slots].",
           "iana_timezone = [user_timezone] ?? 'America/Bogota'",
-          "language = [preferred_language] in uppercase ('EN', 'ES', or 'PT')"
+          "language = [preferred_language] in uppercase ('EN', 'ES', 'PT', 'FR', 'DE', or 'IT')"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -1599,7 +1599,7 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[o__msg_language] = the language the latest user message is written in, as exactly one of English, Spanish or Portuguese; NULL when there is no user message yet or its language is unclear"
+          "[o__msg_language] = MESSAGE_LANGUAGE"
         ],
         "capture": [],
         "eval": "code",
@@ -1632,23 +1632,9 @@
         "route": [
           {
             "target": "O__OP_TO_LM",
-            "condition_text": "IF [o__msg_language] == 'Spanish' AND [preferred_language] != 'Spanish' -> GO_TO: O__OP_TO_LM",
+            "condition_text": "IF [o__msg_language] IS NOT NULL AND [o__msg_language] != [preferred_language] -> GO_TO: O__OP_TO_LM",
             "is_mechanical": true,
-            "python_expression": "o__msg_language == 'Spanish' and preferred_language != 'Spanish'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_TO_LM",
-            "condition_text": "IF [o__msg_language] == 'Portuguese' AND [preferred_language] != 'Portuguese' -> GO_TO: O__OP_TO_LM",
-            "is_mechanical": true,
-            "python_expression": "o__msg_language == 'Portuguese' and preferred_language != 'Portuguese'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_TO_LM",
-            "condition_text": "IF [o__msg_language] == 'English' AND [preferred_language] != 'English' -> GO_TO: O__OP_TO_LM",
-            "is_mechanical": true,
-            "python_expression": "o__msg_language == 'English' and preferred_language != 'English'",
+            "python_expression": "o__msg_language is not None and o__msg_language != preferred_language",
             "reason": null
           }
         ],
@@ -1789,7 +1775,7 @@
           "The first message already asks to book an appointment: send the contact to scheduling, carrying the service when the message names one."
         ],
         "do": [
-          "If the latest user message mentions IVF, FIV or ROPA, set [svc] = 'ivf' and [appt_svc] = 'ivf'. If it mentions surrogacy (subrogación, subrogação, gestación subrogada), set [svc] = 'surrogacy' and [appt_svc] = 'surrogacy'. If it names no service, change nothing."
+          "If the latest user message mentions IVF, FIV, FIVET, In-vitro-Fertilisation or ROPA, set [svc] = 'ivf' and [appt_svc] = 'ivf'. If it mentions surrogacy (subrogación, subrogação, gestación subrogada, gestation pour autrui, GPA, mère porteuse, Leihmutterschaft, maternità surrogata, gestazione per altri), set [svc] = 'surrogacy' and [appt_svc] = 'surrogacy'. If it names no service, change nothing."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4652,7 +4638,7 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[lm__requested_language] = the language the latest user message asks for or is written in, as exactly one of English, Spanish or Portuguese. If they ask for a language, that language; if they say in Spanish or Portuguese that they do not speak English, that language; if they only say in English that they do not speak English, NULL. NULL for a one-word answer, a service name, an isolated borrowed word, or when no language is clear"
+          "[lm__requested_language] = REQUESTED_LANGUAGE"
         ],
         "capture": [],
         "eval": "code",
@@ -4684,24 +4670,10 @@
         "eval": "code",
         "route": [
           {
-            "target": "LM__LM_SET_ES",
-            "condition_text": "IF [lm__requested_language] == 'Spanish' -> GO_TO: LM__LM_SET_ES",
+            "target": "LM__LM_SET_REQUESTED",
+            "condition_text": "IF [lm__requested_language] IS NOT NULL -> GO_TO: LM__LM_SET_REQUESTED",
             "is_mechanical": true,
-            "python_expression": "lm__requested_language == 'Spanish'",
-            "reason": null
-          },
-          {
-            "target": "LM__LM_SET_PT",
-            "condition_text": "IF [lm__requested_language] == 'Portuguese' -> GO_TO: LM__LM_SET_PT",
-            "is_mechanical": true,
-            "python_expression": "lm__requested_language == 'Portuguese'",
-            "reason": null
-          },
-          {
-            "target": "LM__LM_SET_EN",
-            "condition_text": "IF [lm__requested_language] == 'English' -> GO_TO: LM__LM_SET_EN",
-            "is_mechanical": true,
-            "python_expression": "lm__requested_language == 'English'",
+            "python_expression": "lm__requested_language is not None",
             "reason": null
           }
         ],
@@ -4734,24 +4706,10 @@
         "eval": "code",
         "route": [
           {
-            "target": "LM__LM_SET_ES",
-            "condition_text": "IF [preferred_language] == 'Spanish' -> GO_TO: LM__LM_SET_ES",
+            "target": "LM__LM_SET_KNOWN",
+            "condition_text": "IF [preferred_language] IS NOT NULL -> GO_TO: LM__LM_SET_KNOWN",
             "is_mechanical": true,
-            "python_expression": "preferred_language == 'Spanish'",
-            "reason": null
-          },
-          {
-            "target": "LM__LM_SET_EN",
-            "condition_text": "IF [preferred_language] == 'English' -> GO_TO: LM__LM_SET_EN",
-            "is_mechanical": true,
-            "python_expression": "preferred_language == 'English'",
-            "reason": null
-          },
-          {
-            "target": "LM__LM_SET_PT",
-            "condition_text": "IF [preferred_language] == 'Portuguese' -> GO_TO: LM__LM_SET_PT",
-            "is_mechanical": true,
-            "python_expression": "preferred_language == 'Portuguese'",
+            "python_expression": "preferred_language is not None",
             "reason": null
           }
         ],
@@ -4769,13 +4727,13 @@
         "node_id": "LM__LM_ASK_LANG",
         "node_type": "question",
         "goal": [
-          "Ask the user which language they prefer to continue in using a trilingual message."
+          "Ask the user which language they prefer to continue in using a six-language message."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Te puedo atender en español. I can assist you in English. Posso atender em português. ¿En qué idioma prefieres continuar? / Which language do you prefer? / Em qual idioma você prefere conversar?"
+          "Te puedo atender en español. I can assist you in English. Posso atender em português. Je peux vous répondre en français. Ich kann Ihnen auf Deutsch helfen. Posso risponderti in italiano. ¿En qué idioma prefieres continuar? / Which language do you prefer? / Em qual idioma você prefere conversar? / Dans quelle langue préférez-vous continuer ? / Welche Sprache bevorzugen Sie? / Quale lingua preferisci?"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -4783,7 +4741,7 @@
         "capture": [
           [
             "preferred_language",
-            "Literal[English, Spanish, Portuguese]"
+            "Literal[English, Spanish, Portuguese, French, German, Italian]"
           ]
         ],
         "eval": "code",
@@ -4814,10 +4772,10 @@
         ]
       },
       {
-        "node_id": "LM__LM_SET_ES",
+        "node_id": "LM__LM_SET_REQUESTED",
         "node_type": "registration",
         "goal": [
-          "Set Spanish display label."
+          "Switch to the language the contact asked for (any allowed language) and keep its name to sync with GHL."
         ],
         "do": [],
         "trigger": [],
@@ -4826,8 +4784,8 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[preferred_language] = 'Spanish'",
-          "[lm__language_value] = 'Spanish'"
+          "[preferred_language] = [lm__requested_language]",
+          "[lm__language_value] = [lm__requested_language]"
         ],
         "capture": [],
         "eval": "code",
@@ -4843,10 +4801,10 @@
         "fallback": []
       },
       {
-        "node_id": "LM__LM_SET_EN",
+        "node_id": "LM__LM_SET_KNOWN",
         "node_type": "registration",
         "goal": [
-          "Set English display label."
+          "The contact picked a language from the menu: keep its name to sync with GHL."
         ],
         "do": [],
         "trigger": [],
@@ -4855,37 +4813,7 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[preferred_language] = 'English'",
-          "[lm__language_value] = 'English'"
-        ],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "LM__LM_ACT_SYNC",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "LM__LM_SET_PT",
-        "node_type": "registration",
-        "goal": [
-          "Set Portuguese display label."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[preferred_language] = 'Portuguese'",
-          "[lm__language_value] = 'Portuguese'"
+          "[lm__language_value] = [preferred_language]"
         ],
         "capture": [],
         "eval": "code",
@@ -7826,7 +7754,7 @@
           "[sc__book_try] = [sc__book_try] + 1",
           "TOOL CALL ONLY: call book_appointment now.",
           "start_date = [sc__start_date]",
-          "duration = <APPOINTMENT_DURATION_MINUTES>. language = [preferred_language] in uppercase ('EN', 'ES', or 'PT'). iana_timezone = [user_timezone].",
+          "duration = <APPOINTMENT_DURATION_MINUTES>. language = [preferred_language] in uppercase ('EN', 'ES', 'PT', 'FR', 'DE', or 'IT'). iana_timezone = [user_timezone].",
           "contact_name = [sc__c_name], contact_email = [sc__c_email], contact_phone = [sc__c_phone].",
           "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it).",
           "It is FORBIDDEN to write to the contact, confirm the appointment, run FAQs or handlers, or route before capturing [sc__success].",
@@ -7901,7 +7829,7 @@
           "[sc__book_try] = [sc__book_try] + 1",
           "TOOL CALL ONLY: call book_appointment now.",
           "start_date = [sc__start_date]",
-          "duration = <APPOINTMENT_DURATION_MINUTES>. language = [preferred_language] in uppercase ('EN', 'ES', or 'PT'). iana_timezone = [user_timezone].",
+          "duration = <APPOINTMENT_DURATION_MINUTES>. language = [preferred_language] in uppercase ('EN', 'ES', 'PT', 'FR', 'DE', or 'IT'). iana_timezone = [user_timezone].",
           "contact_name = [sc__c_name], contact_email = [sc__c_email], contact_phone = [sc__c_phone].",
           "contact_id = {{contact.contact_id}} (required in every call to this tool; the tool fails without it).",
           "It is FORBIDDEN to write to the contact, confirm the appointment, run FAQs or handlers, or route before capturing [sc__success].",
@@ -9552,7 +9480,28 @@
           "este e o meu numero",
           "confirmo meu número",
           "confirmo meu numero",
-          "sim confirmo"
+          "sim confirmo",
+          "confirmer le numéro",
+          "confirmer mon numéro",
+          "oui c'est mon numéro",
+          "c'est mon numéro",
+          "voici mon numéro",
+          "je confirme mon numéro",
+          "oui je confirme",
+          "nummer bestätigen",
+          "meine nummer bestätigen",
+          "ja das ist meine nummer",
+          "das ist meine nummer",
+          "hier ist meine nummer",
+          "ich bestätige meine nummer",
+          "ja ich bestätige",
+          "confermare il numero",
+          "confermo il mio numero",
+          "sì è il mio numero",
+          "è il mio numero",
+          "ecco il mio numero",
+          "confermo il numero",
+          "sì confermo"
         ],
         "disabled_in": [],
         "say": [],
@@ -9662,7 +9611,29 @@
           "quero trabalhar como gestante",
           "como posso ser barriga de aluguel",
           "quero alugar minha barriga",
-          "quero gerar o bebê de outra família"
+          "quero gerar o bebê de outra família",
+          "je veux être mère porteuse",
+          "je veux devenir mère porteuse",
+          "je veux me porter candidate comme mère porteuse",
+          "je veux travailler comme gestatrice",
+          "comment puis-je devenir mère porteuse",
+          "je veux louer mon ventre",
+          "je veux offrir mon utérus",
+          "je veux porter le bébé d'une autre famille",
+          "ich möchte leihmutter werden",
+          "ich will leihmutter werden",
+          "ich möchte mich als leihmutter bewerben",
+          "ich möchte als leihmutter arbeiten",
+          "wie kann ich leihmutter werden",
+          "ich möchte das baby einer anderen familie austragen",
+          "ich möchte meine gebärmutter zur verfügung stellen",
+          "voglio diventare madre surrogata",
+          "voglio fare la madre surrogata",
+          "voglio candidarmi come madre surrogata",
+          "voglio lavorare come gestante",
+          "come posso diventare madre surrogata",
+          "voglio portare in grembo il bambino di un'altra famiglia",
+          "voglio offrire il mio utero"
         ],
         "disabled_in": [
           "O__OP_CONFIRM_SUR"
@@ -9696,7 +9667,19 @@
           "no me interesa",
           "no quiero continuar",
           "não estou interessado",
-          "não quero continuar"
+          "não quero continuar",
+          "je ne suis pas intéressé",
+          "je ne suis pas intéressée",
+          "ça ne m'intéresse pas",
+          "je ne veux pas continuer",
+          "ich bin nicht interessiert",
+          "kein interesse",
+          "ich möchte nicht weitermachen",
+          "das interessiert mich nicht",
+          "non sono interessato",
+          "non sono interessata",
+          "non mi interessa",
+          "non voglio continuare"
         ],
         "disabled_in": [],
         "say": [
@@ -9758,7 +9741,10 @@
         "do": [
           "If the latest user message clearly requests to speak Spanish (e.g., contains 'no hablo ingles', 'habla en español', 'en español por favor', 'cambiar a español'), set [preferred_language] = 'Spanish' now before speaking.",
           "If the latest user message clearly requests to speak Portuguese (e.g., contains 'não falo inglês', 'mudar para português', 'em português por favor', 'fale em português'), set [preferred_language] = 'Portuguese' now before speaking.",
-          "If the latest user message clearly requests to speak English or says they do not speak Spanish/Portuguese (e.g., 'I don't speak Spanish', 'speak in English', 'in English please'), set [preferred_language] = 'English' now before speaking."
+          "If the latest user message clearly requests to speak French (e.g., contains 'en français s'il vous plaît', 'parlez-moi en français', 'je ne parle pas anglais', 'in French please'), set [preferred_language] = 'French' now before speaking.",
+          "If the latest user message clearly requests to speak German (e.g., contains 'auf Deutsch bitte', 'sprechen Sie Deutsch', 'ich spreche kein Englisch', 'in German please'), set [preferred_language] = 'German' now before speaking.",
+          "If the latest user message clearly requests to speak Italian (e.g., contains 'in italiano per favore', 'parla italiano', 'non parlo inglese', 'in Italian please'), set [preferred_language] = 'Italian' now before speaking.",
+          "If the latest user message clearly requests to speak English or says they do not speak Spanish/Portuguese/French/German/Italian (e.g., 'I don't speak Spanish', 'speak in English', 'in English please'), set [preferred_language] = 'English' now before speaking."
         ],
         "trigger": [
           "the contact explicitly asks to switch the language of the conversation, or says they do not speak or understand the current language (never a plain 'I did not understand' about the content, which is H_REPEAT)",
@@ -9823,7 +9809,83 @@
           "mudar para espanhol",
           "change language",
           "cambiar idioma",
-          "mudar idioma"
+          "mudar idioma",
+          "parlez-moi en français",
+          "parle-moi en français",
+          "en français s'il vous plaît",
+          "en français svp",
+          "je ne parle pas français",
+          "je ne parle pas anglais",
+          "je ne parle pas espagnol",
+          "je ne parle pas portugais",
+          "pouvez-vous parler français",
+          "passer en français",
+          "passer à l'anglais",
+          "passer à l'espagnol",
+          "changer de langue",
+          "speak in french",
+          "french please",
+          "in french please",
+          "can you speak french",
+          "I don't speak French",
+          "fale em francês",
+          "em francês por favor",
+          "hablame en frances",
+          "háblame en francés",
+          "habla en francés",
+          "en francés por favor",
+          "en frances por favor",
+          "no hablo francés",
+          "responde en francés",
+          "prefiero que me hables en francés",
+          "mudar para francês",
+          "sprechen sie deutsch",
+          "sprich deutsch mit mir",
+          "auf deutsch bitte",
+          "bitte auf deutsch",
+          "ich spreche kein englisch",
+          "ich spreche kein spanisch",
+          "ich spreche kein portugiesisch",
+          "ich spreche kein französisch",
+          "auf deutsch wechseln",
+          "sprache wechseln",
+          "speak in german",
+          "german please",
+          "in german please",
+          "can you speak german",
+          "I don't speak German",
+          "háblame en alemán",
+          "hablame en aleman",
+          "en alemán por favor",
+          "no hablo alemán",
+          "fale em alemão",
+          "em alemão por favor",
+          "parlez-moi en allemand",
+          "en allemand s'il vous plaît",
+          "parlami in italiano",
+          "parla italiano",
+          "in italiano per favore",
+          "non parlo inglese",
+          "non parlo spagnolo",
+          "non parlo portoghese",
+          "non parlo francese",
+          "passa all'italiano",
+          "cambiare lingua",
+          "speak in italian",
+          "italian please",
+          "in italian please",
+          "can you speak italian",
+          "I don't speak Italian",
+          "háblame en italiano",
+          "hablame en italiano",
+          "en italiano por favor",
+          "no hablo italiano",
+          "fale em italiano",
+          "em italiano por favor",
+          "parlez-moi en italien",
+          "en italien s'il vous plaît",
+          "sprich italienisch",
+          "auf italienisch bitte"
         ],
         "disabled_in": [],
         "say": [],
@@ -9876,7 +9938,28 @@
           "cancelar minha reunião",
           "remarcar consulta",
           "cancelar consulta",
-          "mudar o horário da minha consulta"
+          "mudar o horário da minha consulta",
+          "je veux annuler mon rendez-vous",
+          "je dois reprogrammer",
+          "puis-je changer l'heure de mon rendez-vous",
+          "je veux voir mes rendez-vous",
+          "annuler mon rendez-vous",
+          "reprogrammer le rendez-vous",
+          "modifier mon rendez-vous",
+          "ich möchte meinen termin absagen",
+          "ich muss den termin verschieben",
+          "kann ich die uhrzeit meines termins ändern",
+          "ich möchte meine termine sehen",
+          "termin absagen",
+          "termin verschieben",
+          "termin ändern",
+          "voglio annullare il mio appuntamento",
+          "devo riprogrammare",
+          "posso cambiare l'orario del mio appuntamento",
+          "voglio vedere i miei appuntamenti",
+          "annullare l'appuntamento",
+          "riprogrammare l'appuntamento",
+          "modificare l'appuntamento"
         ],
         "disabled_in": [],
         "say": [
@@ -9942,7 +10025,28 @@
           "humano por favor",
           "posso falar com um humano",
           "atendimento humano",
-          "falar com agente"
+          "falar com agente",
+          "parler à un conseiller",
+          "parler à un humain",
+          "je veux parler à une personne",
+          "conseiller humain",
+          "un humain s'il vous plaît",
+          "puis-je parler à un humain",
+          "transférez-moi à un conseiller",
+          "mit einem berater sprechen",
+          "mit einem menschen sprechen",
+          "ich möchte mit einer person sprechen",
+          "menschlicher berater",
+          "einen menschen bitte",
+          "kann ich mit einem menschen sprechen",
+          "verbinden sie mich mit einem berater",
+          "parlare con un consulente",
+          "parlare con una persona",
+          "voglio parlare con una persona",
+          "consulente umano",
+          "un operatore umano per favore",
+          "posso parlare con un operatore",
+          "passami a un consulente"
         ],
         "disabled_in": [],
         "say": [],
@@ -9995,7 +10099,25 @@
           "preciso de uma consulta",
           "gostaria de agendar uma consulta",
           "quero agendar uma consulta de fiv",
-          "quero agendar uma consulta de subrogação"
+          "quero agendar uma consulta de subrogação",
+          "je veux prendre rendez-vous",
+          "je voudrais prendre rendez-vous",
+          "je veux réserver une consultation",
+          "j'ai besoin d'un rendez-vous",
+          "je veux prendre rendez-vous pour une FIV",
+          "je veux prendre rendez-vous pour la gestation pour autrui",
+          "ich möchte einen termin vereinbaren",
+          "ich möchte einen termin buchen",
+          "ich möchte eine beratung buchen",
+          "ich brauche einen termin",
+          "ich möchte einen termin für eine ivf",
+          "ich möchte einen termin für die leihmutterschaft",
+          "voglio prenotare un appuntamento",
+          "vorrei prendere un appuntamento",
+          "voglio prenotare una consulenza",
+          "ho bisogno di un appuntamento",
+          "voglio un appuntamento per la fivet",
+          "voglio un appuntamento per la maternità surrogata"
         ],
         "disabled_in": [],
         "say": [
@@ -10052,7 +10174,28 @@
           "quanto vale o processo",
           "custos",
           "valor do processo",
-          "orçamento"
+          "orçamento",
+          "combien ça coûte",
+          "quel est le prix",
+          "quels sont les tarifs",
+          "combien coûte le processus",
+          "les coûts",
+          "le prix du processus",
+          "combien coûte une FIV",
+          "was kostet das",
+          "wie hoch ist der preis",
+          "was sind die preise",
+          "was kostet der prozess",
+          "die kosten",
+          "der preis des prozesses",
+          "was kostet eine ivf",
+          "quanto costa",
+          "qual è il prezzo",
+          "quali sono le tariffe",
+          "quanto costa il processo",
+          "i costi",
+          "il prezzo del processo",
+          "quanto costa una fivet"
         ],
         "disabled_in": [],
         "say": [],
@@ -10090,7 +10233,19 @@
           "qué quisiste decir",
           "pode repetir",
           "não entendi",
-          "o que você quis dizer"
+          "o que você quis dizer",
+          "pouvez-vous répéter",
+          "je n'ai pas compris",
+          "qu'est-ce que vous voulez dire",
+          "répétez s'il vous plaît",
+          "können sie das wiederholen",
+          "ich habe das nicht verstanden",
+          "was meinen sie damit",
+          "bitte wiederholen sie",
+          "puoi ripetere",
+          "non ho capito",
+          "cosa intendi",
+          "ripeti per favore"
         ],
         "disabled_in": [],
         "say": [
@@ -11022,7 +11177,7 @@
         {
           "name": "language",
           "required": true,
-          "description": "Two-letter uppercase language code, strictly 'EN', 'ES', or 'PT', for the confirmation and follow-up notifications. Selected from [preferred_language], the language in which the active conversation is being conducted.",
+          "description": "Two-letter uppercase language code, 'EN', 'ES', 'PT', 'FR', 'DE' or 'IT', for the confirmation and follow-up notifications. Selected from [preferred_language], the language in which the active conversation is being conducted.",
           "type_expr": "Literal[EN, ES, PT]",
           "examples": []
         },
@@ -11119,7 +11274,7 @@
       ],
       "notes": [
         "MANDATORY EXECUTION: on entering SC__SC_BOOK_I or SC__SC_BOOK_S; requires prior get_available_slots.",
-        "ARGUMENTS: start_date = chosen slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT'}; iana_timezone = same as availability; calendar_type = 'FT'.",
+        "ARGUMENTS: start_date = chosen slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT','FR','DE','IT'}; iana_timezone = same as availability; calendar_type = 'FT'.",
         "SOURCE OF TRUTH: success determines creation; do not confirm before success == true and event_id != null."
       ]
     },
@@ -11167,7 +11322,7 @@
         {
           "name": "language",
           "required": false,
-          "description": "Two-letter uppercase code in {'ES','EN','PT'} to format results. Default: ES.",
+          "description": "Two-letter uppercase code in {'ES','EN','PT','FR','DE','IT'} to format results. Default: ES.",
           "type_expr": "str",
           "examples": [
             "ES"
@@ -11301,7 +11456,7 @@
         {
           "name": "language",
           "required": false,
-          "description": "Two-letter uppercase code in {'ES','EN','PT'} for confirmation. Default: ES.",
+          "description": "Two-letter uppercase code in {'ES','EN','PT','FR','DE','IT'} for confirmation. Default: ES.",
           "type_expr": "str",
           "examples": [
             "ES"
@@ -11360,7 +11515,7 @@
         {
           "name": "language",
           "required": false,
-          "description": "Language of the answer: English, Spanish or Portuguese.",
+          "description": "Language of the answer: English, Spanish, Portuguese, French, German or Italian.",
           "type_expr": "str",
           "examples": []
         },
@@ -11409,7 +11564,7 @@
     "IVF_CITY": "Bogotá",
     "APPOINTMENT_DURATION_MINUTES": "30",
     "MIGRATION_POLICY_REASON": "This policy responds exclusively to Colombian migration requirements and aims to ensure that the process can be carried out legally and safely.",
-    "SUPPORTED_LANG": "English|Spanish|Portuguese",
+    "SUPPORTED_LANG": "English|Spanish|Portuguese|French|German|Italian",
     "DATA_POLICY_URL": "https://familyaims.com/privacy-policy-us/",
     "MAX_KB_ROUNDS": "8",
     "KB_SIDE_NUDGE_AFTER": "2"
@@ -11417,7 +11572,7 @@
   "session_timeout_minutes": 10080,
   "say_policies": [
     "The conversation operating language is [preferred_language], initialized from {{contact.language}} when available or defaulting to English. When the global language-change handler routes to language_management, let that subflow update [preferred_language] and sync GHL before continuing; do not make a parallel language decision or tool call.",
-    "If [preferred_language] == 'English', respond in warm professional English; if 'Spanish', respond in natural Colombian Spanish; if 'Portuguese', respond in natural Brazilian Portuguese. If it is empty, default to English.",
+    "If [preferred_language] == 'English', respond in warm professional English; if 'Spanish', respond in natural Colombian Spanish; if 'Portuguese', respond in natural Brazilian Portuguese; if 'French', respond in natural, warm standard French (vous form); if 'German', respond in natural, warm standard German (Sie form); if 'Italian', respond in natural, warm standard Italian (tu form). If it is empty, default to English.",
     "For ambiguous replies such as yes, no, ok, numbers, dates, or times, keep the current [preferred_language]. Change it only if the user explicitly asks for another language or sends a clear message in another supported language.",
     "If an approved SAY, FAQ, or handler message is written in another supported language, translate it faithfully into [preferred_language] without adding or removing facts.",
     "Write in a warm, brief, useful style and keep each turn focused on one clear next step.",
@@ -11448,7 +11603,7 @@
     "TOOL RESULTS ARE THE ONLY SOURCE: never offer, promise, or invent days, times, ranges, or availability, and never say an appointment is booked or confirmed from your own knowledge. Availability comes only from the most recent get_available_slots output for the active service, and a booking is real only when book_appointment returns success == true.",
     "Do not mix service tools: if [appt_svc] == 'ivf', use the IVF scheduling path; if [appt_svc] == 'surrogacy', use the surrogacy scheduling path.",
     "Emails and contact data may be repeated back for confirmation, but never invented or completed from guesswork.",
-    "Multilingual normalization: interpret responses, intents, FAQ matches, and semantic captures in Spanish, English, or Brazilian Portuguese. Normalize yes/no, services, objections, and preferences to the declared DSL literals without changing slot names or state IDs.",
+    "Multilingual normalization: interpret responses, intents, FAQ matches, and semantic captures in Spanish, English, Brazilian Portuguese, French, German, or Italian. Normalize yes/no, services, objections, and preferences to the declared DSL literals without changing slot names or state IDs.",
     "No hallucinations: if the user asks for a detail that is not in the approved content or a tool result, briefly explain that you don't have that specific information right now and that the human specialist will clarify it during the appointment. Avoid using repetitive filler phrases.",
     "PROCESS DURATION: When asked about duration (F_TIME), if [svc] is known, focus your answer on that service. For surrogacy, emphasize the 24-month estimate. For IVF, explain the 20-30 day (stimulation in Colombia) or 10-15 day (already stimulated) timelines, and always mention that the second phase is the transfer.",
     "TECHNICAL ERRORS: If a network error or technical failure occurs during a tool call, apologize to the user, explain that there is a temporary connection issue, and suggest retrying later or waiting for a human advisor.",

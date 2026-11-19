@@ -1,0 +1,74 @@
+code: pt
+name: Portuguese
+native_name: português
+aliases: [por, portugues]
+default_enabled: true
+
+calendar:
+  weekdays: [segunda-feira, terça-feira, quarta-feira, quinta-feira, sexta-feira, sábado, domingo]
+  months: [janeiro, fevereiro, março, abril, maio, junho, julho, agosto, setembro, outubro, novembro, dezembro]
+  month_abbreviations: [jan, fev, mar, abr, mai, jun, jul, ago, set, out, nov, dez]
+  parts_of_day: [madrugada, manhã, tarde, noite]
+  range_word: a
+  clock: 24
+  formats:
+    date: "{day} de {month} de {year}"
+    day_label: "{weekday} {day} de {month}"
+    weekday_date: "{weekday} {date}"
+    full_date: "{weekday}, {date}"
+    day_title: "{weekday}. {day} {month_abbr}"
+
+messages:
+  closing: "Obrigado por entrar em contato conosco. Se tiver mais alguma pergunta, não hesite em nos escrever. Tenha um ótimo dia!"
+  unsupported_media: "Não consegui entender essa mensagem. Por enquanto só posso responder por texto."
+  menu_offer: "Posso atendê-lo em {languages}."
+  menu_or: ou
+
+router:
+  explicit_phrases:
+    - fale em português
+    - em português por favor
+    - mudar para português
+    - mude para português
+    - escreva em português
+    - prefiro português
+    - responda em português
+  inability_phrases:
+    - nao falo ingles
+    - nao entendo ingles
+    - nao falo este idioma
+    - nao entendo este idioma
+  content_words:
+    - olá
+    - obrigado
+    - obrigada
+    - por favor
+    - português
+    - barriga
+    - maternidade
+    - interessa
+    - quero
+    - voce
+    - você
+    - embrião
+  bare_reply_words: >-
+    sim nao claro ok certo pode quero tambem obrigado obrigada com certeza exatamente perfeito beleza tudo bem
+    legal isso mesmo aceito por favor positivo negativo combinado otimo pode ser
+
+scheduling:
+  today: [hoje]
+  tomorrow: [amanhã]
+  day_after_tomorrow: [depois de amanhã]
+  part_words:
+    early_morning: [madrugada]
+    morning: [manhã]
+    afternoon: [tarde, tardes]
+    night: [noite, noites]
+  ordinals:
+    last: [mais tarde, mais tardia, mais tardio, último, última, últimos, últimas, derradeiro, derradeira]
+    second_to_last: [penúltimo, penúltima, penúltimos, penúltimas]
+    first: [primeiro, primeira, primeiros, primeiras, mais cedo, mais pronto]
+    second: [segundo, segunda, segundos, segundas]
+    third: [terceiro, terceira, terceiros, terceiras]
+    fourth: [quarto, quarta, quartos, quartas]
+    fifth: [quinto, quinta, quintos, quintas]

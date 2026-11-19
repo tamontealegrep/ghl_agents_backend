@@ -72,6 +72,7 @@ Revisa estas:
 | `FA_GOOGLE_*_GMAIL`, `FA_GMAIL_SENDER_EMAIL` | Solo si envías correos de confirmación |
 | `GLOBAL_ROUTER_RESPECT_FILTER` | `true` = el agente responde con cortesía ante insultos o discurso de odio |
 | `GLOBAL_ROUTER_LANGUAGE_DETECTION` | `false` = frases fijas primero; `true` = el modelo detecta el cambio de idioma |
+| `GLOBAL_ROUTER_LANGUAGES` | Idiomas a los que puede cambiar una conversación, separados por comas y por nombre o código (`English,Spanish,Portuguese,French`). Vacío = `English,Spanish,Portuguese` |
 | `GLOBAL_ROUTER_OUTPUT_REVIEW` | `false`. La revisión de salida hoy solo aplica a agentes con reglas declaradas (BabyNova) |
 | `GHL_VERSION` | `v3` |
 

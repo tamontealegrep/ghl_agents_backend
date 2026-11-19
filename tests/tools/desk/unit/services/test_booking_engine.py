@@ -104,12 +104,12 @@ def test_normalize_email_trims_and_lowercases():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("raw,expected", [("es", "ES"), ("ES", "ES"), ("pt", "PT"), ("PT", "PT")])
-def test_normalize_language_recognizes_es_and_pt(raw, expected):
+@pytest.mark.parametrize("raw,expected", [("es", "ES"), ("ES", "ES"), ("pt", "PT"), ("PT", "PT"), ("fr", "FR"), ("FR", "FR"), ("de", "DE"), ("it", "IT")])
+def test_normalize_language_recognizes_the_languages_with_a_template(raw, expected):
     assert engine.normalize_language(raw) == expected
 
 
-@pytest.mark.parametrize("raw", ["en", "EN", "fr", "", None])
+@pytest.mark.parametrize("raw", ["en", "EN", "tlh", "", None])
 def test_normalize_language_defaults_to_english(raw):
     assert engine.normalize_language(raw) == "EN"
 

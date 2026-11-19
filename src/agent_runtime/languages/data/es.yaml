@@ -1,0 +1,94 @@
+code: es
+name: Spanish
+native_name: español
+aliases: [esp, spa, espanol, castellano]
+default_enabled: true
+
+calendar:
+  weekdays: [lunes, martes, miércoles, jueves, viernes, sábado, domingo]
+  months: [enero, febrero, marzo, abril, mayo, junio, julio, agosto, septiembre, octubre, noviembre, diciembre]
+  month_abbreviations: [ene, feb, mar, abr, may, jun, jul, ago, sep, oct, nov, dic]
+  parts_of_day: [madrugada, mañana, tarde, noche]
+  range_word: a
+  clock: 12
+  formats:
+    date: "{day} de {month} de {year}"
+    day_label: "{weekday} {day} de {month}"
+    weekday_date: "{weekday} {date}"
+    full_date: "{weekday}, {date}"
+    day_title: "{weekday}. {day} {month_abbr}"
+
+messages:
+  closing: "Gracias por contactarte con nosotros. Si tienes alguna otra pregunta, no dudes en escribirnos. ¡Que tengas un buen día!"
+  unsupported_media: "No pude entender ese mensaje. Por ahora solo puedo responderte por texto."
+  menu_offer: "Puedo atenderte en {languages}."
+  menu_or: o
+
+router:
+  explicit_phrases:
+    - hablame en español
+    - habla en español
+    - habla español
+    - en español por favor
+    - cambiar a español
+    - cambia a español
+    - escribe en español
+    - prefiero español
+    - responde en español
+  inability_phrases:
+    - no hablo ingles
+    - no entiendo ingles
+    - no hablo este idioma
+    - no entiendo este idioma
+  content_words:
+    - hola
+    - gracias
+    - por favor
+    - español
+    - subrogacion
+    - subrrogacion
+    - gestacion
+    - maternidad
+    - fertilizacion
+    - interesa
+    - quiero
+    - metodo
+    - ropa
+    - embarazo
+    - pareja
+    - nombre
+    - correo
+    - viajar
+  topic_words:
+    - subrogacion
+    - subrrogacion
+    - fiv
+    - ropa
+    - in vitro
+    - gestacion
+    - maternidad
+    - pareja
+    - mi nombre
+    - me interesa
+    - quiero
+  bare_reply_words: >-
+    si no claro ok vale dale listo bueno bien correcto exacto afirmativo negativo por supuesto favor gracias
+    de acuerdo obvio seguro porfa tambien perfecto genial adelante efectivamente asi
+
+scheduling:
+  today: [hoy]
+  tomorrow: [mañana]
+  day_after_tomorrow: [pasado mañana]
+  part_words:
+    early_morning: [madrugada]
+    morning: [la mañana]      # a bare "mañana" is tomorrow, not the morning
+    afternoon: [tarde, tardes]
+    night: [noche, noches]
+  ordinals:
+    last: [más tarde, último, última, últimos, últimas]
+    second_to_last: [penúltimo, penúltima, penúltimos, penúltimas]
+    first: [primer, primero, primera, primeros, primeras, más temprano, 1ra, 1ro, 1era, 1ero]
+    second: [segundo, segunda, segundos, segundas, 2da, 2do]
+    third: [tercer, tercero, tercera, terceros, terceras, 3ra, 3ro, 3era, 3ero]
+    fourth: [cuarto, cuarta, cuartos, cuartas, 4ta, 4to]
+    fifth: [quinto, quinta, quintos, quintas, 5ta, 5to]

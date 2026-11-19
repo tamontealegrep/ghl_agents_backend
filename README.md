@@ -316,7 +316,7 @@ python scripts/dev_tunnel.py --company family_aims
 
 `dev_tunnel.py` necesita el ejecutable `ngrok` en el PATH. Si el `.env` trae `ADMIN_TOKEN`, `send_request.py` lo envía como `Bearer` (para `reset` y `admin/reload`).
 
-**Variables del motor y de la persistencia** (que también faltaban en los `env.example`): `GLOBAL_ROUTER_RESPECT_FILTER`, `GLOBAL_ROUTER_LANGUAGE_DETECTION` y `GLOBAL_ROUTER_OUTPUT_REVIEW` (router global; esta última revisa cada mensaje del agente contra las `output_rules` y `forbidden_words` de su definición antes de enviarlo, solo actúa en agentes que las declaran y está activa solo en `babynova`), `GHL_TEXT_HISTORY_MAX_DAYS` (días de inactividad antes de empezar una conversación nueva), `CLOSING_MESSAGE_SWEEP_INTERVAL_SECONDS` (cada cuánto corre el barrido del mensaje de cierre), `ECHO_ALLOWED_PHONES` (teléfonos permitidos para la herramienta `echo`) y `DATABASE_HOST`, `DATABASE_REGION`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`, `DATABASE_POOL_MAX_SIZE` (Postgres por piezas, con prioridad sobre `DATABASE_URL`).
+**Variables del motor y de la persistencia** (que también faltaban en los `env.example`): `GLOBAL_ROUTER_RESPECT_FILTER`, `GLOBAL_ROUTER_LANGUAGE_DETECTION`, `GLOBAL_ROUTER_LANGUAGES` (idiomas a los que puede cambiar una conversación, por nombre o código y separados por comas; vacío = `English,Spanish,Portuguese`) y `GLOBAL_ROUTER_OUTPUT_REVIEW` (router global; esta última revisa cada mensaje del agente contra las `output_rules` y `forbidden_words` de su definición antes de enviarlo, solo actúa en agentes que las declaran y está activa solo en `babynova`), `GHL_TEXT_HISTORY_MAX_DAYS` (días de inactividad antes de empezar una conversación nueva), `CLOSING_MESSAGE_SWEEP_INTERVAL_SECONDS` (cada cuánto corre el barrido del mensaje de cierre), `ECHO_ALLOWED_PHONES` (teléfonos permitidos para la herramienta `echo`) y `DATABASE_HOST`, `DATABASE_REGION`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`, `DATABASE_POOL_MAX_SIZE` (Postgres por piezas, con prioridad sobre `DATABASE_URL`).
 
 ---
 
@@ -408,6 +408,17 @@ curl -X POST http://localhost:8011/agents/family_aims_sam_text/admin/reload \
 | Cambiar `.env` | `docker compose up -d --force-recreate` |
 
 ---
+
+## 5b. Agregar o quitar un idioma
+
+Los idiomas viven en **un archivo por idioma**: `src/agent_runtime/languages/data/<código>.yaml` (hoy `en`, `es`, `pt` y `fr`). Ahí están los nombres de días y meses, los formatos de fecha, los mensajes fijos (cierre, "solo texto", menú de idiomas), las frases que el router reconoce ("hábleme en francés", "no hablo inglés") y las palabras con las que el contacto elige día u hora ("mañana", "por la tarde", "la última"). Ningún otro código nombra un idioma; `en.yaml` explica cada campo.
+
+- **Agregar**: `python scripts/add_language.py it Italian --env-file companies/<empresa>/.env` pide al modelo un borrador, lo valida con el mismo cargador que usa el runtime y lo deja en `data/it.yaml`. Revisa sobre todo `router` (las frases) y los formatos; luego agrega `Italian` a `GLOBAL_ROUTER_LANGUAGES`. También se puede copiar `en.yaml` y traducirlo a mano.
+- **Quitar para una empresa**: sácalo de `GLOBAL_ROUTER_LANGUAGES` (la conversación ya no cambia a ese idioma). **Quitar del todo**: borra su archivo.
+- Un idioma con `default_enabled: true` está permitido cuando `GLOBAL_ROUTER_LANGUAGES` está vacío; los demás hay que nombrarlos.
+- `tests/runtime/test_languages.py` valida todos los archivos (los de hoy y los que vengan) sin tocarlo.
+
+Lo que **no** es del backend: la definición del agente (`compiler/definitions/<agente>`) también nombra los idiomas que habla (la constante de idiomas, la política de respuesta, la pregunta "¿en qué idioma?"), y los correos de confirmación de Family Aims necesitan, por idioma, su asunto (`EMAIL_SUBJECTS` y `calendar_links` en `_tools/desk/services`) y `templates/emails/book_appointment_ft_<código>.html` (hoy EN, ES, PT y FR; un idioma sin plantilla sale en inglés).
 
 ## 6. Problemas frecuentes
 

@@ -638,7 +638,7 @@
     "description": "Authorized booking tool; creates the appointment from a valid slot.",
     "notes": [
       "MANDATORY EXECUTION: on entering SC__SC_BOOK_I or SC__SC_BOOK_S; requires prior get_available_slots.",
-      "ARGUMENTS: start_date = chosen slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT'}; iana_timezone = same as availability; calendar_type = 'FT'.",
+      "ARGUMENTS: start_date = chosen slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT','FR','DE','IT'}; iana_timezone = same as availability; calendar_type = 'FT'.",
       "SOURCE OF TRUTH: success determines creation; do not confirm before success == true and event_id != null."
     ],
     "inputs": [
@@ -660,7 +660,7 @@
       {
         "name": "language",
         "required": true,
-        "description": "Two-letter uppercase language code, strictly 'EN', 'ES', or 'PT', for the confirmation and follow-up notifications. Selected from [preferred_language], the language in which the active conversation is being conducted."
+        "description": "Two-letter uppercase language code, 'EN', 'ES', 'PT', 'FR', 'DE' or 'IT', for the confirmation and follow-up notifications. Selected from [preferred_language], the language in which the active conversation is being conducted."
       },
       {
         "name": "contact_name",
@@ -763,7 +763,7 @@
       {
         "name": "language",
         "required": false,
-        "description": "Two-letter uppercase code in {'ES','EN','PT'} to format results. Default: ES."
+        "description": "Two-letter uppercase code in {'ES','EN','PT','FR','DE','IT'} to format results. Default: ES."
       }
     ],
     "outputs": [
@@ -859,7 +859,7 @@
       {
         "name": "language",
         "required": false,
-        "description": "Two-letter uppercase code in {'ES','EN','PT'} for confirmation. Default: ES."
+        "description": "Two-letter uppercase code in {'ES','EN','PT','FR','DE','IT'} for confirmation. Default: ES."
       }
     ],
     "outputs": [
@@ -903,7 +903,7 @@
       {
         "name": "language",
         "required": false,
-        "description": "Language of the answer: English, Spanish or Portuguese."
+        "description": "Language of the answer: English, Spanish, Portuguese, French, German or Italian."
       },
       {
         "name": "history",

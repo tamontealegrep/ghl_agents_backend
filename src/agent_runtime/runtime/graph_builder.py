@@ -80,6 +80,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.types import Command, interrupt
 
+from agent_runtime import languages
 from agent_runtime.dsl.schemas import ToolContractField
 from agent_runtime.dsl.utils import dynamic_target_slot_name, is_dynamic_target
 from agent_runtime.runtime.global_router import (
@@ -153,6 +154,7 @@ _STORE_LOCATION_LABEL_RE = re.compile(r"^LOCATION_LABEL\s+\[([a-zA-Z_][a-zA-Z0-9
 _STORE_DAY_LABEL_RE = re.compile(r"^DAY_(LABEL|TITLE|FULL)\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]$")
 _STORE_CONTACT_RE = re.compile(r"^\{\{contact\.([a-zA-Z_][a-zA-Z0-9_]*)\}\}$")
 _STORE_LANGUAGE_NAME_RE = re.compile(r"^LANGUAGE_NAME\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]$")
+_STORE_MESSAGE_LANGUAGE_RE = re.compile(r"^(MESSAGE_LANGUAGE|REQUESTED_LANGUAGE)$")
 _STORE_FIRST_WORD_RE = re.compile(r"^FIRST_WORD\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]$")
 _STORE_FIND_DAY_RE = re.compile(r"^FIND_DAY\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]\s+IN\s+\[([a-zA-Z_][a-zA-Z0-9_]*)\]$")
 _STORE_PICK_RE = re.compile(
@@ -178,6 +180,41 @@ def _match_in_constant(current: Any, options_text: Any, fallback: str) -> str | 
     options = [o.strip() for o in re.split(r",|\sy\s", options_text) if o.strip()]
     wanted = _fold(str(current))
     return next((o for o in options if _fold(o) == wanted), fallback)
+
+
+def _detect_message_language(llm_client: LLMClient, message: str | None, *, requested: bool = False) -> str | None:
+    """
+    The name of the allowed language `message` is written in, or None when it is empty or unclear.
+
+    With `requested`, the language the contact wants to continue in: the one they ask for, else (they say they
+    do not speak a language, or ask nothing) the one they wrote in.
+
+    A call of its own that sees only the message and the allowed languages (`GLOBAL_ROUTER_LANGUAGES`): the
+    general store prompt also shows the CRM contact, and a contact whose CRM language was Spanish had an
+    English message read as Spanish.
+    """
+    text = (message or "").strip()
+    if not text:
+        return None
+    allowed = languages.enabled_languages()
+    options = ", ".join(language.name for language in allowed)
+    unclear = (
+        "Answer NULL when the message is too short or ambiguous to tell (a single word, a name, a number, an emoji, "
+        "a service name, an isolated borrowed word) or is written in none of them."
+    )
+    if requested:
+        question = (
+            f"A contact wrote this chat message: {text!r}\n"
+            "Which language does the contact want to continue the conversation in? If they ask to switch to a language, "
+            "that language. If they say they do not speak a language, the language their message is written in; but if "
+            "they only say in English that they do not speak English, the message does not tell which language they want: "
+            "NULL. Otherwise the language the message is written in.\n"
+        )
+    else:
+        question = f"Which language is this chat message written in?\nMessage: {text!r}\n"
+    reply = languages.fold(llm_client.complete(f"{question}Answer with exactly one of: {options}. {unclear}", temperature=0.0))
+    reply = reply.strip(" .\"'")
+    return next((language.name for language in allowed if reply in language.exact_names or reply == language.code), None)
 
 
 def _apply_store_line(line: str, ctx: LLMContext, llm_client: LLMClient) -> None:
@@ -281,7 +318,14 @@ def _apply_store_line(line: str, ctx: LLMContext, llm_client: LLMClient) -> None
 
     language_name = _STORE_LANGUAGE_NAME_RE.match(rhs)
     if language_name:
-        slots[name] = _LANGUAGE_NAMES.get(_language_key(slots.get(language_name.group(1))) or "", "English")
+        slots[name] = languages.resolve(slots.get(language_name.group(1))).name
+        return
+
+    detection = _STORE_MESSAGE_LANGUAGE_RE.match(rhs)
+    if detection:
+        slots[name] = _detect_message_language(
+            llm_client, ctx.last_user_message, requested=detection.group(1) == "REQUESTED_LANGUAGE"
+        )
         return
 
     first_word = _STORE_FIRST_WORD_RE.match(rhs)
@@ -302,37 +346,6 @@ def _apply_store_line(line: str, ctx: LLMContext, llm_client: LLMClient) -> None
         return
 
     slots[name] = _llm_compute_store_value(llm_client, name, rhs, ctx)
-
-
-_WEEKDAY_WORDS = {
-    0: ("lunes", "monday", "segunda"),
-    1: ("martes", "tuesday", "terca"),
-    2: ("miercoles", "wednesday", "quarta"),
-    3: ("jueves", "thursday", "quinta"),
-    4: ("viernes", "friday", "sexta"),
-    5: ("sabado", "saturday"),
-    6: ("domingo", "sunday"),
-}
-_WEEKDAY_BY_WORD = {word: index for index, words in _WEEKDAY_WORDS.items() for word in words}
-_WEEKDAY_NAMES = {
-    "es": ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"],
-    "en": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-    "pt": ["segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado", "domingo"],
-}
-def _month_by_word() -> dict[str, int]:
-    """Month number by accent-folded month name or its first three letters, in every language."""
-    by_word = {_fold(name): index + 1 for names in _MONTH_NAMES.values() for index, name in enumerate(names)}
-    by_word.update({word[:3]: number for word, number in list(by_word.items())})
-    return by_word
-
-
-_LANGUAGE_CODE_BY_NAME = {"spanish": "es", "english": "en", "portuguese": "pt"}
-
-
-def _language_key(language: Any) -> str | None:
-    """'es', 'en' or 'pt' for either the code or the language name (`preferred_language` holds the name)."""
-    text = str(language or "").strip().lower()
-    return text if text in _LANGUAGE_CODE_BY_NAME.values() else _LANGUAGE_CODE_BY_NAME.get(text)
 
 
 def _contact_field(contact: dict[str, Any] | None, field: str) -> Any:
@@ -386,15 +399,15 @@ def _resolve_day_reference(reply: Any, calendar: Any, offered: Any) -> str | Non
         return iso.group(0)
     text = _fold(reply)
     words = re.findall(r"[a-z]+", text)
-    if "pasado" in words and "manana" in words or "depois" in words and "amanha" in words or ("after" in words and "tomorrow" in words):
+    if languages.day_after_tomorrow_pattern().search(text):
         return dates[2].isoformat() if len(dates) > 2 else None
-    if {"hoy", "today", "hoje"} & set(words):
+    if languages.today_pattern().search(text):
         return dates[0].isoformat()
-    if {"manana", "tomorrow", "amanha"} & set(words) and len(dates) > 1:
+    if languages.tomorrow_pattern().search(text) and len(dates) > 1:
         return dates[1].isoformat()
 
     numbers = [int(n) for n in re.findall(r"(?<![\d:])\b(\d{1,2})(?![\d:])", text) if 1 <= int(n) <= 31]
-    month_by_word = _month_by_word()
+    month_by_word = languages.month_by_word()
     months = [month_by_word[w] for w in words if w in month_by_word]
     if numbers:
         day = numbers[0]
@@ -409,7 +422,8 @@ def _resolve_day_reference(reply: Any, calendar: Any, offered: Any) -> str | Non
             return None
         return next((d.isoformat() for d in dates if d.day == day), None)
 
-    weekdays = {_WEEKDAY_BY_WORD[w] for w in words if w in _WEEKDAY_BY_WORD}
+    weekday_by_word = languages.weekday_by_word()
+    weekdays = {weekday_by_word[w] for w in words if w in weekday_by_word}
     if len(weekdays) != 1:
         return None
     weekday = weekdays.pop()
@@ -432,25 +446,20 @@ _UNPADDED_TIME_RE = re.compile(r"(?:[a-z ]*?)([1-9]):([0-5]\d)(?: ?h(?:rs?)?\.?)
 _BARE_HOUR_RE = re.compile(r"^\D*?(\d{1,2})\D*$")
 
 
-_PART_PATTERNS = (
-    ("madrugada", re.compile(r"\b(?:madrugada|early morning|dawn)\b")),
-    ("manana", re.compile(r"\bla manana\b|\bmorning\b|\bmanha\b")),
-    ("tarde", re.compile(r"\b(?:tardes?|afternoon)\b")),
-    ("noche", re.compile(r"\b(?:noches?|night|evening|noite)\b")),
-)
-"""The parts of the day a contact can name, in the language of the three conversations. A bare 'mañana' is
-tomorrow, not the morning, so only 'la mañana' (also 'por la', 'en la', 'de la') counts."""
+_PART_KEYS = ("madrugada", "manana", "tarde", "noche")
+"""The internal names of the four parts of the day (kept in the `part_shown` slot), in the order of `languages.PART_KEYS`."""
 
-_ORDINAL_PATTERNS = (
-    (-1, re.compile(r"\b(?:mas|mais) (?:tarde|tardia|tardio)\b|\b(?:ultim[oa]s?|last|latest|final|derradeir[oa])\b")),
-    (-2, re.compile(r"\b(?:penultim[oa]|second to last|second-to-last|penultimate)\b")),
-    (0, re.compile(r"\b(?:primer[oa]?s?|primeir[oa]|first|earliest|1(?:ra|ro|st|era|ero))\b|\b(?:mas|mais) (?:temprano|temprana|cedo|pronto)\b")),
-    (1, re.compile(r"\b(?:segund[oa]|second|2(?:da|do|nd|nda))\b")),
-    (2, re.compile(r"\b(?:tercer[oa]?|terceir[oa]|third|3(?:ra|ro|rd|era|ero))\b")),
-    (3, re.compile(r"\b(?:cuart[oa]|fourth|4(?:ta|to|th))\b")),
-    (4, re.compile(r"\b(?:quint[oa]|fifth|5(?:ta|to|th))\b")),
+_PART_BOUNDS = ((0, 6), (6, 12), (12, 19), (19, 24))
+"""The hours of each part of the day: 00-06, 06-12, 12-19, 19-24."""
+
+_PART_PATTERNS = tuple(
+    (internal, pattern) for internal, (_, pattern) in zip(_PART_KEYS, languages.part_patterns(), strict=True)
 )
-"""A position among the offered times: 0 is the first, -1 the last, -2 the one before it."""
+"""The parts of the day a contact can name, in the words of every language (`scheduling.part_words`). A bare
+'mañana' is tomorrow, not the morning, so a language lists 'la mañana' for the morning, not 'mañana'."""
+
+_ORDINAL_PATTERNS = languages.ordinal_patterns()
+"""A position among the offered times, in the words of every language: 0 is the first, -1 the last, -2 the one before it."""
 
 
 def _describe_time_choice(reply: str) -> tuple[str | None, int | None]:
@@ -477,13 +486,10 @@ def _times_in_part(times: list[str], part: str | None) -> list[str]:
     """`times` (sorted HH:MM) that fall in `part` ('madrugada', 'manana', 'tarde', 'noche'); all of them when it is None."""
     if part is None:
         return times
-    bounds = next(((start, end) for (start, end, _), key in zip(_PARTS_OF_DAY, _PART_KEYS) if key == part), None)
+    bounds = next((bounds for bounds, key in zip(_PART_BOUNDS, _PART_KEYS, strict=True) if key == part), None)
     if bounds is None:
         return times
     return [t for t in times if bounds[0] <= _minutes(t) // 60 < bounds[1]]
-
-
-_PART_KEYS = ("madrugada", "manana", "tarde", "noche")
 
 
 def _offered_times(offered: Any, day: Any) -> list[str]:
@@ -571,12 +577,7 @@ def _day_label(day: Any, language: Any) -> str | None:
     if parts is None:
         return None
     date = datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
-    code = _LANGUAGE_CODE_BY_NAME.get(str(language or "").strip().lower(), "es")
-    weekday = _WEEKDAY_NAMES[code][date.weekday()]
-    month = _MONTH_NAMES[code][date.month - 1]
-    if code == "en":
-        return f"{weekday}, {month} {date.day}"
-    return f"{weekday} {date.day} de {month}"
+    return languages.resolve(language, default="es").day_label(date)
 
 
 def _location_label(llm_client: LLMClient, location: Any, time_zone: Any, language: Any) -> str | None:
@@ -588,7 +589,7 @@ def _location_label(llm_client: LLMClient, location: Any, time_zone: Any, langua
     """
     if not isinstance(location, str) or not location.strip():
         return None
-    name = {"es": "Spanish", "en": "English", "pt": "Portuguese"}[_language_key(language) or "es"]
+    name = languages.resolve(language, default="es").name
     prompt = (
         f"A contact wrote the country and city where they are as: {location.strip()!r} "
         f"(their IANA time zone is {time_zone}).\n"
@@ -607,24 +608,13 @@ def _day_full(day: Any, language: Any) -> str | None:
     return label[:1].upper() + label[1:] if label else None
 
 
-_MONTH_ABBREVIATIONS = {
-    "es": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
-    "en": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-    "pt": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"],
-}
-
-
 def _day_title(day: Any, language: Any) -> str | None:
     """`day` (YYYY-MM-DD) as the short heading of a list of times: 'Miércoles. 4 nov' / 'Wednesday. Nov 4'."""
     parts = _date_parts(day) if isinstance(day, str) else None
     if parts is None:
         return None
     date = datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
-    code = _language_key(language) or "es"
-    weekday = _WEEKDAY_NAMES[code][date.weekday()]
-    weekday = weekday[:1].upper() + weekday[1:]
-    month = _MONTH_ABBREVIATIONS[code][date.month - 1]
-    return f"{weekday}. {month} {date.day}" if code == "en" else f"{weekday}. {date.day} {month}"
+    return languages.resolve(language, default="es").day_title(date)
 
 
 def _pick_appointment_field(items: Any, field: str, day: Any, time: Any) -> Any:
@@ -1048,20 +1038,11 @@ def _coerce_value(value: Any, type_expr: str) -> Any:
 # `say` rendering and slot interpolation
 # ---------------------------------------------------------------------------
 
-_LANGUAGE_NAMES = {"es": "Spanish", "en": "English", "pt": "Portuguese"}
-
-
 def _language_name_from_slots(slots: dict[str, Any] | None, fallback: str | None = None) -> str | None:
-    """Resolve full language name from slots['preferred_language'] (code or name)."""
-    if not slots:
-        return fallback
-    value = slots.get("preferred_language")
-    if not isinstance(value, str):
-        return fallback
-    v = value.strip()
-    if v.lower() in _LANGUAGE_NAMES:
-        return _LANGUAGE_NAMES[v.lower()]
-    return v if v in set(_LANGUAGE_NAMES.values()) else fallback
+    """The name of the language held by slots['preferred_language'] (a name or a code), else `fallback`."""
+    value = (slots or {}).get("preferred_language")
+    language = languages.get(value) if isinstance(value, str) else None
+    return language.name if language is not None else fallback
 
 
 _INTERPOLATION_RE = re.compile(r"\[([a-zA-Z_][a-zA-Z0-9_]*)\]|<([A-Z_][A-Z0-9_]*)>|\{\{\s*contact\.([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}")
@@ -1071,21 +1052,6 @@ _ISO_DATE_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
 _ISO_TIME_RE = re.compile(r"T(\d{2}):(\d{2})")
 _STANDALONE_NUMBER_RE = re.compile(r"\b\d{1,2}\b")
 _CONSTANT_NAME_RE = re.compile(r"^[A-Z_][A-Z0-9_]*$")
-
-_MONTH_NAMES = {
-    "es": [
-        "enero", "febrero", "marzo", "abril", "mayo", "junio",
-        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
-    ],
-    "en": [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December",
-    ],
-    "pt": [
-        "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-        "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
-    ],
-}
 
 _DateParts = tuple[str, str, str]  # (yyyy, mm, dd)
 
@@ -1103,16 +1069,6 @@ def _date_parts(iso_text: str) -> _DateParts | None:
 def _time_part(iso_text: str) -> str | None:
     match = _ISO_TIME_RE.search(iso_text)
     return f"{match.group(1)}:{match.group(2)}" if match else None
-
-
-def _format_date_human(date_parts: _DateParts, language_code: str | None) -> str:
-    year, month, day = date_parts
-    months = _MONTH_NAMES.get(language_code or "es", _MONTH_NAMES["es"])
-    month_name = months[int(month) - 1]
-    day_number = str(int(day))
-    if language_code == "en":
-        return f"{month_name} {day_number}, {year}"
-    return f"{day_number} de {month_name} de {year}"
 
 
 _ANY_ISO_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
@@ -1258,17 +1214,8 @@ def _format_appointment_list(items: list[dict[str, Any]], slots: dict[str, Any],
 
 def _date_title(date_parts: _DateParts, language_code: str | None) -> str:
     """'Martes 3 de noviembre' / 'Tuesday, November 3': the weekday and day, no year."""
-    code = language_code if language_code in _MONTH_NAMES else "es"
-    label = _day_label("-".join(date_parts), {"es": "spanish", "en": "english", "pt": "portuguese"}[code]) or ""
+    label = _day_label("-".join(date_parts), language_code) or ""
     return label[:1].upper() + label[1:]
-
-
-_PARTS_OF_DAY = (
-    (0, 6, {"es": "madrugada", "en": "early morning", "pt": "madrugada"}),
-    (6, 12, {"es": "mañana", "en": "morning", "pt": "manhã"}),
-    (12, 19, {"es": "tarde", "en": "afternoon", "pt": "tarde"}),
-    (19, 24, {"es": "noche", "en": "night", "pt": "noite"}),
-)
 
 
 def _minutes(time_text: str) -> int:
@@ -1278,10 +1225,12 @@ def _minutes(time_text: str) -> int:
 
 def _parts_of_day(times: list[str], language_code: str | None) -> str:
     """The parts of the day (madrugada, mañana, tarde, noche) that have at least one of `times`, in order."""
-    code = language_code if language_code in _MONTH_NAMES else "es"
+    language = languages.resolve(language_code, default="es")
     hours = {_minutes(t) // 60 for t in times}
     return " · ".join(
-        names[code].capitalize() for start, end, names in _PARTS_OF_DAY if any(start <= h < end for h in hours)
+        name.capitalize()
+        for (start, end), name in zip(_PART_BOUNDS, language.parts_of_day, strict=True)
+        if any(start <= h < end for h in hours)
     )
 
 
@@ -1294,23 +1243,20 @@ def _slot_step_minutes(dated_items: list[tuple[_DateParts, str | None]]) -> int:
     return min(gaps) if gaps else 30
 
 
-_RANGE_WORDS = {"es": "a", "en": "to", "pt": "a"}
-
-
 def _times_by_part_of_day(times: list[str], step: int, language_code: str | None) -> str:
     """The times of one day under a heading per part of the day, a blank line between the parts."""
-    code = language_code if language_code in _MONTH_NAMES else "es"
+    language = languages.resolve(language_code, default="es")
     blocks = []
-    for start, end, names in _PARTS_OF_DAY:
+    for (start, end), name in zip(_PART_BOUNDS, language.parts_of_day, strict=True):
         part = [t for t in times if start <= _minutes(t) // 60 < end]
         if part:
-            blocks.append("\n".join([names[code].capitalize(), *_time_ranges(part, step, language_code)]))
+            blocks.append("\n".join([name.capitalize(), *_time_ranges(part, step, language_code)]))
     return "\n\n".join(blocks)
 
 
 def _time_ranges(times: list[str], step: int, language_code: str | None = None) -> list[str]:
     """`times` (sorted HH:MM) as single times and ranges of consecutive ones: '🕐 07:00', '🕐 09:00 a 11:30'."""
-    word = _RANGE_WORDS.get(language_code or "es", "a")
+    word = languages.resolve(language_code, default="es").range_word
     runs: list[list[str]] = []
     for t in times:
         if runs and _minutes(t) - _minutes(runs[-1][-1]) == step:
@@ -1332,17 +1278,14 @@ def _format_booked_appointments(items: list[dict[str, Any]], language_code: str 
     Written by code so every list reads the same: a model asked to list them wrote a different
     layout each time, and the raw record (JSON) showed up when it was interpolated whole.
     """
-    code = language_code if language_code in _MONTH_NAMES else "es"
+    language = languages.resolve(language_code, default="es")
     lines = []
     for item in sorted(items, key=lambda i: i["start_time"]):
         parts = _date_parts(item["start_time"])
         if parts is None:
             lines.append(item["start_time"])
             continue
-        date = datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
-        weekday = _WEEKDAY_NAMES[code][date.weekday()]
-        month = _MONTH_NAMES[code][date.month - 1]
-        day = f"{weekday}, {month} {date.day}, {date.year}" if code == "en" else f"{weekday} {date.day} de {month} de {date.year}"
+        day = language.weekday_date(datetime.date(int(parts[0]), int(parts[1]), int(parts[2])))
         time = _time_part(item["start_time"])
         lines.append(f"📅 {day}" + (f" 🕐 {time}" if time else ""))
     if len(lines) > 1:
@@ -1374,8 +1317,6 @@ def _interpolate_slots(
     objects value's human-readable date formatting (`_format_appointment_
     list`) — every other value renders the same regardless.
     """
-
-    language_code = _language_key(language_code)
 
     def _format_value(value: Any) -> str:
         if isinstance(value, str) and value.lstrip().startswith("{"):
@@ -1431,9 +1372,7 @@ def _protect_contact_values(text: str, contact: dict[str, Any] | None, protected
     return _CONTACT_PLACEHOLDER_RE.sub(repl, text)
 
 
-_PART_HEADINGS = frozenset(
-        names[code].capitalize() for _, _, names in _PARTS_OF_DAY for code in names
-)
+_PART_HEADINGS = languages.part_headings()
 _LIST_LINE_RE = re.compile(r"^(\d+\. )?[📅🕐🗓├└🌎]")
 
 
@@ -1636,7 +1575,9 @@ def _make_render_say(
         raw = _protect_place(raw, slots, protected)
         raw = _protect_figures(raw, protected)
 
-        language_name = _LANGUAGE_NAMES.get(language_code, language_code) if language_code else None
+        language_name = (
+            (languages.get(language_code).name if languages.get(language_code) else language_code) if language_code else None
+        )
         in_language = f" in {language_name}" if language_name else ""
         policy_block = (
             f"House rules this message must respect:\n{chr(10).join(policies)}\n\n" if policies else ""
@@ -1820,8 +1761,8 @@ def _uppercase_binding(rhs: str, slots: dict[str, Any]) -> tuple[bool, Any]:
     value = slots.get(match.group(1)) if match else None
     if not isinstance(value, str) or not value.strip():
         return False, None
-    code = _LANGUAGE_CODE_BY_NAME.get(value.strip().lower())
-    return True, (code or value.strip()).upper()
+    language = languages.get(value)
+    return True, (language.code if language else value.strip()).upper()
 
 
 def _extract_mechanical_arg_bindings(do_lines: list[str], slots: dict[str, Any]) -> dict[str, Any]:

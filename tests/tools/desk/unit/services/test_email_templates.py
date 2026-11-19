@@ -11,7 +11,7 @@ VARS = dict(
 )
 
 
-TEMPLATES = ["book_appointment_ft_es", "book_appointment_ft_en", "book_appointment_ft_pt"]
+TEMPLATES = ["book_appointment_ft_es", "book_appointment_ft_en", "book_appointment_ft_pt", "book_appointment_ft_fr", "book_appointment_ft_de", "book_appointment_ft_it"]
 
 
 @pytest.mark.parametrize("template_name", TEMPLATES)
@@ -72,3 +72,11 @@ def test_the_booking_response_carries_both_links():
 
     assert response.model_dump()["event_link"] == "https://g/e"
     assert response.model_dump()["calendar_link"] == "https://g/c"
+
+
+def test_every_language_with_an_e_mail_subject_has_its_template_and_calendar_texts():
+    from desk.services import booking_engine, calendar_links
+
+    for code in booking_engine.EMAIL_SUBJECTS:
+        assert render_email_template(f"book_appointment_ft_{code.lower()}", **VARS)
+        assert code in calendar_links.TITLES and code in calendar_links.DETAILS

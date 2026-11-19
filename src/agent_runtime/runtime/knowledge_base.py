@@ -39,9 +39,6 @@ DEFAULT_MAX_DOCUMENT_TOKENS = 24_000
 _CHARS_PER_TOKEN = 4
 """Rough ratio used to estimate size without a tokenizer."""
 
-_LANGUAGE_NAMES = {"en": "English", "es": "Spanish", "pt": "Portuguese"}
-
-
 class KnowledgeBaseTooLarge(ValueError):
     """The document is too large to send whole; use a `RAGKnowledgeBase` instead."""
 

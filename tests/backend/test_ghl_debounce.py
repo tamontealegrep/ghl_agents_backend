@@ -196,3 +196,15 @@ def test_a_request_without_ids_is_ignored(webhook):
     }
     time.sleep(DEBOUNCE + 0.2)
     assert webhook.graph.turns == []
+
+
+def test_french_is_a_supported_language_of_the_ghl_text_channel():
+    from agent_backend.channels.ghl.config import CompiledAgentGhlConfig, _closing_message_text
+    from agent_runtime import languages
+    from agent_backend.channels.ghl.text import normalize_language
+
+    assert [normalize_language(v) for v in ("fr", "FR-fr", "French", "Français", "tlh")] == ["fr", "fr", "fr", "fr", "en"]
+    cfg = CompiledAgentGhlConfig(slug="a", path="/a", allowed_phones=frozenset(), debounce_seconds=1, ghl_client_config=lambda: None, enforce_phone_whitelist=False)
+    french_closing = languages.get("fr").messages["closing"]
+    assert _closing_message_text(cfg, "French") == french_closing
+    assert _closing_message_text(cfg, "fr") == french_closing

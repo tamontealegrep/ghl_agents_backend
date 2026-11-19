@@ -29,6 +29,9 @@ EMAIL_SUBJECTS = {
     "ES": "🎉 ¡Cita confirmada! Detalles de tu consulta con Family Aims",
     "EN": "🎉 Appointment Confirmed! Details for your consultation with Family Aims",
     "PT": "🎉 Consulta confirmada! Detalhes da sua consulta com a Family Aims",
+    "FR": "🎉 Consultation confirmée ! Détails de votre consultation avec Family Aims",
+    "DE": "🎉 Beratung bestätigt! Details zu Ihrer Beratung bei Family Aims",
+    "IT": "🎉 Consulenza confermata! Dettagli della tua consulenza con Family Aims",
 }
 
 # Descripción del evento de Calendar: igual para ambos tools en el JSON
@@ -67,6 +70,10 @@ def is_valid_email(raw_email: str) -> bool:
 
 
 def normalize_language(raw_language: str) -> str:
-    """ES o PT si vienen explícitos; cualquier otra cosa cae a inglés (igual que el JS original, que solo distinguía ES vs "todo lo demás")."""
+    """El código del idioma si tiene asunto de correo (`EMAIL_SUBJECTS`) y plantilla; cualquier otra cosa cae a inglés.
+
+    Para agregar un idioma de correo: su asunto en `EMAIL_SUBJECTS`, su título en `calendar_links` y
+    `templates/emails/book_appointment_ft_<código>.html`.
+    """
     lang = (raw_language or "").strip().upper()
-    return lang if lang in ("ES", "PT") else "EN"
+    return lang if lang in EMAIL_SUBJECTS else "EN"
