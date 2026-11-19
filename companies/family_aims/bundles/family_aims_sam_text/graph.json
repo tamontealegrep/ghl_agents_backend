@@ -1384,13 +1384,14 @@
           "[o__contact_language] = {{contact.language}}",
           "[preferred_language] = LANGUAGE_NAME [o__contact_language]",
           "[o__contact_service] = {{contact.service}}",
-          "[svc] = [o__contact_service]"
+          "[svc] = [o__contact_service]",
+          "[o__farewell] = NULL"
         ],
         "capture": [],
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_NAME_DEC",
+            "target": "O__OP_FAREWELL_CHK",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -1398,6 +1399,68 @@
           }
         ],
         "fallback": []
+      },
+      {
+        "node_id": "O__OP_FAREWELL_CHK",
+        "node_type": "registration",
+        "goal": [
+          "A conversation that already closed must not start again because the contact answers the goodbye: detect a message that is only a goodbye or a thanks, before anything is said."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[o__farewell] = 'yes' only when the latest user message is nothing but a goodbye or thanks (e.g. 'igualmente', 'gracias, chao', 'hasta luego', 'you too', 'thanks, bye', 'obrigado, tchau'; emojis allowed); 'no' otherwise: any question, request, greeting or service name makes it 'no' even with thanks ('gracias, ¿cuánto cuesta una FIV?', 'hola, gracias'), as do a number confirmation or no user message yet"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_FAREWELL_DEC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_FAREWELL_DEC",
+        "node_type": "decision",
+        "goal": [
+          "A farewell answering a closed conversation ends silently: nothing is said and no new conversation starts."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "MESSAGE_END",
+            "condition_text": "IF [o__farewell] == 'yes' -> GO_TO: MESSAGE_END",
+            "is_mechanical": true,
+            "python_expression": "o__farewell == 'yes'",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "O__OP_NAME_DEC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
       },
       {
         "node_id": "O__OP_NAME_DEC",
