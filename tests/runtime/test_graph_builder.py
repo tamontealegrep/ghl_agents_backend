@@ -645,6 +645,13 @@ def test_store_requested_language_asks_for_the_language_the_contact_wants(monkey
     assert '"es"' not in client.prompts[0] and "English, Spanish, French" in client.prompts[0]
 
 
+def test_store_bare_reply_flags_a_reply_that_is_only_a_yes_or_an_acknowledgement():
+    for text, expected in (("sí", "yes"), ("Vale, claro", "yes"), ("ok", "yes"), ("oui", "yes"), ("ja", "yes"), ("la segunda", None), ("IVF", None), ("", None)):
+        ctx = _ctx({}, last_user_message=text)
+        _apply_store_line("[bare] = BARE_REPLY", ctx, _FakeLLMClient())
+        assert ctx.slots["bare"] == expected, text
+
+
 def test_store_find_day_returns_the_day_only_when_it_is_offered():
     offered = [{"start_local": "2026-11-05T09:00:00-05:00"}, {"start_local": "2026-11-09T10:30:00-05:00"}]
     ctx = _ctx({"day": "2026-11-09", "available_slots": offered})

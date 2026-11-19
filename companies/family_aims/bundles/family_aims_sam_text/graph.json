@@ -1372,6 +1372,9 @@
         "execute": null,
         "store": [
           "[o__svc_try] = 0",
+          "[o__profile_try] = 0",
+          "[o__bare_try] = 0",
+          "[o__family_profile] = NULL",
           "[o__consent_try] = 0",
           "[o__resume_state] = NULL",
           "[o__sur_role] = NULL",
@@ -2410,7 +2413,439 @@
         "eval": "code",
         "route": [
           {
+            "target": "O__OP_PROFILE_ASK",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_PROFILE_ASK",
+        "node_type": "question",
+        "goal": [
+          "The service of interest is not known: before listing services, ask who is starting the process, so the services that apply can be shown."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "To point you to the right path, which of these describes you?\n\n- Single man\n- Single woman\n- Heterosexual couple\n- Couple of men\n- Couple of women"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_CLS_PROFILE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_PROFILE_AGAIN",
+        "node_type": "question",
+        "goal": [
+          "The previous answer did not say who is starting the process: ask again in one short line."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Sorry, I didn't catch that. Are you a single man, a single woman, a heterosexual couple, a couple of men or a couple of women?"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_CLS_PROFILE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_PROFILE_COUPLE",
+        "node_type": "question",
+        "goal": [
+          "The contact said they are a couple without saying the genders: ask which kind, without guessing."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Thank you! So I can point you to the right path, are you a man and a woman, two men or two women?"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_CLS_PROFILE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_CLS_PROFILE",
+        "node_type": "registration",
+        "goal": [
+          "Classify who the contact says is starting the process. Only the latest message counts."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[o__family_profile] = who the latest user message says is starting the process. Read only that message, never what was said before it, and answer with the first of these that applies, exactly one word: couple_unclear (it speaks of a couple without stating the genders of both people, for example 'mi esposo y yo', 'mi esposa y yo', 'mi pareja y yo', 'my husband and I', 'my wife and I', 'my partner and I', 'somos pareja', 'estamos casados'; never guess the writer's gender), single_man (a man on his own, a single father, 'soy un hombre soltero'), single_woman (a woman on her own, a single mother, 'soy una mujer soltera'), male_couple (it says they are two men: 'pareja de hombres', 'somos dos hombres'), female_couple (it says they are two women: 'pareja de mujeres', 'somos dos mujeres', 'we are two women'), hetero_couple (it says they are a man and a woman: 'pareja heterosexual', 'husband and wife', 'hombre y mujer'), service (it says what they want instead of who they are: it names IVF, FIV, fertilización in vitro, ROPA, surrogacy, subrogación, gestación subrogada or egg donation; it says THEY want to be a surrogate or carrier for another family; or it asks for something else, such as adoption), other (it describes who they are in a way none of the five covers or declines to say: a trans or non-binary identity, a group of three or more, 'prefiero no decirlo'; never force it into one of the five), blank (anything else: a bare 'yes', 'sí', 'ok', a question, a complaint)"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_PROFILE_DEC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_PROFILE_DEC",
+        "node_type": "decision",
+        "goal": [
+          "Show the services that apply to the profile; ask again when it is not clear."
+        ],
+        "do": [
+          "[o__profile_try] = [o__profile_try] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_PROFILE_MEN",
+            "condition_text": "IF [o__family_profile] == 'single_man' OR [o__family_profile] == 'male_couple' -> GO_TO: O__OP_PROFILE_MEN",
+            "is_mechanical": true,
+            "python_expression": "o__family_profile == 'single_man' or o__family_profile == 'male_couple'",
+            "reason": null
+          },
+          {
+            "target": "O__OP_ASK_SW",
+            "condition_text": "IF [o__family_profile] == 'single_woman' -> GO_TO: O__OP_ASK_SW",
+            "is_mechanical": true,
+            "python_expression": "o__family_profile == 'single_woman'",
+            "reason": null
+          },
+          {
+            "target": "O__OP_ASK_HC",
+            "condition_text": "IF [o__family_profile] == 'hetero_couple' -> GO_TO: O__OP_ASK_HC",
+            "is_mechanical": true,
+            "python_expression": "o__family_profile == 'hetero_couple'",
+            "reason": null
+          },
+          {
+            "target": "O__OP_ASK_FC",
+            "condition_text": "IF [o__family_profile] == 'female_couple' -> GO_TO: O__OP_ASK_FC",
+            "is_mechanical": true,
+            "python_expression": "o__family_profile == 'female_couple'",
+            "reason": null
+          },
+          {
+            "target": "O__OP_CLS_SVC",
+            "condition_text": "IF [o__family_profile] == 'service' -> GO_TO: O__OP_CLS_SVC",
+            "is_mechanical": true,
+            "python_expression": "o__family_profile == 'service'",
+            "reason": null
+          },
+          {
+            "target": "O__OP_PROFILE_COUPLE",
+            "condition_text": "IF [o__family_profile] == 'couple_unclear' -> GO_TO: O__OP_PROFILE_COUPLE",
+            "is_mechanical": true,
+            "python_expression": "o__family_profile == 'couple_unclear'",
+            "reason": null
+          },
+          {
             "target": "O__OP_ASK",
+            "condition_text": "IF [o__family_profile] == 'other' -> GO_TO: O__OP_ASK",
+            "is_mechanical": true,
+            "python_expression": "o__family_profile == 'other'",
+            "reason": null
+          },
+          {
+            "target": "O__OP_ASK",
+            "condition_text": "IF [o__profile_try] >= 2 -> GO_TO: O__OP_ASK",
+            "is_mechanical": true,
+            "python_expression": "o__profile_try >= 2",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "O__OP_PROFILE_AGAIN",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "O__OP_PROFILE_MEN",
+        "node_type": "message",
+        "goal": [
+          "A single man or a couple of men: the only path offered is surrogacy; say so and go on with it."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Thank you for sharing that. For single men and couples of men, the path we offer is gestational surrogacy, with programs in Colombia, Mexico and Georgia, depending on your profile and situation."
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_SET_SUR_PROFILE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_SET_SUR_PROFILE",
+        "node_type": "registration",
+        "goal": [
+          "Surrogacy is the service that applies to this profile."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[svc] = 'surrogacy'"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_SET_APPT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_BARE_CHK",
+        "node_type": "registration",
+        "goal": [
+          "A bare yes to a question that offers several services chooses none of them: detect it mechanically, because the model sometimes reads it as the first option."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[o__bare_reply] = BARE_REPLY"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_BARE_DEC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_BARE_DEC",
+        "node_type": "decision",
+        "goal": [
+          "Ask which option they mean (once); a second bare yes goes to the normal classification."
+        ],
+        "do": [
+          "[o__bare_try] = [o__bare_try] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_BARE_AGAIN",
+            "condition_text": "IF [o__bare_reply] == 'yes' AND [o__bare_try] < 2 -> GO_TO: O__OP_BARE_AGAIN",
+            "is_mechanical": true,
+            "python_expression": "o__bare_reply == 'yes' and o__bare_try < 2",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "O__OP_CLS_SVC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "O__OP_BARE_AGAIN",
+        "node_type": "question",
+        "goal": [
+          "The contact only said yes: ask which of the two options they want to explore, in one short line."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Just to be sure, which of the two options would you like to explore?"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_BARE_CHK",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_ASK_SW",
+        "node_type": "question",
+        "goal": [
+          "A single woman: show what applies to her and ask which one she wants to explore, capturing it as [svc]. Both messages belong to this state so that, after a language switch, the contact gets both again."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Thank you for sharing that. For single women, here is what we can offer:\n\n- In vitro fertilization (IVF) in Bogotá, Colombia, with your own or donated eggs.\n- Gestational surrogacy, with Mexico as the destination that best fits single women.",
+          "Which would you like to explore: in vitro fertilization or surrogacy?"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_BARE_CHK",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_ASK_HC",
+        "node_type": "question",
+        "goal": [
+          "A heterosexual couple: show what applies to them and ask which one they want to explore, capturing it as [svc]. Both messages belong to this state so that, after a language switch, the contact gets both again."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Thank you for sharing that. For heterosexual couples, here is what we can offer:\n\n- In vitro fertilization (IVF) in Bogotá, Colombia, with your own or donated eggs.\n- Gestational surrogacy, with programs in Colombia, Mexico and Georgia, depending on your profile and situation.",
+          "Which would you like to explore: in vitro fertilization or surrogacy?"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_BARE_CHK",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_ASK_FC",
+        "node_type": "question",
+        "goal": [
+          "A couple of women: show what applies to them and ask which one they want to explore, capturing it as [svc]. Both messages belong to this state so that, after a language switch, the contact gets both again."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Thank you for sharing that. For couples of women, here is what we can offer:\n\n- The ROPA method in Bogotá, Colombia: one of you provides the eggs and the other carries the pregnancy, so both take part in the process.\n- In vitro fertilization (IVF) in Bogotá, Colombia, with your own or donated eggs.",
+          "Which would you like to explore: the ROPA method or in vitro fertilization?"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_BARE_CHK",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -2489,7 +2924,7 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[svc] = what the latest user message says about the service they want. Read only that message, never what was said before it, and answer with the first of these that applies, exactly one word: carrier (it says THEY THEMSELVES want to be the surrogate: carry a pregnancy for another family, rent or lend their womb, or apply to work as a gestational carrier; never someone who wants a surrogacy process for their own family), ropa (it names the ROPA method or dual motherhood), ivf (it names in vitro fertilization, IVF, FIV, conventional fertility treatment, IVF with donated eggs or egg donation), surrogacy (it names surrogacy or gestational surrogacy for their own family), none (it says none of these services is what they look for, or names something else they want, for example 'quiero adoptar', 'adoption', 'I want to buy bread'), unknown (it says in words that they do not know yet, are not sure, want to hear about all of them or cannot choose, for example 'no sé', 'todos', 'cuéntame de todo'), blank (anything else: a bare 'yes', 'sí', 'ok', 'vale', 'bueno', 'entiendo', a question, a complaint or frustration; these never mean none or unknown, whatever was said before)"
+          "[svc] = what the latest user message says about the service they want. Read only that message, never what was said before it, and answer with the first of these that applies, exactly one word: carrier (it says THEY THEMSELVES want to be the surrogate: carry a pregnancy for another family, rent or lend their womb, or apply to work as a gestational carrier; never someone who wants a surrogacy process for their own family), ropa (it names the ROPA method or dual motherhood), ivf (it names in vitro fertilization, IVF, FIV, conventional fertility treatment, IVF with donated eggs or egg donation), surrogacy (it names surrogacy or gestational surrogacy for their own family), none (it says none of these services is what they look for, or names something else they want, for example 'quiero adoptar', 'adoption', 'I want to buy bread'), unknown (it says in words that they do not know yet, are not sure, want to hear about all of them or cannot choose, for example 'no sé', 'todos', 'cuéntame de todo'), blank (anything else: a bare 'yes', 'sí', 'ok', 'vale', 'claro', 'bueno', 'entiendo', a question, a complaint or frustration; these never mean none or unknown, whatever was said before, and a bare yes answering a question that offers several services chooses none of them: never pick the first one)"
         ],
         "capture": [],
         "eval": "code",
@@ -2586,7 +3021,7 @@
         "node_id": "O__OP_CLEAR_SVC",
         "node_type": "registration",
         "goal": [
-          "The reply did not say which service they want: clear it so nothing downstream reads a placeholder, and ask again."
+          "The reply did not say which service they want: clear it so nothing downstream reads a placeholder, and ask again with the services that apply to their profile (the general overview when the profile is unknown), so the question never mentions services nobody listed."
         ],
         "do": [],
         "trigger": [],
@@ -2601,14 +3036,43 @@
         "eval": "code",
         "route": [
           {
+            "target": "O__OP_ASK_SW",
+            "condition_text": "IF [o__family_profile] == 'single_woman' -> GO_TO: O__OP_ASK_SW",
+            "is_mechanical": true,
+            "python_expression": "o__family_profile == 'single_woman'",
+            "reason": null
+          },
+          {
+            "target": "O__OP_ASK_HC",
+            "condition_text": "IF [o__family_profile] == 'hetero_couple' -> GO_TO: O__OP_ASK_HC",
+            "is_mechanical": true,
+            "python_expression": "o__family_profile == 'hetero_couple'",
+            "reason": null
+          },
+          {
+            "target": "O__OP_ASK_FC",
+            "condition_text": "IF [o__family_profile] == 'female_couple' -> GO_TO: O__OP_ASK_FC",
+            "is_mechanical": true,
+            "python_expression": "o__family_profile == 'female_couple'",
+            "reason": null
+          },
+          {
+            "target": "O__OP_ASK",
+            "condition_text": "IF [o__family_profile] == 'service' -> GO_TO: O__OP_ASK",
+            "is_mechanical": true,
+            "python_expression": "o__family_profile == 'service'",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
             "target": "O__OP_ASK_AGAIN",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
             "reason": null
           }
-        ],
-        "fallback": []
+        ]
       },
       {
         "node_id": "O__OP_NO_SERVICE",
