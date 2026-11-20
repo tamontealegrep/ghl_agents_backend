@@ -9,6 +9,8 @@ from agent_backend.builtin_tools.endpoints import (
     callback_request,
     check_days_elapsed,
     remove_tags,
+    send_whatsapp_file,
+    send_whatsapp_template,
     time_now,
     update_contact,
     update_opportunity,
@@ -33,6 +35,7 @@ from agent_backend.builtin_tools.schemas.ghl import (
     GhlUpdateOpportunityResponse,
 )
 from agent_backend.builtin_tools.schemas.input_payload import InputPayloadResponse
+from agent_backend.builtin_tools.schemas.whatsapp import GhlSendWhatsappResponse
 
 router = APIRouter()
 
@@ -85,6 +88,20 @@ router.add_api_route(
     methods=["POST"],
     response_model=GhlRemoveTagsResponse,
     tags=["utils.remove_tags"],
+)
+router.add_api_route(
+    "/send-whatsapp-template",
+    send_whatsapp_template.send_whatsapp_template,
+    methods=["POST"],
+    response_model=GhlSendWhatsappResponse,
+    tags=["utils.send_whatsapp_template"],
+)
+router.add_api_route(
+    "/send-whatsapp-file",
+    send_whatsapp_file.send_whatsapp_file,
+    methods=["POST"],
+    response_model=GhlSendWhatsappResponse,
+    tags=["utils.send_whatsapp_file"],
 )
 router.add_api_route(
     "/update-contact",
