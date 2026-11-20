@@ -16,7 +16,7 @@ Agentes de Family Aims y sus rutas:
 | `family_aims_sam_text` | Texto (GoHighLevel) | `POST /agents/family_aims/sam-text` (webhook) |
 | `family_aims_sam_en_voice`, `_es_voice`, `_pt_voice` | Voz | `POST /agents/<agente>/chat` |
 | (herramientas del plugin `desk`) | Ambos | `POST /agents/family_aims/tools/<herramienta>-ghl` |
-| (herramientas built-in de GHL: `add-tags`, `remove-tags`, `update-contact`, `update-opportunity`, `update-custom-field`, ...) | Ambos | `POST /builtin-tools/<herramienta>` |
+| (herramientas built-in de GHL: `add-tags`, `remove-tags`, `update-contact`, `update-opportunity`, `update-custom-field`, `send-whatsapp-template`, `send-whatsapp-file`, ...) | Ambos | `POST /builtin-tools/<herramienta>` |
 
 ## Antes de empezar
 
@@ -108,6 +108,7 @@ Guarda los cambios: Render reinicia el servicio.
    - El payload debe traer `contact_id` y `location_id`; sin ellos el webhook lo ignora.
 2. **Workflows que llamen herramientas** (`/agents/family_aims/tools/...` o `/builtin-tools/...`) necesitan la cabecera `X-API-Key: <API_TOKEN>`.
 3. Si el token de GHL no tiene el alcance `contacts.write` y `opportunities.write`, las herramientas `add_tags`, `remove_tags`, `update_contact` y `update_opportunity` devolverán un error 401/403: dale esos alcances en la integración privada de GHL.
+4. Las herramientas `send_whatsapp_template` y `send_whatsapp_file` necesitan el alcance `conversations/message.write` en el token de la subcuenta. La plantilla se identifica por nombre e idioma (no por el ID numérico de su lista) con la forma que usa la propia app de GHL, que la página pública del endpoint no documenta; el archivo se envía por URL pública (GHL documenta 5 MB por archivo).
 
 ## Actualizar el despliegue
 
