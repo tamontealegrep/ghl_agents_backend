@@ -2519,7 +2519,7 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[o__family_profile] = who the latest user message says is starting the process. Read only that message, never what was said before it, and answer with the first of these that applies, exactly one word: couple_unclear (it speaks of a couple without stating the genders of both people, for example 'mi esposo y yo', 'mi esposa y yo', 'mi pareja y yo', 'my husband and I', 'my wife and I', 'my partner and I', 'somos pareja', 'estamos casados'; never guess the writer's gender), single_man (a man on his own, a single father, 'soy un hombre soltero'), single_woman (a woman on her own, a single mother, 'soy una mujer soltera'), male_couple (it says they are two men: 'pareja de hombres', 'somos dos hombres'), female_couple (it says they are two women: 'pareja de mujeres', 'somos dos mujeres', 'we are two women'), hetero_couple (it says they are a man and a woman: 'pareja heterosexual', 'husband and wife', 'hombre y mujer'), service (it says what they want instead of who they are: it names IVF, FIV, fertilización in vitro, ROPA, surrogacy, subrogación, gestación subrogada or egg donation; it says THEY want to be a surrogate or carrier for another family; or it asks for something else, such as adoption), other (it describes who they are in a way none of the five covers or declines to say: a trans or non-binary identity, a group of three or more, 'prefiero no decirlo'; never force it into one of the five), blank (anything else: a bare 'yes', 'sí', 'ok', a question, a complaint)"
+          "[o__family_profile] = who the latest user message says is starting the process. Read only that message, never what was said before it, and answer with the first of these that applies, exactly one word: couple_only (it speaks of a couple without stating the genders of both people, for example 'mi esposo y yo', 'mi esposa y yo', 'mi pareja y yo', 'my husband and I', 'my wife and I', 'my partner and I', 'somos pareja', 'estamos casados'; whenever the only clue is a word such as husband, wife, spouse, esposo, esposa, marido, mulher, never guess the writer's gender; a message that says the couple is heterosexual or 'a man and a woman' is NOT couple_only), single_man (a man on his own, a single father, 'soy un hombre soltero'), single_woman (a woman on her own, a single mother, 'soy una mujer soltera'), male_couple (it says they are two men: 'pareja de hombres', 'somos dos hombres'), female_couple (it says they are two women: 'pareja de mujeres', 'somos dos mujeres', 'we are two women'), hetero_couple (it says they are a man and a woman: 'pareja heterosexual', 'casal heterossexual', 'heterosexuelles Paar', 'couple hétérosexuel', 'coppia eterosessuale', 'husband and wife', 'hombre y mujer'), service (it says what they want instead of who they are: it names IVF, FIV, fertilización in vitro, ROPA, surrogacy, subrogación, gestación subrogada or egg donation; it says THEY want to be a surrogate or carrier for another family; or it asks for something else, such as adoption), other (it describes who they are in a way none of the five covers or declines to say: a trans or non-binary identity, a group of three or more, 'prefiero no decirlo'; never force it into one of the five), blank (anything else: a bare 'yes', 'sí', 'ok', 'no sé', 'não sei', 'I don't know', a question, a complaint)"
         ],
         "capture": [],
         "eval": "code",
@@ -2589,9 +2589,9 @@
           },
           {
             "target": "O__OP_PROFILE_COUPLE",
-            "condition_text": "IF [o__family_profile] == 'couple_unclear' -> GO_TO: O__OP_PROFILE_COUPLE",
+            "condition_text": "IF [o__family_profile] == 'couple_only' -> GO_TO: O__OP_PROFILE_COUPLE",
             "is_mechanical": true,
-            "python_expression": "o__family_profile == 'couple_unclear'",
+            "python_expression": "o__family_profile == 'couple_only'",
             "reason": null
           },
           {
