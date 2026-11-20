@@ -514,7 +514,7 @@
     "name": "get_available_slots",
     "description": "Authorized availability tool; source of truth for days and times.",
     "notes": [
-      "MANDATORY EXECUTION: on entering SC__SC_AV_I or SC__SC_AV_S, or SC__SC_CHK_I or SC__SC_CHK_S to re-verify the chosen time, and on any intent to schedule/reschedule/see-more/retry.",
+      "MANDATORY EXECUTION: on entering SC__SC_AV_S or SC__SC_CHK_S to re-verify the chosen time, and on any intent to schedule/reschedule/see-more/retry.",
       "ARGUMENTS: calendar_type = 'FT'; iana_timezone is a real IANA zone (e.g., America/Bogota) resolved in-flow.",
       "SOURCE OF TRUTH: use only available_slots; each slot must include start_co/end_co and start_local/end_local.",
       "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal."
@@ -558,7 +558,7 @@
     "name": "book_appointment",
     "description": "Authorized booking tool; creates the appointment from a valid slot.",
     "notes": [
-      "MANDATORY EXECUTION: on entering SC__SC_BOOK_I or SC__SC_BOOK_S; requires prior get_available_slots.",
+      "MANDATORY EXECUTION: on entering SC__SC_BOOK_S; requires prior get_available_slots.",
       "ARGUMENTS: start_date = chosen slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT'}; iana_timezone = same as availability; calendar_type = 'FT'.",
       "SOURCE OF TRUTH: success determines creation; do not confirm before success == true and event_id != null."
     ],
@@ -601,7 +601,7 @@
       {
         "name": "contact_id",
         "required": false,
-        "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone."
+        "description": "The conversation's CRM contact id; the runtime fills it."
       },
       {
         "name": "iana_timezone",
@@ -669,7 +669,7 @@
       {
         "name": "contact_id",
         "required": false,
-        "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone."
+        "description": "The conversation's CRM contact id; the runtime fills it."
       },
       {
         "name": "calendar_type",
