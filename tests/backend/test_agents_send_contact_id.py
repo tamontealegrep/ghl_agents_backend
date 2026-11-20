@@ -24,6 +24,10 @@ SCHEDULING_AGENTS = [
 CONTACT_TOOLS = ("book_appointment", "find_appointment")
 # The BabyNova voice agent only books: it has no appointment-management subflow, so it has no find_appointment.
 BOOK_ONLY_AGENTS = {"babynova_surrogate_questions_voice"}
+# The Family Aims voice agents do not tell the model to send the id (it cost prompt tokens on every booking step): the runtime
+# fills `contact_id` from the session for every tool whose contract declares it, which `test_the_contracts_declare_the_contact_id`
+# checks and `tests/runtime/test_graph_builder.py` covers.
+RUNTIME_FILLED_AGENTS = {"family_aims_sam_es_voice", "family_aims_sam_en_voice", "family_aims_sam_pt_voice"}
 
 
 def _tools_of(slug: str) -> tuple[str, ...]:
@@ -41,6 +45,8 @@ def test_every_booking_and_finding_step_sends_the_contact_id(company, slug):
 
     assert {n["execute"] for n in steps} == set(_tools_of(slug))
     for step in steps:
+        if slug in RUNTIME_FILLED_AGENTS:
+            continue
         # `{{contact.contact_id}}` where the agent declares the input variable, `[contact.contact_id]` where the
         # platform provides it without the agent declaring it (BabyNova voice).
         assert any(
