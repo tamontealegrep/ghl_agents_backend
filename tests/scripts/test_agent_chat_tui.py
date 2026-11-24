@@ -32,7 +32,8 @@ def family_aims(tmp_path, monkeypatch):
     return {a.slug: a for a in agents}
 
 
-def test_agents_are_discovered_per_company_skipping_tool_folders():
+def test_agents_discovered_per_company():
+    """Agents are discovered per company, skipping tool folders."""
     everything = tui.discover_agents()
     slugs = {(a.company, a.slug) for a in everything}
     assert ("family_aims", "family_aims_sam_text") in slugs and (
@@ -44,11 +45,13 @@ def test_agents_are_discovered_per_company_skipping_tool_folders():
     assert tui.discover_agents("nope") == []
 
 
-def test_the_selector_label_names_agent_and_company():
+def test_selector_label():
+    """The selector label names the agent and its company."""
     assert tui.discover_agents("babynova")[0].label.endswith("(babynova)")
 
 
 def test_session_round_trip_keeps_everything(tmp_path, family_aims):
+    """A saved session reloads with everything intact."""
     state = tui._new_state(family_aims["family_aims_sam_text"])
     state.history.append(tui._history_entry("inbound", "hola"))
     state.first_speaker, state.log_llm, state.log_http, state.log_tools = "user", True, True, True
@@ -68,14 +71,16 @@ def test_session_round_trip_keeps_everything(tmp_path, family_aims):
     assert (loaded.log_llm, loaded.log_http, loaded.log_tools) == (True, True, True)
 
 
-def test_a_session_of_a_missing_agent_is_reported(tmp_path, family_aims):
+def test_session_of_missing_agent(tmp_path, family_aims):
+    """A session of an agent that no longer exists is reported."""
     state = tui._new_state(family_aims["family_aims_sam_text"])
     tui.save_session(state, tmp_path / "s.json")
     with pytest.raises(KeyError):
         tui.load_session(tmp_path / "s.json", [])
 
 
-def test_session_files_default_to_a_timestamped_log(tmp_path, monkeypatch):
+def test_session_file_default_name(tmp_path, monkeypatch):
+    """Session files default to a timestamped log."""
     monkeypatch.setattr(session_module, "DEFAULT_SESSION_DIR", tmp_path / "logs")
     path = tui.resolve_session_file("agent_x", None)
     assert path.parent == tmp_path / "logs" and path.name.startswith("agent_x_session_")
@@ -86,18 +91,21 @@ def test_session_files_default_to_a_timestamped_log(tmp_path, monkeypatch):
     ("raw", "expected"),
     [("", None), ("  ", None), ("true", True), ("12", 12), ('{"a": 1}', {"a": 1}), ("hola", "hola")],
 )
-def test_slot_values_are_json_when_possible(raw, expected):
+def test_slot_values_parse_as_json(raw, expected):
+    """Slot values are parsed as JSON when possible."""
     assert tui._parse_slot_input(raw) == expected
 
 
-def test_the_harness_discovers_slots_and_contact_fields_from_the_graph(family_aims):
+def test_harness_discovers_slots(family_aims):
+    """The harness discovers slots and contact fields from the graph."""
     harness = tui.AgentHarness(family_aims["family_aims_sam_text"], llm_client=FakeLLM())
     assert len(harness.discover_slot_names()) > 20
     assert {"name", "email", "phone", "language"} <= set(harness.discover_contact_fields())
     assert harness.discover_input_variables() == []  # no definitions folder
 
 
-def test_a_turn_runs_the_real_graph_and_leaves_a_checkpoint(family_aims):
+def test_turn_runs_graph_and_checkpoints(family_aims):
+    """A turn runs the real graph and leaves a checkpoint."""
     harness = tui.AgentHarness(
         family_aims["family_aims_sam_text"], contact={"name": "Ana", "language": "es"}, llm_client=FakeLLM()
     )
@@ -116,13 +124,15 @@ def test_a_turn_runs_the_real_graph_and_leaves_a_checkpoint(family_aims):
         harness.turn("t1", None)
 
 
-def test_initial_slots_are_preset_before_the_graph_runs(family_aims):
+def test_initial_slots_preset(family_aims):
+    """Initial slots are set before the graph runs."""
     harness = tui.AgentHarness(family_aims["family_aims_sam_text"], llm_client=FakeLLM())
     harness.start("t2", "user", "hola", initial_slots={"mi_slot_de_prueba": "x"})
     assert harness.state_snapshot("t2")["slots"]["mi_slot_de_prueba"] == "x"
 
 
-def test_tool_calls_are_recorded_and_fall_back_across_routes(family_aims):
+def test_tool_calls_recorded_with_fallback(family_aims):
+    """Tool calls are recorded and fall back across candidate routes."""
     harness = tui.AgentHarness(family_aims["family_aims_sam_text"], llm_client=FakeLLM())
 
     response = harness.tracing_http_client.post(
@@ -135,7 +145,8 @@ def test_tool_calls_are_recorded_and_fall_back_across_routes(family_aims):
     assert trace.response_body["success"] is True
 
 
-def test_http_logging_prints_request_and_response_only_when_enabled(family_aims):
+def test_http_logging_only_when_enabled(family_aims):
+    """HTTP logging prints requests and responses only when enabled."""
     harness = tui.AgentHarness(family_aims["family_aims_sam_text"], llm_client=FakeLLM())
     url = f"{harness.tools_base_url}/check_visa"
     with tui.console.capture() as quiet:
@@ -151,7 +162,8 @@ def test_http_logging_prints_request_and_response_only_when_enabled(family_aims)
     )
 
 
-def test_llm_logging_prints_prompts_only_when_enabled():
+def test_llm_logging_only_when_enabled():
+    """LLM logging prints prompts only when enabled."""
     llm = tui.TracingLLMClient(FakeLLM())
     with tui.console.capture() as quiet:
         assert llm.complete("hola") == "NONE"
@@ -162,7 +174,8 @@ def test_llm_logging_prints_prompts_only_when_enabled():
     assert quiet.get() == "" and "LLM Prompt (complete)" in loud.get() and "LLM Response (JSON)" in loud.get()
 
 
-def test_commands_toggle_logs_and_clear_things(tmp_path, family_aims):
+def test_chat_commands(tmp_path, family_aims):
+    """Chat commands toggle logs and clear state."""
     ref = family_aims["family_aims_sam_text"]
     harness = tui.AgentHarness(ref, llm_client=FakeLLM())
     state = tui._new_state(ref)
@@ -200,6 +213,7 @@ def test_commands_toggle_logs_and_clear_things(tmp_path, family_aims):
 
 
 def test_traces_and_history_are_rendered():
+    """Traces and history are rendered as text."""
     state = tui.SessionState(agent=tui.AgentRef("c", "slug_x", Path(".")), thread_id="t")
     state.history = [tui._history_entry("inbound", "hola"), tui._history_entry("outbound", "buenas")]
     with tui.console.capture() as out:
@@ -215,13 +229,15 @@ def test_traces_and_history_are_rendered():
     )
 
 
-def test_contact_flags_build_the_simulated_contact():
+def test_contact_flags():
+    """Contact flags build the simulated contact."""
     args = tui.parse_args(["--contact-name", "Ana", "--contact-language", "es"])
     assert tui._contact_from_args(args) == {"name": "Ana", "language": "es"}
     assert tui._contact_from_args(tui.parse_args([])) == {}
 
 
-def test_tool_calls_go_to_the_company_mount_like_in_the_deployed_backend(family_aims):
+def test_tools_use_company_mount(family_aims):
+    """Tool calls go to the company mount, like the deployed backend."""
     harness = tui.AgentHarness(family_aims["family_aims_sam_text"], llm_client=FakeLLM())
     assert harness.tools_base_url.endswith("/agents/family_aims/tools")
 

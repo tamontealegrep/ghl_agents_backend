@@ -46,18 +46,21 @@ class APIConnectionError(Exception):
         (ValueError("odd"), ErrorKind.UNKNOWN),
     ],
 )
-def test_kinds(exc, kind):
+def test_error_kinds(exc, kind):
+    """Exceptions are classified into the right error kind."""
     assert classify_exception("openai", exc).kind is kind
 
 
-def test_the_provider_name_and_message_are_kept():
+def test_error_keeps_provider_and_message():
+    """The classified error keeps the provider name and message."""
     error = classify_exception("google", FakeApiError("nope", status_code=401))
 
     assert error.provider == "google"
     assert "nope" in str(error)
 
 
-def test_an_already_classified_error_is_returned_as_is():
+def test_classified_error_passes_through():
+    """An already classified error is returned unchanged."""
     original = LLMProviderError("openai", ErrorKind.QUOTA, "x")
 
     assert classify_exception("anthropic", original) is original

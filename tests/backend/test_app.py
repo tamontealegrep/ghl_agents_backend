@@ -11,6 +11,7 @@ GHL_YAML = "ghl:\n  path: /ghl\n  default_allowed_phones: '+573001112233'\n"
 
 
 def test_health_lists_discovered_agents(settings, agents_dir):
+    """/health lists the agents found in the agents directory."""
     make_bundle(agents_dir, "alpha")
     make_bundle(agents_dir, "beta")
     with TestClient(create_app(settings)) as client:
@@ -18,6 +19,7 @@ def test_health_lists_discovered_agents(settings, agents_dir):
 
 
 def test_agent_tool_plugin_is_mounted_under_its_slug(settings, agents_dir):
+    """An agent's tool plugin is served under its own slug and not under another agent's."""
     make_bundle(agents_dir, "alpha", plugin=PLUGIN_SOURCE)
     with TestClient(create_app(settings)) as client:
         assert client.post("/agents/alpha/tools/ping-tool").json() == {"pong": True}
@@ -25,11 +27,13 @@ def test_agent_tool_plugin_is_mounted_under_its_slug(settings, agents_dir):
 
 
 def test_builtin_tools_are_available_to_every_agent(settings):
+    """Built-in tools are mounted once and reachable without an agent."""
     with TestClient(create_app(settings)) as client:
         assert client.post("/builtin-tools/echo", json={}).status_code != 404
 
 
 def test_ghl_webhook_is_mounted_only_when_configured(settings, agents_dir):
+    """The GHL webhook route exists only for agents whose `agent.yaml` has a ghl section."""
     make_bundle(agents_dir, "with_ghl", agent_yaml=GHL_YAML)
     make_bundle(agents_dir, "without")
     with TestClient(create_app(settings)) as client:
@@ -39,6 +43,7 @@ def test_ghl_webhook_is_mounted_only_when_configured(settings, agents_dir):
 
 
 def test_ghl_webhook_ignores_phone_outside_allow_list(settings, agents_dir):
+    """A message from a phone outside the allow list is ignored with a 202."""
     make_bundle(agents_dir, "a", agent_yaml=GHL_YAML)
     body = {"contact": {"phone": "+570000000000"}, "location_id": "L", "contact_id": "C", "message": "hi"}
     with TestClient(create_app(settings)) as client:
@@ -48,6 +53,7 @@ def test_ghl_webhook_ignores_phone_outside_allow_list(settings, agents_dir):
 
 
 def test_broken_bundle_is_skipped_without_breaking_the_others(settings, agents_dir):
+    """A bundle that fails to load is skipped and the other agents keep working."""
     make_bundle(agents_dir, "good", plugin=PLUGIN_SOURCE)
     make_bundle(agents_dir, "bad", plugin="raise RuntimeError('boom')\n")
     with TestClient(create_app(settings)) as client:
@@ -56,11 +62,13 @@ def test_broken_bundle_is_skipped_without_breaking_the_others(settings, agents_d
 
 
 def test_unknown_agent_chat_is_404(settings):
+    """Chatting with an agent that does not exist returns 404."""
     with TestClient(create_app(settings)) as client:
         assert client.post("/agents/ghost/chat", json={"thread_id": "t"}).status_code == 404
 
 
 def test_admin_routes_require_token_when_configured(settings, agents_dir):
+    """Admin routes return 401 without the admin token once one is configured."""
     make_bundle(agents_dir, "a")
     with TestClient(create_app(replace(settings, admin_token="s3cret"))) as client:
         assert client.post("/agents/a/admin/reload").status_code == 401

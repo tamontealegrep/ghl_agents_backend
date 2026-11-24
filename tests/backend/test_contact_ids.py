@@ -16,14 +16,16 @@ BUNDLES = Path(__file__).resolve().parents[2] / "companies" / "babynova" / "bund
 VOICE = BUNDLES / "babynova_surrogate_questions_voice"
 
 
-def test_the_location_is_filled_from_the_environment_but_the_contact_id_never_is():
+def test_location_from_env_never_contact_id():
+    """The location id comes from the environment; the contact id is never invented."""
     env = {"GHL_LOCATION_ID": "LOC1"}
     assert with_default_ids({"name": "Ana"}, env) == {"name": "Ana", "location_id": "LOC1"}
     assert with_default_ids(None, env) == {"location_id": "LOC1"}
     assert "contact_id" not in with_default_ids({}, env)
 
 
-def test_a_location_given_by_the_caller_wins_and_an_empty_one_is_replaced():
+def test_caller_location_wins_blank_replaced():
+    """A location given by the caller wins, and a blank one is replaced."""
     env = {"GHL_LOCATION_ID": "LOC1"}
     assert with_default_ids({"location_id": "MINE"}, env)["location_id"] == "MINE"
     assert with_default_ids({"location_id": "  "}, env)["location_id"] == "LOC1"
@@ -31,6 +33,7 @@ def test_a_location_given_by_the_caller_wins_and_an_empty_one_is_replaced():
 
 
 def test_the_input_is_not_modified():
+    """The contact passed in is not modified."""
     contact = {"name": "Ana"}
     with_default_ids(contact, {"GHL_LOCATION_ID": "LOC1"})
     assert contact == {"name": "Ana"}
@@ -64,10 +67,12 @@ def _chat(monkeypatch, contact, env_location):
     return graph.started_with["contact"]
 
 
-def test_a_chat_started_by_hand_gets_the_location_of_the_company(monkeypatch):
+def test_manual_chat_gets_company_location(monkeypatch):
+    """A chat started by hand gets the company's location id."""
     contact = _chat(monkeypatch, {"contact_id": "c9", "name": "Ana"}, "LOC1")
     assert contact == {"contact_id": "c9", "name": "Ana", "location_id": "LOC1"}
 
 
-def test_a_chat_without_a_configured_location_leaves_it_out(monkeypatch):
+def test_chat_without_location_leaves_it_out(monkeypatch):
+    """Without a configured location the contact has no location id."""
     assert _chat(monkeypatch, {"contact_id": "c9"}, None) == {"contact_id": "c9"}

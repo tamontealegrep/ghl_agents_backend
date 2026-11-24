@@ -18,28 +18,34 @@ BOGOTA = "America/Bogota"
 # ---------------------------------------------------------------------------
 
 
-def test_get_day_window_hours_monday():
+def test_window_monday():
+    """Monday's window is 07:00 to 12:00."""
     assert get_day_window_hours(1, 10) == (7, 0, 12, 0)
 
 
-def test_get_day_window_hours_wednesday():
+def test_window_wednesday():
+    """Wednesday's window is 07:00 to 13:00."""
     assert get_day_window_hours(3, 10) == (7, 0, 13, 0)
 
 
-def test_get_day_window_hours_friday():
+def test_window_friday():
+    """Friday's window is 14:00 to 17:00."""
     assert get_day_window_hours(5, 10) == (14, 0, 17, 0)
 
 
-def test_get_day_window_hours_first_saturday_of_month():
+def test_window_first_saturday():
+    """The first Saturday of the month is open 08:00 to 12:00."""
     assert get_day_window_hours(6, 7) == (8, 0, 12, 0)
 
 
-def test_get_day_window_hours_saturday_after_first_week_is_closed():
+def test_window_later_saturday_closed():
+    """Later Saturdays are closed."""
     assert get_day_window_hours(6, 8) is None
 
 
 @pytest.mark.parametrize("weekday", [0, 2, 4])
-def test_get_day_window_hours_closed_on_other_days(weekday):
+def test_window_other_days_closed(weekday):
+    """The other days are closed."""
     assert get_day_window_hours(weekday, 15) is None
 
 
@@ -49,10 +55,12 @@ def test_get_day_window_hours_closed_on_other_days(weekday):
 
 
 def test_is_holiday_known_date():
+    """A known holiday is detected."""
     assert is_holiday(2026, 1, 1) is True
 
 
 def test_is_holiday_regular_date():
+    """A regular date is not a holiday."""
     assert is_holiday(2026, 8, 26) is False
 
 
@@ -61,20 +69,23 @@ def test_is_holiday_regular_date():
 # ---------------------------------------------------------------------------
 
 
-def test_compute_processing_day_key_regular_weekday():
+def test_processing_day_weekday():
     # Miercoles 2026-08-26 -> siguiente dia es jueves, sin salto
+    """On a weekday the processing day is the next one."""
     now = build_business_instant(2026, 8, 26, 12, 0, BOGOTA)
     assert compute_processing_day_key(now) == "2026-08-27"
 
 
-def test_compute_processing_day_key_skips_saturday_to_monday():
+def test_processing_day_saturday():
     # Viernes 2026-08-28 -> siguiente dia es sabado -> salta a lunes
+    """From a Saturday the processing day is Monday."""
     now = build_business_instant(2026, 8, 28, 12, 0, BOGOTA)
     assert compute_processing_day_key(now) == "2026-08-31"
 
 
-def test_compute_processing_day_key_skips_sunday_to_monday():
+def test_processing_day_sunday():
     # Sabado 2026-08-29 -> siguiente dia es domingo -> salta a lunes
+    """From a Sunday the processing day is Monday."""
     now = build_business_instant(2026, 8, 29, 12, 0, BOGOTA)
     assert compute_processing_day_key(now) == "2026-08-31"
 
@@ -84,17 +95,20 @@ def test_compute_processing_day_key_skips_sunday_to_monday():
 # ---------------------------------------------------------------------------
 
 
-def test_valid_advance_true_when_slot_day_after_processing_day():
+def test_advance_valid_after_processing_day():
+    """A slot after the processing day is valid."""
     slot_start = build_business_instant(2026, 8, 28, 7, 0, BOGOTA)
     assert valid_advance(slot_start, "2026-08-27") is True
 
 
-def test_valid_advance_false_when_slot_day_equals_processing_day():
+def test_advance_invalid_on_processing_day():
+    """A slot on the processing day is not valid."""
     slot_start = build_business_instant(2026, 8, 27, 7, 0, BOGOTA)
     assert valid_advance(slot_start, "2026-08-27") is False
 
 
-def test_valid_advance_false_when_slot_day_before_processing_day():
+def test_advance_invalid_before_processing_day():
+    """A slot before the processing day is not valid."""
     slot_start = build_business_instant(2026, 8, 26, 7, 0, BOGOTA)
     assert valid_advance(slot_start, "2026-08-27") is False
 
@@ -104,21 +118,24 @@ def test_valid_advance_false_when_slot_day_before_processing_day():
 # ---------------------------------------------------------------------------
 
 
-def test_get_candidate_days_list_includes_only_business_days_with_window():
+def test_candidate_days_business_only():
+    """Candidate days include only business days that have a window."""
     start = build_business_instant(2026, 8, 24, 0, 0, BOGOTA)  # Lunes
     end = build_business_instant(2026, 8, 30, 23, 59, BOGOTA)  # Domingo
     days = get_candidate_days_list(start, end)
     assert [d["day"] for d in days] == [24, 26, 28]  # Lunes, Miercoles, Viernes
 
 
-def test_get_candidate_days_list_excludes_holiday():
+def test_candidate_days_exclude_holiday():
     # 2026-08-17 es lunes y tambien festivo en COLOMBIA_HOLIDAYS
+    """Holidays are excluded from candidate days."""
     start = build_business_instant(2026, 8, 17, 0, 0, BOGOTA)
     end = build_business_instant(2026, 8, 17, 23, 59, BOGOTA)
     assert get_candidate_days_list(start, end) == []
 
 
-def test_get_candidate_days_list_includes_first_saturday_of_month():
+def test_candidate_days_first_saturday():
+    """The first Saturday of the month is a candidate day."""
     start = build_business_instant(2026, 8, 1, 0, 0, BOGOTA)  # Sabado, dia 1
     end = build_business_instant(2026, 8, 1, 23, 59, BOGOTA)
     days = get_candidate_days_list(start, end)
@@ -137,7 +154,8 @@ def _compute(**overrides):
     return compute_available_slots(**kwargs)
 
 
-def test_compute_available_slots_single_monday_window_no_busy_events():
+def test_slots_single_monday():
+    """A free Monday window gives 8 slots."""
     slots = _compute(interval_minutes=35)
     assert len(slots) == 8
     assert slots[0].start_co == "2026-08-24T07:00:00-05:00"
@@ -145,13 +163,15 @@ def test_compute_available_slots_single_monday_window_no_busy_events():
     assert slots[-1].start_co == "2026-08-24T11:05:00-05:00"
 
 
-def test_compute_available_slots_interval_zero_is_back_to_back():
+def test_slots_interval_zero_back_to_back():
+    """An interval of 0 gives back-to-back slots."""
     slots = _compute()
     assert len(slots) == 10
     assert [s.start_co[11:16] for s in slots[:3]] == ["07:00", "07:30", "08:00"]
 
 
-def test_compute_available_slots_post_buffer_keeps_time_after_an_existing_appointment():
+def test_slots_post_buffer():
+    """The post buffer keeps time after an existing appointment."""
     busy = [
         (
             build_business_instant(2026, 8, 24, 8, 0, BOGOTA),
@@ -164,7 +184,8 @@ def test_compute_available_slots_post_buffer_keeps_time_after_an_existing_appoin
     assert "08:30" not in buffered and "09:00" in buffered
 
 
-def test_compute_available_slots_pre_buffer_keeps_time_before_an_existing_appointment():
+def test_slots_pre_buffer():
+    """The pre buffer keeps time before an existing appointment."""
     busy = [
         (
             build_business_instant(2026, 8, 24, 9, 0, BOGOTA),
@@ -177,7 +198,8 @@ def test_compute_available_slots_pre_buffer_keeps_time_before_an_existing_appoin
     assert "08:30" not in buffered and "08:00" in buffered
 
 
-def test_compute_available_slots_excludes_slot_overlapping_a_busy_event():
+def test_slots_exclude_busy_event():
+    """A slot overlapping a busy event is excluded."""
     busy = [
         (build_business_instant(2026, 8, 24, 8, 6, BOGOTA), build_business_instant(2026, 8, 24, 8, 8, BOGOTA))
     ]
@@ -186,7 +208,8 @@ def test_compute_available_slots_excludes_slot_overlapping_a_busy_event():
     assert len(starts) == 9
 
 
-def test_compute_available_slots_min_notice_replaces_the_next_business_day_rule():
+def test_slots_min_notice_replaces_next_day_rule():
+    """Minimum notice replaces the next-business-day rule."""
     now = build_business_instant(2026, 8, 23, 20, 0, BOGOTA)  # domingo noche
     default = _compute(now=now, date_range_days=3)
     with_notice = _compute(now=now, date_range_days=3, min_notice_minutes=11 * 60)  # lunes 07:00 ya cumple
@@ -196,10 +219,12 @@ def test_compute_available_slots_min_notice_replaces_the_next_business_day_rule(
     assert all(s.start_co[:10] != "2026-08-24" or s.start_co[11:16] >= "09:00" for s in stricter)
 
 
-def test_compute_available_slots_start_local_reflects_user_timezone():
+def test_slots_local_start_uses_user_timezone():
+    """Each slot's local start reflects the user's timezone."""
     slots = _compute(user_tz="America/New_York")
     assert slots[0].start_local == "2026-08-24T08:00:00-04:00"
 
 
-def test_compute_available_slots_returns_empty_when_no_candidate_days_in_range():
+def test_slots_empty_without_candidate_days():
+    """No candidate days in the range gives no slots."""
     assert _compute(date_range_days=0) == []

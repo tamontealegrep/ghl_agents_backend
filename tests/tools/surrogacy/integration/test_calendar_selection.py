@@ -43,7 +43,8 @@ async def _token(*args, **kwargs):
     return "token"
 
 
-def test_slots_use_the_requested_calendars_credentials_hours_and_timings(monkeypatch):
+def test_slots_use_requested_calendar(monkeypatch):
+    """Slots use the requested calendar's credentials, hours and timings."""
     seen = {}
 
     async def _busy(access_token, calendar_id, start, end):
@@ -70,7 +71,8 @@ def test_slots_use_the_requested_calendars_credentials_hours_and_timings(monkeyp
         assert not (12 <= start.hour < 13)  # default lunch break
 
 
-def test_every_scheduling_tool_fails_when_calendar_type_is_missing(monkeypatch):
+def test_calendar_type_required(monkeypatch):
+    """Every scheduling tool fails when the calendar type is missing."""
     _use(monkeypatch, slots_endpoint, book_endpoint, cancel_endpoint, edit_endpoint, find_endpoint)
     payloads = {
         "get-available-slots-google": {},
@@ -92,7 +94,8 @@ def test_every_scheduling_tool_fails_when_calendar_type_is_missing(monkeypatch):
             assert "FT, CONTROL, SIN_CREDENCIALES" in body["errors"], tool
 
 
-def test_every_scheduling_tool_rejects_an_unknown_calendar_with_the_valid_keys(monkeypatch):
+def test_unknown_calendar_lists_valid_keys(monkeypatch):
+    """Every scheduling tool rejects an unknown calendar and lists the valid keys."""
     _use(monkeypatch, slots_endpoint, book_endpoint, cancel_endpoint, edit_endpoint, find_endpoint)
     payloads = {
         "get-available-slots-google": {},
@@ -112,7 +115,8 @@ def test_every_scheduling_tool_rejects_an_unknown_calendar_with_the_valid_keys(m
         assert "FT, CONTROL, SIN_CREDENCIALES" in body["errors"], tool
 
 
-def test_cancel_and_find_use_the_requested_calendar(monkeypatch):
+def test_cancel_and_find_use_calendar(monkeypatch):
+    """Cancel and find use the requested calendar."""
     seen = []
 
     async def _delete(access_token, calendar_id, event_id):
@@ -135,7 +139,8 @@ def test_cancel_and_find_use_the_requested_calendar(monkeypatch):
     assert seen == [("delete", "control@cal"), ("list", "control@cal")]
 
 
-def test_calendar_without_credentials_names_the_variables_to_define(monkeypatch):
+def test_missing_credentials_name_variables(monkeypatch):
+    """A calendar without credentials names the variables to define."""
     _use(monkeypatch, slots_endpoint)
 
     body = client.post(
@@ -153,7 +158,8 @@ def _monday_at(hour: int) -> str:
     return day.replace(hour=hour, minute=0, second=0, microsecond=0).isoformat()
 
 
-def test_booking_in_a_new_calendar_uses_its_hours_title_and_notifies_the_team(monkeypatch):
+def test_new_calendar_booking_rules(monkeypatch):
+    """Booking in a new calendar uses its hours and title and notifies the team."""
     created = {}
     sent = []
 

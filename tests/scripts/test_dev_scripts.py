@@ -24,12 +24,14 @@ def openapi():
     return TestClient(create_app(settings)).get("/openapi.json").json()
 
 
-def test_env_file_is_parsed_ignoring_comments_and_quotes(tmp_path):
+def test_env_file_parsing(tmp_path):
+    """An env file is parsed, ignoring comments and quotes."""
     (tmp_path / ".env").write_text('# c\nA=1\n\nB="two words"\nC=\nbad line\nD=x=y\n', encoding="utf-8")
     assert devenv.read_env_file(tmp_path / ".env") == {"A": "1", "B": "two words", "C": "", "D": "x=y"}
 
 
-def test_the_file_wins_over_the_process_environment(tmp_path, monkeypatch):
+def test_file_wins_over_process_env(tmp_path, monkeypatch):
+    """The env file wins over the process environment."""
     monkeypatch.setenv("PORT", "1111")
     monkeypatch.setenv("ONLY_IN_PROCESS", "yes")
     (tmp_path / ".env").write_text("PORT=2222\n", encoding="utf-8")
@@ -49,23 +51,27 @@ def test_the_file_wins_over_the_process_environment(tmp_path, monkeypatch):
     ],
 )
 def test_base_url_per_target(env, target, expected):
+    """Each target resolves to its own base URL."""
     assert devenv.base_url(env, target) == expected
 
 
 @pytest.mark.parametrize(("env", "target"), [({}, "render"), ({}, "ngrok"), ({}, "mars")])
-def test_a_target_without_its_variables_is_an_error(env, target):
+def test_target_without_variables_errors(env, target):
+    """A target without its variables raises an error."""
     with pytest.raises(ValueError):
         devenv.base_url(env, target)
 
 
-def test_the_default_target_is_local_unless_configured():
+def test_default_target_is_local():
+    """The default target is local unless configured."""
     assert devenv.default_target({}) == "local"
     assert devenv.default_target({"SEND_REQUEST_DEFAULT_TARGET": "RENDER"}) == "render"
     with pytest.raises(ValueError):
         devenv.default_target({"SEND_REQUEST_DEFAULT_TARGET": "prod"})
 
 
-def test_the_operations_of_every_agent_are_listed(openapi):
+def test_agent_operations_listed(openapi):
+    """The operations of every agent are listed."""
     operations = send_request.list_operations(openapi)
     assert (
         "babynova_triage_obstetrico_text",
@@ -77,7 +83,8 @@ def test_the_operations_of_every_agent_are_listed(openapi):
     assert any(t == "tools/book-appointment-ghl" for _, t, _, _ in operations)
 
 
-def test_a_tool_is_found_with_or_without_the_tools_prefix(openapi):
+def test_tool_found_with_or_without_prefix(openapi):
+    """A tool is found with or without the tools prefix."""
     slug = "babynova_surrogate_questions_text"
     assert send_request.find_operation(openapi, slug, "book-appointment-ghl", None) == (
         f"/agents/{slug}/tools/book-appointment-ghl",
@@ -88,7 +95,8 @@ def test_a_tool_is_found_with_or_without_the_tools_prefix(openapi):
         send_request.find_operation(openapi, slug, "nope", None)
 
 
-def test_the_default_payload_comes_from_the_request_schema(openapi):
+def test_default_payload_from_schema(openapi):
+    """The default payload is built from the request schema."""
     slug = "babynova_surrogate_questions_text"
     path, method = send_request.find_operation(openapi, slug, "book-appointment-ghl", None)
     payload = send_request.default_payload(openapi, path, method)

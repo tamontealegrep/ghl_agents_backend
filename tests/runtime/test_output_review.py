@@ -37,7 +37,8 @@ def _review() -> OutputReview:
     return review
 
 
-def test_review_is_off_unless_the_environment_turns_it_on(monkeypatch):
+def test_review_off_by_default(monkeypatch):
+    """Review is off unless the environment turns it on."""
     artifact = SimpleNamespace(output_rules=_RULES, forbidden_words=_WORDS)
     monkeypatch.delenv(OUTPUT_REVIEW_ENV, raising=False)
     assert output_review_enabled() is False
@@ -49,13 +50,15 @@ def test_review_is_off_unless_the_environment_turns_it_on(monkeypatch):
     assert OutputReview.from_artifact(artifact) is None
 
 
-def test_an_agent_without_rules_or_words_is_never_reviewed(monkeypatch):
+def test_no_rules_no_review(monkeypatch):
+    """An agent without rules or words is never reviewed."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     assert OutputReview.from_artifact(SimpleNamespace(output_rules=[], forbidden_words=[])) is None
     assert OutputReview.from_artifact(SimpleNamespace()) is None
 
 
-def test_forbidden_words_match_ignoring_case_accents_and_endings(monkeypatch):
+def test_forbidden_words_flexible_match(monkeypatch):
+    """Forbidden words match ignoring case, accents and endings."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     review = _review()
     hit = lambda text: sorted(t.word for t in review.find_forbidden(text))  # noqa: E731
@@ -69,10 +72,14 @@ def test_forbidden_words_match_ignoring_case_accents_and_endings(monkeypatch):
     assert hit("Estamos en la gestación subrogada") == []
 
 
-def test_a_message_that_follows_the_rules_goes_out_unchanged(monkeypatch):
+def test_compliant_message_unchanged(monkeypatch):
+    """A message that follows the rules goes out unchanged."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     llm = _ScriptedLLM("OK")
-    assert _review().review(llm, "Con gusto le cuento cómo es el proceso.") == "Con gusto le cuento cómo es el proceso."
+    assert (
+        _review().review(llm, "Con gusto le cuento cómo es el proceso.")
+        == "Con gusto le cuento cómo es el proceso."
+    )
     assert len(llm.prompts) == 1
     # the prompt carries the rules, the words and the message
     prompt = llm.prompts[0]
@@ -80,7 +87,8 @@ def test_a_message_that_follows_the_rules_goes_out_unchanged(monkeypatch):
     assert "Con gusto le cuento" in prompt
 
 
-def test_a_message_that_breaks_a_rule_is_rewritten(monkeypatch):
+def test_rule_breaking_message_rewritten(monkeypatch):
+    """A message that breaks a rule is rewritten."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     llm = _ScriptedLLM("REWRITE\nCon gusto le cuento cómo es el proceso.")
     out = _review().review(llm, "Le cuento cómo ganar un sueldo con el proceso.", language="Spanish")
@@ -89,7 +97,8 @@ def test_a_message_that_breaks_a_rule_is_rewritten(monkeypatch):
     assert '"sueldo"' in llm.prompts[0]  # the word check tells the model what it found
 
 
-def test_a_rewrite_that_still_uses_a_forbidden_word_is_tried_again(monkeypatch):
+def test_bad_rewrite_retried(monkeypatch):
+    """A rewrite that still uses a forbidden word is tried again."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     llm = _ScriptedLLM("REWRITE\nEs un alquiler de vientre.", "REWRITE\nEs una gestación subrogada.")
     out = _review().review(llm, "Es un negocio de alquiler de vientres.")
@@ -98,7 +107,8 @@ def test_a_rewrite_that_still_uses_a_forbidden_word_is_tried_again(monkeypatch):
     assert "still contains listed words" in llm.prompts[1]
 
 
-def test_when_the_rewrites_keep_failing_the_message_still_goes_out(monkeypatch):
+def test_failing_rewrites_still_send(monkeypatch):
+    """When rewrites keep failing the message still goes out."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     llm = _ScriptedLLM("REWRITE\nSe paga un sueldo.")
     out = _review().review(llm, "Hay un sueldo.")
@@ -121,31 +131,38 @@ def test_ok_from_the_model_is_final_even_when_a_listed_word_is_present(monkeypat
         assert "Judge whether the message CONVEYS that idea, never whether a" in llm.prompts[0]
 
 
-def test_a_rewrite_that_loses_a_code_written_value_is_thrown_away(monkeypatch):
+def test_rewrite_losing_token_discarded(monkeypatch):
+    """A rewrite that loses a code-written value is discarded."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     text = "Tengo estas fechas disponibles:\n<LIST_1>"
     llm = _ScriptedLLM("REWRITE\nTengo fechas disponibles.")
     assert _review().review(llm, text, required_tokens=["<LIST_1>"]) == text
     # kept: accepted
     llm = _ScriptedLLM("REWRITE\nHay fechas:\n<LIST_1>")
-    assert _review().review(llm, "Hay un sueldo en estas fechas:\n<LIST_1>", required_tokens=["<LIST_1>"]) == "Hay fechas:\n<LIST_1>"
+    assert (
+        _review().review(llm, "Hay un sueldo en estas fechas:\n<LIST_1>", required_tokens=["<LIST_1>"])
+        == "Hay fechas:\n<LIST_1>"
+    )
 
 
-def test_a_rewrite_that_adds_a_question_is_thrown_away(monkeypatch):
+def test_rewrite_adding_question_discarded(monkeypatch):
+    """A rewrite that adds a question is discarded."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     text = "Le cuento el proceso."
     llm = _ScriptedLLM("REWRITE\nLe cuento el proceso. ¿Quiere saber más?")
     assert _review().review(llm, text) == text
 
 
-def test_an_unusable_answer_leaves_the_message_alone(monkeypatch):
+def test_unusable_answer_keeps_message(monkeypatch):
+    """An unusable model answer leaves the message alone."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     text = "Le cuento el proceso."
     assert _review().review(_ScriptedLLM(""), text) == text
     assert _review().review(_ScriptedLLM("REWRITE"), text) == text
 
 
-def test_render_say_reviews_the_paraphrase_and_keeps_code_written_values(monkeypatch):
+def test_say_reviews_paraphrase(monkeypatch):
+    """The paraphrase is reviewed and code-written values are kept."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     review = _review()
 
@@ -164,14 +181,16 @@ def test_render_say_reviews_the_paraphrase_and_keeps_code_written_values(monkeyp
     assert out == "Tengo estas fechas para usted:\n🗓️ Viernes 13 de noviembre\n └─ Tarde"
 
 
-def test_render_say_does_not_review_when_it_is_off():
+def test_say_skips_review_when_off():
+    """Nothing is reviewed when review is off."""
     client = _ScriptedLLM("Hola, ¿cómo está?")
     render_say = _make_render_say(client, None)
     assert render_say("N", ["Hola, ¿cómo está?"], False, "es", {}) == "Hola, ¿cómo está?"
     assert not any(p.startswith("You are the final compliance reviewer") for p in client.prompts)
 
 
-def test_verbatim_copy_is_never_rewritten_and_costs_no_call(monkeypatch, caplog):
+def test_verbatim_never_rewritten(monkeypatch, caplog):
+    """Verbatim copy is never rewritten and costs no call."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     llm = _ScriptedLLM("REWRITE\nOtra cosa")
     render_say = _make_render_say(llm, _review())
@@ -182,7 +201,8 @@ def test_verbatim_copy_is_never_rewritten_and_costs_no_call(monkeypatch, caplog)
     assert "listed word" in caplog.text
 
 
-def test_the_verdict_line_after_the_analysis_decides(monkeypatch):
+def test_verdict_line_decides(monkeypatch):
+    """The verdict line after the analysis decides."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     review = _review()
     text = "Claro, puede mantener su empleo."
@@ -197,7 +217,8 @@ def test_the_verdict_line_after_the_analysis_decides(monkeypatch):
     assert review.review(_ScriptedLLM(tricky), text) == text
 
 
-def test_the_contact_message_and_the_label_handling(monkeypatch):
+def test_contact_message_and_label(monkeypatch):
+    """The contact message is used and a copied label is dropped."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     review = _review()
     llm = _ScriptedLLM("VERDICT: REWRITE\nMESSAGE: Le explicamos el proceso.")
@@ -209,7 +230,8 @@ def test_the_contact_message_and_the_label_handling(monkeypatch):
     assert "WHAT THE CONTACT JUST WROTE" not in llm.prompts[0]
 
 
-def test_render_say_hands_the_contact_message_to_the_review(monkeypatch):
+def test_say_passes_contact_message(monkeypatch):
+    """The contact's message is handed to the review."""
     monkeypatch.setenv(OUTPUT_REVIEW_ENV, "true")
     seen: list[str] = []
 

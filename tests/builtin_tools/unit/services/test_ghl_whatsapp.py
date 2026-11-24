@@ -27,7 +27,8 @@ def _sent(ghl):
     return request, json.loads(request.content)
 
 
-def test_the_template_goes_the_way_ghls_own_app_sends_it(ghl):
+def test_template_sent_like_ghl_app(ghl):
+    """The template is sent the same way GHL's own app sends it."""
     result = asyncio.run(
         send_whatsapp_template_service(
             " contact1 ",
@@ -59,7 +60,8 @@ def test_the_template_goes_the_way_ghls_own_app_sends_it(ghl):
     assert ghl["locations"] == ["loc1"]  # the location picks the token
 
 
-def test_the_optional_numbers_are_left_out_when_not_given(ghl):
+def test_optional_numbers_left_out(ghl):
+    """Optional phone numbers are left out when not given."""
     asyncio.run(send_whatsapp_template_service("c", "sam_fc_en", "en_US", category="marketing"))
 
     body = _sent(ghl)[1]
@@ -83,23 +85,28 @@ def test_the_optional_numbers_are_left_out_when_not_given(ghl):
         ([1, "b"], ["1", "b"]),
     ],
 )
-def test_the_variables_are_a_list_of_texts_whatever_their_shape(raw, expected):
+def test_variables_are_text_list(raw, expected):
+    """Template variables are normalised to a list of texts."""
     assert normalize_variables(raw) == expected
 
 
 @pytest.mark.parametrize(
     ("contact", "name", "language"), [("", "t", "es"), ("  ", "t", "es"), ("c", "", "es"), ("c", "t", " ")]
 )
-def test_a_template_without_contact_name_or_language_never_reaches_ghl(ghl, contact, name, language):
+def test_template_missing_input_skips_ghl(ghl, contact, name, language):
+    """A template without contact, name or language never reaches GHL."""
     result = asyncio.run(send_whatsapp_template_service(contact, name, language))
 
     assert result["success"] is False and "required" in result["errors"]
     assert ghl["requests"] == []
 
 
-def test_the_file_goes_as_whatsapp_media_with_the_name_from_the_url(ghl):
+def test_file_sent_as_media(ghl):
+    """A file is sent as WhatsApp media named from its URL."""
     result = asyncio.run(
-        send_whatsapp_file_service("contact1", "https://files.test/docs/Gu%C3%ADa%20FIV.pdf", location_id="loc1")
+        send_whatsapp_file_service(
+            "contact1", "https://files.test/docs/Gu%C3%ADa%20FIV.pdf", location_id="loc1"
+        )
     )
 
     assert result == {"success": True, "message_id": "msg1", "conversation_id": "conv1"}
@@ -110,15 +117,25 @@ def test_the_file_goes_as_whatsapp_media_with_the_name_from_the_url(ghl):
         "status": "pending",
         "whatsapp": {
             "type": "media",
-            "media": {"type": "document", "url": "https://files.test/docs/Gu%C3%ADa%20FIV.pdf", "name": "Guía FIV.pdf"},
+            "media": {
+                "type": "document",
+                "url": "https://files.test/docs/Gu%C3%ADa%20FIV.pdf",
+                "name": "Guía FIV.pdf",
+            },
         },
     }
 
 
-def test_a_caption_and_an_explicit_type_and_name_are_used_as_given(ghl):
+def test_file_caption_type_name(ghl):
+    """A caption, type and name given explicitly are used as is."""
     asyncio.run(
         send_whatsapp_file_service(
-            "c", "https://files.test/x", file_type=" IMAGE ", file_name="Foto.png", message=" Mira ", from_number="+57"
+            "c",
+            "https://files.test/x",
+            file_type=" IMAGE ",
+            file_name="Foto.png",
+            message=" Mira ",
+            from_number="+57",
         )
     )
 
@@ -141,11 +158,13 @@ def test_a_caption_and_an_explicit_type_and_name_are_used_as_given(ghl):
         ("https://x.test/v1.2/file", "document"),  # a dot in a folder is not an extension
     ],
 )
-def test_the_kind_of_file_is_deduced_from_the_extension(url, expected):
+def test_file_type_from_extension(url, expected):
+    """The media type is deduced from the file extension."""
     assert media_type_for(url) == expected
 
 
-def test_a_file_type_that_is_not_one_of_the_four_is_refused(ghl):
+def test_unknown_file_type_refused(ghl):
+    """A type outside image, video, audio and document is refused."""
     result = asyncio.run(send_whatsapp_file_service("c", "https://x.test/a.pdf", file_type="sticker"))
 
     assert result["success"] is False and "image, video, audio, document" in result["errors"]
@@ -154,13 +173,15 @@ def test_a_file_type_that_is_not_one_of_the_four_is_refused(ghl):
 
 @pytest.mark.parametrize("url", ["", "  ", "ftp://x.test/a.pdf", "/local/a.pdf", "file:///a.pdf", "https://"])
 def test_only_a_public_http_url_is_sent(ghl, url):
+    """Only a public http(s) URL is accepted."""
     result = asyncio.run(send_whatsapp_file_service("c", url))
 
     assert result["success"] is False and "public http" in result["errors"]
     assert ghl["requests"] == []
 
 
-def test_a_file_without_contact_never_reaches_ghl(ghl):
+def test_file_without_contact_skips_ghl(ghl):
+    """A file without a contact never reaches GHL."""
     assert asyncio.run(send_whatsapp_file_service(" ", "https://x.test/a.pdf"))["success"] is False
     assert ghl["requests"] == []
 
@@ -174,10 +195,12 @@ def test_a_file_without_contact_never_reaches_ghl(ghl):
     ],
 )
 def test_the_file_name(url, given, expected):
+    """The file name comes from the given name or from the URL."""
     assert file_name_for(url, given) == expected
 
 
-def test_a_ghl_refusal_comes_back_as_data(ghl):
+def test_ghl_refusal_is_data(ghl):
+    """A GHL refusal is returned as data."""
     ghl["reply"] = lambda request: httpx.Response(422, json={"message": "template not approved"})
 
     for result in (
@@ -188,15 +211,31 @@ def test_a_ghl_refusal_comes_back_as_data(ghl):
         assert "422" in result["errors"] and "template not approved" in result["errors"]
 
 
-def test_both_tools_are_reachable_with_snake_or_camel_names(ghl):
+def test_tools_accept_snake_or_camel(ghl):
+    """Both tools are reachable with snake_case or camelCase names."""
     client = TestClient(app)
 
-    template = client.post("/api/v1/send-whatsapp-template", json={"contact_id": "c1", "template_name": "t1", "language": "es", "body_variables": "Ana, 5", "location_id": "loc1"})
-    file = client.post("/api/v1/send-whatsapp-file", json={"contactId": "c1", "fileUrl": "https://x.test/a.png", "locationId": "loc1"})
+    template = client.post(
+        "/api/v1/send-whatsapp-template",
+        json={
+            "contact_id": "c1",
+            "template_name": "t1",
+            "language": "es",
+            "body_variables": "Ana, 5",
+            "location_id": "loc1",
+        },
+    )
+    file = client.post(
+        "/api/v1/send-whatsapp-file",
+        json={"contactId": "c1", "fileUrl": "https://x.test/a.png", "locationId": "loc1"},
+    )
 
     assert template.status_code == 200 and template.json()["message_id"] == "msg1"
     assert json.loads(ghl["requests"][0].content)["whatsapp"]["placeholders"]["body"] == ["Ana", "5"]
     assert file.status_code == 200 and file.json() == {
-        "success": True, "message_id": "msg1", "conversation_id": "conv1", "errors": None,
+        "success": True,
+        "message_id": "msg1",
+        "conversation_id": "conv1",
+        "errors": None,
     }
     assert json.loads(ghl["requests"][1].content)["whatsapp"]["media"]["type"] == "image"

@@ -42,7 +42,8 @@ def _free_slot(hour: int, day, minute: int = 0) -> str:
     return f"{day.isoformat()}T{hour + 5:02d}:{minute:02d}:00Z"
 
 
-def test_ghl_slots_outside_the_window_the_lunch_break_and_holidays_are_dropped(monkeypatch):
+def test_ghl_slots_drop_closed_times(monkeypatch):
+    """GHL slots outside the window, in lunch or on holidays are dropped."""
     thursday = _future_weekday(4)
     holiday = _future_weekday(2)
 

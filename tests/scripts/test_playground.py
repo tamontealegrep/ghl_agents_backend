@@ -56,7 +56,8 @@ def _new(client, **extra):
     return client.post("/api/sessions", json=body).json()
 
 
-def test_the_page_and_the_agent_list_are_served(client):
+def test_page_and_agents_served(client):
+    """The page and the agent list are served."""
     page = client.get("/")
     assert page.status_code == 200 and "Agent playground" in page.text
     agents = client.get("/api/agents").json()
@@ -70,18 +71,21 @@ def test_the_page_and_the_agent_list_are_served(client):
     assert voice["first_speaker"] == "agent"
 
 
-def test_meta_offers_contact_fields_and_slot_names(client):
+def test_meta_lists_fields_and_slots(client):
+    """Meta lists the contact fields and slot names."""
     meta = client.get(f"/api/agents/family_aims/{SLUG}/meta").json()
     assert {"name", "email", "language"} <= set(meta["contact_fields"])
     assert len(meta["slot_names"]) > 20
 
 
-def test_a_new_conversation_has_not_started(client):
+def test_new_conversation_not_started(client):
+    """A new conversation has not started yet."""
     session = _new(client)
     assert (session["started"], session["timeline"], session["state"]["slots"]) == (False, [], {})
 
 
-def test_a_turn_records_the_message_the_llm_calls_and_the_state(client):
+def test_turn_records_events(client):
+    """A turn records the message, the LLM calls and the state."""
     session = _new(client, contact={"name": "Ana"})
 
     done = client.post(f"/api/sessions/{session['id']}/messages", json={"text": "hola"}).json()
@@ -94,7 +98,8 @@ def test_a_turn_records_the_message_the_llm_calls_and_the_state(client):
     assert done["state"]["current_state"] == done["timeline"][-1]["current_state"]
 
 
-def test_tool_calls_are_events_with_request_response_and_routes_tried(client):
+def test_tool_calls_are_events(client):
+    """Tool calls are events with request, response and routes tried."""
     session = _new(client)
     harness = server_session(client, session).harness
 
@@ -111,7 +116,8 @@ def server_session(client, session):
     return client.app.state.sessions[session["id"]]
 
 
-def test_flow_variables_can_be_edited_before_and_after_the_conversation_starts(client):
+def test_variables_editable_any_time(client):
+    """Flow variables can be edited before and after the conversation starts."""
     session = _new(client)
     before = client.patch(
         f"/api/sessions/{session['id']}/state", json={"slots": {"mi_slot": "x"}, "contact": {"name": "Luis"}}
@@ -129,7 +135,8 @@ def test_flow_variables_can_be_edited_before_and_after_the_conversation_starts(c
     ) == 3  # before the start, after it, and the removal
 
 
-def test_a_failing_turn_is_shown_in_the_conversation_not_as_an_http_error(client):
+def test_failing_turn_shown_in_chat(client):
+    """A failing turn is shown in the conversation, not as an HTTP error."""
     client.llm["client"] = BrokenLLM()
     session = _new(client)
 
@@ -141,7 +148,8 @@ def test_a_failing_turn_is_shown_in_the_conversation_not_as_an_http_error(client
     assert any(e["kind"] == "llm" and "boom" in e.get("error", "") for e in done.json()["timeline"])
 
 
-def test_saved_conversations_are_listed_and_reopened_where_they_were(client):
+def test_saved_sessions_resume(client):
+    """Saved conversations are listed and reopened where they stopped."""
     session = _new(client)
     client.post(f"/api/sessions/{session['id']}/messages", json={"text": "hola"})
 
@@ -157,13 +165,15 @@ def test_saved_conversations_are_listed_and_reopened_where_they_were(client):
     assert again["turns"] == 2
 
 
-def test_resume_refuses_paths_and_unknown_sessions(client):
+def test_resume_refuses_bad_sessions(client):
+    """Resume refuses file paths and unknown sessions."""
     assert client.post("/api/sessions/resume", json={"file": "../x.json"}).status_code in (404, 422)
     assert client.get("/api/sessions/nope").status_code == 404
     assert client.post("/api/sessions/nope/messages", json={"text": "x"}).status_code == 404
 
 
 def test_live_events_and_export(client):
+    """Live events and the export are available."""
     session = _new(client)
     assert client.get(f"/api/sessions/{session['id']}/live").json() == []
     client.post(f"/api/sessions/{session['id']}/messages", json={"text": "hola"})
@@ -172,9 +182,8 @@ def test_live_events_and_export(client):
     assert client.post(f"/api/sessions/{session['id']}/messages", json={"text": "  "}).status_code == 422
 
 
-def test_the_location_id_defaults_to_the_company_env_and_the_contact_id_is_left_to_the_user(
-    client, monkeypatch, tmp_path
-):
+def test_location_default_contact_manual(client, monkeypatch, tmp_path):
+    """The location id defaults to the company env; the contact id is left to the user."""
     monkeypatch.setenv("GHL_LOCATION_ID", "LOC-FROM-ENV")
     meta = client.get(f"/api/agents/family_aims/{SLUG}/meta").json()
     assert meta["default_location_id"] == "LOC-FROM-ENV"

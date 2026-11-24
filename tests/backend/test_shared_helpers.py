@@ -5,7 +5,8 @@ from agent_backend.email_templates import render_template_file
 from agent_backend.team_notification import join_errors
 
 
-def test_template_variables_are_substituted_and_a_missing_one_fails(tmp_path):
+def test_template_substitutes_variables(tmp_path):
+    """Template variables are substituted and a missing one raises."""
     (tmp_path / "hello.html").write_text("<p>Hi ${name}</p>", encoding="utf-8")
     assert render_template_file(tmp_path, "hello", name="Ana") == "<p>Hi Ana</p>"
     with pytest.raises(KeyError):
@@ -19,10 +20,12 @@ def test_template_variables_are_substituted_and_a_missing_one_fails(tmp_path):
     [(None, 20), ("", 20), ("abc", 20), ("0", 20), ("-5", 20), ("30", 30), ("45 min", 45)],
 )
 def test_duration_falls_back_to_the_given_default(raw, expected):
+    """An invalid duration falls back to the given default."""
     assert parse_duration_minutes(raw, 20) == expected
 
 
-def test_start_date_without_offset_uses_the_default_timezone():
+def test_start_date_default_timezone():
+    """A start date without an offset uses the default timezone."""
     assert parse_start_date("2027-03-03T09:00:00").utcoffset().total_seconds() == -5 * 3600
     assert parse_start_date("2027-03-03T09:00:00", "UTC").utcoffset().total_seconds() == 0
     assert parse_start_date("2027-03-03T09:00:00Z").utcoffset().total_seconds() == 0
@@ -30,6 +33,7 @@ def test_start_date_without_offset_uses_the_default_timezone():
         parse_start_date("not a date")
 
 
-def test_contact_names_are_tidied_and_errors_joined():
+def test_contact_name_tidied_errors_joined():
+    """Contact names are tidied and error messages are joined."""
     assert format_contact_name("  ana   GOMEZ ") == "Ana Gomez"
     assert join_errors(None, "", "a", "b") == "a; b" and join_errors(None, "") is None

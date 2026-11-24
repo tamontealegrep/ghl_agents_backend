@@ -116,7 +116,8 @@ def wait_for(condition, seconds=6.0):
     return condition()
 
 
-def test_a_burst_of_messages_becomes_one_turn_in_order(webhook):
+def test_burst_becomes_one_ordered_turn(webhook):
+    """A burst of messages becomes a single turn, in order."""
     for i, text in enumerate(["hola", "quiero", "agendar una cita"]):
         assert post(webhook, text, f"m{i}")["status"] == "accepted"
         time.sleep(0.1)
@@ -129,6 +130,7 @@ def test_a_burst_of_messages_becomes_one_turn_in_order(webhook):
 
 
 def test_each_new_message_restarts_the_wait(webhook):
+    """Each new message restarts the debounce wait."""
     post(webhook, "uno", "m1")
     time.sleep(DEBOUNCE * 0.7)
     post(webhook, "dos", "m2")  # still inside the first window: the timer starts over
@@ -140,6 +142,7 @@ def test_each_new_message_restarts_the_wait(webhook):
 
 
 def test_messages_apart_are_separate_turns(webhook):
+    """Messages sent far apart are separate turns."""
     post(webhook, "primero", "m1")
     assert wait_for(lambda: len(webhook.sent) == 1)
 
@@ -149,7 +152,8 @@ def test_messages_apart_are_separate_turns(webhook):
     assert webhook.graph.turns == ["primero", "segundo"]
 
 
-def test_messages_that_arrive_while_the_agent_is_answering_are_merged_into_the_next_turn(webhook):
+def test_messages_during_answer_merge(webhook):
+    """Messages that arrive while the agent answers are merged into the next turn."""
     webhook.graph.turn_seconds = 1.0
     post(webhook, "primero", "m1")
     assert wait_for(lambda: webhook.graph.running == 1)  # the first turn is running now
@@ -164,6 +168,7 @@ def test_messages_that_arrive_while_the_agent_is_answering_are_merged_into_the_n
 
 
 def test_two_contacts_do_not_share_a_buffer(webhook):
+    """Two contacts never share a message buffer."""
     post(webhook, "soy uno", "a1", contactId="c1")
     post(webhook, "soy dos", "b1", contactId="c2")
 
@@ -171,7 +176,8 @@ def test_two_contacts_do_not_share_a_buffer(webhook):
     assert sorted(webhook.graph.turns) == ["soy dos", "soy uno"]
 
 
-def test_a_repeated_delivery_of_the_same_message_is_not_counted_twice(webhook):
+def test_duplicate_delivery_is_ignored(webhook):
+    """A repeated delivery of the same message id is not counted twice."""
     assert post(webhook, "hola", "m1")["status"] == "accepted"
     assert post(webhook, "hola", "m1")["status"] == "duplicate"
 
@@ -189,7 +195,8 @@ def test_different_messages_without_a_message_id_are_all_kept(webhook):
     assert webhook.graph.turns == ["hola\nquiero agendar"]
 
 
-def test_a_request_without_ids_is_ignored(webhook):
+def test_request_without_ids_is_ignored(webhook):
+    """A request without message and location ids is ignored."""
     assert webhook.post("/hook", json={"contactId": "c1", "message": "hola"}).json() == {
         "status": "ignored",
         "reason": "missing_ids",
@@ -198,13 +205,27 @@ def test_a_request_without_ids_is_ignored(webhook):
     assert webhook.graph.turns == []
 
 
-def test_french_is_a_supported_language_of_the_ghl_text_channel():
+def test_french_is_supported():
+    """French is a supported language of the GHL text channel."""
     from agent_backend.channels.ghl.config import CompiledAgentGhlConfig, _closing_message_text
     from agent_runtime import languages
     from agent_backend.channels.ghl.text import normalize_language
 
-    assert [normalize_language(v) for v in ("fr", "FR-fr", "French", "Français", "tlh")] == ["fr", "fr", "fr", "fr", "en"]
-    cfg = CompiledAgentGhlConfig(slug="a", path="/a", allowed_phones=frozenset(), debounce_seconds=1, ghl_client_config=lambda: None, enforce_phone_whitelist=False)
+    assert [normalize_language(v) for v in ("fr", "FR-fr", "French", "Français", "tlh")] == [
+        "fr",
+        "fr",
+        "fr",
+        "fr",
+        "en",
+    ]
+    cfg = CompiledAgentGhlConfig(
+        slug="a",
+        path="/a",
+        allowed_phones=frozenset(),
+        debounce_seconds=1,
+        ghl_client_config=lambda: None,
+        enforce_phone_whitelist=False,
+    )
     french_closing = languages.get("fr").messages["closing"]
     assert _closing_message_text(cfg, "French") == french_closing
     assert _closing_message_text(cfg, "fr") == french_closing

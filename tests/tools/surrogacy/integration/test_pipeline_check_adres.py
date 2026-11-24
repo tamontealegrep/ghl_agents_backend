@@ -46,7 +46,8 @@ def croma(monkeypatch):
     return calls, settings
 
 
-def test_an_affiliated_person_comes_back_with_the_documented_output(croma):
+def test_affiliated_person_output(croma):
+    """An affiliated person comes back with the documented output."""
     calls, _ = croma
 
     body = client.post(
@@ -84,7 +85,9 @@ def test_an_affiliated_person_comes_back_with_the_documented_output(croma):
     )
 
 
-def test_a_document_that_is_not_in_the_bdua_is_success_with_found_false(croma, monkeypatch):
+def test_unknown_document_is_not_found(croma, monkeypatch):
+    """A document not in the BDUA is a success with found false."""
+
     async def not_found(body, **kwargs):
         return {"found": False, "full_name": None, "affiliations": []}
 
@@ -100,7 +103,8 @@ def test_a_document_that_is_not_in_the_bdua_is_success_with_found_false(croma, m
     )
 
 
-def test_an_invalid_input_is_a_normal_result_and_never_calls_the_provider(croma):
+def test_invalid_input_skips_provider(croma):
+    """An invalid input is a normal result and never calls the provider."""
     calls, _ = croma
 
     body = client.post(URL, json={"document_type": "licencia", "document_number": "123456"}).json()
@@ -112,7 +116,8 @@ def test_an_invalid_input_is_a_normal_result_and_never_calls_the_provider(croma)
     assert calls == []
 
 
-def test_a_missing_api_key_is_a_technical_failure(croma, monkeypatch):
+def test_missing_key_is_failure(croma, monkeypatch):
+    """A missing API key is a technical failure."""
     _, settings = croma
     settings.croma_api_key = ""
 
@@ -121,7 +126,9 @@ def test_a_missing_api_key_is_a_technical_failure(croma, monkeypatch):
     assert body["success"] is False and body["errors"] == "Missing CROMA_API_KEY in environment"
 
 
-def test_a_provider_failure_is_a_technical_failure_with_its_message(croma, monkeypatch):
+def test_provider_failure_is_failure(croma, monkeypatch):
+    """A provider failure is a technical failure that keeps its message."""
+
     async def broken(body, **kwargs):
         raise CromaError("Croma answered HTTP 429: rate limit")
 

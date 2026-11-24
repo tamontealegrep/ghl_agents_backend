@@ -53,6 +53,7 @@ BOOK = {
 
 @pytest.mark.parametrize("extra", [{}, {"contact_id": ""}, {"contact_id": "   "}])
 def test_booking_fails_without_a_contact_id(guarded, extra):
+    """Booking without a contact id fails with `missing_contact_id`."""
     body = client.post("/api/v1/book-appointment-ghl", json={**BOOK, **extra}).json()
 
     assert body["success"] is False and body["reason"] == "missing_contact_id"
@@ -62,6 +63,7 @@ def test_booking_fails_without_a_contact_id(guarded, extra):
 
 @pytest.mark.parametrize("extra", [{}, {"contact_id": ""}, {"contact_id": "   "}])
 def test_finding_fails_without_a_contact_id(guarded, extra):
+    """Finding appointments without a contact id fails."""
     payload = {"calendar_type": "IVF", "contact_name": "Ana Perez", "contact_email": "ana@gmail.com", **extra}
 
     body = client.post("/api/v1/find-appointment-ghl", json=payload).json()

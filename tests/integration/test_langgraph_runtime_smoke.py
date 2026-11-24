@@ -78,6 +78,8 @@ class _FakeLLMClient:
         self.captures: list[dict] = []
 
     def complete(self, prompt: str, *, temperature: float = 0.0) -> str:
+        if "Reply with just DISRESPECTFUL or OK." in prompt:
+            return "OK"
         if "Global interrupts:" in prompt:
             return self.router_stage1_replies.pop(0)
         if "mid-question" in prompt:
@@ -167,7 +169,8 @@ def _build_spec():
     )
 
 
-def test_build_graph_defaults_to_an_in_memory_checkpointer():
+def test_graph_defaults_to_in_memory_checkpointer():
+    """Without an injected checkpointer the graph keeps state in memory."""
     from langgraph.checkpoint.memory import InMemorySaver
 
     spec = _build_spec()
@@ -176,7 +179,8 @@ def test_build_graph_defaults_to_an_in_memory_checkpointer():
     assert isinstance(graph.checkpointer, InMemorySaver)
 
 
-def test_build_graph_accepts_an_injected_checkpointer():
+def test_graph_uses_injected_checkpointer():
+    """A checkpointer passed to build_graph is the one the graph uses."""
     from langgraph.checkpoint.memory import InMemorySaver
 
     spec = _build_spec()
@@ -186,7 +190,8 @@ def test_build_graph_accepts_an_injected_checkpointer():
     assert graph.checkpointer is custom_checkpointer
 
 
-def test_full_conversation_with_repeat_handler_then_capture_then_tool_call_then_close():
+def test_conversation_handler_capture_tool_close():
+    """A conversation goes through a handler, a captured answer, a tool call and the closing message."""
     spec = _build_spec()
     artifact = _build_artifact(spec)  # JSON round-trip — see module docstring
     llm_client = _FakeLLMClient()
@@ -223,19 +228,9 @@ def test_full_conversation_with_repeat_handler_then_capture_then_tool_call_then_
 
     # Global router: the real answer doesn't match anything -> captured as
     # the answer to the pending question, extraction populates `name`.
-    #
-    # Two full router checks happen here, not one: LangGraph replays the
-    # node function from the top on every resume, so the FIRST interrupt()
-    # call (already resumed once, with "repeat that") replays and re-issues
-    # its global-router check before reaching the second, still-pending
-    # interrupt() call that actually receives this new "Alex" resume. This
-    # is the documented trade-off in DESIGN_PATTERNS.md P04 — extra calls,
-    # not an incorrect final state. The replayed "repeat that" check needs
-    # both stages again (INTERRUPT -> "0"); "Alex" is a normal continuation,
-    # so its check is Stage 1 only (CONTINUE, no Stage 2 call at all).
-    llm_client.router_stage1_replies.append("INTERRUPT")  # replay of "repeat that", stage 1
-    llm_client.router_replies.append("0")  # replay of "repeat that", stage 2
-    llm_client.router_stage1_replies.append("CONTINUE")  # the new "Alex" reply, stage 1 only
+    # After the handler the node is entered again with a fresh interrupt(), so
+    # "Alex" is a normal continuation: Stage 1 only (CONTINUE), no Stage 2 call.
+    llm_client.router_stage1_replies.append("CONTINUE")
     llm_client.captures.append({"name": "Alex"})
     result = graph.invoke(Command(resume="Alex"), config)
 
@@ -250,7 +245,8 @@ def test_full_conversation_with_repeat_handler_then_capture_then_tool_call_then_
     assert final_slots["booked_id"] == "evt_1"  # action node's `store` runs after the tool call
 
 
-def test_global_router_command_goto_jumps_straight_to_the_handoff_target():
+def test_router_goto_jumps_to_handoff_target():
+    """A handler whose route is a state jumps straight to that state."""
     spec = _build_spec()
     artifact = _build_artifact(spec)
     llm_client = _FakeLLMClient()

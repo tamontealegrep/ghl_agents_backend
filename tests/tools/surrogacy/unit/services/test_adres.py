@@ -15,7 +15,8 @@ from surrogacy.services.croma_client import CromaError, lookup_affiliation
 
 
 @pytest.mark.parametrize("code", DOCUMENT_TYPES)
-def test_every_abbreviation_is_accepted_in_either_case(code):
+def test_doc_type_abbreviations_any_case(code):
+    """Every document type abbreviation is accepted in either case."""
     assert normalize_document_type(code) == code
     assert normalize_document_type(code.lower()) == code
 
@@ -36,12 +37,14 @@ def test_every_abbreviation_is_accepted_in_either_case(code):
         ("  ppt ", "PPT"),
     ],
 )
-def test_long_names_and_loose_spellings_map_to_the_abbreviation(raw, expected):
+def test_doc_type_names_map_to_abbreviation(raw, expected):
+    """Long names and loose spellings map to the abbreviation."""
     assert normalize_document_type(raw) == expected
 
 
 @pytest.mark.parametrize("raw", [None, "", "  ", "otro", "licencia", "XX"])
-def test_unknown_document_types_are_not_guessed(raw):
+def test_unknown_doc_type_is_none(raw):
+    """Unknown document types are not guessed."""
     assert normalize_document_type(raw) is None
 
 
@@ -55,22 +58,26 @@ def test_unknown_document_types_are_not_guessed(raw):
     ],
 )
 def test_document_numbers_lose_separators(raw, expected):
+    """Document numbers lose dots, dashes and spaces."""
     assert normalize_document_number(raw) == expected
 
 
 @pytest.mark.parametrize("raw", [None, "", "12", "x" * 31])
-def test_document_numbers_outside_3_to_30_characters_are_refused(raw):
+def test_doc_number_length_limits(raw):
+    """Document numbers outside 3 to 30 characters are refused."""
     assert normalize_document_number(raw) is None
 
 
-def test_a_valid_input_builds_the_providers_body():
+def test_valid_input_builds_body():
+    """A valid input builds the provider's request body."""
     assert prepare_lookup("cc", "1.234.567.890") == (
         {"document_type": "CC", "document_number": "1234567890"},
         None,
     )
 
 
-def test_an_invalid_input_explains_what_is_wrong_without_raising():
+def test_invalid_input_explains_error():
+    """An invalid input explains what is wrong without raising."""
     body, error = prepare_lookup("licencia", "123456")
     assert body is None and "document_type" in error and "PPT" in error
     body, error = prepare_lookup("CC", "1")
@@ -103,19 +110,22 @@ AFFILIATED = {
 }
 
 
-def test_an_affiliation_is_active_only_when_it_has_no_termination_date():
+def test_active_means_no_termination_date():
+    """An affiliation is active only when it has no termination date."""
     result = build_result(AFFILIATED)
     assert [a["active"] for a in result["affiliations"]] == [True, False]
     assert result["has_active_affiliation"] is True
     assert (result["found"], result["full_name"], result["municipality"]) == (True, "ANA PEREZ", "SOACHA")
 
 
-def test_nobody_active_means_no_active_affiliation():
+def test_nobody_active():
+    """With no active affiliation the result says so."""
     data = {**AFFILIATED, "affiliations": AFFILIATED["affiliations"][1:]}
     assert build_result(data)["has_active_affiliation"] is False
 
 
-def test_a_document_not_in_the_bdua_is_a_normal_result():
+def test_not_in_bdua_is_normal():
+    """A document not in the BDUA is a normal result."""
     result = build_result({"found": False, "full_name": None, "affiliations": []})
     assert result == {
         "found": False,
@@ -142,7 +152,8 @@ def _call(handler):
     return asyncio.run(run())
 
 
-def test_the_request_goes_to_the_affiliation_endpoint_with_the_bearer_key():
+def test_request_url_and_bearer_key():
+    """The request goes to the affiliation endpoint with the bearer key."""
     seen = {}
 
     def handler(request):
@@ -157,11 +168,14 @@ def test_the_request_goes_to_the_affiliation_endpoint_with_the_bearer_key():
     assert data["full_name"] == "ANA PEREZ"
 
 
-def test_a_body_without_the_data_wrapper_is_still_read():
+def test_body_without_data_wrapper():
+    """A body without the `data` wrapper is still read."""
     assert _call(lambda request: httpx.Response(200, json=AFFILIATED))["found"] is True
 
 
-def test_provider_errors_are_reported_with_their_message():
+def test_provider_errors_keep_message():
+    """Provider errors are reported with their message."""
+
     def handler(request):
         return httpx.Response(
             401, json={"error": {"type": "auth", "code": "invalid_key", "message": "Bad key"}}
@@ -171,17 +185,21 @@ def test_provider_errors_are_reported_with_their_message():
         _call(handler)
 
 
-def test_an_error_without_a_json_body_still_names_the_status():
+def test_error_without_json_names_status():
+    """An error without a JSON body still names the status."""
     with pytest.raises(CromaError, match="HTTP 503"):
         _call(lambda request: httpx.Response(503, text="down"))
 
 
-def test_a_lookup_that_became_a_job_is_reported_not_polled():
+def test_job_lookup_is_reported():
+    """A lookup that became a job is reported, not polled."""
     with pytest.raises(CromaError, match="did not finish"):
         _call(lambda request: httpx.Response(202, json={"data": {"job": "abc"}}))
 
 
-def test_timeouts_and_network_failures_become_croma_errors():
+def test_network_failures_are_croma_errors():
+    """Timeouts and network failures become Croma errors."""
+
     def timeout(request):
         raise httpx.ReadTimeout("slow")
 

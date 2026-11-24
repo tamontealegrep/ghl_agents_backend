@@ -26,7 +26,8 @@ def _payload(**overrides):
     return payload
 
 
-def test_endpoint_returns_eligible_for_valid_payload():
+def test_donor_valid_payload_eligible():
+    """A valid payload is classified as eligible."""
     response = client.post(URL, json=_payload())
     assert response.status_code == 200
     assert response.json() == {
@@ -38,7 +39,8 @@ def test_endpoint_returns_eligible_for_valid_payload():
     }
 
 
-def test_endpoint_returns_incomplete_for_empty_payload():
+def test_donor_empty_payload_incomplete():
+    """An empty payload is classified as incomplete."""
     body = client.post(URL, json={}).json()
     assert body["success"] is True
     assert body["result"] == "Inconclusive"
@@ -46,21 +48,24 @@ def test_endpoint_returns_incomplete_for_empty_payload():
     assert body["not_eligibility_reason"] == "missing_data (age)"
 
 
-def test_endpoint_rejects_age_out_of_range():
+def test_donor_age_out_of_range_rejected():
+    """An age out of range is rejected."""
     body = client.post(URL, json=_payload(age="40")).json()
     assert body["result"] == "Rejected (Age)"
     assert body["eligibility_result"] == "not_eligible"
     assert body["not_eligibility_reason"] == "age"
 
 
-def test_endpoint_sends_borderline_bmi_to_validation():
+def test_donor_borderline_bmi_to_validate():
+    """A borderline BMI goes to validation."""
     body = client.post(URL, json=_payload(bmi="28.0")).json()
     assert body["result"] == "To Validate (BMI)"
     assert body["eligibility_result"] == "to_validate"
     assert body["not_eligibility_reason"] == "bmi_to_validate"
 
 
-def test_endpoint_rejects_other_documents():
+def test_donor_other_documents_rejected():
+    """Other documents are rejected."""
     body = client.post(URL, json=_payload(document_type="other")).json()
     assert body["result"] == "Rejected (Documentation)"
     assert body["not_eligibility_reason"] == "documentation"

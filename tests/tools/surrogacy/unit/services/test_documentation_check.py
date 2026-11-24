@@ -2,25 +2,29 @@ import pytest
 from surrogacy.services.documentation_check import check_documentation
 
 
-def test_colombian_nationality_is_approved_without_document():
+def test_colombian_approved_without_document():
+    """A Colombian is approved without a document."""
     result = check_documentation("COL", None)
     assert result == {"approved": True, "reason": "Colombian nationality", "normalized_documents": []}
 
 
-def test_colombian_nationality_case_and_whitespace_insensitive():
+def test_colombian_ignores_case_and_spaces():
+    """The Colombian nationality ignores case and whitespace."""
     result = check_documentation("  col  ", None)
     assert result["approved"] is True
 
 
 @pytest.mark.parametrize("bad_nationality", ["", "CO", "COLO", "123", "C0L", None])
 def test_invalid_nationality_format_is_rejected(bad_nationality):
+    """An invalid nationality format is rejected."""
     result = check_documentation(bad_nationality, "cedula_ciudadania")
     assert result["approved"] is False
     assert "Format error" in result["reason"]
     assert result["normalized_documents"] == []
 
 
-def test_foreign_nationality_without_document_type_is_rejected():
+def test_foreigner_without_document_rejected():
+    """A foreigner without a document type is rejected."""
     result = check_documentation("VEN", None)
     assert result == {
         "approved": False,
@@ -30,7 +34,8 @@ def test_foreign_nationality_without_document_type_is_rejected():
 
 
 @pytest.mark.parametrize("empty_document_type", ["", "   ", []])
-def test_foreign_nationality_with_empty_document_type_is_rejected(empty_document_type):
+def test_foreigner_empty_document_rejected(empty_document_type):
+    """A foreigner with an empty document type is rejected."""
     result = check_documentation("VEN", empty_document_type)
     assert result["approved"] is False
     assert result["reason"] == "Missing document type for foreign nationality"
@@ -41,7 +46,8 @@ def test_foreign_nationality_with_empty_document_type_is_rejected(empty_document
     "document_type",
     ["cedula_ciudadania", "cedula de ciudadania", "cedula ciudadania", "c.c", "cc", "CC"],
 )
-def test_foreigner_with_cedula_ciudadania_is_approved(document_type):
+def test_foreigner_cedula_approved(document_type):
+    """A foreigner with a cedula de ciudadania is approved."""
     result = check_documentation("VEN", document_type)
     assert result["approved"] is True
     assert result["normalized_documents"] == ["cedula_ciudadania"]
@@ -72,7 +78,8 @@ def test_foreigner_with_ppt_is_approved(document_type):
         ("OTRO", "otro"),
     ],
 )
-def test_foreigner_with_other_documents_is_rejected(document_type, canonical):
+def test_foreigner_other_document_rejected(document_type, canonical):
+    """A foreigner with other documents is rejected."""
     result = check_documentation("VEN", document_type)
     assert result["approved"] is False
     assert "Document not allowed" in result["reason"]
@@ -80,7 +87,8 @@ def test_foreigner_with_other_documents_is_rejected(document_type, canonical):
     assert result["normalized_documents"] == [canonical]
 
 
-def test_foreigner_with_unknown_document_type_is_rejected_as_desconocido():
+def test_foreigner_unknown_document_rejected():
+    """A foreigner with an unknown document type is rejected as unknown."""
     result = check_documentation("VEN", "algo-que-no-existe")
     assert result["approved"] is False
     assert result["normalized_documents"] == ["desconocido"]
@@ -93,27 +101,31 @@ def test_foreigner_with_unknown_document_type_is_rejected_as_desconocido():
 # ---------------------------------------------------------------------------
 
 
-def test_multiple_documents_as_comma_separated_string_approves_if_any_is_valid():
+def test_comma_string_any_valid_approves():
+    """A comma-separated string approves if any document is valid."""
     result = check_documentation("VEN", "cedula_extranjeria,ppt")
     assert result["approved"] is True
     assert result["normalized_documents"] == ["cedula_extranjeria", "ppt"]
     assert result["reason"] == "Foreigner with Permiso de Proteccion Temporal (PPT)"
 
 
-def test_multiple_documents_as_list_approves_if_any_is_valid():
+def test_list_any_valid_approves():
+    """A list of documents approves if any is valid."""
     result = check_documentation("VEN", ["pasaporte", "cedula_ciudadania"])
     assert result["approved"] is True
     assert result["normalized_documents"] == ["pasaporte", "cedula_ciudadania"]
     assert result["reason"] == "Foreigner with Colombian Cedula de Ciudadania"
 
 
-def test_multiple_documents_uses_first_approved_match_when_more_than_one_qualifies():
+def test_first_approved_match_wins():
+    """When several documents qualify, the first approved one is used."""
     result = check_documentation("VEN", "ppt,cedula_ciudadania")
     assert result["approved"] is True
     assert result["reason"] == "Foreigner with Permiso de Proteccion Temporal (PPT)"
 
 
-def test_multiple_documents_rejected_when_none_are_valid():
+def test_none_valid_rejects():
+    """Several documents are rejected when none is valid."""
     result = check_documentation("VEN", "cedula_extranjeria,pasaporte")
     assert result["approved"] is False
     assert result["normalized_documents"] == ["cedula_extranjeria", "pasaporte"]
@@ -122,19 +134,22 @@ def test_multiple_documents_rejected_when_none_are_valid():
     assert "'pasaporte'" in result["reason"]
 
 
-def test_multiple_documents_mixed_known_and_unknown():
+def test_mixed_known_and_unknown():
+    """A mix of known and unknown documents approves if one is valid."""
     result = check_documentation("VEN", "algo-raro,ppt")
     assert result["approved"] is True
     assert result["normalized_documents"] == ["desconocido", "ppt"]
 
 
-def test_multiple_documents_trims_whitespace_around_each_item():
+def test_documents_trimmed():
+    """Whitespace around each document is trimmed."""
     result = check_documentation("VEN", " ppt , pasaporte ")
     assert result["normalized_documents"] == ["ppt", "pasaporte"]
     assert result["approved"] is True
 
 
-def test_multiple_documents_drops_empty_items_from_comma_string():
+def test_empty_items_dropped():
+    """Empty items in a comma-separated string are dropped."""
     result = check_documentation("VEN", "ppt,,pasaporte")
     assert result["normalized_documents"] == ["ppt", "pasaporte"]
 
@@ -147,7 +162,8 @@ def test_otro_alone_is_rejected():
     assert "Document not allowed" in result["reason"]
 
 
-def test_otro_mixed_with_a_valid_document_still_approves():
+def test_otro_with_valid_document_approves():
+    """ "Otro" next to a valid document still approves."""
     result = check_documentation("VEN", "otro,ppt")
     assert result["approved"] is True
     assert result["normalized_documents"] == ["otro", "ppt"]

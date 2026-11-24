@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from agent_backend.builtin_tools.services.ghl_tags import add_tags_service, normalize_tags
 from tests.builtin_tools.app_factory import app
 
+
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
@@ -28,11 +29,13 @@ from tests.builtin_tools.app_factory import app
         ([1, "a"], ["1", "a"]),
     ],
 )
-def test_the_tags_are_cleaned_whatever_their_shape(raw, expected):
+def test_tags_are_normalised(raw, expected):
+    """Tags are cleaned whether they come as a list or a string."""
     assert normalize_tags(raw) == expected
 
 
-def test_it_posts_the_tags_to_the_contact_with_the_right_headers(ghl):
+def test_add_tags_posts_with_headers(ghl):
+    """Tags are posted to the contact with the right headers."""
     result = asyncio.run(add_tags_service(["vip", " Nuevo "], "contact1", "loc1"))
 
     assert result == {"success": True, "tags": ["vip"], "tags_added": ["vip"]}
@@ -45,7 +48,8 @@ def test_it_posts_the_tags_to_the_contact_with_the_right_headers(ghl):
     assert ghl["locations"] == ["loc1"]  # the location picks the token
 
 
-def test_a_tag_the_contact_already_has_is_reported_as_not_added(ghl):
+def test_existing_tag_not_reported_added(ghl):
+    """A tag the contact already has is not reported as added."""
     ghl["reply"] = lambda r: httpx.Response(201, json={"tags": ["vip", "nuevo"], "tagsAdded": ["nuevo"]})
 
     result = asyncio.run(add_tags_service("vip,nuevo", "contact1"))
@@ -54,18 +58,24 @@ def test_a_tag_the_contact_already_has_is_reported_as_not_added(ghl):
 
 
 def test_nothing_new_means_an_empty_added_list(ghl):
+    """Adding only existing tags gives an empty added list."""
     ghl["reply"] = lambda r: httpx.Response(201, json={"tags": ["vip"], "tagsAdded": []})
     assert asyncio.run(add_tags_service(["vip"], "contact1"))["tags_added"] == []
 
 
-def test_a_missing_contact_or_empty_tags_never_reach_ghl(ghl):
-    assert asyncio.run(add_tags_service(["vip"], "  ")) == {"success": False, "errors": "contact_id is required"}
+def test_missing_input_skips_ghl(ghl):
+    """A missing contact or empty tags never reach GHL."""
+    assert asyncio.run(add_tags_service(["vip"], "  ")) == {
+        "success": False,
+        "errors": "contact_id is required",
+    }
     assert asyncio.run(add_tags_service([" ", ""], "contact1"))["errors"] == "No tags"
     assert asyncio.run(add_tags_service(None, "contact1"))["success"] is False
     assert ghl["requests"] == []
 
 
-def test_an_error_from_ghl_is_reported_with_its_reason_and_never_raised(ghl):
+def test_ghl_error_is_reported(ghl):
+    """A GHL error is returned with its reason and never raised."""
     ghl["reply"] = lambda r: httpx.Response(401, json={"message": "Invalid token"})
 
     result = asyncio.run(add_tags_service(["vip"], "contact1", "loc1"))
@@ -76,11 +86,14 @@ def test_an_error_from_ghl_is_reported_with_its_reason_and_never_raised(ghl):
 
 
 def test_a_long_error_body_is_cut(ghl):
+    """A long error body is cut to a short length."""
     ghl["reply"] = lambda r: httpx.Response(500, text="x" * 5000)
     assert len(asyncio.run(add_tags_service(["vip"], "c"))["errors"]) < 400
 
 
 def test_a_network_failure_is_reported(ghl):
+    """A network failure is returned as data."""
+
     def boom(request):
         raise httpx.ConnectError("connection refused")
 
@@ -89,13 +102,15 @@ def test_a_network_failure_is_reported(ghl):
     assert result["success"] is False and "connection refused" in result["errors"]
 
 
-def test_a_reply_that_is_not_json_is_reported(ghl):
+def test_non_json_reply_is_reported(ghl):
+    """A reply that is not JSON is returned as an error."""
     ghl["reply"] = lambda r: httpx.Response(201, text="<html>")
     result = asyncio.run(add_tags_service(["vip"], "c"))
     assert result["success"] is False and result["errors"]
 
 
-def test_the_tool_is_served_under_the_kebab_case_route(ghl):
+def test_served_under_kebab_route(ghl):
+    """The tool is served under the kebab-case route."""
     client = TestClient(app)
 
     response = client.post(
@@ -107,16 +122,20 @@ def test_the_tool_is_served_under_the_kebab_case_route(ghl):
     assert json.loads(ghl["requests"][0].content) == {"tags": ["vip", "nuevo"]}
 
 
-def test_the_route_accepts_ghl_style_names_and_a_string_of_tags(ghl):
+def test_route_accepts_ghl_names(ghl):
+    """The route accepts GHL-style names and a string of tags."""
     client = TestClient(app)
 
-    response = client.post("/api/v1/add-tags", json={"tags": "vip, nuevo", "contactId": "contact1", "locationId": "loc1"})
+    response = client.post(
+        "/api/v1/add-tags", json={"tags": "vip, nuevo", "contactId": "contact1", "locationId": "loc1"}
+    )
 
     assert response.status_code == 200 and response.json()["success"] is True
     assert str(ghl["requests"][0].url).endswith("/contacts/contact1/tags")
 
 
-def test_the_route_reports_a_failure_in_the_body_not_as_an_http_error(ghl):
+def test_route_failure_is_in_body(ghl):
+    """A failure is reported in the body, not as an HTTP error."""
     ghl["reply"] = lambda r: httpx.Response(404, json={"message": "Contact not found"})
 
     response = TestClient(app).post("/api/v1/add-tags", json={"tags": ["vip"], "contact_id": "nope"})
@@ -126,7 +145,8 @@ def test_the_route_reports_a_failure_in_the_body_not_as_an_http_error(ghl):
     assert body["success"] is False and "Contact not found" in body["errors"]
 
 
-def test_the_tool_is_one_of_the_builtin_tools_the_runtime_routes_to():
+def test_tool_is_builtin_route():
+    """The tool is one of the built-in routes the runtime tries."""
     from agent_backend.tool_client import candidate_urls
 
     urls = candidate_urls("http://x/tools/add_tags")

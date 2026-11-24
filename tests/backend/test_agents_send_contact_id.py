@@ -39,7 +39,8 @@ def _graph(company: str, slug: str) -> dict:
 
 
 @pytest.mark.parametrize(("company", "slug"), SCHEDULING_AGENTS)
-def test_every_booking_and_finding_step_sends_the_contact_id(company, slug):
+def test_booking_steps_send_contact_id(company, slug):
+    """Every booking or finding step in the compiled agents passes the contact id to its tool."""
     nodes = _graph(company, slug)["graph"]["nodes"]
     steps = [n for n in nodes if n.get("execute") in CONTACT_TOOLS]
 
@@ -74,7 +75,8 @@ def test_the_contracts_declare_the_contact_id(company, slug):
         {"customData": {"contact_id": "abc123"}, "locationId": "loc9", "message": "hola"},
     ],
 )
-def test_the_webhook_puts_contact_id_and_location_id_in_the_contact(payload):
+def test_webhook_sets_contact_and_location_ids(payload):
+    """The GHL webhook payload fills `contact_id` and `location_id` in the contact."""
     contact = GhlAgentRequest.model_validate(payload).contact
 
     assert contact["contact_id"] == "abc123" and contact["location_id"] == "loc9"

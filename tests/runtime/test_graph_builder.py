@@ -100,11 +100,13 @@ def _ctx(
 # ---------------------------------------------------------------------------
 
 
-def test_block_omits_contact_section_when_contact_is_empty():
+def test_block_omits_empty_contact():
+    """The context block omits the contact section when the contact is empty."""
     assert "Contact info" not in _ctx({}).block()
 
 
-def test_block_renders_known_contact_fields():
+def test_block_renders_contact():
+    """The context block renders the known contact fields."""
     block = _ctx({}, contact={"name": "Ana Gomez", "email": None}).block()
     assert "Contact info" in block
     assert "Ana Gomez" in block
@@ -116,42 +118,49 @@ def test_block_renders_known_contact_fields():
 
 
 def test_store_increment():
+    """A store line can increment a slot."""
     slots = {"retry_count": 1}
     _apply_store_line("increment [retry_count] by 1", _ctx(slots), _FakeLLMClient())
     assert slots["retry_count"] == 2
 
 
-def test_store_increment_defaults_missing_slot_to_zero():
+def test_store_increment_from_zero():
+    """Incrementing a missing slot starts from zero."""
     slots: dict = {}
     _apply_store_line("increment [retry_count] by 1", _ctx(slots), _FakeLLMClient())
     assert slots["retry_count"] == 1
 
 
-def test_store_slot_to_slot_copy():
+def test_store_copies_slot():
+    """A store line copies one slot into another."""
     slots = {"raw_name": "Alex", "name": None}
     _apply_store_line("[name] = [raw_name]", _ctx(slots), _FakeLLMClient())
     assert slots["name"] == "Alex"
 
 
 def test_store_integer_literal():
+    """A store line can set an integer literal."""
     slots: dict = {}
     _apply_store_line("[max_tries] = 3", _ctx(slots), _FakeLLMClient())
     assert slots["max_tries"] == 3
 
 
 def test_store_boolean_literal():
+    """A store line can set a boolean literal."""
     slots: dict = {}
     _apply_store_line("[confirmed] = true", _ctx(slots), _FakeLLMClient())
     assert slots["confirmed"] is True
 
 
 def test_store_quoted_string_literal():
+    """A store line can set a quoted string literal."""
     slots: dict = {}
     _apply_store_line("[status] = 'pending'", _ctx(slots), _FakeLLMClient())
     assert slots["status"] == "pending"
 
 
-def test_store_unquoted_prose_delegates_to_llm():
+def test_store_prose_uses_llm():
+    """Unquoted prose in a store line is delegated to the model."""
     client = _FakeLLMClient(reply="America/Bogota")
     slots = {"city": "Bogota"}
     _apply_store_line("[tz] = the IANA timezone for the reported city", _ctx(slots), client)
@@ -186,24 +195,28 @@ def test_store_unquoted_prose_prompt_includes_history():
 # ---------------------------------------------------------------------------
 
 
-def test_mechanical_arg_binding_resolves_slot_reference():
+def test_binding_slot_reference():
+    """A mechanical binding resolves a slot reference."""
     bindings = _extract_mechanical_arg_bindings(["nationalities = [cl__nat]"], {"cl__nat": "Venezuela"})
     assert bindings == {"nationalities": "Venezuela"}
 
 
-def test_mechanical_arg_binding_resolves_constant_reference():
+def test_binding_constant_reference():
+    """A mechanical binding resolves a constant reference."""
     bindings = _extract_mechanical_arg_bindings(
         ["duration = <APPOINTMENT_DURATION_MINUTES>"], {"APPOINTMENT_DURATION_MINUTES": 30}
     )
     assert bindings == {"duration": 30}
 
 
-def test_mechanical_arg_binding_resolves_quoted_literal():
+def test_binding_quoted_literal():
+    """A mechanical binding resolves a quoted literal."""
     bindings = _extract_mechanical_arg_bindings(["calendar_type = 'IVF'"], {})
     assert bindings == {"calendar_type": "IVF"}
 
 
-def test_mechanical_arg_binding_splits_multiple_assignments_in_one_line():
+def test_binding_multiple_assignments():
+    """A mechanical binding splits several assignments on one line."""
     bindings = _extract_mechanical_arg_bindings(
         ["contact_name = [c_name], contact_email = [c_email], contact_phone = [c_phone]."],
         {"c_name": "Alex", "c_email": "alex@example.com", "c_phone": "+15551234567"},
@@ -302,7 +315,8 @@ def test_mechanical_arg_binding_skips_the_nationality_derivation_line():
     assert bindings == {}
 
 
-def test_a_computed_store_line_gets_its_constants_expanded_before_the_model_sees_it():
+def test_computed_store_expands_constants():
+    """A computed store line has its constants expanded before the model sees it."""
     llm = _FakeLLMClient(reply="ask")
     slots = {"OPTIONS": "schedule (wants to book) | ask (anything else)"}
     _apply_store_line("[next_step] = which of: <OPTIONS>", _ctx(slots), llm)
@@ -311,19 +325,22 @@ def test_a_computed_store_line_gets_its_constants_expanded_before_the_model_sees
     assert "<OPTIONS>" not in llm.prompts[0]
 
 
-def test_a_computed_store_line_keeps_a_constant_that_has_no_value():
+def test_computed_store_keeps_unset_constant():
+    """A computed store line keeps a constant that has no value."""
     llm = _FakeLLMClient(reply="x")
     _apply_store_line("[a] = from <UNKNOWN_CONST>", _ctx({}), llm)
     assert "<UNKNOWN_CONST>" in llm.prompts[0]
 
 
-def test_bind_tool_inputs_prefers_exact_slot_name_match():
+def test_bind_prefers_exact_slot():
+    """Tool inputs prefer a slot with the exact name."""
     fields = [ToolContractField(name="nationalities", required=True, description="d")]
     bound = _bind_tool_inputs(fields, _ctx({"nationalities": "USA"}), _FakeLLMClient())
     assert bound == {"nationalities": "USA"}
 
 
-def test_bind_tool_inputs_fills_a_declared_history_input_from_the_conversation():
+def test_bind_fills_history():
+    """A declared history input is filled from the conversation."""
     fields = [
         ToolContractField(name="question", required=True, description="d"),
         ToolContractField(name="history", required=False, description="d"),
@@ -333,13 +350,15 @@ def test_bind_tool_inputs_fills_a_declared_history_input_from_the_conversation()
     assert bound == {"question": "and how long?", "history": "agent: Which service?\nuser: IVF"}
 
 
-def test_bind_tool_inputs_leaves_history_out_when_the_tool_does_not_declare_it():
+def test_bind_omits_undeclared_history():
+    """History is left out when the tool does not declare it."""
     fields = [ToolContractField(name="question", required=True, description="d")]
     bound = _bind_tool_inputs(fields, _ctx({"question": "q"}, history=["user: hi"]), _FakeLLMClient())
     assert bound == {"question": "q"}
 
 
-def test_bind_tool_inputs_fills_the_conversation_ids_from_the_contact_without_a_do_line():
+def test_bind_fills_ids_from_contact():
+    """Contact and location ids are filled from the contact without a do line."""
     fields = [
         ToolContractField(name="name", required=True, description="d"),
         ToolContractField(name="contact_id", required=False, description="d"),
@@ -350,7 +369,8 @@ def test_bind_tool_inputs_fills_the_conversation_ids_from_the_contact_without_a_
     assert bound == {"name": "age", "contact_id": "C1", "location_id": "L1"}
 
 
-def test_bind_tool_inputs_leaves_the_ids_out_when_the_contact_has_none_or_the_tool_does_not_declare_them():
+def test_bind_omits_ids_when_absent():
+    """Ids are left out when the contact has none or the tool does not declare them."""
     fields = [ToolContractField(name="name", required=True, description="d")]
     bound = _bind_tool_inputs(fields, _ctx({"name": "age"}, contact={"contact_id": "C1"}), _FakeLLMClient())
     assert bound == {"name": "age"}
@@ -358,13 +378,15 @@ def test_bind_tool_inputs_leaves_the_ids_out_when_the_contact_has_none_or_the_to
     assert _bind_tool_inputs(with_ids, _ctx({"name": "age"}, contact={}), _FakeLLMClient()) == {"name": "age"}
 
 
-def test_bind_tool_inputs_keeps_an_id_a_do_line_binds_over_the_contact():
+def test_bind_do_line_id_wins():
+    """An id bound by a do line wins over the contact's."""
     fields = [ToolContractField(name="contact_id", required=False, description="d")]
     ctx = _ctx({"cid": "FROM_SLOT"}, do=["contact_id = [cid]"], contact={"contact_id": "FROM_CONTACT"})
     assert _bind_tool_inputs(fields, ctx, _FakeLLMClient()) == {"contact_id": "FROM_SLOT"}
 
 
-def test_bind_tool_inputs_uses_mechanical_do_binding_when_no_exact_slot():
+def test_bind_uses_do_binding():
+    """A do-line binding is used when no slot matches exactly."""
     fields = [ToolContractField(name="nationalities", required=True, description="d")]
     bound = _bind_tool_inputs(
         fields, _ctx({"cl__nat": "Venezuela"}, do=["Send nationalities = [cl__nat]."]), _FakeLLMClient()
@@ -397,7 +419,8 @@ def test_bind_tool_inputs_coerces_a_mechanically_bound_value_to_its_contract_typ
     assert bound == {"duration": "30"}
 
 
-def test_bind_tool_inputs_falls_back_to_one_batched_llm_call():
+def test_bind_falls_back_to_one_llm_call():
+    """Unresolved inputs fall back to one batched model call."""
     fields = [
         ToolContractField(name="start_date", required=True, description="d", type_expr="str"),
         ToolContractField(name="duration", required=True, description="d", type_expr="int"),
@@ -450,7 +473,8 @@ def test_bind_tool_inputs_llm_fallback_includes_the_field_s_own_contract_descrip
     assert "USA, China, India" in prompt
 
 
-def test_bind_tool_inputs_never_calls_llm_when_everything_resolves_mechanically():
+def test_bind_no_llm_when_resolved():
+    """The model is never called when every input resolves mechanically."""
     fields = [ToolContractField(name="nationalities", required=True, description="d")]
     client = _FakeLLMClient()  # extract_structured raises if called
     bound = _bind_tool_inputs(fields, _ctx({"cl__nat": "USA"}, do=["nationalities = [cl__nat]"]), client)
@@ -458,7 +482,8 @@ def test_bind_tool_inputs_never_calls_llm_when_everything_resolves_mechanically(
     assert client.structured_prompts == []
 
 
-def test_bind_tool_inputs_omits_unresolved_optional_field_without_calling_llm():
+def test_bind_omits_optional_unresolved():
+    """An unresolved optional input is omitted without calling the model."""
     fields = [
         ToolContractField(name="calendar_type", required=True, description="d"),
         ToolContractField(name="notes", required=False, description="d"),
@@ -526,7 +551,8 @@ def test_bind_tool_inputs_drops_unresolvable_optional_field_from_llm_fallback():
     assert "contact_email" not in bound
 
 
-def test_bind_tool_inputs_keeps_none_for_unresolvable_required_field():
+def test_bind_required_unresolved_is_none():
+    """An unresolvable required input stays None."""
     fields = [ToolContractField(name="start_date", required=True, description="d")]
     client = _FakeLLMClient(structured_reply={"start_date": None})
     bound = _bind_tool_inputs(fields, _ctx({}, do=["start_date = the chosen slot's start."]), client)
@@ -538,32 +564,39 @@ def test_bind_tool_inputs_keeps_none_for_unresolvable_required_field():
 # ---------------------------------------------------------------------------
 
 
-def test_matches_true_for_registered_predicate():
+def test_matches_registered_predicate():
+    """A registered predicate matches a valid value."""
     assert _matches("America/Bogota", "iana_timezone_format") is True
 
 
-def test_matches_true_for_three_segment_iana_identifier():
+def test_matches_three_segment_timezone():
+    """A three-segment IANA timezone matches."""
     assert _matches("America/Argentina/Buenos_Aires", "iana_timezone_format") is True
 
 
-def test_matches_false_for_non_matching_value():
+def test_matches_rejects_other_values():
+    """A value that does not fit the predicate does not match."""
     assert _matches("not-a-timezone", "iana_timezone_format") is False
 
 
-def test_matches_false_for_unregistered_predicate():
+def test_matches_unknown_predicate():
+    """An unregistered predicate never matches."""
     assert _matches("anything", "not_a_real_predicate") is False
 
 
-def test_matches_false_for_none_value():
+def test_matches_none():
+    """None never matches."""
     assert _matches(None, "iana_timezone_format") is False
 
 
-def test_matches_scheduling_state_id_true_for_scheduling_states():
+def test_scheduling_predicate_true():
+    """The scheduling predicate matches scheduling states."""
     assert _matches("SC__SC_ASK_E", "scheduling_state_id") is True
     assert _matches("SC__SC_DEC_OK", "scheduling_state_id") is True
 
 
-def test_store_copies_a_contact_field_mechanically():
+def test_store_copies_contact_field():
+    """A store line copies a contact field without the model."""
     ctx = _ctx(
         {}, contact={"name": " Laura Gómez ", "email": "", "phone": "{{contact.phone}}", "service": "null"}
     )
@@ -578,7 +611,8 @@ def test_store_copies_a_contact_field_mechanically():
     }
 
 
-def test_store_replaces_constants_written_inside_a_quoted_text():
+def test_store_replaces_constants_in_text():
+    """Constants inside a quoted text are replaced."""
     ctx = _ctx({"SUR_MINUTES": "30", "IVF_MINUTES": "40"})
     _apply_store_line("[range] = '<SUR_MINUTES> to <IVF_MINUTES>'", ctx, _FakeLLMClient())
     _apply_store_line("[unknown] = 'keeps <NOT_A_CONSTANT> as written'", ctx, _FakeLLMClient())
@@ -586,7 +620,8 @@ def test_store_replaces_constants_written_inside_a_quoted_text():
     assert ctx.slots["unknown"] == "keeps <NOT_A_CONSTANT> as written"
 
 
-def test_store_first_word_takes_the_first_name_and_is_empty_without_one():
+def test_store_first_word():
+    """`first_word` takes the first name and is empty without one."""
     ctx = _ctx({"full": "  Laura  Gómez ", "none": None, "blank": "  "})
     for source in ("full", "none", "blank"):
         _apply_store_line("[first_" + source + "] = FIRST_WORD [" + source + "]", ctx, _FakeLLMClient())
@@ -594,7 +629,8 @@ def test_store_first_word_takes_the_first_name_and_is_empty_without_one():
     assert ctx.slots["first_none"] is None and ctx.slots["first_blank"] is None
 
 
-def test_store_replaces_slots_written_inside_a_quoted_text():
+def test_store_replaces_slots_in_text():
+    """Slots inside a quoted text are replaced."""
     ctx = _ctx({"first_name": "Laura"})
     _apply_store_line("[hello] = 'Hi [first_name]!'", ctx, _FakeLLMClient())
     _apply_store_line("[other] = 'Hi [nobody]!'", ctx, _FakeLLMClient())
@@ -602,7 +638,8 @@ def test_store_replaces_slots_written_inside_a_quoted_text():
     assert ctx.slots["other"] == "Hi [nobody]!"
 
 
-def test_store_language_name_maps_codes_and_names_and_defaults_to_english():
+def test_store_language_name():
+    """`language_name` maps codes and names and defaults to English."""
     ctx = _ctx({"code": "es"})
     for code, expected in (
         ("es", "Spanish"),
@@ -618,16 +655,28 @@ def test_store_language_name_maps_codes_and_names_and_defaults_to_english():
         assert ctx.slots["preferred_language"] == expected
 
 
-def test_store_message_language_asks_a_clean_question_and_keeps_only_an_allowed_language(monkeypatch):
+def test_store_message_language(monkeypatch):
+    """`message_language` keeps only an allowed language."""
     monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGES", "English,Spanish,German")
     contact = {"language": "es"}
-    for reply, expected in (("English", "English"), (" german. ", "German"), ("NULL", None), ("French", None), ("", None)):
-        ctx = _ctx({"preferred_language": "Spanish"}, last_user_message="Hello, I want information", contact=contact)
+    for reply, expected in (
+        ("English", "English"),
+        (" german. ", "German"),
+        ("NULL", None),
+        ("French", None),
+        ("", None),
+    ):
+        ctx = _ctx(
+            {"preferred_language": "Spanish"}, last_user_message="Hello, I want information", contact=contact
+        )
         client = _FakeLLMClient(reply)
         _apply_store_line("[msg_language] = MESSAGE_LANGUAGE", ctx, client)
         assert ctx.slots["msg_language"] == expected, reply
         # only the message and the allowed languages reach the model: not the CRM language nor the stored preference
-        assert "Hello, I want information" in client.prompts[0] and "English, Spanish, German" in client.prompts[0]
+        assert (
+            "Hello, I want information" in client.prompts[0]
+            and "English, Spanish, German" in client.prompts[0]
+        )
         assert '"es"' not in client.prompts[0] and "preferred_language" not in client.prompts[0]
     ctx = _ctx({}, last_user_message="  ")
     client = _FakeLLMClient("English")
@@ -635,9 +684,14 @@ def test_store_message_language_asks_a_clean_question_and_keeps_only_an_allowed_
     assert ctx.slots["msg_language"] is None and client.prompts == []
 
 
-def test_store_requested_language_asks_for_the_language_the_contact_wants(monkeypatch):
+def test_store_requested_language(monkeypatch):
+    """`requested_language` returns the language the contact asks for."""
     monkeypatch.setenv("GLOBAL_ROUTER_LANGUAGES", "English,Spanish,French")
-    ctx = _ctx({"preferred_language": "Spanish"}, last_user_message="parlez-moi en français", contact={"language": "es"})
+    ctx = _ctx(
+        {"preferred_language": "Spanish"},
+        last_user_message="parlez-moi en français",
+        contact={"language": "es"},
+    )
     client = _FakeLLMClient("French")
     _apply_store_line("[requested_language] = REQUESTED_LANGUAGE", ctx, client)
     assert ctx.slots["requested_language"] == "French"
@@ -645,14 +699,25 @@ def test_store_requested_language_asks_for_the_language_the_contact_wants(monkey
     assert '"es"' not in client.prompts[0] and "English, Spanish, French" in client.prompts[0]
 
 
-def test_store_bare_reply_flags_a_reply_that_is_only_a_yes_or_an_acknowledgement():
-    for text, expected in (("sí", "yes"), ("Vale, claro", "yes"), ("ok", "yes"), ("oui", "yes"), ("ja", "yes"), ("la segunda", None), ("IVF", None), ("", None)):
+def test_store_bare_reply():
+    """`bare_reply` flags a reply that is only a yes or an acknowledgement."""
+    for text, expected in (
+        ("sí", "yes"),
+        ("Vale, claro", "yes"),
+        ("ok", "yes"),
+        ("oui", "yes"),
+        ("ja", "yes"),
+        ("la segunda", None),
+        ("IVF", None),
+        ("", None),
+    ):
         ctx = _ctx({}, last_user_message=text)
         _apply_store_line("[bare] = BARE_REPLY", ctx, _FakeLLMClient())
         assert ctx.slots["bare"] == expected, text
 
 
-def test_store_find_day_returns_the_day_only_when_it_is_offered():
+def test_store_find_day():
+    """`find_day` returns the day only when it was offered."""
     offered = [{"start_local": "2026-11-05T09:00:00-05:00"}, {"start_local": "2026-11-09T10:30:00-05:00"}]
     ctx = _ctx({"day": "2026-11-09", "available_slots": offered})
     _apply_store_line("[day_ok] = FIND_DAY [day] IN [available_slots]", ctx, _FakeLLMClient())
@@ -665,7 +730,8 @@ def test_store_find_day_returns_the_day_only_when_it_is_offered():
     assert ctx.slots["day_ok"] is None
 
 
-def test_matches_knowledge_state_id_only_for_knowledge_states():
+def test_knowledge_predicate_true():
+    """The knowledge predicate matches only knowledge states."""
     assert _matches("KQ__KQ_ASK_DOUBT", "knowledge_state_id") is True
     assert _matches("KQ__KQ_MORE", "knowledge_state_id") is True
     assert _matches("SC__SC_ASK_E", "knowledge_state_id") is False
@@ -674,7 +740,8 @@ def test_matches_knowledge_state_id_only_for_knowledge_states():
     assert _matches(None, "knowledge_state_id") is False
 
 
-def test_matches_scheduling_state_id_false_for_other_states():
+def test_scheduling_predicate_false():
+    """The scheduling predicate does not match other states."""
     assert _matches("AH__AH_ASK", "scheduling_state_id") is False
     assert _matches("O__OP_S", "scheduling_state_id") is False
     assert _matches("SC__", "scheduling_state_id") is False
@@ -707,7 +774,8 @@ def test_resolve_edges_evaluates_matches_condition_mechanically():
     assert target == "VALID"
 
 
-def test_resolve_edges_matches_condition_no_match_falls_through():
+def test_edges_no_match_falls_through():
+    """When no condition matches, edge resolution falls through to None."""
     resolve_edges = _make_resolve_edges(_FakeLLMClient())
     edges = [
         GraphEdge(
@@ -740,6 +808,7 @@ def test_resolve_edges_llm_prompt_includes_history():
 
 
 def test_store_null_reset():
+    """A store line can reset a slot to null."""
     slots = {"available_slots": ["stale"]}
     _apply_store_line("[available_slots] = NULL", _ctx(slots), _FakeLLMClient())
     assert slots["available_slots"] is None
@@ -760,13 +829,15 @@ def test_store_self_referential_increment():
     assert slots["tz_try"] == 2
 
 
-def test_store_self_referential_increment_defaults_missing_slot_to_zero():
+def test_store_self_increment_from_zero():
+    """A self-referencing increment of a missing slot starts from zero."""
     slots: dict = {}
     _apply_store_line("[tz_try] = [tz_try] + 1", _ctx(slots), _FakeLLMClient())
     assert slots["tz_try"] == 1
 
 
-def test_store_self_referential_decrement():
+def test_store_self_decrement():
+    """A self-referencing decrement lowers the slot."""
     slots = {"budget": 5}
     _apply_store_line("[budget] = [budget] - 2", _ctx(slots), _FakeLLMClient())
     assert slots["budget"] == 3
@@ -960,7 +1031,8 @@ def test_conditional_mutations_ignores_slot_whose_gate_is_false():
     assert slots["svc"] is None
 
 
-def test_conditional_mutations_noop_when_only_recognized_assignments_present():
+def test_recognised_assignments_skip_llm():
+    """Recognised assignments never call the model."""
     client = _FakeLLMClient()  # extract_structured raises if called
     slots = {"svc_try": 0}
     _apply_conditional_mutations(["[svc_try] = [svc_try] + 1"], _ctx(slots, last_user_message="Hola"), client)
@@ -1062,7 +1134,8 @@ def test_decision_node_do_increments_retry_counter():
     assert result["slots"]["tz_try"] == 3
 
 
-def test_decision_node_do_resets_slot_to_null():
+def test_decision_do_resets_slot():
+    """A decision node's do line can reset a slot to null."""
     node = _decision_node(do=["[available_slots] = NULL"])
     node_fn = _build_node_fn(node, _FakeLLMClient())
     result = node_fn({"slots": {"available_slots": ["stale"]}, "current_state": "", "last_user_message": ""})
@@ -1251,7 +1324,8 @@ def test_eval_llm_exclusion_applies_to_any_node_type_not_only_decision():
 # ---------------------------------------------------------------------------
 
 
-def test_render_say_verbatim_block_returns_raw_text_without_calling_llm():
+def test_say_verbatim_skips_llm():
+    """A verbatim say block returns its raw text without the model."""
     client = _FakeLLMClient()  # complete() would return "" by default; assert no call at all
     render_say = _make_render_say(client)
     result = render_say("N", ["Exact legal copy."], True, "es", {})
@@ -1259,7 +1333,8 @@ def test_render_say_verbatim_block_returns_raw_text_without_calling_llm():
     assert client.prompts == []
 
 
-def test_render_say_non_verbatim_block_calls_llm_even_without_a_language_code():
+def test_say_paraphrases_without_language():
+    """A non-verbatim say block is paraphrased even without a language code."""
     client = _FakeLLMClient(reply="Rephrased greeting.")
     render_say = _make_render_say(client)
     result = render_say("N", ["Hola, bienvenido."], False, None, {})
@@ -1267,7 +1342,8 @@ def test_render_say_non_verbatim_block_calls_llm_even_without_a_language_code():
     assert len(client.prompts) == 1
 
 
-def test_render_say_interpolates_slots_before_sending_to_llm():
+def test_say_interpolates_before_llm():
+    """Slots are interpolated before the text is sent to the model."""
     client = _FakeLLMClient(reply="Rephrased with name.")
     render_say = _make_render_say(client)
     render_say("N", ["Hola [name]."], False, "es", {"name": "Alex"})
@@ -1293,7 +1369,8 @@ def test_render_say_never_caches_across_repeated_calls():
     assert len(client.prompts) == 2
 
 
-def test_render_say_falls_back_to_raw_when_llm_returns_empty():
+def test_say_empty_llm_falls_back():
+    """An empty model reply falls back to the raw text."""
     client = _FakeLLMClient(reply="")
     render_say = _make_render_say(client)
     result = render_say("N", ["Hola."], False, "es", {})
@@ -1351,13 +1428,15 @@ def test_render_say_retries_a_discarded_rewording_before_sending_the_original():
     assert client.temperatures == [1.0, 0.0]
 
 
-def test_render_say_sends_the_original_when_both_rewordings_are_discarded():
+def test_say_sends_original_if_rewrites_rejected():
+    """The original text is sent when both rewordings are discarded."""
     client = _FakeLLMClient(reply="Hola, ¿cómo estás?")
     render_say = _make_render_say(client)
     assert render_say("N", ["Hello."], False, "es", {}) == "Hello."
 
 
-def test_apply_store_line_pick_resolves_the_start_co_of_the_day_and_time_in_start_local():
+def test_store_pick_resolves_start_co():
+    """`pick` resolves the start_co of the chosen day and time."""
     slots = {
         "available_slots": [
             {"start_co": "2026-10-30T07:00:00-05:00", "start_local": "2026-10-30T19:00:00+07:00"},
@@ -1373,7 +1452,8 @@ def test_apply_store_line_pick_resolves_the_start_co_of_the_day_and_time_in_star
     assert slots["start_date"] == "2026-10-30T09:00:00-05:00"
 
 
-def test_apply_store_line_pick_is_empty_when_nothing_matches_exactly():
+def test_store_pick_empty_without_match():
+    """`pick` is empty when nothing matches exactly."""
     slots = {
         "available_slots": [
             {"start_co": "2026-10-30T09:00:00-05:00", "start_local": "2026-10-30T21:00:00+07:00"}
@@ -1392,15 +1472,18 @@ def test_apply_store_line_pick_is_empty_when_nothing_matches_exactly():
 # ---------------------------------------------------------------------------
 
 
-def test_interpolate_slots_substitutes_known_value():
+def test_interpolate_known_value():
+    """A known slot is substituted."""
     assert _interpolate_slots("Hello [name]!", {"name": "Alex"}) == "Hello Alex!"
 
 
-def test_interpolate_slots_leaves_unknown_slot_as_bracket_token():
+def test_interpolate_unknown_slot():
+    """An unknown slot stays as a bracket token."""
     assert _interpolate_slots("Hello [name]!", {}) == "Hello [name]!"
 
 
-def test_interpolate_slots_leaves_none_valued_slot_as_bracket_token():
+def test_interpolate_none_slot():
+    """A slot with value None stays as a bracket token."""
     assert _interpolate_slots("Hello [name]!", {"name": None}) == "Hello [name]!"
 
 
@@ -1465,7 +1548,8 @@ def test_interpolate_slots_shows_unique_dates_when_no_slot_names_one_of_them():
     assert result == "🗓️ Martes 22 de septiembre\n └─ Mañana\n🗓️ Miércoles 23 de septiembre\n └─ Tarde"
 
 
-def test_interpolate_slots_names_the_date_when_only_one_date_is_on_offer_and_none_was_picked():
+def test_interpolate_single_offered_date():
+    """With one date on offer and none picked, the date is named."""
     slots = {
         "available_slots": [
             _appointment("2026-09-22", "09:00"),
@@ -1476,7 +1560,8 @@ def test_interpolate_slots_names_the_date_when_only_one_date_is_on_offer_and_non
     assert result == "🗓️ Martes 22 de septiembre\n └─ Mañana"
 
 
-def test_interpolate_slots_shows_the_times_of_the_only_date_once_it_was_picked():
+def test_interpolate_times_of_picked_date():
+    """Once the only date is picked, its times are shown."""
     slots = {
         "day": "2026-09-22",
         "available_slots": [
@@ -1487,7 +1572,8 @@ def test_interpolate_slots_shows_the_times_of_the_only_date_once_it_was_picked()
     assert _interpolate_slots("[available_slots]", slots) == "Mañana\n🕐 09:00 a 10:00"
 
 
-def test_interpolate_slots_filters_to_times_when_a_slot_names_the_exact_iso_date():
+def test_interpolate_exact_iso_date():
+    """An exact ISO date in a slot filters the list to that day's times."""
     slots = {
         "day": "2026-09-22",
         "available_slots": [
@@ -1585,7 +1671,8 @@ def test_interpolate_slots_day_of_month_heuristic_never_misfires_on_a_compile_ti
     )
 
 
-def test_interpolate_slots_a_loose_number_in_an_unrelated_slot_does_not_pick_the_day():
+def test_interpolate_loose_number_ignored():
+    """A loose number in an unrelated slot does not pick the day."""
     slots = {
         "children_count": "11",
         "last_birth_date": "11/05/1995",
@@ -1641,7 +1728,8 @@ def test_interpolate_slots_date_reference_slots_do_not_pick_a_day():
     )
 
 
-def test_interpolate_slots_formats_dates_in_english_when_language_code_is_en():
+def test_interpolate_dates_in_english():
+    """Dates are written in English for language code en."""
     slots = {
         "available_slots": [
             _appointment("2026-09-22", "09:00"),
@@ -1669,11 +1757,13 @@ def test_interpolate_slots_substitutes_a_constant_reference():
     assert _interpolate_slots("Soy <AGENT_NAME>.", {"AGENT_NAME": "Sam"}) == "Soy Sam."
 
 
-def test_interpolate_slots_leaves_unknown_constant_as_angle_bracket_token():
+def test_interpolate_unknown_constant():
+    """An unknown constant stays as an angle-bracket token."""
     assert _interpolate_slots("Soy <AGENT_NAME>.", {}) == "Soy <AGENT_NAME>."
 
 
-def test_interpolate_slots_substitutes_both_forms_in_the_same_text():
+def test_interpolate_both_forms():
+    """Slots and constants are both substituted in the same text."""
     slots = {"AGENT_NAME": "Sam", "name": "Alex"}
     result = _interpolate_slots("Soy <AGENT_NAME>, hablando con [name].", slots)
     assert result == "Soy Sam, hablando con Alex."
@@ -1684,44 +1774,54 @@ def test_interpolate_slots_substitutes_both_forms_in_the_same_text():
 # ---------------------------------------------------------------------------
 
 
-def test_coerce_value_none_stays_none():
+def test_coerce_none():
+    """None stays None."""
     assert _coerce_value(None, "str") is None
 
 
-def test_coerce_value_bool_type():
+def test_coerce_bool():
+    """A bool-typed value is coerced to a boolean."""
     assert _coerce_value("true", "bool") is True
 
 
-def test_coerce_value_int_type():
+def test_coerce_int():
+    """An int-typed value is coerced to an integer."""
     assert _coerce_value("3", "int") == 3
 
 
-def test_coerce_value_int_type_uncoercible_falls_back_to_raw():
+def test_coerce_int_fallback():
+    """An uncoercible int keeps its raw value."""
     assert _coerce_value("not a number", "int") == "not a number"
 
 
-def test_coerce_value_str_type_passthrough():
+def test_coerce_str():
+    """A str-typed value passes through."""
     assert _coerce_value("Alex", "str") == "Alex"
 
 
-def test_json_schema_type_for_literal():
+def test_schema_literal():
+    """A Literal type becomes a nullable enum."""
     schema = _json_schema_type("Literal[yes, no]")
     assert schema == {"type": ["string", "null"], "enum": ["yes", "no", None]}
 
 
-def test_json_schema_type_for_bool():
+def test_schema_bool():
+    """A bool becomes a nullable boolean."""
     assert _json_schema_type("bool") == {"type": ["boolean", "null"]}
 
 
-def test_json_schema_type_for_int():
+def test_schema_int():
+    """An int becomes a nullable integer."""
     assert _json_schema_type("int") == {"type": ["integer", "null"]}
 
 
-def test_json_schema_type_default_is_nullable_string():
+def test_schema_default_string():
+    """Any other type becomes a nullable string."""
     assert _json_schema_type("free_text") == {"type": ["string", "null"]}
 
 
-def test_capture_json_schema_marks_every_slot_required():
+def test_capture_schema_requires_slots():
+    """The capture schema marks every slot as required."""
     schema = _capture_json_schema([("name", "str"), ("age", "int")])
     assert schema["required"] == ["name", "age"]
     assert set(schema["properties"]) == {"name", "age"}
@@ -1737,7 +1837,8 @@ def test_capture_json_schema_marks_every_slot_required():
 # ---------------------------------------------------------------------------
 
 
-def test_llm_extract_capture_omits_history_block_when_not_given():
+def test_extract_omits_history():
+    """Capture extraction omits the history block when none is given."""
     client = _FakeLLMClient(structured_reply={"profile": "couple"})
     _llm_extract_capture(
         client,
@@ -1747,7 +1848,8 @@ def test_llm_extract_capture_omits_history_block_when_not_given():
     assert "Recent conversation" not in client.structured_prompts[0]
 
 
-def test_llm_extract_capture_includes_history_when_given():
+def test_extract_includes_history():
+    """Capture extraction includes the history when given."""
     client = _FakeLLMClient(structured_reply={"profile": "couple"})
     history = ["agent: ¿Deseas hacer el proceso en pareja?", "user: en pareja"]
     _llm_extract_capture(
@@ -1787,15 +1889,18 @@ def test_llm_extract_capture_includes_known_slots():
 # ---------------------------------------------------------------------------
 
 
-def test_coerce_constant_numeric_string_becomes_int():
+def test_constant_numeric_becomes_int():
+    """A numeric constant becomes an integer."""
     assert _coerce_constant("3") == 3
 
 
-def test_coerce_constant_non_numeric_stays_string():
+def test_constant_text_stays_string():
+    """A non-numeric constant stays a string."""
     assert _coerce_constant("America/Bogota") == "America/Bogota"
 
 
 def test_initial_slots_seeds_every_constant():
+    """Initial slots are seeded with every constant."""
     spec = build_minimal_agent_spec(
         constants=[ConstantItem(name="MAX_RETRY_ATTEMPTS", description="d", value="3")]
     )
@@ -1804,7 +1909,8 @@ def test_initial_slots_seeds_every_constant():
     assert slots == {"MAX_RETRY_ATTEMPTS": 3, "current_state": ""}
 
 
-def test_fresh_state_has_empty_current_state_and_seeded_slots():
+def test_fresh_state():
+    """A fresh state has an empty current state and seeded slots."""
     spec = build_minimal_agent_spec(
         constants=[ConstantItem(name="MAX_RETRY_ATTEMPTS", description="d", value="3")]
     )
@@ -1821,7 +1927,8 @@ def test_fresh_state_has_empty_current_state_and_seeded_slots():
 # ---------------------------------------------------------------------------
 
 
-def test_sync_language_change_calls_update_custom_field_when_language_changed():
+def test_language_sync_calls_tool():
+    """A language change calls the update-custom-field tool."""
     calls = []
     executors = {"update_custom_field": lambda **kw: calls.append(kw) or {"success": True}}
     _sync_language_change(
@@ -1830,7 +1937,8 @@ def test_sync_language_change_calls_update_custom_field_when_language_changed():
     assert calls == [{"name": "language", "value": "Spanish", "contact_id": "c1", "location_id": "l1"}]
 
 
-def test_sync_language_change_skips_when_unchanged_or_no_contact_or_no_tool():
+def test_language_sync_skips():
+    """No call is made when the language is unchanged or there is no contact or tool."""
     calls = []
     executors = {"update_custom_field": lambda **kw: calls.append(kw)}
     contact = {"contact_id": "c1"}
@@ -1839,14 +1947,17 @@ def test_sync_language_change_skips_when_unchanged_or_no_contact_or_no_tool():
     assert calls == []
 
 
-def test_sync_language_change_still_calls_tool_without_contact_ids():
+def test_language_sync_without_ids():
+    """The tool is still called when the contact has no ids."""
     calls = []
     executors = {"update_custom_field": lambda **kw: calls.append(kw)}
     _sync_language_change("English", {"preferred_language": "Spanish"}, {}, executors)
     assert calls == [{"name": "language", "value": "Spanish"}]
 
 
-def test_sync_language_change_swallows_tool_failure():
+def test_language_sync_swallows_failure():
+    """A tool failure during the language sync is swallowed."""
+
     def boom(**kw):
         raise RuntimeError("ghl down")
 
@@ -1862,7 +1973,8 @@ def test_sync_language_change_swallows_tool_failure():
 _DOC_LIST_TYPE = "list[Literal[cedula_ciudadania, ppt, pasaporte]]"
 
 
-def test_json_schema_type_maps_list_of_literal_to_an_enum_array():
+def test_schema_list_of_literal():
+    """A list of Literal becomes an array of enum values."""
     schema = _json_schema_type(_DOC_LIST_TYPE)
     assert schema == {
         "type": ["array", "null"],
@@ -1871,7 +1983,8 @@ def test_json_schema_type_maps_list_of_literal_to_an_enum_array():
     assert _json_schema_type("list[str]") == {"type": ["array", "null"], "items": {"type": "string"}}
 
 
-def test_coerce_value_turns_stringified_lists_into_real_lists():
+def test_coerce_stringified_list():
+    """A stringified list becomes a real list."""
     assert _coerce_value('["pasaporte", "ppt"]', _DOC_LIST_TYPE) == ["pasaporte", "ppt"]
     assert _coerce_value("pasaporte, ppt", _DOC_LIST_TYPE) == ["pasaporte", "ppt"]
     assert _coerce_value(["ppt"], _DOC_LIST_TYPE) == ["ppt"]
@@ -1879,7 +1992,8 @@ def test_coerce_value_turns_stringified_lists_into_real_lists():
     assert _coerce_value(None, _DOC_LIST_TYPE) is None
 
 
-def test_mechanical_arg_bindings_resolve_the_last_argument_before_a_closing_paren():
+def test_binding_last_argument():
+    """The last argument before a closing parenthesis is resolved."""
     bindings = _extract_mechanical_arg_bindings(
         ["TOOL CALL: call check_documentation (nationality=[nat], document_type=[docs])."],
         {"nat": "VEN", "docs": ["pasaporte", "ppt"]},
@@ -1899,7 +2013,8 @@ def _match_in_slots(city):
     return {"ALLOWED_CITIES": _CITIES, "city": city}
 
 
-def test_match_in_canonicalizes_ignoring_accents_and_case_without_the_llm():
+def test_match_in_canonicalises():
+    """`match_in` canonicalises ignoring accents and case, without the model."""
     slots = _match_in_slots("bogota")
     _apply_store_line(_MATCH_LINE, _ctx(slots), _FakeLLMClient())
     assert slots["city"] == "Bogotá"
@@ -1911,13 +2026,15 @@ def test_match_in_canonicalizes_ignoring_accents_and_case_without_the_llm():
     assert slots["city"] == "Sibaté"
 
 
-def test_match_in_uses_the_fallback_for_a_value_outside_the_list():
+def test_match_in_fallback():
+    """`match_in` uses the fallback for a value outside the list."""
     slots = _match_in_slots("Medellín")
     _apply_store_line(_MATCH_LINE, _ctx(slots), _FakeLLMClient())
     assert slots["city"] == "Otro"
 
 
-def test_match_in_leaves_an_empty_slot_untouched():
+def test_match_in_empty_untouched():
+    """`match_in` leaves an empty slot untouched."""
     slots = _match_in_slots(None)
     _apply_store_line(_MATCH_LINE, _ctx(slots), _FakeLLMClient())
     assert slots["city"] is None
@@ -2047,20 +2164,23 @@ def test_action_capture_takes_the_longest_matching_result_key_for_a_namespaced_s
     assert result["slots"]["q__eligibility_result"] == "rejected"
 
 
-def test_render_say_discards_a_paraphrase_that_balloons_past_the_original():
+def test_say_discards_long_paraphrase():
+    """A paraphrase much longer than the original is discarded."""
     invented = "Hola Ana, tengo estos días disponibles para tu cita: martes 10 y jueves 12. ¿Cuál prefieres para agendar?"
     client = _FakeLLMClient(reply=invented)
     render_say = _make_render_say(client)
     assert render_say("N", ["Hasta luego."], False, "es", {}) == "Hasta luego."
 
 
-def test_render_say_discards_a_paraphrase_that_adds_a_question():
+def test_say_discards_added_question():
+    """A paraphrase that adds a question is discarded."""
     client = _FakeLLMClient(reply="Hasta luego. ¿Algo más?")
     render_say = _make_render_say(client)
     assert render_say("N", ["Hasta luego."], False, "es", {}) == "Hasta luego."
 
 
-def test_resolve_edges_llm_condition_before_an_unconditional_default_still_gets_judged():
+def test_edges_llm_condition_before_default():
+    """An LLM condition listed before a default edge is still judged."""
     client = _FakeLLMClient(reply="0")
     resolve_edges = _make_resolve_edges(client)
     edges = [
@@ -2073,7 +2193,8 @@ def test_resolve_edges_llm_condition_before_an_unconditional_default_still_gets_
     assert len(client.prompts) == 1
 
 
-def test_resolve_edges_unconditional_default_wins_when_no_llm_condition_applies():
+def test_edges_default_when_no_condition():
+    """The default edge wins when no LLM condition applies."""
     client = _FakeLLMClient(reply="NONE")
     resolve_edges = _make_resolve_edges(client)
     edges = [
@@ -2085,7 +2206,8 @@ def test_resolve_edges_unconditional_default_wins_when_no_llm_condition_applies(
     assert resolve_edges(edges, _ctx({})) == "GREET"
 
 
-def test_coerce_value_turns_the_word_null_into_an_empty_value_except_for_literals():
+def test_coerce_null_word():
+    """The word "null" becomes empty, except for literals."""
     from agent_runtime.runtime.graph_builder import _coerce_value
 
     assert _coerce_value("null", "email") is None
@@ -2094,7 +2216,8 @@ def test_coerce_value_turns_the_word_null_into_an_empty_value_except_for_literal
     assert _coerce_value("21:00", "appointment_slot_selection") == "21:00"
 
 
-def test_coerce_value_writes_a_chosen_time_as_24_hour_hh_mm():
+def test_coerce_time_24h():
+    """A chosen time is written as 24-hour HH:MM."""
     from agent_runtime.runtime.graph_builder import _coerce_value
 
     assert _coerce_value("9:40 am", "appointment_slot_selection") == "09:40"
@@ -2110,7 +2233,8 @@ def test_coerce_value_writes_a_chosen_time_as_24_hour_hh_mm():
     assert _coerce_value("9:40 amazing", "appointment_slot_selection") == "09:40"
 
 
-def test_missing_required_inputs_lists_only_required_ones_without_a_value():
+def test_missing_required_inputs():
+    """Only required inputs without a value are listed as missing."""
     from types import SimpleNamespace
 
     from agent_runtime.runtime.graph_builder import _missing_required_inputs
@@ -2120,7 +2244,8 @@ def test_missing_required_inputs_lists_only_required_ones_without_a_value():
     assert _missing_required_inputs(fields, {"start_date": "2026-11-04T09:40:00-05:00"}) == []
 
 
-def test_render_say_cuts_a_closing_question_the_rewording_added():
+def test_say_cuts_added_closing_question():
+    """A closing question added by the rewording is cut."""
     reply = "Estos son los horarios:\n\n<NUM_1>\n<NUM_2>\n\n¿Cuál prefieres?"
     client = _FakeLLMClient(reply=reply)
     render_say = _make_render_say(client)
@@ -2128,7 +2253,9 @@ def test_render_say_cuts_a_closing_question_the_rewording_added():
     assert out == "Estos son los horarios:\n\n09:00\n10:00"
 
 
-def test_render_say_discards_a_rewording_that_changes_a_time():
+def test_say_discards_changed_time():
+    """A rewording that changes a time is discarded."""
+
     class _Client(_FakeLLMClient):
         def complete(self, prompt, *, temperature=0.0):
             self.temperatures.append(temperature)
@@ -2145,7 +2272,8 @@ _CALENDAR = "2026-10-27 Tuesday{n}2026-10-28 Wednesday{n}2026-10-29 Thursday{n}2
 _OFFERED = [{"start_local": f"2026-{d}T09:00:00-05:00"} for d in ("10-30", "11-03", "11-04", "11-05")]
 
 
-def test_resolve_day_reference_reads_weekdays_in_three_languages():
+def test_day_reference_weekdays():
+    """Weekdays are read in three languages."""
     from agent_runtime.runtime.graph_builder import _resolve_day_reference
 
     for reply in ("el viernes", "sexta", "Friday", "this coming friday"):
@@ -2153,7 +2281,8 @@ def test_resolve_day_reference_reads_weekdays_in_three_languages():
     assert _resolve_day_reference("quarta", _CALENDAR, _OFFERED) == "2026-11-04"
 
 
-def test_resolve_day_reference_reads_numbers_months_and_relative_days():
+def test_day_reference_numbers_and_relative():
+    """Day numbers, months and relative days are read."""
     from agent_runtime.runtime.graph_builder import _resolve_day_reference
 
     assert _resolve_day_reference("dia 3 de novembro", _CALENDAR, _OFFERED) == "2026-11-03"
@@ -2164,7 +2293,8 @@ def test_resolve_day_reference_reads_numbers_months_and_relative_days():
     assert _resolve_day_reference("2026-11-04", _CALENDAR, _OFFERED) == "2026-11-04"
 
 
-def test_resolve_day_reference_is_empty_when_no_real_day_is_named():
+def test_day_reference_none_when_unnamed():
+    """No day is returned when none is named."""
     from agent_runtime.runtime.graph_builder import _resolve_day_reference
 
     assert _resolve_day_reference("banana", _CALENDAR, _OFFERED) is None
@@ -2172,7 +2302,8 @@ def test_resolve_day_reference_is_empty_when_no_real_day_is_named():
     assert _resolve_day_reference("viernes", None, _OFFERED) is None
 
 
-def test_day_label_follows_the_conversation_language():
+def test_day_label_language():
+    """Day labels follow the conversation language."""
     from agent_runtime.runtime.graph_builder import _day_label
 
     assert _day_label("2026-10-30", "Spanish") == "viernes 30 de octubre"
@@ -2181,7 +2312,8 @@ def test_day_label_follows_the_conversation_language():
     assert _day_label(None, "Spanish") is None
 
 
-def test_is_bare_yes_no_only_accepts_plain_yes_no_replies():
+def test_bare_yes_no_plain_only():
+    """Only plain yes or no replies count as bare."""
     from agent_runtime.runtime.graph_builder import _is_bare_yes_no
 
     for reply in ("Sí", "no", "Claro, por favor", "de acuerdo", "Sim"):
@@ -2190,7 +2322,8 @@ def test_is_bare_yes_no_only_accepts_plain_yes_no_replies():
         assert not _is_bare_yes_no(reply)
 
 
-def test_blank_word_to_none_clears_the_word_null_only():
+def test_blank_null_word_only():
+    """Only the word "null" is cleared to None."""
     from agent_runtime.runtime.graph_builder import _blank_word_to_none
 
     assert _blank_word_to_none("null") is None
@@ -2199,7 +2332,8 @@ def test_blank_word_to_none_clears_the_word_null_only():
     assert _blank_word_to_none(3) == 3
 
 
-def test_coerce_value_rejects_an_incomplete_email_and_lowercases_a_valid_one():
+def test_coerce_email():
+    """An incomplete email is rejected and a valid one is lowercased."""
     from agent_runtime.runtime.graph_builder import _coerce_value
 
     assert _coerce_value("juan@", "email") is None
@@ -2207,7 +2341,8 @@ def test_coerce_value_rejects_an_incomplete_email_and_lowercases_a_valid_one():
     assert _coerce_value("  Marcela.Arango@Gmail.com ", "email") == "marcela.arango@gmail.com"
 
 
-def test_coerce_value_rejects_a_phone_that_cannot_be_a_number():
+def test_coerce_phone():
+    """A phone that cannot be a number is rejected."""
     from agent_runtime.runtime.graph_builder import _coerce_value
 
     assert _coerce_value("123", "phone_number") is None
@@ -2216,7 +2351,8 @@ def test_coerce_value_rejects_a_phone_that_cannot_be_a_number():
     assert _coerce_value("3001234567", "phone_number") == "3001234567"
 
 
-def test_correct_contact_email_replaces_the_kept_address_with_the_one_in_the_reply():
+def test_email_correction_replaces():
+    """A corrected email in the reply replaces the kept address."""
     from agent_runtime.runtime.graph_builder import _correct_contact_email
 
     slots = {"sc__c_email": "ana@gmial.com"}
@@ -2226,7 +2362,8 @@ def test_correct_contact_email_replaces_the_kept_address_with_the_one_in_the_rep
     assert slots["sc__c_email"] == "ana@gmail.com"
 
 
-def test_correct_contact_email_leaves_everything_else_alone():
+def test_email_correction_ignores_others():
+    """Replies without a corrected email are left alone."""
     from agent_runtime.runtime.graph_builder import _correct_contact_email
 
     capture = [("sc__day", "free_text")]
@@ -2247,7 +2384,8 @@ def test_correct_contact_email_leaves_everything_else_alone():
         assert slots == before
 
 
-def test_interpolate_slots_lists_booked_appointments_soonest_first_in_the_contacts_language():
+def test_interpolate_appointments_sorted():
+    """Booked appointments are listed soonest first in the contact's language."""
     later = {
         "event_id": "b",
         "summary": "Consulta",
@@ -2266,14 +2404,16 @@ def test_interpolate_slots_lists_booked_appointments_soonest_first_in_the_contac
     assert _interpolate_slots("[app]", {"app": sooner}, "en") == "📅 Tuesday, November 3, 2026 🕐 10:00"
 
 
-def test_interpolate_slots_formats_a_booked_appointment_kept_as_json_text():
+def test_interpolate_appointment_json():
+    """A booked appointment kept as JSON text is formatted."""
     text = (
         '{"event_id":"a","summary":"Consulta","start_time":"2026-11-03T10:00:00-05:00","calendar_type":"IVF"}'
     )
     assert _interpolate_slots("[app]", {"app": text}, "es") == "📅 martes 3 de noviembre de 2026 🕐 10:00"
 
 
-def test_interpolate_slots_joins_consecutive_times_into_ranges():
+def test_interpolate_time_ranges():
+    """Consecutive times are joined into ranges."""
     times = [
         "07:00",
         "08:00",
@@ -2297,7 +2437,8 @@ def test_interpolate_slots_joins_consecutive_times_into_ranges():
     )
 
 
-def test_interpolate_slots_names_every_part_of_the_day_with_availability():
+def test_interpolate_parts_of_day():
+    """Every part of the day with availability is named."""
     slots = {
         "available_slots": [_appointment("2026-11-03", t) for t in ("04:00", "07:00", "14:00", "20:00")]
         + [_appointment("2026-11-04", "09:00")]
@@ -2307,7 +2448,8 @@ def test_interpolate_slots_names_every_part_of_the_day_with_availability():
     )
 
 
-def test_protect_lists_swaps_each_date_or_time_block_for_a_token_and_back():
+def test_protect_lists_round_trip():
+    """Date and time blocks are swapped for tokens and restored."""
     from agent_runtime.runtime.graph_builder import _protect_lists, _restore_contact_values
 
     protected: dict[str, str] = {}
@@ -2321,7 +2463,8 @@ def _offered(day, *times):
     return [_appointment(day, t) for t in times]
 
 
-def test_resolve_time_reference_accepts_only_unambiguous_offered_times():
+def test_time_reference_unambiguous_only():
+    """Only unambiguous offered times are accepted."""
     from agent_runtime.runtime.graph_builder import _resolve_time_reference
 
     offered = _offered("2026-11-04", "10:00", "10:30", "15:00", "16:00")
@@ -2383,19 +2526,24 @@ def test_resolve_time_reference_understands_a_description_of_the_time():
     assert _named_part_of_day("la primera", offered, day) is None
 
 
-def test_restored_list_always_starts_on_its_own_line():
+def test_restored_list_own_line():
+    """A restored list always starts on its own line."""
     from agent_runtime.runtime.graph_builder import _restore_contact_values
 
-    lst = "\U0001F5D3️ Viernes 13\n └─ Tarde\n\U0001F5D3️ Miércoles 18"
+    lst = "\U0001f5d3️ Viernes 13\n └─ Tarde\n\U0001f5d3️ Miércoles 18"
     protected = {"<LIST_1>": lst}
     # the paraphrasing model glued the token to the sentence before it
     assert _restore_contact_values("Tengo estas fechas: <LIST_1>", protected) == f"Tengo estas fechas:\n{lst}"
     # lists that already start on their own line are left as they are
-    assert _restore_contact_values("Fechas:\n\n<LIST_1>\n\nQue dia?", protected) == f"Fechas:\n\n{lst}\n\nQue dia?"
+    assert (
+        _restore_contact_values("Fechas:\n\n<LIST_1>\n\nQue dia?", protected)
+        == f"Fechas:\n\n{lst}\n\nQue dia?"
+    )
     assert _restore_contact_values("Fechas:\n<LIST_1>", protected) == f"Fechas:\n{lst}"
 
 
-def test_time_list_is_narrowed_to_the_part_of_the_day_the_contact_named():
+def test_time_list_narrowed_to_part_of_day():
+    """The time list is narrowed to the part of the day the contact named."""
     from agent_runtime.runtime.graph_builder import _format_appointment_list
 
     items = _offered("2026-11-18", "07:00", "08:00", "13:00", "15:00")
@@ -2408,22 +2556,30 @@ def test_time_list_is_narrowed_to_the_part_of_the_day_the_contact_named():
     assert "Mañana" in empty and "Tarde" in empty
 
 
-def test_applying_time_part_and_resolve_within_store_lines():
+def test_store_time_part_and_resolve():
+    """The time-part and resolve operations work inside store lines."""
     slots = {
         "available_slots": _offered("2026-11-18", "07:00", "13:00", "15:00"),
         "day": "2026-11-18",
         "slot": "por la tarde",
         "part_shown": None,
     }
-    _apply_store_line("[part_asked] = TIME_PART [slot] AMONG [available_slots] AT [day]", _ctx(slots), _FakeLLMClient())
+    _apply_store_line(
+        "[part_asked] = TIME_PART [slot] AMONG [available_slots] AT [day]", _ctx(slots), _FakeLLMClient()
+    )
     assert slots["part_asked"] == "tarde"
     slots["part_shown"] = slots["part_asked"]
     slots["slot"] = "la primera"
-    _apply_store_line("[slot] = RESOLVE_TIME [slot] AMONG [available_slots] AT [day] WITHIN [part_shown]", _ctx(slots), _FakeLLMClient())
+    _apply_store_line(
+        "[slot] = RESOLVE_TIME [slot] AMONG [available_slots] AT [day] WITHIN [part_shown]",
+        _ctx(slots),
+        _FakeLLMClient(),
+    )
     assert slots["slot"] == "13:00"
 
 
-def test_protect_figures_swaps_times_and_long_numbers_for_tokens_and_back():
+def test_protect_figures_round_trip():
+    """Times and long numbers are swapped for tokens and restored."""
     from agent_runtime.runtime.graph_builder import _protect_figures, _restore_contact_values
 
     protected: dict[str, str] = {}
@@ -2433,7 +2589,9 @@ def test_protect_figures_swaps_times_and_long_numbers_for_tokens_and_back():
     assert _restore_contact_values(swapped, protected) == text
 
 
-def test_render_say_falls_back_to_a_plain_translation_before_the_template_language():
+def test_say_plain_translation_fallback():
+    """A plain translation is tried before falling back to the template language."""
+
     class _Client(_FakeLLMClient):
         def __init__(self):
             super().__init__()
@@ -2456,7 +2614,8 @@ def test_render_say_falls_back_to_a_plain_translation_before_the_template_langua
     assert client.prompts[2].startswith("Translate this agent message")
 
 
-def test_mechanical_arg_bindings_turn_a_language_name_into_its_uppercase_code():
+def test_binding_language_code():
+    """A language name is turned into its uppercase code."""
     from agent_runtime.runtime.graph_builder import _extract_mechanical_arg_bindings
 
     line = "duration = 30. language = [preferred_language] in uppercase ('EN', 'ES', or 'PT'). iana_timezone = [user_timezone]."
@@ -2468,7 +2627,8 @@ def test_mechanical_arg_bindings_turn_a_language_name_into_its_uppercase_code():
     assert "language" not in _extract_mechanical_arg_bindings([line], {})
 
 
-def test_hours_are_grouped_under_each_part_of_the_day_with_ranges_in_the_language():
+def test_hours_grouped_by_part_of_day():
+    """Hours are grouped under each part of the day with ranges."""
     times = ["07:00", "08:00", "09:20", "09:40", "10:00", "10:20", "10:40", "11:00", "13:00", "13:20"]
     slots = {"day": "2026-11-09", "available_slots": [_appointment("2026-11-09", t) for t in times]}
     assert _interpolate_slots("[available_slots]", slots, "es") == (
@@ -2477,7 +2637,8 @@ def test_hours_are_grouped_under_each_part_of_the_day_with_ranges_in_the_languag
     assert _interpolate_slots("[available_slots]", slots, "en").splitlines()[3] == "🕐 09:20 to 11:00"
 
 
-def test_location_label_asks_for_country_and_city_in_the_conversation_language():
+def test_location_label_language():
+    """The location label follows the conversation language."""
     client = _FakeLLMClient("'Spain - Seville'\n")
     slots = {
         "user_location": "spian, sevila",
@@ -2489,7 +2650,8 @@ def test_location_label_asks_for_country_and_city_in_the_conversation_language()
     assert "'spian, sevila'" in client.prompts[0] and "in English" in client.prompts[0]
 
 
-def test_protect_place_swaps_the_location_label_for_a_token_and_back():
+def test_protect_place_round_trip():
+    """The location label is swapped for a token and restored."""
     from agent_runtime.runtime.graph_builder import _protect_place, _restore_contact_values
 
     protected: dict[str, str] = {}
@@ -2500,7 +2662,8 @@ def test_protect_place_swaps_the_location_label_for_a_token_and_back():
     assert _protect_place(text, {"location_label": None}, {}) == text
 
 
-def test_an_unpadded_time_without_am_or_pm_needs_only_one_offered_twin():
+def test_unpadded_time_single_twin():
+    """An unpadded time without am/pm needs only one matching offered time."""
     from agent_runtime.runtime.graph_builder import _resolve_time_reference as resolve
 
     def offered(*times):
@@ -2514,7 +2677,8 @@ def test_an_unpadded_time_without_am_or_pm_needs_only_one_offered_twin():
     assert resolve("10:30", offered("10:30", "22:30"), "2026-11-10") == "10:30"
 
 
-def test_day_full_store_op_writes_the_weekday_day_and_month_with_a_capital():
+def test_store_day_full():
+    """`day_full` writes the weekday, day and month with a capital."""
     slots = {"day": "2026-11-10", "preferred_language": "Spanish"}
     _apply_store_line("[day_full] = DAY_FULL [day]", _ctx(slots), _FakeLLMClient())
     assert slots["day_full"] == "Martes 10 de noviembre"
@@ -2523,7 +2687,8 @@ def test_day_full_store_op_writes_the_weekday_day_and_month_with_a_capital():
     assert slots["day_full"] == "Tuesday, November 10"
 
 
-def test_the_summary_block_is_protected_as_one_list():
+def test_summary_block_protected():
+    """The summary block is protected as one list."""
     from agent_runtime.runtime.graph_builder import _protect_lists
 
     block = "🗓️ Martes 10 de noviembre\n├─ 🕐 03:00 (24h)\n├─ 🌎 Japón - Tokio\n├─ 👤 Ana\n├─ ✉️ a@b.co\n└─ 📞 +5712345678"
@@ -2532,13 +2697,15 @@ def test_the_summary_block_is_protected_as_one_list():
     assert protected["<LIST_1>"] == block
 
 
-def test_location_label_is_empty_without_a_location():
+def test_location_label_empty():
+    """The location label is empty without a location."""
     slots = {"user_location": None, "preferred_language": "Spanish"}
     _apply_store_line("[location_label] = LOCATION_LABEL [user_location]", _ctx(slots), _FakeLLMClient())
     assert slots["location_label"] is None
 
 
-def test_day_title_store_op_capitalizes_the_day_label():
+def test_store_day_title():
+    """`day_title` capitalises the day label."""
     slots = {"day": "2026-11-09", "preferred_language": "Spanish"}
     _apply_store_line("[day_title] = DAY_TITLE [day]", _ctx(slots), _FakeLLMClient())
     assert slots["day_title"] == "Lunes. 9 nov"
@@ -2550,7 +2717,8 @@ def test_day_title_store_op_capitalizes_the_day_label():
     assert slots["day_title"] == "Segunda-feira. 9 nov"
 
 
-def test_protect_lists_also_covers_the_new_day_and_part_of_day_blocks():
+def test_protect_lists_day_blocks():
+    """List protection also covers the day and part-of-day blocks."""
     from agent_runtime.runtime.graph_builder import _protect_lists
 
     protected: dict[str, str] = {}
@@ -2558,7 +2726,8 @@ def test_protect_lists_also_covers_the_new_day_and_part_of_day_blocks():
     assert _protect_lists(text, protected) == "Hi\n\n<LIST_1>\n\nTitle\n\n<LIST_2>\n\n<LIST_3>"
 
 
-def test_lists_follow_the_language_name_held_in_preferred_language():
+def test_lists_follow_preferred_language():
+    """Lists follow the language held in preferred_language."""
     slots = {
         "day": "2026-11-04",
         "available_slots": [_appointment("2026-11-04", t) for t in ("09:00", "09:30", "14:00")],
@@ -2573,7 +2742,8 @@ def test_lists_follow_the_language_name_held_in_preferred_language():
     )
 
 
-def test_session_history_keeps_ten_lines_but_prompts_show_the_last_five():
+def test_history_keeps_ten_shows_five():
+    """History keeps ten lines but prompts show the last five."""
     from agent_runtime.runtime.llm_client import PROMPT_HISTORY_LINES
 
     history: list[str] = []
@@ -2586,7 +2756,8 @@ def test_session_history_keeps_ten_lines_but_prompts_show_the_last_five():
     assert PROMPT_HISTORY_LINES == 5
 
 
-def test_dates_and_times_are_written_in_french():
+def test_dates_in_french():
+    """Dates and times are written in French."""
     import datetime
 
     from agent_runtime import languages

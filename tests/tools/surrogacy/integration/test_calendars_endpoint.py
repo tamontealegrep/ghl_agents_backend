@@ -7,7 +7,9 @@ from tests.tools.apps import surrogacy_app as app
 client = TestClient(app)
 
 
-def test_calendars_lists_keys_and_integrations_without_ids(monkeypatch):
+def test_calendars_lists_keys_not_ids(monkeypatch):
+    """The calendars endpoint lists keys and integrations without ids."""
+
     class _Settings:
         calendars = {
             "FT": CalendarSettings("", "", "", "primary", ""),

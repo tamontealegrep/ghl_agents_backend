@@ -19,14 +19,16 @@ SCHEDULING_AGENTS = [
     "tool",
     ["get_available_slots", "book_appointment", "find_appointment", "edit_appointment", "cancel_appointment"],
 )
-def test_scheduling_tools_resolve_to_the_ghl_routes_first(slug, tool):
+def test_scheduling_tools_try_ghl_first(slug, tool):
+    """Scheduling tools resolve to the -ghl routes first."""
     bundle = discover_bundles(BUNDLES)[slug]
     urls = candidate_urls(f"http://x/agents/{slug}/tools/{tool}", bundle.config.tool_route_suffixes)
     assert urls[0].endswith(f"/{tool.replace('_', '-')}-ghl")
 
 
 @pytest.mark.parametrize("slug", SCHEDULING_AGENTS)
-def test_the_sur_routes_still_work_for_the_other_tools(slug):
+def test_other_tools_keep_sur_routes(slug):
+    """Non-scheduling tools still resolve to their -sur routes."""
     bundle = discover_bundles(BUNDLES)[slug]
     urls = candidate_urls(
         f"http://x/agents/{slug}/tools/check_documentation", bundle.config.tool_route_suffixes

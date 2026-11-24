@@ -45,6 +45,7 @@ def install_openai(monkeypatch, content='{"name": "Ana"}', error=None):
 
 
 def test_openai_complete_and_structured(monkeypatch):
+    """The OpenAI provider returns text and structured output."""
     seen = install_openai(monkeypatch)
     provider = OpenAIProvider("k", "gpt-x", 20)
 
@@ -55,13 +56,15 @@ def test_openai_complete_and_structured(monkeypatch):
     assert seen[2]["model"] == "gpt-x"
 
 
-def test_openai_malformed_json_is_an_empty_extraction(monkeypatch):
+def test_openai_bad_json_is_empty(monkeypatch):
+    """Malformed JSON from OpenAI gives an empty extraction."""
     install_openai(monkeypatch, content="not json")
 
     assert OpenAIProvider("k", "m", 5).extract_structured("p", SCHEMA) == {}
 
 
 def test_sdk_errors_become_provider_errors(monkeypatch):
+    """SDK exceptions are converted to provider errors."""
     install_openai(monkeypatch, error=HttpError("slow down"))
 
     with pytest.raises(LLMProviderError) as info:
@@ -87,14 +90,16 @@ def install_anthropic(monkeypatch, content):
     return seen
 
 
-def test_anthropic_complete_joins_the_text_blocks(monkeypatch):
+def test_anthropic_joins_text_blocks(monkeypatch):
+    """The Anthropic provider joins the text blocks of its reply."""
     seen = install_anthropic(monkeypatch, [NS(type="text", text="Hola "), NS(type="text", text="mundo")])
 
     assert AnthropicProvider("k", "claude-x", 20).complete("p", temperature=0.3) == "Hola mundo"
     assert seen[1]["temperature"] == 0.3 and seen[1]["max_tokens"] > 0
 
 
-def test_anthropic_structured_output_is_a_forced_tool_call(monkeypatch):
+def test_anthropic_structured_uses_tool(monkeypatch):
+    """Anthropic structured output is a forced tool call."""
     seen = install_anthropic(
         monkeypatch, [NS(type="text", text="thinking"), NS(type="tool_use", input={"name": "Ana"})]
     )
@@ -105,7 +110,8 @@ def test_anthropic_structured_output_is_a_forced_tool_call(monkeypatch):
     assert call["tool_choice"] == {"type": "tool", "name": call["tools"][0]["name"]}
 
 
-def test_anthropic_without_a_tool_call_is_an_empty_extraction(monkeypatch):
+def test_anthropic_no_tool_is_empty(monkeypatch):
+    """Anthropic without a tool call gives an empty extraction."""
     install_anthropic(monkeypatch, [NS(type="text", text="no")])
 
     assert AnthropicProvider("k", "m", 5).extract_structured("p", SCHEMA) == {}
@@ -143,6 +149,7 @@ def install_google(monkeypatch, text='{"name": "Ana"}'):
 
 
 def test_google_complete_and_structured(monkeypatch):
+    """The Google provider returns text and structured output."""
     seen = install_google(monkeypatch)
     provider = GoogleProvider("k", "gemini-x", 20)
 
@@ -154,7 +161,8 @@ def test_google_complete_and_structured(monkeypatch):
 
 
 # ------------------------------------------------------------------------------------------------ factory
-def test_the_factory_builds_the_listed_providers_in_order(monkeypatch):
+def test_factory_builds_providers_in_order(monkeypatch):
+    """The factory builds the listed providers in order."""
     install_openai(monkeypatch)
     install_anthropic(monkeypatch, [])
     install_google(monkeypatch)

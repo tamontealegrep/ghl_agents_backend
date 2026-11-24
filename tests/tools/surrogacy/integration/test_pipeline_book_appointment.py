@@ -106,7 +106,8 @@ def mocked_success(monkeypatch):
     monkeypatch.setattr(notifications, "send_email", _fake_send_email)
 
 
-def test_book_appointment_success(mocked_success):
+def test_booking_succeeds(mocked_success):
+    """A booking succeeds and returns the event id."""
     response = client.post("/api/v1/book-appointment-google", json=_valid_payload())
     assert response.status_code == 200
     body = response.json()
@@ -115,7 +116,8 @@ def test_book_appointment_success(mocked_success):
     assert body["errors"] is None
 
 
-def test_book_appointment_rejects_past_date(mocked_success):
+def test_booking_rejects_past_date(mocked_success):
+    """A date in the past is rejected."""
     payload = _valid_payload()
     payload["start_date"] = "2020-01-01T09:00:00-05:00"
     response = client.post("/api/v1/book-appointment-google", json=payload)
@@ -124,7 +126,8 @@ def test_book_appointment_rejects_past_date(mocked_success):
     assert body["reason"] == "past_date"
 
 
-def test_book_appointment_rejects_invalid_start_date(mocked_success):
+def test_booking_rejects_invalid_date(mocked_success):
+    """An unparsable start date is rejected."""
     payload = _valid_payload()
     payload["start_date"] = "no-es-una-fecha"
     response = client.post("/api/v1/book-appointment-google", json=payload)
@@ -133,7 +136,8 @@ def test_book_appointment_rejects_invalid_start_date(mocked_success):
     assert body["reason"] == "invalid_start_date"
 
 
-def test_book_appointment_rejects_outside_business_hours(mocked_success):
+def test_booking_rejects_outside_hours(mocked_success):
+    """A time outside business hours is rejected."""
     payload = _valid_payload()
     payload["start_date"] = _next_business_datetime_iso(hour=20)
     response = client.post("/api/v1/book-appointment-google", json=payload)
@@ -142,7 +146,8 @@ def test_book_appointment_rejects_outside_business_hours(mocked_success):
     assert body["reason"] == "invalid_hour"
 
 
-def test_book_appointment_rejects_sunday(mocked_success):
+def test_booking_rejects_sunday(mocked_success):
+    """A Sunday booking is rejected."""
     now = datetime.now(ZoneInfo("America/Bogota"))
     days_until_sunday = (6 - now.weekday()) % 7 or 7
     next_sunday = (now + timedelta(days=days_until_sunday)).replace(
@@ -156,7 +161,8 @@ def test_book_appointment_rejects_sunday(mocked_success):
     assert body["reason"] == "invalid_hour"
 
 
-def test_book_appointment_reports_creation_failed(monkeypatch):
+def test_booking_reports_creation_failed(monkeypatch):
+    """A calendar creation error is reported."""
     monkeypatch.setattr(endpoint, "get_settings", lambda: _FakeSettings())
     monkeypatch.setattr(endpoint, "get_access_token", _fake_get_access_token)
     monkeypatch.setattr(endpoint, "create_event", _fake_create_event_no_id)
@@ -167,7 +173,8 @@ def test_book_appointment_reports_creation_failed(monkeypatch):
     assert body["reason"] == "creation_failed"
 
 
-def test_book_appointment_fails_gracefully_when_calendar_credentials_missing(monkeypatch):
+def test_booking_missing_credentials(monkeypatch):
+    """Missing calendar credentials give an error in the body, not an HTTP failure."""
     monkeypatch.setattr(endpoint, "get_settings", lambda: _EmptyCalendarSettings())
 
     response = client.post("/api/v1/book-appointment-google", json=_valid_payload())
@@ -195,7 +202,8 @@ def _book(monkeypatch, settings_cls):
     return client.post("/api/v1/book-appointment-google", json=_valid_payload()).json()
 
 
-def test_book_appointment_without_notification_email_sends_nothing(monkeypatch):
+def test_booking_no_email_sends_nothing(monkeypatch):
+    """Without a notification email nothing is sent."""
     sent = _capture_emails(monkeypatch)
 
     body = _book(monkeypatch, _EmptyNotificationSettings)
@@ -204,7 +212,8 @@ def test_book_appointment_without_notification_email_sends_nothing(monkeypatch):
     assert sent == []
 
 
-def test_book_appointment_notifies_the_team_not_the_patient(monkeypatch):
+def test_booking_notifies_team_not_patient(monkeypatch):
+    """The team is notified, never the patient."""
     sent = _capture_emails(monkeypatch)
 
     body = _book(monkeypatch, _FakeSettings)
@@ -215,7 +224,8 @@ def test_book_appointment_notifies_the_team_not_the_patient(monkeypatch):
     assert "+573007654321" in sent[0]["html"]
 
 
-def test_book_appointment_notifies_every_configured_address_in_one_message(monkeypatch):
+def test_booking_one_message_all_addresses(monkeypatch):
+    """Every configured address gets the same single message."""
     sent = _capture_emails(monkeypatch)
 
     class _Many(_FakeSettings):
@@ -227,7 +237,8 @@ def test_book_appointment_notifies_every_configured_address_in_one_message(monke
     assert len(sent) == 1 and sent[0]["to"] == "a@example.org, b@example.org"
 
 
-def test_book_appointment_succeeds_even_if_email_fails(monkeypatch):
+def test_booking_survives_email_failure(monkeypatch):
+    """The booking succeeds even if the notification email fails."""
     monkeypatch.setattr(endpoint, "get_settings", lambda: _EmptyGmailSettings())
     monkeypatch.setattr(endpoint, "get_access_token", _fake_get_access_token)
     monkeypatch.setattr(endpoint, "create_event", _fake_create_event)

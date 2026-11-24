@@ -37,7 +37,8 @@ def _client_returning(handler) -> httpx.Client:
     return httpx.Client(transport=httpx.MockTransport(handler))
 
 
-def test_posts_to_base_url_plus_tool_name():
+def test_posts_to_base_url_and_name():
+    """The executor posts to the base URL plus the tool name."""
     seen = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -49,7 +50,8 @@ def test_posts_to_base_url_plus_tool_name():
     assert seen["url"] == "https://tools.example.com/book_appointment"
 
 
-def test_sends_declared_inputs_as_json_body():
+def test_sends_inputs_as_json():
+    """Declared inputs are sent as the JSON body."""
     seen = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -61,7 +63,9 @@ def test_sends_declared_inputs_as_json_body():
     assert seen["body"] == {"slot_start": "2026-01-01T10:00:00Z", "notes": "VIP client"}
 
 
-def test_maps_response_onto_declared_outputs():
+def test_maps_response_to_outputs():
+    """The response is mapped onto the declared outputs."""
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"event_id": "evt_1", "success": True, "extra_field": "ignored"})
 
@@ -70,7 +74,9 @@ def test_maps_response_onto_declared_outputs():
     assert result == {"event_id": "evt_1", "success": True}
 
 
-def test_missing_output_in_response_is_simply_omitted():
+def test_missing_output_omitted():
+    """An output missing from the response is omitted."""
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"event_id": "evt_1"})
 
@@ -81,18 +87,22 @@ def test_missing_output_in_response_is_simply_omitted():
 
 
 def test_unknown_input_raises_value_error():
+    """An undeclared input raises ValueError."""
     executor = make_tool_executor(_contract(), "https://tools.example.com")
     with pytest.raises(ValueError, match="Unknown input"):
         executor(slot_start="x", made_up_field="y")
 
 
-def test_missing_required_input_raises_value_error():
+def test_missing_required_input_raises():
+    """A missing required input raises ValueError."""
     executor = make_tool_executor(_contract(), "https://tools.example.com")
     with pytest.raises(ValueError, match="Missing required input"):
         executor(notes="only optional given")
 
 
 def test_optional_input_can_be_omitted():
+    """An optional input can be omitted."""
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={})
 
@@ -100,7 +110,9 @@ def test_optional_input_can_be_omitted():
     executor(slot_start="2026-01-01T10:00:00Z")  # no ValueError
 
 
-def test_http_error_status_raises_tool_execution_error():
+def test_http_error_raises():
+    """An HTTP error status raises a tool execution error."""
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(500, text="internal error")
 
@@ -109,7 +121,9 @@ def test_http_error_status_raises_tool_execution_error():
         executor(slot_start="x")
 
 
-def test_non_json_response_raises_tool_execution_error():
+def test_non_json_raises():
+    """A non-JSON response raises a tool execution error."""
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, text="not json")
 
@@ -118,7 +132,8 @@ def test_non_json_response_raises_tool_execution_error():
         executor(slot_start="x")
 
 
-def test_base_url_trailing_slash_is_normalized():
+def test_trailing_slash_normalised():
+    """A trailing slash in the base URL is normalised."""
     seen = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
