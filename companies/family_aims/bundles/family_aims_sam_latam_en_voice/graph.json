@@ -32,7 +32,7 @@
         "node_id": "CALL_DECIDE_ANSWERED",
         "node_type": "decision",
         "goal": [
-          "Check whether the contact answered the call."
+          "Check whether a person answered the call. A voicemail, an answering machine, a recorded greeting, a beep to leave a message or no answer at all is NOT answered."
         ],
         "do": [],
         "trigger": [],
@@ -576,11 +576,7 @@
         "store": [
           "[o__identity_retry_count] = 0",
           "[o__capture_identity_retry_count] = 0",
-          "[o__holder_available_retry_count] = 0",
-          "[o__confirm_after_transfer_retry_count] = 0",
           "[o__program_participation_retry_count] = 0",
-          "[o__data_consent_retry_count] = 0",
-          "[o__do_not_contact_retry_count] = 0",
           "[o__contact_name] = {{contact.name}}",
           "[o__first_name] = FIRST_WORD [o__contact_name]",
           "[preferred_language] = 'English'"
@@ -589,7 +585,63 @@
         "eval": "code",
         "route": [
           {
+            "target": "O__OP_GREET",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_GREET",
+        "node_type": "message",
+        "goal": [
+          "Greet and introduce the assistant."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Hi, I am <AGENT_NAME>, the virtual assistant for <COMPANY_NAME>."
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
             "target": "O__OP_HAS_NAME",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_POLICY",
+        "node_type": "message",
+        "goal": [
+          "Tell the contact, once the person is confirmed and without asking anything, that going on with the call means accepting the data processing policy."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "By continuing this conversation, you accept our Privacy and Personal Data Protection Policy, issued in compliance with current Colombian regulations."
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_INTRO",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -640,7 +692,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Hi, I am <AGENT_NAME>, the virtual assistant for <COMPANY_NAME>. Am I speaking with [o__first_name]?"
+          "Am I speaking with [o__first_name]?"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -694,8 +746,8 @@
             "reason": null
           },
           {
-            "target": "O__OP_INTRO",
-            "condition_text": "IF [o__identity_confirmed] == 'yes' -> GO_TO: O__OP_INTRO",
+            "target": "O__OP_POLICY",
+            "condition_text": "IF [o__identity_confirmed] == 'yes' -> GO_TO: O__OP_POLICY",
             "is_mechanical": true,
             "python_expression": "o__identity_confirmed == 'yes'",
             "reason": null
@@ -708,8 +760,8 @@
             "reason": null
           },
           {
-            "target": "O__OP_PRIV",
-            "condition_text": "IF [o__identity_confirmed] == 'no' -> GO_TO: O__OP_PRIV",
+            "target": "O__OP_BYE_WRONG",
+            "condition_text": "IF [o__identity_confirmed] == 'no' -> GO_TO: O__OP_BYE_WRONG",
             "is_mechanical": true,
             "python_expression": "o__identity_confirmed == 'no'",
             "reason": null
@@ -733,7 +785,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Hi, I am <AGENT_NAME>, the virtual assistant for <COMPANY_NAME>. Who do I have the pleasure of speaking with?"
+          "Who do I have the pleasure of speaking with?"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -866,15 +918,15 @@
             "reason": null
           },
           {
-            "target": "O__OP_INTRO",
-            "condition_text": "IF [o__identity_confirmed] == 'yes' -> GO_TO: O__OP_INTRO",
+            "target": "O__OP_POLICY",
+            "condition_text": "IF [o__identity_confirmed] == 'yes' -> GO_TO: O__OP_POLICY",
             "is_mechanical": true,
             "python_expression": "o__identity_confirmed == 'yes'",
             "reason": null
           },
           {
-            "target": "O__OP_PRIV",
-            "condition_text": "IF [o__identity_confirmed] == 'no' -> GO_TO: O__OP_PRIV",
+            "target": "O__OP_BYE_WRONG",
+            "condition_text": "IF [o__identity_confirmed] == 'no' -> GO_TO: O__OP_BYE_WRONG",
             "is_mechanical": true,
             "python_expression": "o__identity_confirmed == 'no'",
             "reason": null
@@ -884,421 +936,6 @@
             "condition_text": "IF [o__identity_confirmed] == 'wrong_number' -> GO_TO: O__OP_BYE_WRONG",
             "is_mechanical": true,
             "python_expression": "o__identity_confirmed == 'wrong_number'",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "O__OP_TO_C",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "O__OP_ASK_DATA",
-        "node_type": "question",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "By continuing this conversation, you accept our Privacy and Personal Data Protection Policy, issued in compliance with current Colombian regulations. Do you authorize us to proceed with the call?"
-        ],
-        "say_verbatim": true,
-        "execute": null,
-        "store": [],
-        "capture": [
-          [
-            "o__data_consent_granted",
-            "Literal[yes, no]"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_DEC_DATA",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_DEC_DATA",
-        "node_type": "decision",
-        "goal": [],
-        "do": [
-          "[o__data_consent_retry_count] = [o__data_consent_retry_count] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_ASK_DNC",
-            "condition_text": "IF [o__data_consent_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_ASK_DNC",
-            "is_mechanical": true,
-            "python_expression": "o__data_consent_retry_count >= MAX_RETRY_ATTEMPTS",
-            "reason": null
-          },
-          {
-            "target": "O__OP_ASK_DATA",
-            "condition_text": "IF [o__data_consent_granted] IS NULL -> GO_TO: O__OP_ASK_DATA",
-            "is_mechanical": true,
-            "python_expression": "o__data_consent_granted is None",
-            "reason": null
-          },
-          {
-            "target": "O__OP_OK_DATA",
-            "condition_text": "IF [o__data_consent_granted] == 'yes' -> GO_TO: O__OP_OK_DATA",
-            "is_mechanical": true,
-            "python_expression": "o__data_consent_granted == 'yes'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_NO_DATA",
-            "condition_text": "IF [o__data_consent_granted] == 'no' -> GO_TO: O__OP_NO_DATA",
-            "is_mechanical": true,
-            "python_expression": "o__data_consent_granted == 'no'",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "O__OP_ASK_DATA",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "O__OP_OK_DATA",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Perfect, thank you very much."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_TO_SS",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_NO_DATA",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "I completely understand. In that case, we will close the call."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_END_NO",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_PRIV",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Thank you. For privacy, I need to speak directly with the person who owns the number."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_ASK_HOLD",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_ASK_DNC",
-        "node_type": "question",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "If you prefer, I can also register that you do not wish to receive any more calls. Would you like me to leave it that way?"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [
-          [
-            "o__do_not_contact",
-            "Literal[yes, no]"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_DEC_DNC",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_DEC_DNC",
-        "node_type": "decision",
-        "goal": [],
-        "do": [
-          "[o__do_not_contact_retry_count] = [o__do_not_contact_retry_count] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_TO_C",
-            "condition_text": "IF [o__do_not_contact_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_TO_C",
-            "is_mechanical": true,
-            "python_expression": "o__do_not_contact_retry_count >= MAX_RETRY_ATTEMPTS",
-            "reason": null
-          },
-          {
-            "target": "O__OP_ASK_DNC",
-            "condition_text": "IF [o__do_not_contact] IS NULL -> GO_TO: O__OP_ASK_DNC",
-            "is_mechanical": true,
-            "python_expression": "o__do_not_contact is None",
-            "reason": null
-          },
-          {
-            "target": "O__OP_BYE_DNC",
-            "condition_text": "IF [o__do_not_contact] == 'yes' -> GO_TO: O__OP_BYE_DNC",
-            "is_mechanical": true,
-            "python_expression": "o__do_not_contact == 'yes'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_END_NO",
-            "condition_text": "IF [o__do_not_contact] == 'no' -> GO_TO: O__OP_END_NO",
-            "is_mechanical": true,
-            "python_expression": "o__do_not_contact == 'no'",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "O__OP_END_NO",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "O__OP_ASK_HOLD",
-        "node_type": "question",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Is the number holder available right now?"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [
-          [
-            "o__holder_available",
-            "Literal[yes, no]"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_DEC_HOLD",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_DEC_HOLD",
-        "node_type": "decision",
-        "goal": [],
-        "do": [
-          "[o__holder_available_retry_count] = [o__holder_available_retry_count] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_TO_C",
-            "condition_text": "IF [o__holder_available_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_TO_C",
-            "is_mechanical": true,
-            "python_expression": "o__holder_available_retry_count >= MAX_RETRY_ATTEMPTS",
-            "reason": null
-          },
-          {
-            "target": "O__OP_ASK_XFER",
-            "condition_text": "IF [o__holder_available] == 'yes' -> GO_TO: O__OP_ASK_XFER",
-            "is_mechanical": true,
-            "python_expression": "o__holder_available == 'yes'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_TO_C",
-            "condition_text": "IF [o__holder_available] == 'no' -> GO_TO: O__OP_TO_C",
-            "is_mechanical": true,
-            "python_expression": "o__holder_available == 'no'",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "O__OP_TO_C",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "O__OP_ASK_XFER",
-        "node_type": "question",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Good day, am I speaking with you directly?"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [
-          [
-            "o__identity_confirmed",
-            "Literal[yes, no, wrong_number]"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_DEC_XFER",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_DEC_XFER",
-        "node_type": "decision",
-        "goal": [],
-        "do": [
-          "[o__confirm_after_transfer_retry_count] = [o__confirm_after_transfer_retry_count] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_TO_C",
-            "condition_text": "IF [o__confirm_after_transfer_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_TO_C",
-            "is_mechanical": true,
-            "python_expression": "o__confirm_after_transfer_retry_count >= MAX_RETRY_ATTEMPTS",
-            "reason": null
-          },
-          {
-            "target": "O__OP_INTRO",
-            "condition_text": "IF [o__identity_confirmed] == 'yes' -> GO_TO: O__OP_INTRO",
-            "is_mechanical": true,
-            "python_expression": "o__identity_confirmed == 'yes'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_BYE_WRONG",
-            "condition_text": "IF [o__identity_confirmed] == 'wrong_number' -> GO_TO: O__OP_BYE_WRONG",
-            "is_mechanical": true,
-            "python_expression": "o__identity_confirmed == 'wrong_number'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_TO_C",
-            "condition_text": "IF [o__identity_confirmed] == 'no' -> GO_TO: O__OP_TO_C",
-            "is_mechanical": true,
-            "python_expression": "o__identity_confirmed == 'no'",
             "reason": null
           }
         ],
@@ -1400,15 +1037,15 @@
             "reason": null
           },
           {
-            "target": "O__OP_ASK_DATA",
-            "condition_text": "IF [o__program_participation] == 'yes' -> GO_TO: O__OP_ASK_DATA",
+            "target": "O__OP_TO_SS",
+            "condition_text": "IF [o__program_participation] == 'yes' -> GO_TO: O__OP_TO_SS",
             "is_mechanical": true,
             "python_expression": "o__program_participation == 'yes'",
             "reason": null
           },
           {
-            "target": "O__OP_ASK_DNC",
-            "condition_text": "IF [o__program_participation] == 'no' -> GO_TO: O__OP_ASK_DNC",
+            "target": "O__OP_TO_OB",
+            "condition_text": "IF [o__program_participation] == 'no' -> GO_TO: O__OP_TO_OB",
             "is_mechanical": true,
             "python_expression": "o__program_participation == 'no'",
             "reason": null
@@ -1468,6 +1105,84 @@
         "route": [
           {
             "target": "C__CB_S",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_TO_OB",
+        "node_type": "subflow_change",
+        "goal": [],
+        "do": [
+          "Load the OBJECTIONS subflow."
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "OB__OB_S",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_TO_SC",
+        "node_type": "subflow_change",
+        "goal": [],
+        "do": [
+          "Load the SCHEDULING subflow."
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_S",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_TO_SCHED",
+        "node_type": "decision",
+        "goal": [
+          "Entrance to scheduling used by the scheduling subflow when it needs the service again."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_TO_SC",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -3373,7 +3088,9 @@
           "[sc__c_email_try] = 0",
           "[sc__time_try] = 0",
           "[sc__day_now_try] = 0",
+          "[sc__svc_ask_try] = 0",
           "[sc__book_try] = 0",
+          "[sc__end_try] = 0",
           "[user_timezone] = NULL",
           "[sc__available_slots] = NULL",
           "[sc__fresh_available_slots] = NULL",
@@ -3435,7 +3152,83 @@
         ],
         "fallback": [
           {
-            "target": "SC__SC_TO_C",
+            "target": "SC__SC_ASK_SVC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "SC__SC_ASK_SVC",
+        "node_type": "question",
+        "goal": [
+          "IVF and the ROPA method are captured as 'ivf'."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Which service would you like the consultation for: conventional fertility treatment (IVF or the ROPA method) or gestational surrogacy?"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[appt_svc] = [appt_svc]"
+        ],
+        "capture": [
+          [
+            "appt_svc",
+            "Literal[ivf, surrogacy]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_DEC_ASK_SVC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "SC__SC_DEC_ASK_SVC",
+        "node_type": "decision",
+        "goal": [],
+        "do": [
+          "[sc__svc_ask_try] = [sc__svc_ask_try] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_TO_SCHED",
+            "condition_text": "IF [appt_svc] IS NOT NULL -> GO_TO: O__OP_TO_SCHED",
+            "is_mechanical": true,
+            "python_expression": "appt_svc is not None",
+            "reason": null
+          },
+          {
+            "target": "SC__SC_TO_OB",
+            "condition_text": "IF [sc__svc_ask_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_OB",
+            "is_mechanical": true,
+            "python_expression": "sc__svc_ask_try >= MAX_RETRY_ATTEMPTS",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_ASK_SVC",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -3573,8 +3366,8 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_TO_C",
-            "condition_text": "IF [sc__tz_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
+            "condition_text": "IF [sc__tz_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_OB",
             "is_mechanical": true,
             "python_expression": "sc__tz_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -3757,8 +3550,8 @@
             "reason": null
           },
           {
-            "target": "SC__SC_TO_C",
-            "condition_text": "IF [sc__c_name_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
+            "condition_text": "IF [sc__c_name_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_OB",
             "is_mechanical": true,
             "python_expression": "sc__c_name_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -3934,8 +3727,8 @@
             "reason": null
           },
           {
-            "target": "SC__SC_TO_C",
-            "condition_text": "IF [sc__c_phone_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
+            "condition_text": "IF [sc__c_phone_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_OB",
             "is_mechanical": true,
             "python_expression": "sc__c_phone_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -4125,8 +3918,8 @@
             "reason": null
           },
           {
-            "target": "SC__SC_TO_C",
-            "condition_text": "IF [sc__c_email_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
+            "condition_text": "IF [sc__c_email_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_OB",
             "is_mechanical": true,
             "python_expression": "sc__c_email_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -4173,7 +3966,7 @@
         ],
         "fallback": [
           {
-            "target": "SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -4233,7 +4026,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Right now I do not find availability over the next few days. If you want, we can leave it as a callback and contact you as soon as we have a suitable opening."
+          "I can't find any availability for the coming days right now. If you'd like, we can leave a contact request and let you know as soon as we have a suitable opening."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -4242,7 +4035,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -4285,8 +4078,8 @@
             "reason": null
           },
           {
-            "target": "SC__SC_TO_C",
-            "condition_text": "IF [sc__day_now_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
+            "condition_text": "IF [sc__day_now_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_OB",
             "is_mechanical": true,
             "python_expression": "sc__day_now_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -4399,8 +4192,8 @@
             "reason": null
           },
           {
-            "target": "SC__SC_TO_C",
-            "condition_text": "IF [sc__day_now_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
+            "condition_text": "IF [sc__day_now_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_OB",
             "is_mechanical": true,
             "python_expression": "sc__day_now_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -4466,8 +4259,8 @@
         "eval": "llm",
         "route": [
           {
-            "target": "SC__SC_TO_C",
-            "condition_text": "IF [sc__day_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
+            "condition_text": "IF [sc__day_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_OB",
             "is_mechanical": false,
             "python_expression": null,
             "reason": "eval='llm' forces an LLM-evaluated edge"
@@ -4761,7 +4554,7 @@
         ],
         "fallback": [
           {
-            "target": "SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -4974,7 +4767,7 @@
         ],
         "fallback": [
           {
-            "target": "SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
             "condition_text": null,
             "is_mechanical": false,
             "python_expression": null,
@@ -5012,8 +4805,8 @@
             "reason": null
           },
           {
-            "target": "SC__SC_TO_C",
-            "condition_text": "IF [sc__time_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
+            "condition_text": "IF [sc__time_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_OB",
             "is_mechanical": true,
             "python_expression": "sc__time_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -5378,7 +5171,7 @@
         ],
         "fallback": [
           {
-            "target": "SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -5437,8 +5230,8 @@
             "reason": null
           },
           {
-            "target": "SC__SC_TO_C",
-            "condition_text": "IF [sc__book_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
+            "condition_text": "IF [sc__book_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_OB",
             "is_mechanical": true,
             "python_expression": "sc__book_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -5583,8 +5376,8 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_TO_C",
-            "condition_text": "IF [sc__retry_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
+            "condition_text": "IF [sc__retry_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_TO_OB",
             "is_mechanical": true,
             "python_expression": "sc__retry_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -5599,7 +5392,7 @@
         ],
         "fallback": [
           {
-            "target": "SC__SC_TO_C",
+            "target": "SC__SC_TO_OB",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -5690,37 +5483,11 @@
         "fallback": []
       },
       {
-        "node_id": "SC__SC_BYE",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Thank you very much. We remain available for any additional questions. Have an excellent day."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_END",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "SC__SC_TO_C",
+        "node_id": "SC__SC_TO_OB",
         "node_type": "subflow_change",
         "goal": [],
         "do": [
-          "Load the CALLBACK subflow."
+          "Load the OBJECTIONS subflow."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -5732,7 +5499,371 @@
         "eval": "code",
         "route": [
           {
-            "target": "C__CB_S",
+            "target": "OB__OB_S",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "SC__SC_BYE",
+        "node_type": "message",
+        "goal": [],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Thank you very much. We're here if you have any further questions."
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_LISTEN",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "SC__SC_LISTEN",
+        "node_type": "question",
+        "goal": [
+          "After booking, stay open for questions; never re-ask anything, only the global router reacts. Close if the contact only thanks or says goodbye; otherwise answer from the knowledge base and come back here (never restart the greeting or the service question). end_closing = 'yes' only for a pure thanks, goodbye, acknowledgement or 'nothing else' that asks nothing new; otherwise 'no'."
+        ],
+        "do": [
+          "[sc__end_try] = [sc__end_try] + 1"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Is there anything else I can help you with?"
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [
+          [
+            "sc__end_closing",
+            "Literal[yes, no]"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_TRUE_END",
+            "condition_text": "IF [sc__end_try] >= <END_LISTEN_MAX_ATTEMPTS> -> GO_TO: SC__SC_TRUE_END",
+            "is_mechanical": true,
+            "python_expression": "sc__end_try >= END_LISTEN_MAX_ATTEMPTS",
+            "reason": null
+          },
+          {
+            "target": "SC__SC_TRUE_END",
+            "condition_text": "IF [sc__end_closing] == 'yes' -> GO_TO: SC__SC_TRUE_END",
+            "is_mechanical": true,
+            "python_expression": "sc__end_closing == 'yes'",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_TO_KQ",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "SC__SC_TO_KQ",
+        "node_type": "registration",
+        "goal": [],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[current_state] = 'SC__SC_LISTEN'"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "KQ__KQ_SIDE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "KQ__KQ_S",
+        "node_type": "start",
+        "goal": [],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "KQ__KQ_SIDE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "KQ__KQ_SIDE",
+        "node_type": "decision",
+        "goal": [
+          "A question no FAQ covers: remember where the contact was, answer it from the knowledge base and go back."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "KQ__KQ_SIDE_SAVE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "KQ__KQ_SIDE_SAVE",
+        "node_type": "registration",
+        "goal": [],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[kq__resume_state] = [current_state]",
+          "[kq__side_count] = [kq__side_count] + 1",
+          "[kq__doubt] = the contact's latest message, copied exactly as written"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "KQ__KQ_ANSWER",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "KQ__KQ_ANSWER",
+        "node_type": "action",
+        "goal": [],
+        "do": [
+          "question = [kq__doubt], language = [preferred_language]."
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "kb_answer",
+        "store": [
+          "[kq__rounds] = [kq__rounds] + 1"
+        ],
+        "capture": [
+          [
+            "kq__kb_answer",
+            "free_text"
+          ],
+          [
+            "kq__kb_found",
+            "bool"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "KQ__KQ_SAY",
+            "condition_text": "IF [kq__kb_found] == TRUE -> GO_TO: KQ__KQ_SAY",
+            "is_mechanical": true,
+            "python_expression": "kq__kb_found == True",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "KQ__KQ_NOANS",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "KQ__KQ_SAY",
+        "node_type": "message",
+        "goal": [
+          "Deliver the knowledge base answer exactly as returned."
+        ],
+        "do": [
+          "[kq__doubt] = NULL"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "[kq__kb_answer]"
+        ],
+        "say_verbatim": true,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "KQ__KQ_AFTER",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "KQ__KQ_NOANS",
+        "node_type": "message",
+        "goal": [],
+        "do": [
+          "[kq__doubt] = NULL"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "I can't confirm that from here. At <COMPANY_NAME> we focus on fertility treatments and surrogacy; if your question is about those, the human specialist can clarify it for you during the appointment."
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "KQ__KQ_AFTER",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "KQ__KQ_AFTER",
+        "node_type": "decision",
+        "goal": [],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "KQ__KQ_NUDGE",
+            "condition_text": "IF [kq__resume_state] MATCHES scheduling_state_id AND [kq__side_count] == <KB_SIDE_NUDGE_AFTER> -> GO_TO: KQ__KQ_NUDGE",
+            "is_mechanical": true,
+            "python_expression": "_matches(kq__resume_state, 'scheduling_state_id') and kq__side_count == KB_SIDE_NUDGE_AFTER",
+            "reason": null
+          },
+          {
+            "target": "KQ__KQ_BACK",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "KQ__KQ_NUDGE",
+        "node_type": "message",
+        "goal": [],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "I can see you have a few questions. Our advisor can go through all of them during your appointment."
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "KQ__KQ_BACK",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "KQ__KQ_BACK",
+        "node_type": "decision",
+        "goal": [],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "[kq__resume_state]",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -5792,24 +5923,6 @@
         "fallback": []
       },
       {
-        "node_id": "O__OP_END_NO",
-        "node_type": "terminal",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Thank you for your time. Have a good day."
-        ],
-        "say_verbatim": false,
-        "execute": "end_call",
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": []
-      },
-      {
         "node_id": "O__OP_END_DNC",
         "node_type": "terminal",
         "goal": [],
@@ -5860,15 +5973,17 @@
         "fallback": []
       },
       {
-        "node_id": "SC__SC_END",
+        "node_id": "SC__SC_TRUE_END",
         "node_type": "terminal",
-        "goal": [],
+        "goal": [
+          "Formal exit point for the scheduling subflow. Reached only when SC_LISTEN closes (the contact says thanks or goodbye) or its safety valve trips; SC_LISTEN otherwise stays open so the contact can keep asking questions after booking; this only exists to satisfy the compiler's requirement of a real terminal state."
+        ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [],
         "say_verbatim": false,
-        "execute": "end_call",
+        "execute": null,
         "store": [],
         "capture": [],
         "eval": "code",
@@ -5971,49 +6086,6 @@
         "route": [
           {
             "target": "C__CB_S",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "H_THIRD_PARTY",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "whoever answers is not the number's owner: a relative, friend or acquaintance who picked up or offers to pass on the message",
-          "I am the mother",
-          "I am the father",
-          "I am the husband",
-          "I am the wife",
-          "I am the brother",
-          "I am the sister",
-          "I am a relative",
-          "I am a friend",
-          "you are speaking with the husband",
-          "you are speaking with the mother",
-          "this is my number",
-          "you can leave the information with me",
-          "she is not here",
-          "he is not here",
-          "they are not available"
-        ],
-        "disabled_in": [],
-        "say": [
-          "Thank you. For privacy reasons, I need to speak directly with the person who owns the number."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_PRIV",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -6186,6 +6258,32 @@
         "route": [
           {
             "target": "[current_state]",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "H_KB_Q",
+        "node_type": "decision",
+        "goal": [],
+        "do": [],
+        "trigger": [
+          "an open question about the company, its services, programs, countries, eligibility, requirements, process or how things work that is not answered by any FAQ or other handler (never the answer to what the agent just asked, never about prices, never a request to book an appointment, never a request to talk to a human)"
+        ],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "KQ__KQ_S",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -6876,6 +6974,55 @@
         "ARGUMENTS: start_date = chosen slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT'}; iana_timezone = same as availability; calendar_type = 'FT'.",
         "SOURCE OF TRUTH: success determines creation; do not confirm before success == true and event_id != null."
       ]
+    },
+    {
+      "name": "kb_answer",
+      "description": "Authorized tool that answers an open question about the company and its services from the approved knowledge base. Its kb_answer output is the only source for the answer.",
+      "inputs": [
+        {
+          "name": "question",
+          "required": true,
+          "description": "The contact's question, in their own words.",
+          "type_expr": "free_text",
+          "examples": []
+        },
+        {
+          "name": "language",
+          "required": false,
+          "description": "Language of the answer: English, Spanish or Portuguese.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "history",
+          "required": false,
+          "description": "Recent conversation, filled in by the runtime (never by the flow). It lets a follow-up question such as 'and how long does it take?' be understood.",
+          "type_expr": "free_text",
+          "examples": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "kb_answer",
+          "required": true,
+          "description": "The answer written in the requested language. Empty when kb_found is false.",
+          "type_expr": "free_text",
+          "examples": []
+        },
+        {
+          "name": "kb_found",
+          "required": true,
+          "description": "Whether the knowledge base answered the question (true/false).",
+          "type_expr": "bool",
+          "examples": []
+        }
+      ],
+      "notes": [
+        "MANDATORY EXECUTION: on entering KQ__KQ_ANSWER.",
+        "ARGUMENTS: question is the contact's question and language is the conversation language.",
+        "history is added by the runtime; the flow never sets it.",
+        "SOURCE OF TRUTH: use kb_found as the only verdict. When kb_found is false the knowledge base does not cover the question: never answer it from your own knowledge."
+      ]
     }
   ],
   "constants": {
@@ -6888,7 +7035,10 @@
     "HUMAN_IVF_ADVISOR_NAME": "Ayda",
     "IVF_CITY": "Bogotá",
     "APPOINTMENT_DURATION_MINUTES": "30",
-    "TOOL_LANGUAGE_CODE": "EN"
+    "TOOL_LANGUAGE_CODE": "EN",
+    "END_LISTEN_MAX_ATTEMPTS": "20",
+    "MAX_KB_ROUNDS": "8",
+    "KB_SIDE_NUDGE_AFTER": "2"
   },
   "session_timeout_minutes": null,
   "say_policies": [
@@ -6913,7 +7063,8 @@
     "EMAIL PROHIBITION: Never read a full email address out loud or spell it character by character.",
     "NO HALLUCINATIONS: You are strictly forbidden from inventing, assuming, or guessing information that is not explicitly in your context or knowledge base. If the user asks something you do not know, say: 'I do not have that detailed information right now, but I can check with a specialist'.",
     "MANDATORY QUALIFICATION FLOW: You cannot move to appointment scheduling until you have obtained a clear answer to the qualification question: Which specific service they are interested in, either in vitro fertilization or surrogacy.",
-    "SENSITIVE DATA HANDLING: Treat all medical information and patient history with absolute confidentiality; never assume diagnoses or mention data from other patients."
+    "SENSITIVE DATA HANDLING: Treat all medical information and patient history with absolute confidentiality; never assume diagnoses or mention data from other patients.",
+    "DATA POLICY: right after the greeting, tell the contact once, without asking anything, that going on with the conversation means accepting the data processing policy. Never ask whether they want to continue and never repeat it; if the contact asked a question, answer it after the policy was stated."
   ],
   "output_rules": [],
   "forbidden_words": []

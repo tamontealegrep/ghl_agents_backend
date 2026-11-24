@@ -32,7 +32,7 @@
         "node_id": "CALL_DECIDE_ANSWERED",
         "node_type": "decision",
         "goal": [
-          "Check whether the contact answered the call."
+          "Check whether a person answered the call. A voicemail, an answering machine, a recorded greeting, a beep to leave a message or no answer at all is NOT answered."
         ],
         "do": [],
         "trigger": [],
@@ -69,11 +69,9 @@
         "do": [],
         "trigger": [],
         "disabled_in": [],
-        "say": [
-          "No pudimos comunicarnos en este momento. Si deseas información, puedes contactarnos nuevamente."
-        ],
+        "say": [],
         "say_verbatim": false,
-        "execute": null,
+        "execute": "end_call",
         "store": [],
         "capture": [],
         "eval": "code",
@@ -1307,11 +1305,9 @@
           "[o__profile_try] = 0",
           "[o__bare_try] = 0",
           "[o__family_profile] = NULL",
-          "[o__consent_try] = 0",
           "[o__resume_state] = NULL",
           "[o__sur_role] = NULL",
           "[ropa] = NULL",
-          "[o__data_consent] = NULL",
           "[o__contact_name] = {{contact.name}}",
           "[o__first_name] = FIRST_WORD [o__contact_name]",
           "[preferred_language] = 'Spanish'",
@@ -1601,6 +1597,34 @@
           "[o__hello] Soy <AGENT_NAME>, el asistente virtual de <COMPANY_NAME>.\nRecibimos tu información y tu interés en nuestros tratamientos de fertilidad, y por eso te llamo para ayudarte a dar el primer paso."
         ],
         "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_POLICY",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "O__OP_POLICY",
+        "node_type": "message",
+        "goal": [
+          "Tell the contact, right after the greeting and without asking anything, that going on with the call means accepting the data processing policy."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Para continuar, debo informarte que al seguir con esta llamada aceptas nuestra política de tratamiento de datos personales, que puedes consultar en nuestra página web."
+        ],
+        "say_verbatim": true,
         "execute": null,
         "store": [],
         "capture": [],
@@ -3072,7 +3096,7 @@
         "node_id": "O__OP_TO_SCHED",
         "node_type": "decision",
         "goal": [
-          "Single entrance to scheduling: first check the program fits who the contact says they are (ROPA only for couples of women; IVF alone is no path for men); only after the data policy was accepted."
+          "Single entrance to scheduling: first check the program fits who the contact says they are (ROPA only for couples of women; IVF alone is no path for men)."
         ],
         "do": [],
         "trigger": [],
@@ -3125,18 +3149,11 @@
             "is_mechanical": true,
             "python_expression": "appt_svc == 'ivf' and profile == 'single_man'",
             "reason": null
-          },
-          {
-            "target": "O__OP_TO_SC",
-            "condition_text": "IF [o__data_consent] == 'yes' -> GO_TO: O__OP_TO_SC",
-            "is_mechanical": true,
-            "python_expression": "o__data_consent == 'yes'",
-            "reason": null
           }
         ],
         "fallback": [
           {
-            "target": "O__OP_CONSENT",
+            "target": "O__OP_TO_SC",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -3393,166 +3410,6 @@
         "fallback": []
       },
       {
-        "node_id": "O__OP_CONSENT",
-        "node_type": "question",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Para continuar, debo informarte que al seguir con esta llamada aceptas nuestra política de tratamiento de datos personales, que puedes consultar en nuestra página web. ¿Deseas continuar?"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_CLS_CONSENT",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_CLS_CONSENT",
-        "node_type": "registration",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[o__consent] = what the latest user message says about continuing with the conversation under the data processing policy, as exactly one of: yes (they agree to continue: 'sí', 'ok', 'claro', 'adelante', 'quiero agendar'), no (they clearly refuse the policy or clearly say they do not want to continue: 'no', 'no acepto', 'no quiero'), other (anything else: a question, a doubt, an objection or a hesitation such as 'lo voy a pensar', 'necesito pensarlo', 'cuánto cuesta?'; these are never a no)"
-        ],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_CONSENT_DEC",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_CONSENT_DEC",
-        "node_type": "decision",
-        "goal": [],
-        "do": [
-          "[o__consent_try] = [o__consent_try] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_CONSENT_OK",
-            "condition_text": "IF [o__consent] == 'yes' -> GO_TO: O__OP_CONSENT_OK",
-            "is_mechanical": true,
-            "python_expression": "o__consent == 'yes'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_NO_CONSENT",
-            "condition_text": "IF [o__consent] == 'no' -> GO_TO: O__OP_NO_CONSENT",
-            "is_mechanical": true,
-            "python_expression": "o__consent == 'no'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_NO_CONSENT",
-            "condition_text": "IF [o__consent_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_NO_CONSENT",
-            "is_mechanical": true,
-            "python_expression": "o__consent_try >= MAX_RETRY_ATTEMPTS",
-            "reason": null
-          },
-          {
-            "target": "O__OP_CONSENT_OTHER",
-            "condition_text": "IF [o__consent] == 'other' -> GO_TO: O__OP_CONSENT_OTHER",
-            "is_mechanical": true,
-            "python_expression": "o__consent == 'other'",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "O__OP_CONSENT",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "O__OP_CONSENT_OTHER",
-        "node_type": "registration",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[o__consent] = NULL",
-          "[current_state] = 'O__OP_CONSENT'"
-        ],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "KQ__KQ_SIDE",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_CONSENT_OK",
-        "node_type": "registration",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[o__data_consent] = 'yes'"
-        ],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_TO_SC",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
         "node_id": "O__OP_TO_SC",
         "node_type": "subflow_change",
         "goal": [],
@@ -3576,48 +3433,6 @@
             "reason": null
           }
         ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_NO_CONSENT",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Entiendo. Sin aceptar la política de datos no podemos continuar, pero si cambias de opinión con gusto te ayudaremos. ¡Que tengas un buen día!"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_END",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_END",
-        "node_type": "terminal",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
         "fallback": []
       },
       {
@@ -9747,7 +9562,7 @@
     "DURACIÓN DEL PROCESO: al preguntar por la duración, si [svc] es conocido, enfoca la respuesta en ese servicio. Para subrogación, destaca la estimación de 24 meses. Para IVF, explica los plazos de 20 a 30 días (estimulación en Colombia) o de 10 a 15 días (ya estimulada) y menciona siempre que la segunda fase es la transferencia.",
     "ERRORES TÉCNICOS: si ocurre un fallo de red o técnico durante una herramienta, pide disculpas, explica que hay un problema de conexión temporal y sugiere reintentar más tarde o esperar a un asesor humano.",
     "RESPUESTAS DE LA BASE DE CONOCIMIENTO: una pregunta abierta sobre la empresa o sus servicios se responde solo con el texto que devuelve la herramienta kb_answer. Nunca la respondas con tu propio conocimiento. La elegibilidad nunca se decide en esta conversación: el asesor humano revisa cada caso durante la cita.",
-    "CONSENTIMIENTO DE DATOS: el agendamiento empieza solo después de que el contacto acepte la política de tratamiento de datos. Nunca omitas esa pregunta y nunca la repitas una vez aceptada."
+    "POLÍTICA DE DATOS: justo después del saludo se informa, una sola vez y sin preguntar nada, que seguir con la conversación implica aceptar la política de tratamiento de datos. Nunca preguntes si desea continuar ni la repitas; si el contacto hizo una pregunta, se responde después de informar la política."
   ],
   "output_rules": [],
   "forbidden_words": []
