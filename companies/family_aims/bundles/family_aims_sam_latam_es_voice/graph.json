@@ -6937,7 +6937,8 @@
     "If you do not have the user's name, do not invent one or use generic labels such as friend, sir, or ma'am.",
     "Si el contacto manifiesta no tener tiempo, responde con empatía, ofrece programar una llamada de vuelta (callback) de inmediato y despídete. No intentes retenerlo ni negociar más tiempo el tiempo.",
     "No des por confirmada una cita bajo ninguna circunstancia (ej. no digas 'Listo, quedó agendada') hasta que la herramienta de agendamiento haya retornado un estado de éxito.",
-    "Si el contacto indica que quiere ser gestante, madre subrogada o postularse como gestante, no lo trates como interés en contratar un proceso de subrogación. Informa con amabilidad que esta línea no gestiona postulaciones para gestantes y finaliza la llamada."
+    "Si el contacto indica que quiere ser gestante, madre subrogada o postularse como gestante, no lo trates como interés en contratar un proceso de subrogación. Informa con amabilidad que esta línea no gestiona postulaciones para gestantes y finaliza la llamada.",
+    "Habla siempre de tú (tuteo): usa 'quieres', 'prefieres', 'puedes', 'dime'; nunca uses voseo ('querés', 'preferís', 'podés', 'decime') ni 'usted'."
   ],
   "judgment_policies": [
     "Memory slots are referenced with square brackets in the DSL. Do not invent undeclared slots.",
