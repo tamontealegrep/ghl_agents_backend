@@ -22,8 +22,8 @@ SCHEDULING_AGENTS = [
     ("family_aims", "family_aims_sam_pt_voice"),
 ]
 CONTACT_TOOLS = ("book_appointment", "find_appointment")
-# The BabyNova voice agent only books: it has no appointment-management subflow, so it has no find_appointment.
-BOOK_ONLY_AGENTS = {"babynova_surrogate_questions_voice"}
+# The BabyNova agents only book: they have no appointment-management subflow, so they have no find_appointment.
+BOOK_ONLY_AGENTS = {"babynova_surrogate_questions_voice", "babynova_surrogate_questions_text"}
 # The Family Aims voice agents do not tell the model to send the id (it cost prompt tokens on every booking step): the runtime
 # fills `contact_id` from the session for every tool whose contract declares it, which `test_the_contracts_declare_the_contact_id`
 # checks and `tests/runtime/test_graph_builder.py` covers.
