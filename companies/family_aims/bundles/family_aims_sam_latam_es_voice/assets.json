@@ -298,5 +298,44 @@
         "description": "Technical error message. May be present with success == true if the appointment was created but the email notification failed."
       }
     ]
+  },
+  {
+    "name": "kb_answer",
+    "description": "Authorized tool that answers an open question about the company and its services from the approved knowledge base. Its kb_answer output is the only source for the answer.",
+    "notes": [
+      "MANDATORY EXECUTION: on entering KQ__KQ_ANSWER.",
+      "ARGUMENTS: question is the contact's question and language is the conversation language.",
+      "history is added by the runtime; the flow never sets it.",
+      "SOURCE OF TRUTH: use kb_found as the only verdict. When kb_found is false the knowledge base does not cover the question: never answer it from your own knowledge."
+    ],
+    "inputs": [
+      {
+        "name": "question",
+        "required": true,
+        "description": "The contact's question, in their own words."
+      },
+      {
+        "name": "language",
+        "required": false,
+        "description": "Language of the answer: English, Spanish or Portuguese."
+      },
+      {
+        "name": "history",
+        "required": false,
+        "description": "Recent conversation, filled in by the runtime (never by the flow). It lets a follow-up question such as 'and how long does it take?' be understood."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "kb_answer",
+        "required": true,
+        "description": "The answer written in the requested language. Empty when kb_found is false."
+      },
+      {
+        "name": "kb_found",
+        "required": true,
+        "description": "Whether the knowledge base answered the question (true/false)."
+      }
+    ]
   }
 ]
