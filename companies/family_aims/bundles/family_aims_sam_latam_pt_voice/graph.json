@@ -3112,7 +3112,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_DEC_SVC",
+            "target": "SC__SC_TAG_PEND",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -3120,6 +3120,42 @@
           }
         ],
         "fallback": []
+      },
+      {
+        "node_id": "SC__SC_TAG_PEND",
+        "node_type": "action",
+        "goal": [
+          "Mark the contact with the tag appointment-pending now that scheduling started; a failed call never blocks scheduling."
+        ],
+        "do": [
+          "tags = ['appointment-pending']"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "add_tags",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_DEC_SVC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_DEC_SVC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
       },
       {
         "node_id": "SC__SC_DEC_SVC",
@@ -5262,8 +5298,8 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_DONE",
-            "condition_text": "IF [sc__success] == TRUE -> GO_TO: SC__SC_DONE",
+            "target": "SC__SC_TAG_RM",
+            "condition_text": "IF [sc__success] == TRUE -> GO_TO: SC__SC_TAG_RM",
             "is_mechanical": true,
             "python_expression": "sc__success == True",
             "reason": null
@@ -5293,6 +5329,78 @@
         "fallback": [
           {
             "target": "SC__SC_ERR",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "SC__SC_TAG_RM",
+        "node_type": "action",
+        "goal": [
+          "The appointment is booked: remove the tag appointment-pending."
+        ],
+        "do": [
+          "tags = ['appointment-pending']"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "remove_tags",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_TAG_SET",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_TAG_SET",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "SC__SC_TAG_SET",
+        "node_type": "action",
+        "goal": [
+          "The appointment is booked: add the tag appointment-set."
+        ],
+        "do": [
+          "tags = ['appointment-set']"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "add_tags",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_DONE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_DONE",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -6760,6 +6868,134 @@
         "ARGUMENT RULE: iana_timezone is an IANA continent/city identifier (e.g. America/Bogota, Europe/Madrid, America/Sao_Paulo). Send whatever the flow fixes; never use abbreviations (EST, COT, BRT).",
         "SOURCE OF TRUTH RULE: use the 'now' field as the only authorized time reference. To normalize a relative date ('8 months ago', 'last year'), compute it from 'now'.",
         "POST-EXECUTION RULE: if 'now' comes back null or 'errors' is not null, call the tool again before continuing."
+      ]
+    },
+    {
+      "name": "add_tags",
+      "description": "Agrega una o varias etiquetas (tags) a un contacto de GoHighLevel.",
+      "inputs": [
+        {
+          "name": "tags",
+          "required": true,
+          "description": "Etiquetas a agregar. Una lista de nombres. Ejemplo: ['calificada', 'cita_agendada'].",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "contact_id",
+          "required": true,
+          "description": "ID del contacto en GHL (disponible en context.contact_id).",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "location_id",
+          "required": false,
+          "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token de la subcuenta.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "success",
+          "required": true,
+          "description": "Indica si GHL aceptó la operación.",
+          "type_expr": "bool",
+          "examples": []
+        },
+        {
+          "name": "tags",
+          "required": false,
+          "description": "Todas las etiquetas que tiene el contacto después de la operación.",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "tags_added",
+          "required": false,
+          "description": "Las etiquetas que se agregaron en esta llamada (vacía si el contacto ya las tenía todas).",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "errors",
+          "required": false,
+          "description": "Mensaje de error si la operación falló.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "notes": [
+        "MANDATORY EXECUTION: ejecútala cuando el flujo pida marcar al contacto con una etiqueta (por ejemplo al calificar, al agendar o al cerrar la conversación). Solo agrega etiquetas; nunca quita ninguna.",
+        "ARGUMENTS: tags (lista de nombres de etiqueta, tal como los define el flujo), contact_id y location_id (disponibles en el contexto del contacto).",
+        "BEHAVIOUR: GHL pasa las etiquetas a minúsculas, crea las que la subcuenta aún no tiene e ignora las que el contacto ya tiene, así que repetir la llamada es seguro.",
+        "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; tags_added dice cuáles se agregaron realmente (vacía si el contacto ya las tenía todas).",
+        "SILENT ACTION: nunca le digas a la persona que le estás agregando etiquetas."
+      ]
+    },
+    {
+      "name": "remove_tags",
+      "description": "Quita una o varias etiquetas (tags) de un contacto de GoHighLevel.",
+      "inputs": [
+        {
+          "name": "tags",
+          "required": true,
+          "description": "Etiquetas a quitar. Una lista de nombres. Ejemplo: ['contacted', 'nuevo'].",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "contact_id",
+          "required": true,
+          "description": "ID del contacto en GHL (disponible en context.contact_id).",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "location_id",
+          "required": false,
+          "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token de la subcuenta.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "success",
+          "required": true,
+          "description": "Indica si GHL aceptó la operación.",
+          "type_expr": "bool",
+          "examples": []
+        },
+        {
+          "name": "tags",
+          "required": false,
+          "description": "Las etiquetas que le quedan al contacto después de la operación.",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "tags_removed",
+          "required": false,
+          "description": "Las etiquetas que se quitaron en esta llamada (vacía si el contacto no tenía ninguna).",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "errors",
+          "required": false,
+          "description": "Mensaje de error si la operación falló.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "notes": [
+        "MANDATORY EXECUTION: ejecútala cuando el flujo pida quitarle una etiqueta al contacto (por ejemplo al pasar de una etapa a otra). Solo quita las etiquetas que nombra; las demás se conservan.",
+        "ARGUMENTS: tags (lista de nombres de etiqueta, tal como los define el flujo), contact_id y location_id (disponibles en el contexto del contacto).",
+        "BEHAVIOUR: GHL pasa las etiquetas a minúsculas antes de compararlas e ignora las que el contacto no tiene, así que pedir una que no está no es un error.",
+        "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; tags_removed dice cuáles se quitaron realmente (vacía si el contacto no tenía ninguna) y tags cuáles le quedan.",
+        "SILENT ACTION: nunca le digas a la persona que le estás quitando etiquetas."
       ]
     },
     {

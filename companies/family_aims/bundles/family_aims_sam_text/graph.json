@@ -5731,7 +5731,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_DEC_SVC",
+            "target": "SC__SC_TAG_PEND",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -5739,6 +5739,44 @@
           }
         ],
         "fallback": []
+      },
+      {
+        "node_id": "SC__SC_TAG_PEND",
+        "node_type": "action",
+        "goal": [
+          "Mark the contact with the tag appointment-pending now that scheduling started; a failed call never blocks scheduling."
+        ],
+        "do": [
+          "tags = ['appointment-pending']",
+          "contact_id = [contact.contact_id]",
+          "location_id = [contact.location_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "add_tags",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_DEC_SVC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_DEC_SVC",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
       },
       {
         "node_id": "SC__SC_DEC_SVC",
@@ -8185,8 +8223,8 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_DONE",
-            "condition_text": "IF [sc__success] == TRUE -> GO_TO: SC__SC_DONE",
+            "target": "SC__SC_TAG_RM",
+            "condition_text": "IF [sc__success] == TRUE -> GO_TO: SC__SC_TAG_RM",
             "is_mechanical": true,
             "python_expression": "sc__success == True",
             "reason": null
@@ -8322,6 +8360,82 @@
         "fallback": [
           {
             "target": "SC__SC_TO_OB",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "SC__SC_TAG_RM",
+        "node_type": "action",
+        "goal": [
+          "The appointment is booked: remove the tag appointment-pending."
+        ],
+        "do": [
+          "tags = ['appointment-pending']",
+          "contact_id = [contact.contact_id]",
+          "location_id = [contact.location_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "remove_tags",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_TAG_SET",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_TAG_SET",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "SC__SC_TAG_SET",
+        "node_type": "action",
+        "goal": [
+          "The appointment is booked: add the tag appointment-set."
+        ],
+        "do": [
+          "tags = ['appointment-set']",
+          "contact_id = [contact.contact_id]",
+          "location_id = [contact.location_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "add_tags",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_DONE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_DONE",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
