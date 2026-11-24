@@ -24,22 +24,26 @@ def fake_openai(monkeypatch):
     monkeypatch.setitem(sys.modules, "openai", module)
 
 
-def test_model_defaults_when_the_variable_is_missing(monkeypatch):
+def test_model_default(monkeypatch):
+    """The model defaults when the variable is missing."""
     monkeypatch.delenv("OPENAI_MODEL", raising=False)
     assert OpenAILLMClient(api_key="k")._model == DEFAULT_OPENAI_MODEL
 
 
-def test_model_comes_from_the_environment(monkeypatch):
+def test_model_from_env(monkeypatch):
+    """The model comes from the environment."""
     monkeypatch.setenv("OPENAI_MODEL", " gpt-4.1-mini ")
     assert OpenAILLMClient(api_key="k")._model == "gpt-4.1-mini"
 
 
-def test_blank_variable_falls_back_to_the_default(monkeypatch):
+def test_blank_model_uses_default(monkeypatch):
+    """A blank variable falls back to the default model."""
     monkeypatch.setenv("OPENAI_MODEL", "  ")
     assert OpenAILLMClient(api_key="k")._model == DEFAULT_OPENAI_MODEL
 
 
-def test_explicit_model_wins_over_the_environment(monkeypatch):
+def test_explicit_model_wins(monkeypatch):
+    """An explicit model wins over the environment."""
     monkeypatch.setenv("OPENAI_MODEL", "gpt-4.1-mini")
     assert OpenAILLMClient(api_key="k", model="gpt-4o")._model == "gpt-4o"
 
@@ -55,7 +59,8 @@ def _big_list():
     ]
 
 
-def test_block_leaves_out_a_large_slot_the_prompt_does_not_name():
+def test_block_omits_unmentioned_large_slot():
+    """A large slot the prompt does not name is left out."""
     assert len(str(_big_list())) > LARGE_SLOT_CHARS
     block = _ctx({"day": "x", "sc__available_slots": _big_list()}).block()
     assert "2026-11-04T09:30" not in block
@@ -63,14 +68,16 @@ def test_block_leaves_out_a_large_slot_the_prompt_does_not_name():
     assert '"day": "x"' in block
 
 
-def test_block_keeps_a_large_slot_named_in_the_mentions():
+def test_block_keeps_mentioned_large_slot():
+    """A large slot named in the mentions is kept."""
     block = _ctx({"sc__available_slots": _big_list()}).block(
         "IF [sc__available_slots] has a match -> GO_TO: X"
     )
     assert "2026-11-04T09:30:00" in block
 
 
-def test_block_keeps_a_large_slot_named_in_the_goal_or_do():
+def test_block_keeps_goal_named_large_slot():
+    """A large slot named in the goal or do lines is kept."""
     assert (
         "2026-11-04T09:30:00"
         in _ctx({"sc__available_slots": _big_list()}, goal=["use [sc__available_slots]"]).block()
@@ -82,6 +89,7 @@ def test_block_keeps_a_large_slot_named_in_the_goal_or_do():
 
 
 def test_block_keeps_small_slots_whole():
+    """Small slots are kept whole."""
     assert '"city": "Bogota"' in _ctx({"city": "Bogota", "tags": ["a", "b"]}).block()
 
 
@@ -97,7 +105,8 @@ def _slot_objects():
     ]
 
 
-def test_block_shows_a_slot_list_without_end_times_unless_the_prompt_names_them():
+def test_block_hides_end_times():
+    """A slot list hides end times unless the prompt names them."""
     ctx = _ctx({"sc__available_slots": _slot_objects()}, goal=["use [sc__available_slots]"])
     block = ctx.block()
     assert "start_co" in block and "start_local" in block
@@ -106,5 +115,6 @@ def test_block_shows_a_slot_list_without_end_times_unless_the_prompt_names_them(
 
 
 def test_block_keeps_other_lists_whole():
+    """Other lists are kept whole."""
     block = _ctx({"tags": [{"start_co": "a", "end_co": "b"}], "name": "x"}).block()
     assert "end_co" in block

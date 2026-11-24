@@ -16,7 +16,8 @@ def at(minutes: int) -> datetime:
     return T + timedelta(minutes=minutes)
 
 
-def test_busy_events_are_parsed_and_unreadable_or_cancelled_ones_skipped():
+def test_busy_events_parsed():
+    """Busy events are parsed; unreadable or cancelled ones are skipped."""
     events = [
         {"startTime": "2027-03-03T14:00:00Z", "endTime": "2027-03-03T14:30:00Z"},
         {"start": "2027-03-03T15:00:00", "end": "2027-03-03T15:30:00"},  # naive -> UTC
@@ -27,7 +28,8 @@ def test_busy_events_are_parsed_and_unreadable_or_cancelled_ones_skipped():
     assert parse_busy(events) == [(at(0), at(30)), (at(60), at(90))]
 
 
-def test_post_buffer_keeps_free_time_after_an_existing_appointment():
+def test_post_buffer_after_appointment():
+    """The post buffer keeps free time after an existing appointment."""
     busy = [(at(0), at(30))]  # an appointment 14:00-14:30
     starts = [at(30), at(35), at(40), at(60)]
     assert drop_conflicting(starts, 30, busy) == starts
@@ -35,7 +37,8 @@ def test_post_buffer_keeps_free_time_after_an_existing_appointment():
     assert drop_conflicting(starts, 30, busy, post_buffer_minutes=10) == [at(40), at(60)]
 
 
-def test_pre_buffer_keeps_free_time_before_an_existing_appointment():
+def test_pre_buffer_before_appointment():
+    """The pre buffer keeps free time before an existing appointment."""
     busy = [(at(60), at(90))]  # an appointment 15:00-15:30
     # A 30-minute slot at 14:30 ends exactly when the appointment starts; a 10-minute pre buffer rejects it.
     assert drop_conflicting([at(30)], 30, busy) == [at(30)]
@@ -43,7 +46,8 @@ def test_pre_buffer_keeps_free_time_before_an_existing_appointment():
     assert drop_conflicting([at(20)], 30, busy, pre_buffer_minutes=10) == [at(20)]
 
 
-def test_each_existing_appointment_blocks_its_own_buffers():
+def test_each_appointment_blocks_its_buffers():
+    """Each existing appointment blocks its own buffers."""
     busy = [(at(0), at(30)), (at(60), at(90))]
     free = drop_conflicting(
         [at(m) for m in range(0, 120, 10)], 10, busy, pre_buffer_minutes=5, post_buffer_minutes=10
@@ -51,29 +55,34 @@ def test_each_existing_appointment_blocks_its_own_buffers():
     assert free == [at(40), at(100), at(110)]
 
 
-def test_touching_edges_do_not_conflict_without_buffers():
+def test_touching_edges_do_not_conflict():
+    """Appointments that only touch do not conflict when there are no buffers."""
     assert conflicts_with_busy(at(30), at(60), [(at(0), at(30))]) is False
     assert conflicts_with_busy(at(29), at(60), [(at(0), at(30))]) is True
 
 
-def test_min_notice_and_date_range_drop_slots_outside_the_window():
+def test_notice_and_range_drop_slots():
+    """Minimum notice and date range drop slots outside the window."""
     starts = [at(0), at(60), at(120)]
     assert drop_before(starts, at(60)) == [at(60), at(120)]
     assert drop_after(starts, at(60)) == [at(0), at(60)]
 
 
 def test_interval_zero_keeps_every_slot_sorted():
+    """An interval of 0 keeps every slot, sorted."""
     starts = [at(30), at(0), at(60)]
     assert thin_by_interval(starts, 0) == [at(0), at(30), at(60)]
 
 
-def test_interval_keeps_starts_at_least_that_far_apart():
+def test_interval_spaces_starts():
+    """The interval keeps starts at least that far apart."""
     starts = [at(m) for m in (0, 30, 60, 90, 120)]
     assert thin_by_interval(starts, 60) == [at(0), at(60), at(120)]
     assert thin_by_interval(starts, 45) == [at(0), at(60), at(120)]
 
 
 def test_interval_restarts_each_day():
+    """The interval restarts on each day."""
     next_day = T + timedelta(days=1)
     starts = [T, T + timedelta(minutes=30), next_day, next_day + timedelta(minutes=30)]
     assert thin_by_interval(starts, 60) == [T, next_day]

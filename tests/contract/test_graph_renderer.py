@@ -54,18 +54,21 @@ def _minimal_template(**overrides) -> SubflowTemplate:
 
 
 def test_entry_point_and_subflow_id():
+    """The graph has the right entry point and subflow id."""
     graph = render_subflow_graph(_minimal_template())
     assert graph.entry_point == "T_S"
     assert graph.subflow_id == "test_subflow"
 
 
 def test_node_count_and_types():
+    """The graph has the expected nodes and types."""
     graph = render_subflow_graph(_minimal_template())
     node_types = {n.node_id: n.node_type for n in graph.nodes}
     assert node_types == {"T_S": "start", "T_DEC": "decision", "T_END": "terminal"}
 
 
-def test_mechanical_edge_carries_python_expression_and_target():
+def test_mechanical_edge_has_expression():
+    """A mechanical edge carries its Python expression and target."""
     graph = render_subflow_graph(_minimal_template())
     dec_node = next(n for n in graph.nodes if n.node_id == "T_DEC")
     edge = dec_node.route[0]
@@ -75,6 +78,7 @@ def test_mechanical_edge_carries_python_expression_and_target():
 
 
 def test_unconditional_edge_has_no_condition_text():
+    """An unconditional edge has no condition text."""
     graph = render_subflow_graph(_minimal_template())
     dec_node = next(n for n in graph.nodes if n.node_id == "T_DEC")
     fallback_edge = dec_node.fallback[0]
@@ -83,7 +87,8 @@ def test_unconditional_edge_has_no_condition_text():
     assert fallback_edge.is_mechanical is True
 
 
-def test_eval_llm_forces_llm_edge_even_if_parseable():
+def test_eval_llm_forces_llm_edge():
+    """eval=llm forces an LLM edge even if the condition is parseable."""
     template = _minimal_template(
         states=[
             _state("T_S", type="start", say=[], route=["GO_TO: T_DEC"]),
@@ -115,7 +120,8 @@ Some subflows never declare exports.states.entry, relying instead on the
     assert graph.entry_point == "T_S"
 
 
-def test_missing_entry_export_and_no_start_state_raises():
+def test_no_entry_and_no_start_raises():
+    """A missing entry export and no start state raises."""
     template = _minimal_template(
         exports={"states": {}},
         states=[
@@ -126,7 +132,8 @@ def test_missing_entry_export_and_no_start_state_raises():
         render_subflow_graph(template)
 
 
-def test_missing_entry_export_and_multiple_start_states_raises():
+def test_no_entry_and_many_starts_raises():
+    """A missing entry export with several start states raises."""
     template = _minimal_template(
         exports={"states": {}},
         states=[
@@ -143,7 +150,8 @@ def test_missing_entry_export_and_multiple_start_states_raises():
         render_subflow_graph(template)
 
 
-def test_explicit_entry_export_takes_precedence_over_start_state():
+def test_entry_export_beats_start_state():
+    """An explicit entry export takes precedence over a start state."""
     template = _minimal_template(
         states=[
             _state("T_S", type="start", say=[], route=["GO_TO: T_DEC"]),
@@ -165,7 +173,8 @@ def test_explicit_entry_export_takes_precedence_over_start_state():
 # ---------------------------------------------------------------------------
 
 
-def test_render_agent_graph_entry_point_is_start_at():
+def test_agent_graph_entry_is_start_at():
+    """The agent graph's entry point is the manifest's start_at."""
     spec = build_minimal_agent_spec()
     graph = render_agent_graph(spec)
     assert graph.entry_point == spec.manifest.start_at == "GREETING"
@@ -224,7 +233,8 @@ A runtime needs to know what to extract from a question / populate from a tool c
     assert node.capture == [("x", "str")]
 
 
-def test_render_agent_graph_includes_states_and_terminal_states():
+def test_agent_graph_has_all_states():
+    """The agent graph includes states and terminal states."""
     spec = build_minimal_agent_spec(
         states=[build_message_state("GREETING", route=["GO_TO: CLOSE"])],
         terminal_states=[build_terminal_state("CLOSE")],

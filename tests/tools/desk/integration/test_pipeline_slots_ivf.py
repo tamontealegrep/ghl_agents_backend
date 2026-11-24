@@ -52,7 +52,8 @@ def mocked_google_calendar(monkeypatch):
     monkeypatch.setattr(endpoint, "get_free_busy", _fake_get_free_busy_empty)
 
 
-def test_available_slots_ivf_endpoint_success_shape(mocked_google_calendar):
+def test_ivf_slots_shape(mocked_google_calendar):
+    """The IVF slots endpoint returns the expected shape."""
     response = client.post(
         "/api/v1/get-available-slots-google", json={"iana_timezone": "America/Bogota", "calendar_type": "IVF"}
     )
@@ -67,7 +68,8 @@ def test_available_slots_ivf_endpoint_success_shape(mocked_google_calendar):
         assert set(slot.keys()) == {"start_co", "end_co", "start_local", "end_local"}
 
 
-def test_available_slots_ivf_endpoint_fails_gracefully_when_credentials_missing(monkeypatch):
+def test_ivf_slots_missing_credentials(monkeypatch):
+    """Missing credentials give an error in the body, not an HTTP failure."""
     monkeypatch.setattr(endpoint, "get_settings", lambda: _EmptySettings())
 
     response = client.post("/api/v1/get-available-slots-google", json={"calendar_type": "IVF"})
@@ -79,7 +81,8 @@ def test_available_slots_ivf_endpoint_fails_gracefully_when_credentials_missing(
     assert "GOOGLE_CLIENT_ID_IVF" in body["errors"]
 
 
-def test_available_slots_ivf_endpoint_fails_gracefully_when_google_api_errors(monkeypatch):
+def test_ivf_slots_google_error(monkeypatch):
+    """A Google API error gives an error in the body, not an HTTP failure."""
     monkeypatch.setattr(endpoint, "get_settings", lambda: _FakeSettings())
 
     async def _raise(*args, **kwargs):

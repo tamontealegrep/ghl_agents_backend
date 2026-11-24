@@ -35,7 +35,8 @@ def _use_settings(monkeypatch, *modules):
         monkeypatch.setattr(module, "get_settings", lambda: _Settings())
 
 
-def test_calendars_endpoint_lists_keys_without_leaking_ids(monkeypatch):
+def test_calendars_lists_keys_not_ids(monkeypatch):
+    """The calendars endpoint lists calendar keys without leaking their ids."""
     _use_settings(monkeypatch, calendars_endpoint)
 
     body = client.get("/api/v1/calendars").json()
@@ -45,7 +46,8 @@ def test_calendars_endpoint_lists_keys_without_leaking_ids(monkeypatch):
     assert "consulta-id" not in str(body)
 
 
-def test_slots_for_a_new_calendar_query_that_calendars_ghl_id(monkeypatch):
+def test_slots_query_the_calendars_own_id(monkeypatch):
+    """Slots for a new calendar query that calendar's own GHL id."""
     seen = {}
 
     day = datetime.now(ZoneInfo("America/Bogota")).date() + timedelta(days=10)
@@ -70,6 +72,7 @@ def test_slots_for_a_new_calendar_query_that_calendars_ghl_id(monkeypatch):
 
 
 def test_unknown_calendar_is_rejected_with_the_valid_keys(monkeypatch):
+    """An unknown calendar is rejected with the list of valid keys."""
     _use_settings(monkeypatch, slots_endpoint)
 
     body = client.post("/api/v1/get-available-slots-ghl", json={"calendar_type": "NOPE"}).json()
@@ -78,7 +81,8 @@ def test_unknown_calendar_is_rejected_with_the_valid_keys(monkeypatch):
     assert "IVF, CONSULTA, SIN_ID" in body["errors"]
 
 
-def test_calendar_without_ghl_id_names_the_variable_to_define(monkeypatch):
+def test_calendar_without_id_names_variable(monkeypatch):
+    """A calendar without a GHL id names the variable to define."""
     _use_settings(monkeypatch, slots_endpoint)
 
     body = client.post("/api/v1/get-available-slots-ghl", json={"calendar_type": "SIN_ID"}).json()
@@ -87,7 +91,8 @@ def test_calendar_without_ghl_id_names_the_variable_to_define(monkeypatch):
     assert "FA_GHL_CALENDAR_ID_SIN_ID" in body["errors"]
 
 
-def test_booking_in_an_unknown_calendar_does_not_fall_back_to_ivf(monkeypatch):
+def test_unknown_calendar_booking_no_ivf_fallback(monkeypatch):
+    """Booking in an unknown calendar never falls back to IVF."""
     _use_settings(monkeypatch, book_endpoint)
 
     body = client.post(
@@ -122,7 +127,9 @@ class _GoogleSettings:
     gmail = _NoGmail()
 
 
-def test_new_calendar_without_email_template_books_without_sending_email(monkeypatch):
+def test_no_template_books_without_email(monkeypatch):
+    """A calendar without an email template books without sending an email."""
+
     async def _token(*args, **kwargs):
         return "token"
 
@@ -208,7 +215,8 @@ def _book_with_notification(monkeypatch, notification_email, send):
     ).json()
 
 
-def test_booking_notifies_the_internal_address_when_configured(monkeypatch):
+def test_booking_notifies_internal_address(monkeypatch):
+    """Booking notifies the internal address when one is configured."""
     sent = []
 
     async def _send(token, sender, to, subject, html):
@@ -221,7 +229,9 @@ def test_booking_notifies_the_internal_address_when_configured(monkeypatch):
     assert sent == ["team@example.org"]
 
 
-def test_booking_stays_successful_when_the_notification_fails(monkeypatch):
+def test_booking_survives_notification_failure(monkeypatch):
+    """Booking still succeeds when the notification fails."""
+
     async def _boom(*args, **kwargs):
         raise RuntimeError("gmail down")
 
@@ -231,7 +241,8 @@ def test_booking_stays_successful_when_the_notification_fails(monkeypatch):
     assert "FA_NOTIFICATION_EMAIL" in body["errors"] and "gmail down" in body["errors"]
 
 
-def test_booking_sends_no_notification_when_not_configured(monkeypatch):
+def test_booking_without_notification_config(monkeypatch):
+    """Booking sends no notification when none is configured."""
     sent = []
 
     async def _send(*args, **kwargs):

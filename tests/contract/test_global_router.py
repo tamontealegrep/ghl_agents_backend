@@ -48,7 +48,8 @@ def _faq(faq_id: str, **overrides) -> FAQModel:
 # ---------------------------------------------------------------------------
 
 
-def test_render_global_router_emits_handler_nodes():
+def test_router_emits_handlers():
+    """The rendered router includes the handler nodes."""
     spec = build_minimal_agent_spec(handlers=[_handler("H_REPEAT")])
     router = render_global_router(spec)
     assert [h.node_id for h in router.handlers] == ["H_REPEAT"]
@@ -69,7 +70,8 @@ A runtime's global-router matching needs the trigger phrases to check
     assert router.handlers[0].trigger == ["repeat that", "say again"]
 
 
-def test_render_global_router_emits_faq_nodes():
+def test_router_emits_faqs():
+    """The rendered router includes the FAQ nodes."""
     spec = build_minimal_agent_spec(faqs=[_faq("FAQ_HOURS")])
     router = render_global_router(spec)
     assert [f.faq_id for f in router.faqs] == ["FAQ_HOURS"]
@@ -77,7 +79,8 @@ def test_render_global_router_emits_faq_nodes():
     assert router.faqs[0].resume_to == "[current_state]"
 
 
-def test_handler_node_route_is_mechanical_via_dynamic_resume():
+def test_handler_route_dynamic_resume():
+    """A handler's route is mechanical through the dynamic resume target."""
     spec = build_minimal_agent_spec(
         handlers=[
             _handler(

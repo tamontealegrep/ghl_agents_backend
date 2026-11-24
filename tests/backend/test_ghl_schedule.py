@@ -40,7 +40,8 @@ def _fresh_cache():
     clear_cache()
 
 
-def test_units_are_converted_to_minutes_and_days():
+def test_units_convert_to_minutes_and_days():
+    """Time units are converted to minutes and days."""
     assert to_minutes(15, "mins") == 15
     assert to_minutes(2, "hours") == 120
     assert to_minutes(1, "days") == 1440
@@ -54,7 +55,8 @@ def test_units_are_converted_to_minutes_and_days():
     )
 
 
-def test_empty_variables_take_their_value_from_the_ghl_calendar():
+def test_empty_variables_use_ghl_values():
+    """Empty variables take their value from the GHL calendar."""
     schedule = schedule_from_calendar(GHL_CALENDAR, tool())
     assert (schedule.duration_minutes, schedule.pre_buffer_minutes, schedule.post_buffer_minutes) == (
         30,
@@ -71,7 +73,8 @@ def test_empty_variables_take_their_value_from_the_ghl_calendar():
     }
 
 
-def test_a_value_in_the_env_wins_over_ghl():
+def test_env_value_wins_over_ghl():
+    """A value set in the environment wins over the GHL calendar."""
     schedule = schedule_from_calendar(GHL_CALENDAR, tool(POST_BUFFER_MINUTES="20", DURATION_MINUTES="45"))
     assert (schedule.duration_minutes, schedule.post_buffer_minutes) == (45, 20)
     assert "post_buffer_minutes" not in schedule.from_ghl and "duration_minutes" not in schedule.from_ghl
@@ -79,15 +82,18 @@ def test_a_value_in_the_env_wins_over_ghl():
 
 
 def test_interval_is_never_taken_from_ghl():
+    """The slot interval is never read from GHL."""
     assert schedule_from_calendar(GHL_CALENDAR, tool()).interval_minutes == 0
 
 
-def test_a_booking_window_of_zero_means_no_limit_and_keeps_the_fallback():
+def test_zero_booking_window_keeps_fallback():
+    """A booking window of 0 means no limit and keeps the fallback."""
     schedule = schedule_from_calendar({**GHL_CALENDAR, "allowBookingFor": 0}, tool())
     assert schedule.date_range_days == 14 and "date_range_days" not in schedule.from_ghl
 
 
 def test_min_notice_can_be_hours_days_or_weeks():
+    """Minimum notice can be given in hours, days or weeks."""
     assert (
         schedule_from_calendar(
             {**GHL_CALENDAR, "allowBookingAfter": 2, "allowBookingAfterUnit": "hours"}, tool()
@@ -102,7 +108,8 @@ def test_min_notice_can_be_hours_days_or_weeks():
     )
 
 
-def test_without_empty_variables_ghl_is_not_even_called():
+def test_ghl_not_called_when_all_set():
+    """GHL is not called when every variable has a value."""
     calls = []
 
     async def fetch(*args):
@@ -116,7 +123,8 @@ def test_without_empty_variables_ghl_is_not_even_called():
     assert calls == [] and schedule.post_buffer_minutes == 0
 
 
-def test_the_ghl_calendar_is_read_once_and_cached():
+def test_ghl_calendar_is_cached():
+    """The GHL calendar is read once and then cached."""
     calls = []
 
     async def fetch(token, calendar_id):
@@ -128,7 +136,9 @@ def test_the_ghl_calendar_is_read_once_and_cached():
     assert calls == ["cal1"] and schedule.post_buffer_minutes == 15
 
 
-def test_if_ghl_cannot_be_read_the_defaults_are_used():
+def test_ghl_failure_uses_defaults():
+    """If GHL cannot be read, the defaults are used."""
+
     async def fetch(*args):
         raise RuntimeError("down")
 

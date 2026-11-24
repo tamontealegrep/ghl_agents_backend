@@ -20,11 +20,13 @@ class _Settings:
 
 
 def test_ft_keeps_the_original_rules():
+    """FT keeps the original booking and slot rules."""
     cal = resolve_calendar(_Settings(), "ft")
     assert cal.booking is booking and cal.slots is slot_calculator
 
 
-def test_missing_calendar_type_resolves_to_nothing_and_says_it_is_required():
+def test_missing_calendar_type_is_none():
+    """A missing calendar type resolves to nothing."""
     from surrogacy.services.calendars import unknown_calendar_message
 
     for missing in (None, "", "   "):
@@ -34,7 +36,8 @@ def test_missing_calendar_type_resolves_to_nothing_and_says_it_is_required():
     assert "Unknown calendar_type 'NOPE'" in unknown_calendar_message(_Settings(), "NOPE")
 
 
-def test_new_calendar_defaults_title_to_its_key_and_entry_overrides_it():
+def test_new_calendar_title():
+    """A new calendar's title defaults to its key and can be overridden."""
     config = {
         "default": {"hours": {1: [7, 0, 18, 0]}},
         "calendars": {"control": {"event_title_prefix": "Control"}},
@@ -46,12 +49,14 @@ def test_new_calendar_defaults_title_to_its_key_and_entry_overrides_it():
     )
 
 
-def test_hours_that_are_not_four_numbers_fail_loudly():
+def test_bad_hours_raise():
+    """Hours that are not four numbers raise an error naming the calendar."""
     with pytest.raises(ValueError, match="CONTROL"):
         ConfiguredBooking("CONTROL", {"hours": {1: {"weeks": [1], "window": [8, 0, 12, 0]}}})
 
 
-def test_configured_booking_matches_the_ft_rules_for_every_minute_of_the_week():
+def test_configured_booking_matches_ft():
+    """Configured booking hours match the FT rules for every minute of the week."""
     hours = {d: [7, 0, 18, 0] for d in (1, 2, 3, 4, 5)} | {6: [8, 0, 13, 0]}
     configured = ConfiguredBooking("X", {"hours": hours})
     for weekday in range(7):
@@ -62,7 +67,8 @@ def test_configured_booking_matches_the_ft_rules_for_every_minute_of_the_week():
                 ) == booking.is_valid_business_hour(weekday, hour, minute), (weekday, hour, minute)
 
 
-def test_configured_slots_match_the_ft_calculator_when_given_the_same_hours(monkeypatch):
+def test_configured_slots_match_ft(monkeypatch):
+    """Configured slots match the FT calculator when given the same hours."""
     ft_hours = {1: [7, 0, 12, 0], 3: [7, 0, 13, 0], 5: [14, 0, 17, 0]}
     slots_yaml = {"holidays": [], "windows": ft_hours, "lunch_break": {"start_hour": 13, "end_hour": 13}}
     monkeypatch.setattr(slot_calculator, "load_slots_config", lambda: slots_yaml)
@@ -83,7 +89,8 @@ def test_configured_slots_match_the_ft_calculator_when_given_the_same_hours(monk
     assert configured.compute_available_slots(**kwargs) == expected
 
 
-def test_configured_slots_skip_the_lunch_break_and_closed_days():
+def test_configured_slots_skip_lunch_and_closed():
+    """Configured slots skip the lunch break and closed days."""
     configured = ConfiguredSlots(
         "X", {"hours": {2: [8, 0, 14, 0]}, "lunch_break": {"start_hour": 12, "end_hour": 13}}
     )

@@ -90,7 +90,8 @@ def _starts(body):
     return [s["start_co"][11:16] for s in body["available_slots"]]
 
 
-def test_the_ghl_tools_are_mounted_next_to_the_google_ones():
+def test_ghl_tools_mounted_with_google():
+    """The -ghl tools are mounted next to the -google ones."""
     paths = {p.removeprefix("/api/v1/") for p in app.openapi()["paths"]}
     for tool in (
         "get-available-slots",
@@ -102,7 +103,8 @@ def test_the_ghl_tools_are_mounted_next_to_the_google_ones():
         assert f"{tool}-ghl" in paths and f"{tool}-google" in paths
 
 
-def test_ft_slots_use_the_ft_opening_hours_and_its_ghl_calendar(ghl):
+def test_ft_slots_use_ft_hours_and_calendar(ghl):
+    """FT slots use the FT opening hours and its GHL calendar."""
     monday = _day(1)  # FT opens Mondays 07:00-12:00
     ghl["free"] = [_at(monday, 6, 30), _at(monday, 8), _at(monday, 11, 40), _at(monday, 13)]
 
@@ -112,7 +114,8 @@ def test_ft_slots_use_the_ft_opening_hours_and_its_ghl_calendar(ghl):
     assert _starts(body) == ["08:00"]  # 11:40-12:10 ends after closing, 13:00 is outside the window
 
 
-def test_a_configured_calendar_uses_the_default_hours_of_calendars_yaml(ghl):
+def test_configured_calendar_default_hours(ghl):
+    """A configured calendar uses the default hours of calendars.yaml."""
     thursday = _day(4)  # FT is closed on Thursdays; the default hours for new calendars are Monday to Friday
     ghl["free"] = [_at(thursday, 9), _at(thursday, 12, 10)]
 
@@ -126,7 +129,8 @@ def test_a_configured_calendar_uses_the_default_hours_of_calendars_yaml(ghl):
     assert closed["available_slots"] == []
 
 
-def test_booking_titles_the_appointment_and_notifies_the_team(ghl):
+def test_booking_titles_and_notifies(ghl):
+    """Booking titles the appointment and notifies the team."""
     monday = _day(1)
     start = _at(monday, 8)
     ghl["free"] = [start]
@@ -149,7 +153,8 @@ def test_booking_titles_the_appointment_and_notifies_the_team(ghl):
     assert ghl["sent"] and ghl["sent"][0][0] == "team@example.org"
 
 
-def test_booking_outside_the_ft_booking_hours_is_rejected(ghl):
+def test_booking_outside_ft_hours_rejected(ghl):
+    """Booking outside the FT booking hours is rejected."""
     sunday = _day(7)
     start = _at(sunday, 9)
     ghl["free"] = [start]

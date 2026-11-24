@@ -9,18 +9,21 @@ from desk.services import booking_engine as engine
 # ---------------------------------------------------------------------------
 
 
-def test_parse_start_date_preserves_explicit_offset():
+def test_start_date_keeps_offset():
+    """A start date with an offset keeps it."""
     dt = engine.parse_start_date("2026-08-28T09:00:00-05:00")
     assert dt.utcoffset() == timedelta(hours=-5)
     assert dt.hour == 9
 
 
-def test_parse_start_date_assumes_bogota_when_no_offset():
+def test_start_date_defaults_to_bogota():
+    """A start date without an offset is read as Bogota time."""
     dt = engine.parse_start_date("2026-08-28T09:00:00")
     assert dt.utcoffset() == timedelta(hours=-5)
 
 
-def test_parse_start_date_invalid_raises_value_error():
+def test_start_date_invalid_raises():
+    """An invalid start date raises ValueError."""
     with pytest.raises(ValueError):
         engine.parse_start_date("no es una fecha")
 
@@ -31,16 +34,19 @@ def test_parse_start_date_invalid_raises_value_error():
 
 
 @pytest.mark.parametrize("raw,expected", [("20", 20), ("45", 45), ("20abc", 20), ("  30  ", 30)])
-def test_parse_duration_minutes_valid(raw, expected):
+def test_duration_valid(raw, expected):
+    """Valid durations are parsed."""
     assert engine.parse_duration_minutes(raw) == expected
 
 
 @pytest.mark.parametrize("raw", [None, "", "abc", "0", "-5"])
-def test_parse_duration_minutes_falls_back_to_default(raw):
+def test_duration_falls_back(raw):
+    """Invalid durations fall back to 20 minutes."""
     assert engine.parse_duration_minutes(raw) == 20
 
 
-def test_parse_duration_minutes_custom_default():
+def test_duration_custom_default():
+    """A custom default is used for invalid durations."""
     assert engine.parse_duration_minutes("abc", default=30) == 30
 
 
@@ -49,19 +55,22 @@ def test_parse_duration_minutes_custom_default():
 # ---------------------------------------------------------------------------
 
 
-def test_compute_end_date_adds_duration():
+def test_end_date_adds_duration():
+    """The end date is the start plus the duration."""
     start = datetime(2026, 8, 28, 9, 0, tzinfo=ZoneInfo("America/Bogota"))
     end = engine.compute_end_date(start, 20)
     assert end == start + timedelta(minutes=20)
 
 
 def test_is_future_true_for_later_date():
+    """A later date is in the future."""
     now = datetime(2026, 8, 20, 0, 0, tzinfo=ZoneInfo("UTC"))
     start = datetime(2026, 8, 28, 9, 0, tzinfo=ZoneInfo("America/Bogota"))
     assert engine.is_future(start, now) is True
 
 
 def test_is_future_false_for_past_date():
+    """An earlier date is not in the future."""
     now = datetime(2026, 8, 28, 0, 0, tzinfo=ZoneInfo("UTC"))
     start = datetime(2026, 8, 20, 9, 0, tzinfo=ZoneInfo("America/Bogota"))
     assert engine.is_future(start, now) is False
@@ -72,11 +81,13 @@ def test_is_future_false_for_past_date():
 # ---------------------------------------------------------------------------
 
 
-def test_format_contact_name_trims_collapses_and_titlecases():
+def test_contact_name_tidied():
+    """Contact names are trimmed, collapsed and title-cased."""
     assert engine.format_contact_name("  maria   PEREZ gomez  ") == "Maria Perez Gomez"
 
 
-def test_format_contact_name_single_word():
+def test_contact_name_single_word():
+    """A one-word name is title-cased."""
     assert engine.format_contact_name("ana") == "Ana"
 
 
@@ -86,16 +97,19 @@ def test_format_contact_name_single_word():
 
 
 @pytest.mark.parametrize("email", ["Maria@Correo.com", "  ana.perez@dominio.co  "])
-def test_is_valid_email_accepts_well_formed_addresses(email):
+def test_email_valid(email):
+    """Well-formed email addresses are accepted."""
     assert engine.is_valid_email(email) is True
 
 
 @pytest.mark.parametrize("email", ["no-es-un-correo", "ana@", "ana@dominio", "ana@example.com"])
-def test_is_valid_email_rejects_malformed_or_example_domain(email):
+def test_email_invalid(email):
+    """Malformed or example-domain emails are rejected."""
     assert engine.is_valid_email(email) is False
 
 
-def test_normalize_email_trims_and_lowercases():
+def test_email_normalised():
+    """Emails are trimmed and lowercased."""
     assert engine.normalize_email("  Maria@Correo.COM  ") == "maria@correo.com"
 
 
@@ -104,13 +118,27 @@ def test_normalize_email_trims_and_lowercases():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("raw,expected", [("es", "ES"), ("ES", "ES"), ("pt", "PT"), ("PT", "PT"), ("fr", "FR"), ("FR", "FR"), ("de", "DE"), ("it", "IT")])
-def test_normalize_language_recognizes_the_languages_with_a_template(raw, expected):
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        ("es", "ES"),
+        ("ES", "ES"),
+        ("pt", "PT"),
+        ("PT", "PT"),
+        ("fr", "FR"),
+        ("FR", "FR"),
+        ("de", "DE"),
+        ("it", "IT"),
+    ],
+)
+def test_language_recognised(raw, expected):
+    """Languages that have an email template are recognised."""
     assert engine.normalize_language(raw) == expected
 
 
 @pytest.mark.parametrize("raw", ["en", "EN", "tlh", "", None])
-def test_normalize_language_defaults_to_english(raw):
+def test_language_defaults_to_english(raw):
+    """Unknown languages default to English."""
     assert engine.normalize_language(raw) == "EN"
 
 
@@ -119,7 +147,8 @@ def test_normalize_language_defaults_to_english(raw):
 # ---------------------------------------------------------------------------
 
 
-def test_format_event_description_includes_contact_info():
+def test_event_description_has_contact():
+    """The event description includes the contact's details."""
     text = engine.format_event_description("Maria Perez", "maria@correo.com", "+573001234567")
     assert "Maria Perez" in text
     assert "maria@correo.com" in text

@@ -3,7 +3,8 @@ import pytest
 from agent_backend.calendars import discover_calendar_keys, load_calendar_settings, load_calendars
 
 
-def test_each_company_prefix_sees_only_its_own_calendars():
+def test_prefix_sees_only_own_calendars():
+    """Each company prefix discovers only its own calendar keys."""
     env = {"FA_GHL_CALENDAR_ID_CONSULTA": "1", "BN_GHL_CALENDAR_ID_CONTROL": "2"}
     assert discover_calendar_keys("FA", env) == ["CONSULTA"]
     assert discover_calendar_keys("BN", env) == ["CONTROL"]
@@ -25,21 +26,25 @@ def test_each_company_prefix_sees_only_its_own_calendars():
         "DATE_RANGE_DAYS",
     ],
 )
-def test_any_calendar_variable_declares_the_calendar(variable):
+def test_any_variable_declares_calendar(variable):
+    """Any calendar variable of a key makes that calendar exist."""
     assert discover_calendar_keys("BN", {f"BN_{variable}_CONTROL": "x"}) == ["CONTROL"]
 
 
-def test_several_variables_of_one_key_count_once_and_keys_are_sorted():
+def test_calendar_keys_unique_and_sorted():
+    """Several variables of one key count once and keys come back sorted."""
     env = {"BN_GHL_CALENDAR_ID_B": "1", "BN_GOOGLE_CALENDAR_ID_B": "2", "BN_DATE_RANGE_DAYS_A": "3"}
     assert discover_calendar_keys("BN", env) == ["A", "B"]
 
 
-def test_builtin_keys_come_first_and_exist_without_variables():
+def test_builtin_keys_come_first():
+    """Built-in keys come first and exist even with no variables."""
     assert discover_calendar_keys("BN", {"BN_GHL_CALENDAR_ID_A": "1"}, builtin=("ft",)) == ["FT", "A"]
     assert discover_calendar_keys("BN", {}, builtin=("FT",)) == ["FT"]
 
 
 def test_gmail_sender_variables_are_not_calendars():
+    """Gmail sender variables do not declare calendars."""
     env = {
         "BN_GOOGLE_CLIENT_ID_GMAIL": "x",
         "BN_GOOGLE_CLIENT_SECRET_GMAIL": "x",
@@ -50,7 +55,8 @@ def test_gmail_sender_variables_are_not_calendars():
     assert discover_calendar_keys("BN", env) == []
 
 
-def test_empty_values_and_other_variables_are_ignored():
+def test_empty_and_unrelated_variables_ignored():
+    """Empty values and unrelated variables declare no calendar."""
     env = {
         "BN_GHL_CALENDAR_ID_E": "",
         "BN_GHL_LOCATION_ID": "x",
@@ -61,10 +67,12 @@ def test_empty_values_and_other_variables_are_ignored():
 
 
 def test_prefix_is_matched_literally():
+    """The company prefix is matched literally, not as a pattern."""
     assert discover_calendar_keys("B.", {"BN_GHL_CALENDAR_ID_Q": "1"}) == []
 
 
-def test_calendar_settings_read_every_variable_and_apply_defaults():
+def test_settings_read_variables_and_defaults():
+    """Calendar settings read every variable and fall back to defaults."""
     env = {
         "BN_GOOGLE_CLIENT_ID_X": "cid",
         "BN_GOOGLE_CLIENT_SECRET_X": "sec",
@@ -85,18 +93,21 @@ def test_calendar_settings_read_every_variable_and_apply_defaults():
     assert (s.min_notice_minutes, s.date_range_days) == (None, 14)
 
 
-def test_default_calendar_id_applies_only_when_the_variable_is_unset():
+def test_default_calendar_id_only_when_unset():
+    """The default calendar id applies only when its variable is unset."""
     assert load_calendar_settings("BN", "FT", calendar_id="primary", environ={}).calendar_id == "primary"
     env = {"BN_GOOGLE_CALENDAR_ID_FT": "mine"}
     assert load_calendar_settings("BN", "FT", calendar_id="primary", environ=env).calendar_id == "mine"
 
 
 def test_non_numeric_duration_names_the_variable():
+    """A non-numeric duration raises an error that names the variable."""
     with pytest.raises(ValueError, match="BN_DURATION_MINUTES_X"):
         load_calendar_settings("BN", "X", environ={"BN_DURATION_MINUTES_X": "abc"})
 
 
-def test_load_calendars_returns_builtin_and_discovered_with_per_key_defaults():
+def test_load_calendars_builtin_and_discovered():
+    """load_calendars returns built-in and discovered calendars with per-key defaults."""
     env = {"BN_GHL_CALENDAR_ID_CONTROL": "c1"}
     calendars = load_calendars(
         "BN", ("FT",), post_buffer_minutes=10, calendar_id_defaults={"ft": "primary"}, environ=env
@@ -107,6 +118,7 @@ def test_load_calendars_returns_builtin_and_discovered_with_per_key_defaults():
 
 
 def test_scheduling_parameters_are_read_per_calendar():
+    """Duration, interval, buffers and window are read per calendar."""
     env = {
         "FA_DURATION_MINUTES_X": "20",
         "FA_INTERVAL_MINUTES_X": "30",
@@ -120,7 +132,8 @@ def test_scheduling_parameters_are_read_per_calendar():
     assert (s.post_buffer_minutes, s.min_notice_minutes, s.date_range_days) == (15, 120, 21)
 
 
-def test_min_notice_stays_none_when_unset_or_empty_and_zero_is_a_real_value():
+def test_min_notice_none_unless_set():
+    """Minimum notice is None when unset or empty, and 0 is a real value."""
     assert load_calendar_settings("FA", "X", environ={}).min_notice_minutes is None
     assert (
         load_calendar_settings("FA", "X", environ={"FA_MIN_NOTICE_MINUTES_X": " "}).min_notice_minutes is None
@@ -128,14 +141,16 @@ def test_min_notice_stays_none_when_unset_or_empty_and_zero_is_a_real_value():
     assert load_calendar_settings("FA", "X", environ={"FA_MIN_NOTICE_MINUTES_X": "0"}).min_notice_minutes == 0
 
 
-def test_company_defaults_apply_to_every_calendar_and_variables_override_them():
+def test_company_defaults_and_overrides():
+    """Company defaults apply to every calendar and per-calendar variables override them."""
     env = {"FA_GHL_CALENDAR_ID_A": "1", "FA_GHL_CALENDAR_ID_B": "2", "FA_POST_BUFFER_MINUTES_B": "0"}
     calendars = load_calendars("FA", (), post_buffer_minutes=10, environ=env)
     assert calendars["A"].post_buffer_minutes == 10
     assert calendars["B"].post_buffer_minutes == 0
 
 
-def test_old_names_no_longer_declare_or_configure_anything():
+def test_old_variable_names_are_ignored():
+    """The old variable names neither declare nor configure a calendar."""
     assert discover_calendar_keys("FA", {"FA_GAP_MINUTES_X": "5", "FA_DAYS_AHEAD_X": "9"}) == []
     s = load_calendar_settings("FA", "X", environ={"FA_GAP_MINUTES_X": "5", "FA_DAYS_AHEAD_X": "9"})
     assert (s.interval_minutes, s.date_range_days) == (0, 14)

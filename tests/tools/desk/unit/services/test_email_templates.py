@@ -11,11 +11,19 @@ VARS = dict(
 )
 
 
-TEMPLATES = ["book_appointment_ft_es", "book_appointment_ft_en", "book_appointment_ft_pt", "book_appointment_ft_fr", "book_appointment_ft_de", "book_appointment_ft_it"]
+TEMPLATES = [
+    "book_appointment_ft_es",
+    "book_appointment_ft_en",
+    "book_appointment_ft_pt",
+    "book_appointment_ft_fr",
+    "book_appointment_ft_de",
+    "book_appointment_ft_it",
+]
 
 
 @pytest.mark.parametrize("template_name", TEMPLATES)
-def test_render_email_template_substitutes_all_variables(template_name):
+def test_template_substitutes_variables(template_name):
+    """A template replaces all its variables."""
     html = render_email_template(template_name, **VARS)
     assert "Maria Perez" in html
     assert VARS["meet_link"] in html
@@ -35,19 +43,22 @@ def test_the_confirmation_e_mail_never_names_the_advisor(template_name):
     ).read_text(encoding="utf-8")
 
 
-def test_render_email_template_missing_variable_raises():
+def test_template_missing_variable_raises():
+    """A missing variable raises KeyError."""
     incomplete = dict(VARS)
     del incomplete["meet_link"]
     with pytest.raises(KeyError):
         render_email_template("book_appointment_ft_es", **incomplete)
 
 
-def test_render_email_template_unknown_template_raises():
+def test_unknown_template_raises():
+    """An unknown template raises FileNotFoundError."""
     with pytest.raises(FileNotFoundError):
         render_email_template("no_existe", **VARS)
 
 
-def test_the_add_to_calendar_link_carries_the_time_and_the_meet_link():
+def test_calendar_link_has_time_and_meet():
+    """The add-to-calendar link carries the time and the Meet link."""
     from datetime import datetime, timedelta
     from urllib.parse import parse_qs, urlparse
     from zoneinfo import ZoneInfo
@@ -55,7 +66,9 @@ def test_the_add_to_calendar_link_carries_the_time_and_the_meet_link():
     from desk.services.calendar_links import build_add_to_calendar_link
 
     start = datetime(2026, 12, 1, 15, 30, tzinfo=ZoneInfo("America/Bogota"))
-    link = build_add_to_calendar_link(start, start + timedelta(minutes=30), "en", "https://meet.google.com/abc")
+    link = build_add_to_calendar_link(
+        start, start + timedelta(minutes=30), "en", "https://meet.google.com/abc"
+    )
     query = parse_qs(urlparse(link).query)
 
     assert link.startswith("https://calendar.google.com/calendar/render?")
@@ -65,7 +78,8 @@ def test_the_add_to_calendar_link_carries_the_time_and_the_meet_link():
     assert "location" not in parse_qs(urlparse(build_add_to_calendar_link(start, start, "xx")).query)
 
 
-def test_the_booking_response_carries_both_links():
+def test_response_has_both_links():
+    """The booking response carries both links."""
     from desk.schemas.booking import BookAppointmentResponse
 
     response = BookAppointmentResponse(success=True, event_link="https://g/e", calendar_link="https://g/c")
@@ -74,7 +88,8 @@ def test_the_booking_response_carries_both_links():
     assert response.model_dump()["calendar_link"] == "https://g/c"
 
 
-def test_every_language_with_an_e_mail_subject_has_its_template_and_calendar_texts():
+def test_every_language_has_template():
+    """Every language with an email subject has its template and calendar texts."""
     from desk.services import booking_engine, calendar_links
 
     for code in booking_engine.EMAIL_SUBJECTS:

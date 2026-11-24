@@ -191,7 +191,8 @@ def starts(body):
 # --------------------------------------------------------------------------- common
 
 
-def test_calendar_type_is_required_and_unknown_values_are_rejected(world):
+def test_calendar_type_is_validated(world):
+    """The calendar type is required and unknown values are rejected."""
     for tool in ("get-available-slots-ghl", "find-appointment-ghl", "cancel-appointment-ghl"):
         body = world.client.post(f"/{tool}", json={"event_id": "e", "contact_name": "Ana"}).json()
         assert body["success"] is False and "Unknown calendar_type" in body["errors"], tool
@@ -202,12 +203,14 @@ def test_calendar_type_is_required_and_unknown_values_are_rejected(world):
     [("token", "", "GHL_TOKEN"), ("location", "", "GHL_LOCATION_ID")],
 )
 def test_missing_company_configuration_is_named(world, attr, value, expected):
+    """A missing company setting is named in the error."""
     setattr(world, attr, value)
     body = world.client.post("/get-available-slots-ghl", json={"calendar_type": "FT"}).json()
     assert body["success"] is False and expected in body["errors"]
 
 
 def test_missing_calendar_id_names_the_variable(world):
+    """A missing calendar id names the variable to set."""
     world.env = {"XX_DURATION_MINUTES_FT": "30"}
     body = world.client.post("/get-available-slots-ghl", json={"calendar_type": "FT"}).json()
     assert "XX_GHL_CALENDAR_ID_FT" in body["errors"]
@@ -216,7 +219,8 @@ def test_missing_calendar_id_names_the_variable(world):
 # --------------------------------------------------------------------------- slots
 
 
-def test_slots_take_buffers_from_the_ghl_calendar_and_drop_slots_inside_them(world):
+def test_slots_use_ghl_buffers(world):
+    """Slots use the GHL calendar's buffers and drop those inside them."""
     d = day()
     world.free = [at(d, 9, 30), at(d, 9, 40), at(d, 10, 0)]
     world.events = [event(at(d, 9, 0), at(d, 9, 30))]
@@ -228,7 +232,8 @@ def test_slots_take_buffers_from_the_ghl_calendar_and_drop_slots_inside_them(wor
     assert world.calls["get_calendar"] == 1
 
 
-def test_duration_is_not_sent_when_it_comes_from_ghl_and_is_sent_when_it_is_in_the_env(world):
+def test_duration_sent_only_from_env(world):
+    """Duration is sent to GHL only when it comes from the environment."""
     d = day()
     world.free = [at(d, 9)]
     world.client.post("/get-available-slots-ghl", json={"calendar_type": "FT"})
@@ -240,7 +245,8 @@ def test_duration_is_not_sent_when_it_comes_from_ghl_and_is_sent_when_it_is_in_t
     assert body["available_slots"][0]["end_co"][11:16] == "09:20"
 
 
-def test_slots_outside_opening_hours_or_in_lunch_are_dropped(world):
+def test_slots_outside_hours_dropped(world):
+    """Slots outside opening hours or during lunch are dropped."""
     d = day()
     # 11:30-12:00 ends when lunch starts (offered); 11:40-12:10 overlaps it (dropped); 12:50-13:20 overlaps its end.
     world.free = [
@@ -260,6 +266,7 @@ def test_slots_outside_opening_hours_or_in_lunch_are_dropped(world):
 
 
 def test_interval_from_the_env_thins_the_slots(world):
+    """The interval from the environment thins out the slots."""
     d = day()
     world.free = [at(d, 9, m) for m in (0, 10, 20, 30, 40)]
     world.env["XX_INTERVAL_MINUTES_FT"] = "30"
@@ -270,7 +277,8 @@ def test_interval_from_the_env_thins_the_slots(world):
     ]
 
 
-def test_min_notice_from_ghl_sets_the_search_start(world):
+def test_ghl_min_notice_sets_search_start(world):
+    """Minimum notice from GHL sets where the slot search starts."""
     world.calendar["allowBookingAfter"] = 3
     world.calendar["allowBookingAfterUnit"] = "days"
     world.client.post("/get-available-slots-ghl", json={"calendar_type": "FT"})
@@ -278,7 +286,8 @@ def test_min_notice_from_ghl_sets_the_search_start(world):
     assert abs((asked - datetime.now(UTC) - timedelta(days=3)).total_seconds()) < 60
 
 
-def test_a_date_range_over_ghls_limit_in_the_env_is_rejected(world):
+def test_date_range_over_ghl_limit_rejected(world):
+    """A date range above GHL's limit is rejected."""
     world.env["XX_DATE_RANGE_DAYS_FT"] = "45"
     body = world.client.post("/get-available-slots-ghl", json={"calendar_type": "FT"}).json()
     assert "XX_DATE_RANGE_DAYS_FT" in body["errors"] and "31" in body["errors"]
@@ -301,7 +310,8 @@ def book(world, start, **overrides):
     return world.client.post("/book-appointment-ghl", json=payload).json()
 
 
-def test_booking_creates_the_appointment_with_the_calendars_duration_and_notifies_the_team(world):
+def test_booking_creates_and_notifies(world):
+    """Booking creates the appointment with the calendar's duration and notifies the team."""
     start = at(day(), 9)
     world.free = [start]
 
@@ -318,7 +328,8 @@ def test_booking_creates_the_appointment_with_the_calendars_duration_and_notifie
     assert world.notified and world.notified[0]["contact_name"] == "Ana Gomez"
 
 
-def test_a_notification_problem_does_not_fail_the_booking(world):
+def test_notification_failure_keeps_booking(world):
+    """A notification failure does not fail the booking."""
     start = at(day(), 9)
     world.free = [start]
     world.notify_result = "notification failed"
@@ -335,18 +346,21 @@ def test_a_notification_problem_does_not_fail_the_booking(world):
         (lambda: at(day(min_days=40), 9), "invalid_hour"),  # beyond the booking window
     ],
 )
-def test_booking_rejections_by_date_and_hours(world, start, reason):
+def test_booking_rejected_by_date_and_hours(world, start, reason):
+    """Dates and hours that are not allowed are rejected with a reason."""
     body = book(world, start())
     assert body["success"] is False and body["reason"] == reason
 
 
-def test_booking_a_time_ghl_does_not_offer_is_slot_taken(world):
+def test_unoffered_time_is_slot_taken(world):
+    """A time GHL does not offer is reported as slot_taken."""
     start = at(day(), 9)
     world.free = [at(day(), 10)]
     assert book(world, start)["reason"] == "slot_taken"
 
 
-def test_booking_is_refused_inside_the_buffer_of_another_appointment(world):
+def test_booking_refused_inside_buffer(world):
+    """Booking inside another appointment's buffer is refused."""
     d = day()
     start = at(d, 9, 40)
     world.free = [start]  # GHL still lists it (e.g. its buffer is not configured)
@@ -355,13 +369,15 @@ def test_booking_is_refused_inside_the_buffer_of_another_appointment(world):
 
 
 def test_booking_needs_an_email_or_a_phone(world):
+    """Booking needs an email or a phone."""
     start = at(day(), 9)
     world.free = [start]
     body = book(world, start, contact_email="", contact_phone="")
     assert body["success"] is False and "required" in body["errors"]
 
 
-def test_a_ghl_400_is_reported_as_slot_taken_with_its_message(world):
+def test_ghl_400_is_slot_taken(world):
+    """A GHL 400 is reported as slot_taken with its message."""
     start = at(day(), 9)
     world.free = [start]
     request = httpx.Request("POST", "https://x")
@@ -377,7 +393,8 @@ def test_a_ghl_400_is_reported_as_slot_taken_with_its_message(world):
 # --------------------------------------------------------------------------- find / edit / cancel
 
 
-def test_find_matches_by_contact_id_title_and_skips_cancelled(world):
+def test_find_matches_and_skips_cancelled(world):
+    """Find matches by contact id and title and skips cancelled ones."""
     d = day()
     world.events = [
         event(at(d, 9), at(d, 9, 30), "by_contact", title="Whatever", contactId="c1"),
@@ -401,6 +418,7 @@ def test_find_matches_by_contact_id_title_and_skips_cancelled(world):
 
 
 def test_find_by_phone_digits_in_the_title(world):
+    """Find matches a phone's digits inside the title."""
     d = day()
     world.events = [event(at(d, 9), at(d, 9, 30), "x", title="Visit - Ana - +57 300 123 4567")]
     body = world.client.post(
@@ -410,7 +428,8 @@ def test_find_by_phone_digits_in_the_title(world):
     assert [a["event_id"] for a in body["appointments"]] == ["x"]
 
 
-def test_find_validates_its_input_and_reports_no_results(world):
+def test_find_validates_input_and_empty(world):
+    """Find validates its input and reports an empty result."""
     assert (
         "not in a valid format"
         in world.client.post(
@@ -426,7 +445,8 @@ def test_find_validates_its_input_and_reports_no_results(world):
     )
 
 
-def test_edit_moves_the_appointment_but_not_into_another_ones_buffer(world):
+def test_edit_moves_but_respects_buffers(world):
+    """Edit reschedules an appointment but not into another one's buffer."""
     d = day()
     world.events = [event(at(d, 9), at(d, 9, 30), "other"), event(at(d, 14), at(d, 14, 30), "mine")]
     refused = world.client.post(
@@ -445,13 +465,15 @@ def test_edit_moves_the_appointment_but_not_into_another_ones_buffer(world):
 
 
 def test_cancel_deletes_the_appointment(world):
+    """Cancel deletes the appointment."""
     body = world.client.post(
         "/cancel-appointment-ghl", json={"calendar_type": "FT", "event_id": "evt9"}
     ).json()
     assert body["success"] is True and world.calls["delete"] == "evt9"
 
 
-def test_the_shared_module_has_no_company_specific_name():
+def test_shared_module_has_no_company_names():
+    """The shared scheduling module contains no company names."""
     source = open(ghl_scheduling.__file__, encoding="utf-8").read().lower()
     assert "babynova" not in source and "family aims" not in source and "family_aims" not in source
 
@@ -469,7 +491,8 @@ def test_booking_uses_the_conversations_contact_and_never_looks_one_up(world):
 
 
 @pytest.mark.parametrize("contact_id", [None, "", "   "])
-def test_booking_fails_without_a_contact_id_before_touching_ghl(world, contact_id):
+def test_booking_needs_contact_id(world, contact_id):
+    """Booking without a contact id fails before calling GHL."""
     start = at(day(min_days=3), 9)
     world.free = [start]
 
@@ -480,7 +503,8 @@ def test_booking_fails_without_a_contact_id_before_touching_ghl(world, contact_i
     assert world.calls == {}  # no availability check, no contact lookup, no appointment
 
 
-def test_find_uses_the_conversations_contact(world):
+def test_find_uses_conversation_contact(world):
+    """Find searches by the conversation's contact id."""
     d = day()
     world.events = [
         event(at(d, 9), at(d, 9, 30), "mine", title="Whatever", contactId="F2FikaF1uvDozXJIcRB1"),
@@ -501,7 +525,8 @@ def test_find_uses_the_conversations_contact(world):
 
 
 @pytest.mark.parametrize("payload", [{}, {"contact_id": ""}, {"contact_id": "  "}])
-def test_find_fails_without_a_contact_id_before_touching_ghl(world, payload):
+def test_find_needs_contact_id(world, payload):
+    """Find without a contact id fails before calling GHL."""
     body = world.client.post(
         "/find-appointment-ghl", json={"calendar_type": "FT", "contact_name": "Ana Gomez", **payload}
     ).json()

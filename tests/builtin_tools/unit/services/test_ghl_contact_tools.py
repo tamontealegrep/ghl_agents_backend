@@ -24,7 +24,8 @@ def _body(ghl, index=0):
 # --------------------------------------------------------------------------------------------------- remove_tags
 
 
-def test_remove_tags_sends_a_delete_with_the_tags_in_the_body(ghl):
+def test_remove_tags_sends_delete(ghl):
+    """Removing tags sends a DELETE with the tags in the body."""
     ghl["reply"] = lambda r: httpx.Response(200, json={"tags": ["assigned"], "tagsRemoved": ["contacted"]})
 
     result = asyncio.run(remove_tags_service([" contacted "], "contact1", "loc1"))
@@ -38,26 +39,38 @@ def test_remove_tags_sends_a_delete_with_the_tags_in_the_body(ghl):
     assert ghl["locations"] == ["loc1"]
 
 
-def test_removing_a_tag_the_contact_does_not_have_is_not_an_error(ghl):
+def test_remove_missing_tag_is_ok(ghl):
+    """Removing a tag the contact does not have is not an error."""
     ghl["reply"] = lambda r: httpx.Response(200, json={"tags": ["a"], "tagsRemoved": []})
-    assert asyncio.run(remove_tags_service("nope", "c")) == {"success": True, "tags": ["a"], "tags_removed": []}
+    assert asyncio.run(remove_tags_service("nope", "c")) == {
+        "success": True,
+        "tags": ["a"],
+        "tags_removed": [],
+    }
 
 
-def test_remove_tags_checks_its_input_before_calling_ghl(ghl):
+def test_remove_tags_validates_input(ghl):
+    """Missing contact id or tags are rejected before calling GHL."""
     assert asyncio.run(remove_tags_service(["x"], " "))["errors"] == "contact_id is required"
     assert asyncio.run(remove_tags_service([], "c"))["errors"] == "No tags"
     assert ghl["requests"] == []
 
 
-def test_remove_tags_reports_a_ghl_error(ghl):
+def test_remove_tags_reports_ghl_error(ghl):
+    """A GHL error is returned as data with its status and reason."""
     ghl["reply"] = lambda r: httpx.Response(401, json={"message": "Invalid token"})
     result = asyncio.run(remove_tags_service(["x"], "c"))
-    assert result["success"] is False and "HTTP 401" in result["errors"] and "Invalid token" in result["errors"]
+    assert (
+        result["success"] is False and "HTTP 401" in result["errors"] and "Invalid token" in result["errors"]
+    )
 
 
 def test_remove_tags_route(ghl):
+    """The remove-tags route answers with the service result."""
     ghl["reply"] = lambda r: httpx.Response(200, json={"tags": [], "tagsRemoved": ["contacted"]})
-    response = client.post("/api/v1/remove-tags", json={"tags": "contacted", "contact_id": "c1", "location_id": "l"})
+    response = client.post(
+        "/api/v1/remove-tags", json={"tags": "contacted", "contact_id": "c1", "location_id": "l"}
+    )
     assert response.status_code == 200
     assert response.json() == {"success": True, "tags": [], "tags_removed": ["contacted"], "errors": None}
 
@@ -71,8 +84,14 @@ def test_remove_tags_route(ghl):
         ({"city": "Bogotá", "age": 30}, [("city", "Bogotá"), ("age", "30")]),
         (["city=Bogotá", " age = 30 "], [("city", "Bogotá"), ("age", "30")]),
         (["note=a=b"], [("note", "a=b")]),  # split on the first =
-        ([{"key": "city", "value": "Bogotá"}, {"id": "x", "fieldValue": "1"}, {"name": "n", "field_value": "2"}],
-         [("city", "Bogotá"), ("x", "1"), ("n", "2")]),
+        (
+            [
+                {"key": "city", "value": "Bogotá"},
+                {"id": "x", "fieldValue": "1"},
+                {"name": "n", "field_value": "2"},
+            ],
+            [("city", "Bogotá"), ("x", "1"), ("n", "2")],
+        ),
         ('{"city": "Bogotá"}', [("city", "Bogotá")]),
         ('[{"key": "city", "value": "Bogotá"}]', [("city", "Bogotá")]),
         ("city=Bogotá\nage=30", [("city", "Bogotá"), ("age", "30")]),
@@ -84,36 +103,50 @@ def test_remove_tags_route(ghl):
         ("", []),
     ],
 )
-def test_custom_fields_are_read_whatever_their_shape(raw, expected):
+def test_custom_fields_any_shape(raw, expected):
+    """Custom fields are normalised whether they come as a list or a dict."""
     assert normalize_custom_fields(raw) == expected
 
 
 # ----------------------------------------------------------------------------------------------- update_contact
 
 
-def test_update_contact_sends_only_what_is_given_with_ghl_names(ghl):
+def test_update_contact_sends_given_fields(ghl):
+    """Update contact sends only the given fields, with GHL names."""
     ghl["reply"] = lambda r: httpx.Response(200, json={"succeeded": True, "contact": {"id": "c1"}})
 
     result = asyncio.run(
         update_contact_service(
-            " c1 ", "loc1", {"first_name": " Laura ", "postal_code": "110111", "city": None, "dnd": False, "bogus": "x"}
+            " c1 ",
+            "loc1",
+            {"first_name": " Laura ", "postal_code": "110111", "city": None, "dnd": False, "bogus": "x"},
         )
     )
 
-    assert result == {"success": True, "contact_id": "c1", "updated_fields": ["first_name", "postal_code", "dnd"]}
+    assert result == {
+        "success": True,
+        "contact_id": "c1",
+        "updated_fields": ["first_name", "postal_code", "dnd"],
+    }
     (request,) = ghl["requests"]
     assert request.method == "PUT" and str(request.url) == "https://ghl.test/contacts/c1"
     assert json.loads(request.content) == {"firstName": "Laura", "postalCode": "110111", "dnd": False}
 
 
 def test_update_contact_never_sends_tags(ghl):
+    """Update contact never sends tags."""
     asyncio.run(update_contact_service("c1", "l", {"first_name": "A"}))
     assert "tags" not in _body(ghl)
 
 
-def test_update_contact_resolves_custom_fields_by_name_and_validates_options(ghl, monkeypatch):
+def test_update_contact_custom_fields_by_name(ghl, monkeypatch):
+    """Custom fields given by name are resolved and their options validated."""
     fields = {
-        "city": {"id": "fieldcity0000001", "dataType": "SINGLE_OPTIONS", "picklistOptions": ["Bogotá", "Chía"]},
+        "city": {
+            "id": "fieldcity0000001",
+            "dataType": "SINGLE_OPTIONS",
+            "picklistOptions": ["Bogotá", "Chía"],
+        },
         "age": {"id": "fieldage00000001", "dataType": "TEXT"},
     }
 
@@ -128,7 +161,10 @@ def test_update_contact_resolves_custom_fields_by_name_and_validates_options(ghl
     assert ok["success"] is True and ok["updated_fields"] == ["email", "city", "age"]
     assert _body(ghl) == {
         "email": "a@b.co",
-        "customFields": [{"id": "fieldcity0000001", "fieldValue": "Chía"}, {"id": "fieldage00000001", "fieldValue": "30"}],
+        "customFields": [
+            {"id": "fieldcity0000001", "fieldValue": "Chía"},
+            {"id": "fieldage00000001", "fieldValue": "30"},
+        ],
     }
 
     ghl["requests"].clear()
@@ -139,7 +175,8 @@ def test_update_contact_resolves_custom_fields_by_name_and_validates_options(ghl
     assert ghl["requests"] == []  # nothing is sent when a field cannot be resolved
 
 
-def test_update_contact_uses_a_field_id_as_it_is_and_needs_a_location_for_names(ghl):
+def test_update_contact_field_id_or_name(ghl):
+    """A field id is used as is; a field name needs a location."""
     ghl["reply"] = lambda r: httpx.Response(200, json={"succeeded": True})
     asyncio.run(update_contact_service("c1", None, None, {"uWLesAbC123456789": "x"}))
     assert _body(ghl)["customFields"] == [{"id": "uWLesAbC123456789", "fieldValue": "x"}]
@@ -147,42 +184,77 @@ def test_update_contact_uses_a_field_id_as_it_is_and_needs_a_location_for_names(
     assert result["success"] is False and "location_id is required" in result["errors"]
 
 
-def test_update_contact_with_nothing_to_change_does_not_call_ghl(ghl):
+def test_update_contact_noop_skips_ghl(ghl):
+    """With nothing to change GHL is not called."""
     assert asyncio.run(update_contact_service("c1", "l", {"city": None}))["errors"] == "Nothing to update"
     assert asyncio.run(update_contact_service("  ", "l", {"city": "x"}))["errors"] == "contact_id is required"
     assert ghl["requests"] == []
 
 
-def test_update_contact_reports_ghl_errors_such_as_a_duplicate_email(ghl):
+def test_update_contact_reports_ghl_errors(ghl):
+    """GHL errors such as a duplicate email are returned as data."""
     ghl["reply"] = lambda r: httpx.Response(400, json={"message": "Duplicate email"})
     result = asyncio.run(update_contact_service("c1", "l", {"email": "a@b.co"}))
-    assert result["success"] is False and "HTTP 400" in result["errors"] and "Duplicate email" in result["errors"]
+    assert (
+        result["success"] is False
+        and "HTTP 400" in result["errors"]
+        and "Duplicate email" in result["errors"]
+    )
     ghl["reply"] = lambda r: httpx.Response(200, json={"succeeded": False})
     assert asyncio.run(update_contact_service("c1", "l", {"city": "x"}))["success"] is False
 
 
-def test_update_contact_route_accepts_snake_case_and_ghl_names(ghl):
+def test_update_contact_route_names(ghl):
+    """The route accepts snake_case and GHL-style field names."""
     ghl["reply"] = lambda r: httpx.Response(200, json={"succeeded": True})
 
-    snake = client.post("/api/v1/update-contact", json={"contact_id": "c1", "location_id": "l", "first_name": "Ana", "city": "Cali"})
-    ghl_style = client.post("/api/v1/update-contact", json={"contactId": "c1", "firstName": "Ana", "postalCode": "760001"})
+    snake = client.post(
+        "/api/v1/update-contact",
+        json={"contact_id": "c1", "location_id": "l", "first_name": "Ana", "city": "Cali"},
+    )
+    ghl_style = client.post(
+        "/api/v1/update-contact", json={"contactId": "c1", "firstName": "Ana", "postalCode": "760001"}
+    )
 
-    assert snake.json() == {"success": True, "contact_id": "c1", "updated_fields": ["first_name", "city"], "errors": None}
+    assert snake.json() == {
+        "success": True,
+        "contact_id": "c1",
+        "updated_fields": ["first_name", "city"],
+        "errors": None,
+    }
     assert ghl_style.json()["updated_fields"] == ["first_name", "postal_code"]
     assert _body(ghl, 0) == {"firstName": "Ana", "city": "Cali"}
 
 
 # ------------------------------------------------------------------------------------------- update_opportunity
 
-OPPORTUNITY = {"opportunity": {"id": "o1", "status": "won", "pipelineId": "p1", "pipelineStageId": "s2", "name": "Deal", "monetaryValue": 1500.5}}
+OPPORTUNITY = {
+    "opportunity": {
+        "id": "o1",
+        "status": "won",
+        "pipelineId": "p1",
+        "pipelineStageId": "s2",
+        "name": "Deal",
+        "monetaryValue": 1500.5,
+    }
+}
 
 
-def test_update_opportunity_sends_only_what_is_given_with_ghl_names(ghl):
+def test_update_opportunity_sends_given_fields(ghl):
+    """Update opportunity sends only the given fields, with GHL names."""
     ghl["reply"] = lambda r: httpx.Response(200, json=OPPORTUNITY)
 
     result = asyncio.run(
         update_opportunity_service(
-            " o1 ", "loc1", {"status": "WON", "monetary_value": "$1,500.50", "pipeline_stage_id": "s2", "name": None, "assigned_to": "  "}
+            " o1 ",
+            "loc1",
+            {
+                "status": "WON",
+                "monetary_value": "$1,500.50",
+                "pipeline_stage_id": "s2",
+                "name": None,
+                "assigned_to": "  ",
+            },
         )
     )
 
@@ -202,28 +274,50 @@ def test_update_opportunity_sends_only_what_is_given_with_ghl_names(ghl):
     assert ghl["locations"] == ["loc1"]
 
 
-def test_update_opportunity_checks_status_and_numbers_before_calling_ghl(ghl):
-    assert "status must be one of" in asyncio.run(update_opportunity_service("o1", "l", {"status": "pending"}))["errors"]
-    assert "monetary_value must be 0 or more" in asyncio.run(update_opportunity_service("o1", "l", {"monetary_value": -1}))["errors"]
-    assert "must be a number" in asyncio.run(update_opportunity_service("o1", "l", {"monetary_value": "mucho"}))["errors"]
-    assert "must be a number" in asyncio.run(update_opportunity_service("o1", "l", {"forecast_probability": True}))["errors"]
+def test_update_opportunity_validates_input(ghl):
+    """Status and numbers are validated before calling GHL."""
+    assert (
+        "status must be one of"
+        in asyncio.run(update_opportunity_service("o1", "l", {"status": "pending"}))["errors"]
+    )
+    assert (
+        "monetary_value must be 0 or more"
+        in asyncio.run(update_opportunity_service("o1", "l", {"monetary_value": -1}))["errors"]
+    )
+    assert (
+        "must be a number"
+        in asyncio.run(update_opportunity_service("o1", "l", {"monetary_value": "mucho"}))["errors"]
+    )
+    assert (
+        "must be a number"
+        in asyncio.run(update_opportunity_service("o1", "l", {"forecast_probability": True}))["errors"]
+    )
     assert asyncio.run(update_opportunity_service("o1", "l", {"name": None}))["errors"] == "Nothing to update"
-    assert asyncio.run(update_opportunity_service("", "l", {"name": "x"}))["errors"] == "opportunity_id is required"
+    assert (
+        asyncio.run(update_opportunity_service("", "l", {"name": "x"}))["errors"]
+        == "opportunity_id is required"
+    )
     assert ghl["requests"] == []
 
 
-def test_update_opportunity_numbers_keep_integers_whole(ghl):
+def test_update_opportunity_keeps_integers(ghl):
+    """Whole numbers are sent as integers, not floats."""
     ghl["reply"] = lambda r: httpx.Response(200, json=OPPORTUNITY)
-    asyncio.run(update_opportunity_service("o1", "l", {"monetary_value": 500.0, "forecast_probability": "75"}))
+    asyncio.run(
+        update_opportunity_service("o1", "l", {"monetary_value": 500.0, "forecast_probability": "75"})
+    )
     body = _body(ghl)
     assert body == {"monetaryValue": 500, "forecastProbability": 75}
 
 
-def test_update_opportunity_custom_fields_go_by_id_or_key_without_the_prefix(ghl):
+def test_update_opportunity_custom_fields(ghl):
+    """Custom fields go by id or by key without the `opportunity.` prefix."""
     ghl["reply"] = lambda r: httpx.Response(200, json=OPPORTUNITY)
 
     result = asyncio.run(
-        update_opportunity_service("o1", "l", None, {"opportunity.source_detail": "web", "uWLesAbC123456789": "x"})
+        update_opportunity_service(
+            "o1", "l", None, {"opportunity.source_detail": "web", "uWLesAbC123456789": "x"}
+        )
     )
 
     assert result["updated_fields"] == ["opportunity.source_detail", "uWLesAbC123456789"]
@@ -234,6 +328,7 @@ def test_update_opportunity_custom_fields_go_by_id_or_key_without_the_prefix(ghl
 
 
 def test_update_opportunity_reports_ghl_errors(ghl):
+    """GHL errors are returned as data."""
     ghl["reply"] = lambda r: httpx.Response(400, json={"code": "OPPORTUNITY_NO_DUPLICATE"})
     result = asyncio.run(update_opportunity_service("o1", "l", {"pipeline_id": "p9"}))
     assert result["success"] is False and "OPPORTUNITY_NO_DUPLICATE" in result["errors"]
@@ -241,10 +336,12 @@ def test_update_opportunity_reports_ghl_errors(ghl):
 
 
 def test_update_opportunity_route(ghl):
+    """The update-opportunity route answers with the service result."""
     ghl["reply"] = lambda r: httpx.Response(200, json=OPPORTUNITY)
 
     response = client.post(
-        "/api/v1/update-opportunity", json={"opportunityId": "o1", "locationId": "l", "status": "won", "monetaryValue": "1500.5"}
+        "/api/v1/update-opportunity",
+        json={"opportunityId": "o1", "locationId": "l", "status": "won", "monetaryValue": "1500.5"},
     )
 
     assert response.status_code == 200 and response.json()["success"] is True
@@ -252,7 +349,8 @@ def test_update_opportunity_route(ghl):
     assert _body(ghl) == {"status": "won", "monetaryValue": 1500.5}
 
 
-def test_the_new_tools_are_builtin_routes_the_runtime_finds():
+def test_tools_are_builtin_routes():
+    """The tools are built-in routes the runtime finds."""
     from agent_backend.tool_client import candidate_urls
 
     for tool in ("remove_tags", "update_contact", "update_opportunity"):

@@ -8,15 +8,18 @@ from tests.backend.conftest import PLUGIN_SOURCE, make_bundle
 
 
 def test_bundle_without_tools_has_no_router(agents_dir):
+    """A bundle without tools has no tool router."""
     assert load_tool_router(load_bundle(make_bundle(agents_dir, "a"))) is None
 
 
 def test_plugin_router_is_loaded(agents_dir):
+    """A bundle's plugin router is loaded."""
     router = load_tool_router(load_bundle(make_bundle(agents_dir, "a", plugin=PLUGIN_SOURCE)))
     assert [route.path for route in router.routes] == ["/ping-tool"]
 
 
 def test_plugins_of_two_agents_do_not_collide(agents_dir):
+    """Plugins of two agents with the same module name do not collide."""
     other = PLUGIN_SOURCE.replace("ping-tool", "other-tool")
     first = load_tool_router(load_bundle(make_bundle(agents_dir, "a", plugin=PLUGIN_SOURCE)))
     second = load_tool_router(load_bundle(make_bundle(agents_dir, "b", plugin=other)))
@@ -25,11 +28,13 @@ def test_plugins_of_two_agents_do_not_collide(agents_dir):
 
 
 def test_plugin_without_router_is_rejected(agents_dir):
+    """A plugin that has no router is rejected."""
     with pytest.raises(ImportError, match="router"):
         load_tool_router(load_bundle(make_bundle(agents_dir, "a", plugin="x = 1\n")))
 
 
-def test_shared_plugin_is_used_by_every_agent_that_names_it(agents_dir):
+def test_shared_plugin_used_by_all(agents_dir):
+    """A shared plugin is used by every agent that names it."""
     shared = agents_dir / "_tools" / "common"
     shared.mkdir(parents=True)
     (shared / "__init__.py").write_text(PLUGIN_SOURCE, encoding="utf-8")
@@ -64,7 +69,8 @@ def _make_company_shared(company_root, **modules: str) -> None:
         (tools / f"{name}.py").write_text(source, encoding="utf-8")
 
 
-def test_a_plugin_can_import_from_the_company_shared_tools(agents_dir, clean_shared_import):
+def test_plugin_imports_company_shared(agents_dir, clean_shared_import):
+    """A plugin can import from the company's shared tools."""
     _make_company_shared(agents_dir.parent, greeting="ROUTE = '/from-shared'\n")
     plugin = PLUGIN_SOURCE.replace('"/ping-tool"', "ROUTE").replace(
         "from fastapi import APIRouter",
@@ -76,7 +82,8 @@ def test_a_plugin_can_import_from_the_company_shared_tools(agents_dir, clean_sha
     assert [route.path for route in router.routes] == ["/from-shared"]
 
 
-def test_two_business_units_of_one_company_share_the_same_module(agents_dir, clean_shared_import):
+def test_units_share_one_module(agents_dir, clean_shared_import):
+    """Two business units of a company share the same module instance."""
     _make_company_shared(agents_dir.parent, counter="CALLS = []\n")
     unit = "from fastapi import APIRouter\nfrom shared.tools import counter\nrouter = APIRouter()\ncounter.CALLS.append('{name}')\n"
 
@@ -88,7 +95,8 @@ def test_two_business_units_of_one_company_share_the_same_module(agents_dir, cle
     assert counter.CALLS == ["a", "b"]
 
 
-def test_a_company_without_a_shared_folder_changes_nothing(agents_dir, clean_shared_import):
+def test_no_shared_folder_is_a_noop(agents_dir, clean_shared_import):
+    """A company without a shared folder changes nothing."""
     import sys
 
     before = list(sys.path)
@@ -96,7 +104,8 @@ def test_a_company_without_a_shared_folder_changes_nothing(agents_dir, clean_sha
     assert sys.path == before
 
 
-def test_every_company_ships_an_importable_shared_tools_package():
+def test_companies_ship_shared_package():
+    """Every company ships an importable shared tools package."""
     from pathlib import Path
 
     companies = Path(__file__).resolve().parents[2] / "companies"

@@ -72,6 +72,7 @@ def data_dir(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("code", LANGUAGE_CODES)
 def test_every_language_file_is_complete(code):
+    """Every language file is complete."""
     language = languages.get(code)
     assert language is not None and language.code == code
     assert language.explicit_phrases and language.content_words and language.bare_reply_words
@@ -93,20 +94,31 @@ def test_every_language_file_is_complete(code):
 
 
 @pytest.mark.parametrize("code", LANGUAGE_CODES)
-def test_a_language_is_found_by_every_way_it_is_written(code):
+def test_language_found_by_any_spelling(code):
+    """A language is found by every way it is written."""
     language = languages.get(code)
-    for written in (language.code, language.code.upper(), language.name, language.name.upper(), language.native_name,
-                    f"{language.code}-XX", f"{language.code}_XX", *language.aliases):
+    for written in (
+        language.code,
+        language.code.upper(),
+        language.name,
+        language.name.upper(),
+        language.native_name,
+        f"{language.code}-XX",
+        f"{language.code}_XX",
+        *language.aliases,
+    ):
         assert languages.get(written) is language
 
 
-def test_unknown_languages_fall_back_without_raising():
+def test_unknown_language_is_none():
+    """Unknown languages give None without raising."""
     assert languages.get("klingon") is None and languages.get(None) is None and languages.get("") is None
     assert languages.resolve("klingon").code == "en"
     assert languages.resolve("klingon", default="es").code == "es"
 
 
-def test_dates_and_clock_follow_each_language():
+def test_dates_and_clock_per_language():
+    """Dates and clock times follow each language."""
     assert languages.get("es").full_date(SAMPLE_DAY) == "miércoles, 4 de noviembre de 2026"
     assert languages.get("es").weekday_date(SAMPLE_DAY) == "miércoles 4 de noviembre de 2026"
     assert languages.get("en").full_date(SAMPLE_DAY) == "Wednesday, November 4, 2026"
@@ -116,14 +128,16 @@ def test_dates_and_clock_follow_each_language():
     assert languages.get("pt").format_time(15, 30) == "15:30"
 
 
-def test_the_env_picks_the_allowed_languages_in_its_own_order(monkeypatch):
+def test_env_picks_languages_in_order(monkeypatch):
+    """The environment picks the allowed languages in its own order."""
     monkeypatch.delenv(languages.LANGUAGES_ENV, raising=False)
     assert [language.code for language in languages.enabled_languages()] == ["en", "es", "pt"]
     monkeypatch.setenv(languages.LANGUAGES_ENV, "French, es; english|klingon")
     assert [language.code for language in languages.enabled_languages()] == ["fr", "es", "en"]
 
 
-def test_adding_a_language_is_adding_its_file(data_dir, monkeypatch):
+def test_new_language_is_a_file(data_dir, monkeypatch):
+    """Adding a language only requires adding its file."""
     from agent_backend.channels.ghl.text import normalize_language
     from agent_runtime.runtime.global_router import _detect_fixed_phrases, _language_menu, is_bare_yes_no
 
@@ -144,11 +158,16 @@ def test_adding_a_language_is_adding_its_file(data_dir, monkeypatch):
     assert _detect_fixed_phrases("parla in italiano per favore", "English") == ("Italian", "explicit")
     assert _detect_fixed_phrases("Ciao, vorrei un appuntamento", "English") == ("Italian", "content_answer")
     assert is_bare_yes_no("perfetto")
-    assert _language_menu() == "I can assist you in English or italiano. / Posso risponderti in English o italiano."
+    assert (
+        _language_menu()
+        == "I can assist you in English or italiano. / Posso risponderti in English o italiano."
+    )
     assert languages.month_by_word()["novembre"] == 11
     assert languages.weekday_by_word()["martedi"] == 1
     assert languages.today_pattern().search("oggi") and languages.tomorrow_pattern().search("domani")
-    assert any(key == "morning" and pattern.search("di mattina") for key, pattern in languages.part_patterns())
+    assert any(
+        key == "morning" and pattern.search("di mattina") for key, pattern in languages.part_patterns()
+    )
 
     (data_dir / "it.yaml").unlink()
     languages.reload()
@@ -157,14 +176,18 @@ def test_adding_a_language_is_adding_its_file(data_dir, monkeypatch):
     assert normalize_language("Italiano") == "en"
 
 
-def test_a_format_with_an_unknown_placeholder_is_refused_when_loaded(data_dir):
+def test_unknown_placeholder_refused(data_dir):
+    """A format with an unknown placeholder is refused when loaded."""
     (data_dir / "it.yaml").write_text(ITALIAN.replace("{month_abbr}", "{month_abbrev}"), encoding="utf-8")
     languages.reload()
-    with pytest.raises(ValueError, match=r"it\.yaml: a calendar format or message uses an unknown placeholder"):
+    with pytest.raises(
+        ValueError, match=r"it\.yaml: a calendar format or message uses an unknown placeholder"
+    ):
         languages.available_languages()
 
 
-def test_a_broken_language_file_is_refused_with_its_name(data_dir):
+def test_broken_file_names_itself(data_dir):
+    """A broken language file is refused with its name."""
     (data_dir / "it.yaml").write_text(ITALIAN.replace("  range_word: alle\n", ""), encoding="utf-8")
     languages.reload()
     with pytest.raises(ValueError, match=r"it\.yaml: missing 'calendar\.range_word'"):
@@ -176,7 +199,8 @@ def test_a_broken_language_file_is_refused_with_its_name(data_dir):
         languages.available_languages()
 
 
-def test_french_scheduling_words_pick_a_day_and_a_time_of_day():
+def test_french_scheduling_words():
+    """French scheduling words pick a day and a time of day."""
     from agent_runtime.runtime.graph_builder import _describe_time_choice, _resolve_day_reference
 
     calendar = "2026-11-03 Tuesday\n2026-11-04 Wednesday\n2026-11-05 Thursday\n2026-11-06 Friday"

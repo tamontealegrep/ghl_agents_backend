@@ -27,7 +27,8 @@ LUNCH = {"start_hour": 12, "end_hour": 13}
 # --- discovery -------------------------------------------------------------
 
 
-def test_discovery_finds_ghl_and_google_ids_and_keeps_ft_first():
+def test_discovery_finds_ids_ft_first():
+    """Discovery finds GHL and Google ids and keeps FT first."""
     env = {
         "FA_GHL_CALENDAR_ID_CONSULTA": "abc",
         "FA_GOOGLE_CALENDAR_ID_SEGUIMIENTO": "def",
@@ -36,7 +37,8 @@ def test_discovery_finds_ghl_and_google_ids_and_keeps_ft_first():
     assert discover_calendar_keys(env) == ["FT", "CONSULTA", "IVF", "SEGUIMIENTO"]
 
 
-def test_discovery_ignores_empty_values_and_unrelated_variables():
+def test_discovery_ignores_empty_and_unrelated():
+    """Discovery ignores empty values and unrelated variables."""
     env = {
         "FA_GHL_CALENDAR_ID_VACIO": "",
         "GHL_LOCATION_ID": "loc",
@@ -48,19 +50,22 @@ def test_discovery_ignores_empty_values_and_unrelated_variables():
     assert discover_calendar_keys(env) == ["FT"]
 
 
-def test_google_and_timing_variables_also_declare_a_calendar():
+def test_any_variable_declares_calendar():
+    """Google and timing variables also declare a calendar."""
     env = {"FA_GOOGLE_CLIENT_ID_CONTROL": "x", "FA_DURATION_MINUTES_SEGUIMIENTO": "20"}
     assert discover_calendar_keys(env) == ["FT", "CONTROL", "SEGUIMIENTO"]
 
 
-def test_discovery_supports_keys_with_underscores_and_digits():
+def test_discovery_key_chars():
+    """Calendar keys may contain underscores and digits."""
     assert discover_calendar_keys({"FA_GHL_CALENDAR_ID_FOLLOW_UP_2": "1"})[-1] == "FOLLOW_UP_2"
 
 
 # --- resolution ------------------------------------------------------------
 
 
-def test_builtin_calendars_keep_their_own_policy_modules():
+def test_builtin_calendars_keep_modules():
+    """Built-in calendars keep their own policy modules."""
     settings = _Settings(ivf=_tool("a"), sur=_tool("b"))
     ivf = resolve_calendar(settings, "ivf")
     sur = resolve_calendar(settings, "SUR")
@@ -69,20 +74,24 @@ def test_builtin_calendars_keep_their_own_policy_modules():
 
 
 def test_empty_calendar_type_means_ft():
+    """An empty calendar type means FT."""
     assert resolve_calendar(_Settings(ft=_tool()), None).key == "FT"
     assert resolve_calendar(_Settings(ft=_tool()), "").key == "FT"
 
 
-def test_unknown_calendar_resolves_to_none_instead_of_falling_back_to_ivf():
+def test_unknown_calendar_is_none():
+    """An unknown calendar resolves to None instead of falling back to IVF."""
     assert resolve_calendar(_Settings(ivf=_tool()), "NOPE") is None
 
 
 def test_unknown_message_lists_valid_keys():
+    """The unknown-calendar message lists the valid keys."""
     message = unknown_calendar_message(_Settings(ivf=_tool(), consulta=_tool()), "x")
     assert "IVF, CONSULTA" in message and "'x'" in message
 
 
-def test_new_calendar_uses_default_rules_with_its_key_as_tag():
+def test_new_calendar_default_rules():
+    """A new calendar uses default rules with its key as tag."""
     cal = resolve_calendar(
         _Settings(consulta=_tool("id1")), "consulta", {"default": {"hours": IVF_HOURS}, "calendars": {}}
     )
@@ -92,7 +101,8 @@ def test_new_calendar_uses_default_rules_with_its_key_as_tag():
     assert cal.booking.is_valid_business_hour(1, 9, 0) is True
 
 
-def test_new_calendar_entry_overrides_default_fields_only():
+def test_new_calendar_overrides_only_given():
+    """A calendar entry overrides only the fields it defines."""
     config = {
         "default": {"agent_name": "Base", "hours": IVF_HOURS},
         "calendars": {
@@ -107,6 +117,7 @@ def test_new_calendar_entry_overrides_default_fields_only():
 
 
 def test_available_keys_follow_settings():
+    """Available keys follow the settings."""
     assert available_keys(_Settings(ivf=_tool(), x=_tool())) == ["IVF", "X"]
 
 
@@ -118,7 +129,8 @@ def test_available_keys_follow_settings():
     [(IVF_HOURS, booking_ivf), (SUR_HOURS, booking_sur)],
     ids=["ivf", "sur"],
 )
-def test_configured_booking_matches_reference_for_every_minute_of_the_week(hours, reference):
+def test_configured_booking_matches_reference(hours, reference):
+    """Configured booking hours match the reference for every minute of the week."""
     rules = {"hours": hours, "lunch_break": LUNCH}
     configured = ConfiguredBooking("X", rules)
     for weekday in range(7):
@@ -131,6 +143,7 @@ def test_configured_booking_matches_reference_for_every_minute_of_the_week(hours
 
 @pytest.mark.parametrize("policy_name, reference", [("ivf", slots_ivf), ("sur", slots_sur)])
 def test_configured_slots_match_reference(policy_name, reference):
+    """Configured slot windows match the reference."""
     from desk.core.config import load_slots_config
 
     rules = load_slots_config()["policies"][policy_name]
@@ -148,11 +161,13 @@ def test_configured_slots_match_reference(policy_name, reference):
 # --- FT: the single round-robin calendar --------------------------------------
 
 
-def test_ft_always_exists_and_is_the_default_calendar():
+def test_ft_is_default_calendar():
+    """FT always exists and is the default calendar."""
     assert discover_calendar_keys({}) == ["FT"]
 
 
-def test_ft_takes_its_rules_from_calendars_yaml_and_sends_the_advisor_free_e_mail():
+def test_ft_rules_from_yaml():
+    """FT takes its rules from calendars.yaml and sends the advisor-free email."""
     from desk.services.calendars import load_calendars_config
 
     cal = resolve_calendar(_Settings(ft=_tool("rr-id")), "ft", load_calendars_config())

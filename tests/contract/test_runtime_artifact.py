@@ -54,14 +54,16 @@ def _spec_with_everything():
     )
 
 
-def test_to_dict_is_plain_json_serializable():
+def test_to_dict_is_json_serialisable():
+    """The artifact converts to plain JSON-serialisable data."""
     spec = _spec_with_everything()
     artifact = render_runtime_artifact(spec)
     encoded = json.dumps(artifact.to_dict())  # raises if anything isn't plain JSON
     assert "book_appointment" in encoded
 
 
-def test_round_trip_preserves_agent_id_and_entry_point():
+def test_round_trip_agent_id_and_entry():
+    """A round trip keeps the agent id and entry point."""
     spec = _spec_with_everything()
     artifact = render_runtime_artifact(spec)
     reloaded = runtime_artifact_from_dict(json.loads(json.dumps(artifact.to_dict())))
@@ -69,7 +71,8 @@ def test_round_trip_preserves_agent_id_and_entry_point():
     assert reloaded.graph.entry_point == artifact.graph.entry_point
 
 
-def test_round_trip_preserves_node_edges():
+def test_round_trip_edges():
+    """A round trip keeps the node edges."""
     spec = _spec_with_everything()
     artifact = render_runtime_artifact(spec)
     reloaded = runtime_artifact_from_dict(json.loads(json.dumps(artifact.to_dict())))
@@ -79,7 +82,8 @@ def test_round_trip_preserves_node_edges():
     assert reloaded_node.route[0].target == "CLOSE"
 
 
-def test_round_trip_preserves_capture_as_tuples():
+def test_round_trip_capture_tuples():
+    """A round trip keeps captures as tuples."""
     state = build_message_state(
         type="question", wait="yes", say=["Q?"], capture=[{"slot": "name", "type_expr": "str"}]
     )
@@ -91,7 +95,8 @@ def test_round_trip_preserves_capture_as_tuples():
     assert isinstance(node.capture[0], tuple)
 
 
-def test_round_trip_preserves_global_router_handlers_and_faqs():
+def test_round_trip_router():
+    """A round trip keeps the global router handlers and FAQs."""
     spec = _spec_with_everything()
     artifact = render_runtime_artifact(spec)
     reloaded = runtime_artifact_from_dict(json.loads(json.dumps(artifact.to_dict())))
@@ -99,7 +104,8 @@ def test_round_trip_preserves_global_router_handlers_and_faqs():
     assert reloaded.global_router.handlers[0].trigger == ["repeat that"]
 
 
-def test_round_trip_preserves_tool_contracts_as_tool_contract_instances():
+def test_round_trip_tool_contracts():
+    """A round trip keeps tool contracts as ToolContract instances."""
     spec = _spec_with_everything()
     artifact = render_runtime_artifact(spec)
     reloaded = runtime_artifact_from_dict(json.loads(json.dumps(artifact.to_dict())))
@@ -109,20 +115,23 @@ def test_round_trip_preserves_tool_contracts_as_tool_contract_instances():
 
 
 def test_round_trip_preserves_constants():
+    """A round trip keeps the constants."""
     spec = _spec_with_everything()
     artifact = render_runtime_artifact(spec)
     reloaded = runtime_artifact_from_dict(json.loads(json.dumps(artifact.to_dict())))
     assert reloaded.constants == {"MAX_RETRY_ATTEMPTS": "3"}
 
 
-def test_round_trip_preserves_none_session_timeout():
+def test_round_trip_none_timeout():
+    """A round trip keeps a None session timeout."""
     spec = _spec_with_everything()
     artifact = render_runtime_artifact(spec)
     reloaded = runtime_artifact_from_dict(json.loads(json.dumps(artifact.to_dict())))
     assert reloaded.session_timeout_minutes is None
 
 
-def test_no_tool_contracts_or_handlers_round_trips_to_empty_lists():
+def test_round_trip_empty_lists():
+    """An artifact without contracts or handlers round-trips to empty lists."""
     spec = build_minimal_agent_spec()
     artifact = render_runtime_artifact(spec)
     reloaded = runtime_artifact_from_dict(json.loads(json.dumps(artifact.to_dict())))
@@ -140,7 +149,8 @@ def _spec_with_policies(**sections: list[str]):
     return build_minimal_agent_spec(policies=build_minimal_policies(**sections))
 
 
-def test_async_text_channel_pulls_its_own_style_section_into_say_policies():
+def test_async_text_style_policies():
+    """The async text channel takes its own style section as say policies."""
     spec = _spec_with_policies(
         style_and_async_rules=["Be warm."],
         response_length_rules=["Keep it short."],
@@ -158,7 +168,8 @@ def test_async_text_channel_pulls_its_own_style_section_into_say_policies():
     assert artifact.judgment_policies == ["Never invent availability."]
 
 
-def test_voice_channel_pulls_its_own_style_section_not_the_text_ones():
+def test_voice_style_policies():
+    """The voice channel takes its own style section, not the text ones."""
     spec = _spec_with_policies(
         style_and_vui_rules=["Speak naturally."],
         # A voice-compiled spec never has these — present here only to prove
@@ -170,19 +181,22 @@ def test_voice_channel_pulls_its_own_style_section_not_the_text_ones():
     assert artifact.say_policies == ["Speak naturally.", "State you are an AI."]
 
 
-def test_generic_channel_pulls_style_rules():
+def test_generic_style_policies():
+    """The generic channel takes the style rules."""
     spec = _spec_with_policies(style_rules=["Be concise."], compliance_and_scope_rules=["Be honest."])
     artifact = render_runtime_artifact(spec, "generic")
     assert artifact.say_policies == ["Be concise.", "Be honest."]
 
 
-def test_default_channel_profile_name_is_generic():
+def test_default_channel_is_generic():
+    """The default channel profile is generic."""
     spec = _spec_with_policies(style_rules=["Be concise."])
     artifact = render_runtime_artifact(spec)
     assert artifact.say_policies == ["Be concise."]
 
 
-def test_unmapped_channel_raises_instead_of_silently_returning_no_policies():
+def test_unmapped_channel_raises():
+    """An unmapped channel raises instead of returning no policies."""
     spec = _spec_with_policies(compliance_and_scope_rules=["Be honest."])
     with pytest.raises(ValueError, match="not_a_real_channel"):
         render_runtime_artifact(spec, "not_a_real_channel")
@@ -242,7 +256,8 @@ Cross-checks each `ChannelPolicyMapping` against the real channel
         assert not unknown, f"{channel_name}: mapping references undeclared section(s) {unknown}"
 
 
-def test_output_rules_and_forbidden_words_survive_the_round_trip():
+def test_round_trip_output_review():
+    """Output rules and forbidden words survive a round trip."""
     spec = build_minimal_agent_spec().model_copy(
         update={
             "output_rules": ["Never talk about money."],
@@ -261,13 +276,15 @@ def test_output_rules_and_forbidden_words_survive_the_round_trip():
     assert again.forbidden_words == artifact.forbidden_words
 
 
-def test_an_agent_without_output_review_has_empty_rules_and_words():
+def test_no_output_review_is_empty():
+    """An agent without output review has empty rules and words."""
     artifact = render_runtime_artifact(build_minimal_agent_spec())
     assert artifact.output_rules == [] and artifact.forbidden_words == []
     assert runtime_artifact_from_dict(artifact.to_dict()).forbidden_words == []
 
 
-def test_a_forbidden_word_may_be_a_plain_string_or_a_mapping():
+def test_forbidden_word_forms():
+    """A forbidden word may be a plain string or a mapping."""
     file = ForbiddenWordsFile.model_validate({"forbidden_words": ["alquiler", {"word": "sueldo", "use_instead": "apoyo"}]})
     assert [(w.word, w.use_instead) for w in file.forbidden_words] == [("alquiler", None), ("sueldo", "apoyo")]
     with pytest.raises(ValueError):

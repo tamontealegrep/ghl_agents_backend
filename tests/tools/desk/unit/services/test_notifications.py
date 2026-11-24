@@ -47,7 +47,9 @@ def sent(monkeypatch):
     return calls
 
 
-def test_nothing_is_sent_when_notification_email_is_not_set(sent):
+def test_nothing_sent_when_email_unset(sent):
+    """Nothing is sent when no notification email is set."""
+
     class _Off(_Settings):
         notification_email = ""
 
@@ -55,7 +57,8 @@ def test_nothing_is_sent_when_notification_email_is_not_set(sent):
     assert sent == []
 
 
-def test_email_goes_to_the_configured_address_with_booking_details(sent):
+def test_email_has_booking_details(sent):
+    """The email goes to the configured address with the booking details."""
     assert _run(_Settings()) is None
     [mail] = sent
     assert mail["to"] == "team@example.org" and mail["sender"] == "sender@example.org"
@@ -65,12 +68,15 @@ def test_email_goes_to_the_configured_address_with_booking_details(sent):
 
 
 def test_user_supplied_text_is_html_escaped(sent):
+    """User-supplied text is HTML-escaped."""
     _run(_Settings())
     assert "<b>Perez</b>" not in sent[0]["html"]
     assert "&lt;b&gt;Perez&lt;/b&gt;" in sent[0]["html"]
 
 
-def test_missing_gmail_credentials_are_reported_not_raised(sent):
+def test_missing_credentials_reported(sent):
+    """Missing Gmail credentials are reported, not raised."""
+
     class _NoGmail(_Settings):
         class gmail:
             google_client_id = google_client_secret = google_refresh_token = sender_email = ""
@@ -81,6 +87,8 @@ def test_missing_gmail_credentials_are_reported_not_raised(sent):
 
 
 def test_send_failure_is_reported_not_raised(monkeypatch, sent):
+    """A send failure is reported, not raised."""
+
     async def _boom(*args, **kwargs):
         raise RuntimeError("smtp down")
 
@@ -89,11 +97,14 @@ def test_send_failure_is_reported_not_raised(monkeypatch, sent):
 
 
 def test_join_errors_skips_empty_values():
+    """Joining errors skips empty values."""
     assert join_errors(None, "", "a", "b") == "a; b"
     assert join_errors(None, "") is None
 
 
 def test_several_addresses_receive_one_message(sent):
+    """Several addresses receive one message."""
+
     class _Many(_Settings):
         notification_email = "a@example.org, b@example.org;c@example.org"
 
@@ -103,6 +114,8 @@ def test_several_addresses_receive_one_message(sent):
 
 
 def test_invalid_addresses_are_skipped_and_reported(sent):
+    """Invalid addresses are skipped and reported."""
+
     class _Mixed(_Settings):
         notification_email = "ok@example.org, nope"
 
@@ -111,7 +124,9 @@ def test_invalid_addresses_are_skipped_and_reported(sent):
     assert "nope" in message
 
 
-def test_only_invalid_addresses_send_nothing_and_say_why(sent):
+def test_only_invalid_sends_nothing(sent):
+    """When every address is invalid nothing is sent and the reason is given."""
+
     class _Bad(_Settings):
         notification_email = "nope"
 

@@ -92,13 +92,15 @@ def _starts(body):
     return [s["start_co"][11:16] for s in body["available_slots"]]
 
 
-def test_the_configured_duration_is_sent_to_ghl(monkeypatch):
+def test_duration_sent_to_ghl(monkeypatch):
+    """The configured duration is sent to GHL."""
     day = _day()
     _, seen = _slots(monkeypatch, {"duration_minutes": 20}, [_at(day, 9)])
     assert seen["free"]["duration_minutes"] == 20
 
 
-def test_post_buffer_keeps_free_time_after_an_existing_appointment(monkeypatch):
+def test_post_buffer_after_appointment(monkeypatch):
+    """The post buffer keeps free time after an existing appointment."""
     day = _day()
     free = [_at(day, 9, 0), _at(day, 9, 30), _at(day, 9, 40), _at(day, 10, 0)]
     events = [_event(_at(day, 9, 0), _at(day, 9, 30))]
@@ -110,7 +112,8 @@ def test_post_buffer_keeps_free_time_after_an_existing_appointment(monkeypatch):
     assert seen["events_calls"] == 1
 
 
-def test_pre_buffer_keeps_free_time_before_an_existing_appointment(monkeypatch):
+def test_pre_buffer_before_appointment(monkeypatch):
+    """The pre buffer keeps free time before an existing appointment."""
     day = _day()
     free = [_at(day, 9, 20), _at(day, 9, 30)]
     events = [_event(_at(day, 10, 0), _at(day, 10, 30))]
@@ -120,7 +123,8 @@ def test_pre_buffer_keeps_free_time_before_an_existing_appointment(monkeypatch):
     assert _starts(body) == ["09:20"]
 
 
-def test_without_buffers_the_events_are_not_even_requested(monkeypatch):
+def test_no_buffers_no_events_request(monkeypatch):
+    """Without buffers the events are not requested from GHL."""
     day = _day()
     body, seen = _slots(
         monkeypatch, {}, [_at(day, 9), _at(day, 9, 30)], [_event(_at(day, 9), _at(day, 9, 30))]
@@ -129,7 +133,8 @@ def test_without_buffers_the_events_are_not_even_requested(monkeypatch):
     assert seen["events_calls"] == 0
 
 
-def test_if_ghl_events_cannot_be_read_the_slots_are_offered_unfiltered(monkeypatch):
+def test_unreadable_events_offer_all_slots(monkeypatch):
+    """If GHL events cannot be read, slots are offered unfiltered."""
     day = _day()
     body, _ = _slots(
         monkeypatch,
@@ -140,7 +145,8 @@ def test_if_ghl_events_cannot_be_read_the_slots_are_offered_unfiltered(monkeypat
     assert body["success"] is True and _starts(body) == ["09:00", "09:30"]
 
 
-def test_interval_keeps_offered_starts_apart(monkeypatch):
+def test_interval_spaces_slots(monkeypatch):
+    """The interval keeps offered starts apart."""
     day = _day()
     free = [_at(day, 9, m) for m in (0, 30)] + [_at(day, 10, m) for m in (0, 30)] + [_at(day, 11)]
     body, _ = _slots(monkeypatch, {"interval_minutes": 60}, free)
@@ -148,12 +154,14 @@ def test_interval_keeps_offered_starts_apart(monkeypatch):
 
 
 def test_interval_zero_offers_every_slot(monkeypatch):
+    """An interval of 0 offers every slot."""
     day = _day()
     body, _ = _slots(monkeypatch, {"interval_minutes": 0}, [_at(day, 9), _at(day, 9, 30)])
     assert _starts(body) == ["09:00", "09:30"]
 
 
-def test_min_notice_sets_the_earliest_slot_and_discards_earlier_ones(monkeypatch):
+def test_min_notice_sets_earliest_slot(monkeypatch):
+    """Minimum notice sets the earliest slot and drops earlier ones."""
     soon = _day(min_days=3)
     later = _day(min_days=12)
     body, seen = _slots(monkeypatch, {"min_notice_minutes": 10 * 24 * 60}, [_at(soon, 9), _at(later, 9)])
@@ -164,7 +172,8 @@ def test_min_notice_sets_the_earliest_slot_and_discards_earlier_ones(monkeypatch
     assert abs((asked - datetime.now(UTC) - timedelta(days=10)).total_seconds()) < 60
 
 
-def test_a_date_range_longer_than_ghls_limit_is_rejected_naming_the_variable(monkeypatch):
+def test_date_range_over_limit_rejected(monkeypatch):
+    """A date range above GHL's limit is rejected, naming the variable."""
     body, seen = _slots(monkeypatch, {"date_range_days": 45}, [])
     assert body["success"] is False
     assert "FA_DATE_RANGE_DAYS_IVF" in body["errors"] and "31" in body["errors"]
@@ -201,7 +210,8 @@ def _book(monkeypatch, tool_overrides, start: datetime, events, free=None):
     ).json()
 
 
-def test_booking_is_refused_inside_the_post_buffer_of_another_appointment(monkeypatch):
+def test_booking_refused_in_post_buffer(monkeypatch):
+    """Booking inside another appointment's post buffer is refused."""
     day = _day()
     start = _at(day, 9, 30)
     events = [_event(_at(day, 9, 0), _at(day, 9, 30))]
@@ -211,7 +221,8 @@ def test_booking_is_refused_inside_the_post_buffer_of_another_appointment(monkey
     assert body["success"] is False and body["reason"] == "slot_taken"
 
 
-def test_booking_is_refused_when_it_leaves_no_pre_buffer_before_the_next_appointment(monkeypatch):
+def test_booking_refused_without_pre_buffer(monkeypatch):
+    """Booking that leaves no pre buffer before the next appointment is refused."""
     day = _day()
     start = _at(day, 9, 30)  # 09:30-10:00, the next appointment starts at 10:00
     events = [_event(_at(day, 10, 0), _at(day, 10, 30))]
@@ -219,7 +230,8 @@ def test_booking_is_refused_when_it_leaves_no_pre_buffer_before_the_next_appoint
     assert _book(monkeypatch, {"pre_buffer_minutes": 10}, start, events)["reason"] == "slot_taken"
 
 
-def test_booking_respects_the_minimum_notice_of_the_calendar(monkeypatch):
+def test_booking_respects_min_notice(monkeypatch):
+    """Booking respects the calendar's minimum notice."""
     start = _at(_day(min_days=3), 9)
 
     body = _book(monkeypatch, {"min_notice_minutes": 10 * 24 * 60}, start, [])
@@ -228,6 +240,7 @@ def test_booking_respects_the_minimum_notice_of_the_calendar(monkeypatch):
 
 
 def test_booking_beyond_the_date_range_is_refused(monkeypatch):
+    """Booking beyond the date range is refused."""
     start = _at(_day(min_days=30), 9)
 
     body = _book(monkeypatch, {"date_range_days": 14}, start, [])
@@ -238,7 +251,8 @@ def test_booking_beyond_the_date_range_is_refused(monkeypatch):
 # --- editing ----------------------------------------------------------------------
 
 
-def test_rescheduling_ignores_the_event_itself_but_not_the_buffers_of_others(monkeypatch):
+def test_reschedule_ignores_itself_not_others(monkeypatch):
+    """Rescheduling ignores the appointment itself but not the buffers of others."""
     day = _day()
     new_start = _at(day, 9, 30)
     events = [
