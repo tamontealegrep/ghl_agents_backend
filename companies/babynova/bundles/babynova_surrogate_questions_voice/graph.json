@@ -89,311 +89,6 @@
         "fallback": []
       },
       {
-        "node_id": "C__CB_START",
-        "node_type": "start",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "C__CB_INIT_RETRY_COUNTS",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "C__CB_INIT_RETRY_COUNTS",
-        "node_type": "registration",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[c__callback_time_slot_retry_count] = 0",
-          "[c__callback_day_retry_count] = 0"
-        ],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "C__CB_ASK_TIME_SLOT",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "C__CB_ASK_TIME_SLOT",
-        "node_type": "question",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "¿En qué momento del día le queda mejor que le llamemos? Puede ser en la mañana, al mediodía, en la tarde o a cualquier hora."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [
-          [
-            "c__callback_time_slot",
-            "Literal[morning, midday, afternoon, evening, any]"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "C__CB_DECIDE_TIME_SLOT",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "C__CB_DECIDE_TIME_SLOT",
-        "node_type": "decision",
-        "goal": [],
-        "do": [
-          "[c__callback_time_slot_retry_count] = [c__callback_time_slot_retry_count] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "C__CB_ASK_DAY",
-            "condition_text": "IF [c__callback_time_slot_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: C__CB_ASK_DAY",
-            "is_mechanical": true,
-            "python_expression": "c__callback_time_slot_retry_count >= MAX_RETRY_ATTEMPTS",
-            "reason": null
-          },
-          {
-            "target": "C__CB_ASK_TIME_SLOT",
-            "condition_text": "IF [c__callback_time_slot] IS NULL -> GO_TO: C__CB_ASK_TIME_SLOT",
-            "is_mechanical": true,
-            "python_expression": "c__callback_time_slot is None",
-            "reason": null
-          },
-          {
-            "target": "C__CB_ASK_DAY",
-            "condition_text": "IF [c__callback_time_slot] IS NOT NULL -> GO_TO: C__CB_ASK_DAY",
-            "is_mechanical": true,
-            "python_expression": "c__callback_time_slot is not None",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "C__CB_ASK_TIME_SLOT",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "C__CB_ASK_DAY",
-        "node_type": "question",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "¿Y qué día le vendría bien? Puede ser mañana, pasado mañana o una fecha específica."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [
-          [
-            "c__callback_day",
-            "date_or_relative"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "C__CB_DECIDE_DAY",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "C__CB_DECIDE_DAY",
-        "node_type": "decision",
-        "goal": [],
-        "do": [
-          "[c__callback_day_retry_count] = [c__callback_day_retry_count] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "C__CB_EXECUTE_CALLBACK",
-            "condition_text": "IF [c__callback_day_retry_count] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: C__CB_EXECUTE_CALLBACK",
-            "is_mechanical": true,
-            "python_expression": "c__callback_day_retry_count >= MAX_RETRY_ATTEMPTS",
-            "reason": null
-          },
-          {
-            "target": "C__CB_ASK_DAY",
-            "condition_text": "IF [c__callback_day] IS NULL -> GO_TO: C__CB_ASK_DAY",
-            "is_mechanical": true,
-            "python_expression": "c__callback_day is None",
-            "reason": null
-          },
-          {
-            "target": "C__CB_EXECUTE_CALLBACK",
-            "condition_text": "IF [c__callback_day] IS NOT NULL -> GO_TO: C__CB_EXECUTE_CALLBACK",
-            "is_mechanical": true,
-            "python_expression": "c__callback_day is not None",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "C__CB_ASK_DAY",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "C__CB_EXECUTE_CALLBACK",
-        "node_type": "action",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": "callback",
-        "store": [],
-        "capture": [
-          [
-            "c__callback_registered",
-            "str"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "C__CB_FAREWELL",
-            "condition_text": "IF [c__callback_registered] == 'yes' -> GO_TO: C__CB_FAREWELL",
-            "is_mechanical": true,
-            "python_expression": "c__callback_registered == 'yes'",
-            "reason": null
-          },
-          {
-            "target": "C__CB_HANDLE_TOOL_FAILURE",
-            "condition_text": "IF [c__callback_registered] == 'no' -> GO_TO: C__CB_HANDLE_TOOL_FAILURE",
-            "is_mechanical": true,
-            "python_expression": "c__callback_registered == 'no'",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "C__CB_HANDLE_TOOL_FAILURE",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "C__CB_HANDLE_TOOL_FAILURE",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "No pude dejar programada la llamada en este momento. Si lo necesita, puede escribirnos al WhatsApp <CLINIC_WHATSAPP>. Que tenga un buen día."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "C__CB_END",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "C__CB_FAREWELL",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Perfecto, quedamos de llamarle el [c__callback_day] en la franja que me indicó. Que tenga un muy buen día."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "C__CB_END",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
         "node_id": "O__OP_S",
         "node_type": "start",
         "goal": [],
@@ -876,8 +571,8 @@
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_TO_C",
-            "condition_text": "IF [o__talk_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_TO_C",
+            "target": "O__OP_BYE_LATER",
+            "condition_text": "IF [o__talk_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_BYE_LATER",
             "is_mechanical": true,
             "python_expression": "o__talk_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -904,8 +599,8 @@
             "reason": null
           },
           {
-            "target": "O__OP_TO_C",
-            "condition_text": "IF [o__talk] == 'no' -> GO_TO: O__OP_TO_C",
+            "target": "O__OP_BYE_LATER",
+            "condition_text": "IF [o__talk] == 'no' -> GO_TO: O__OP_BYE_LATER",
             "is_mechanical": true,
             "python_expression": "o__talk == 'no'",
             "reason": null
@@ -913,7 +608,7 @@
         ],
         "fallback": [
           {
-            "target": "O__OP_TO_C",
+            "target": "O__OP_BYE_LATER",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -1131,8 +826,8 @@
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_TO_C",
-            "condition_text": "IF [o__stop_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_TO_C",
+            "target": "O__OP_BYE_LATER",
+            "condition_text": "IF [o__stop_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_BYE_LATER",
             "is_mechanical": true,
             "python_expression": "o__stop_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -1168,6 +863,32 @@
             "reason": null
           }
         ]
+      },
+      {
+        "node_id": "O__OP_BYE_LATER",
+        "node_type": "message",
+        "goal": [],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [
+          "Entiendo. Si le queda mejor otro momento, puede escribirnos al WhatsApp <CLINIC_WHATSAPP>."
+        ],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_END_NO",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
       },
       {
         "node_id": "O__OP_BYE_PROG",
@@ -1239,30 +960,6 @@
         "route": [
           {
             "target": "O__OP_END_WRONG",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_TO_C",
-        "node_type": "subflow_change",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "C__CB_START",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -1360,46 +1057,6 @@
         "say_verbatim": false,
         "execute": null,
         "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_INIT_RETRY_COUNTS",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "Q__SQ_INIT_RETRY_COUNTS",
-        "node_type": "registration",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[q__nationality_try] = 0",
-          "[q__age_try] = 0",
-          "[q__city_try] = 0",
-          "[q__kids_try] = 0",
-          "[q__birth_try] = 0",
-          "[q__csec_try] = 0",
-          "[q__abort_try] = 0",
-          "[q__pree_try] = 0",
-          "[q__weight_try] = 0",
-          "[q__height_try] = 0",
-          "[q__drugs_try] = 0",
-          "[q__btype_try] = 0",
-          "[q__avail_try] = 0",
-          "[q__missing_try] = 0",
-          "[q__prop_auth_try] = 0"
-        ],
         "capture": [],
         "eval": "code",
         "route": [
@@ -1576,9 +1233,7 @@
       {
         "node_id": "Q__SQ_NORM_CITY",
         "node_type": "registration",
-        "goal": [
-          "Tolerate accents, capitalization and small typos."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -2985,9 +2640,7 @@
       {
         "node_id": "Q__SQ_DEC_MISSING",
         "node_type": "decision",
-        "goal": [
-          "Re-ask the datum that not_eligibility_reason names as missing_data (<field>), with fresh retries per question; birth_type is optional (only if the last birth was less than 18 months ago)."
-        ],
+        "goal": [],
         "do": [
           "[q__missing_try] = [q__missing_try] + 1",
           "[q__classification_result] = NULL",
@@ -3334,9 +2987,7 @@
       {
         "node_id": "Q__SQ_BYE_NOFIT",
         "node_type": "decision",
-        "goal": [
-          "Pick the closing message that tells the candidate which requirement she does not meet, from the verdict of the classification tool."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -4816,9 +4467,7 @@
       {
         "node_id": "KQ__KQ_ANSWER",
         "node_type": "action",
-        "goal": [
-          "The answer is spoken aloud: it must come back short and plain."
-        ],
+        "goal": [],
         "do": [
           "TOOL CALL ONLY: call kb_answer now.",
           "question = [kq__doubt], language = 'Spanish'."
@@ -5875,7 +5524,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "En este momento no encuentro espacios disponibles para los próximos días. Si le parece, le llamamos apenas tengamos un espacio adecuado."
+          "En este momento no encuentro espacios disponibles para los próximos días. Si le parece, puede escribirnos al WhatsApp <CLINIC_WHATSAPP> y le ayudamos apenas haya un espacio adecuado."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -5884,7 +5533,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_TO_C",
+            "target": "SC__SC_TRUE_END",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -6063,9 +5712,7 @@
       {
         "node_id": "SC__SC_NORM_D",
         "node_type": "registration",
-        "goal": [
-          "Mechanical conversion of the chosen day into a date and a label, from [sc__calendar] and the dates in [sc__available_slots]; [sc__day] becomes empty if it names no real date."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -6269,9 +5916,7 @@
       {
         "node_id": "SC__SC_RES_T",
         "node_type": "registration",
-        "goal": [
-          "Mechanical resolution of what was said → one of the times offered on [sc__day], or nothing if it names none or several. A part of the day or a position also works ('por la tarde', 'la primera', 'la última de la mañana'); after the list was narrowed to a part of the day, a position refers to that list."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -6298,9 +5943,7 @@
       {
         "node_id": "SC__SC_SWAP_D",
         "node_type": "registration",
-        "goal": [
-          "Another day named while choosing a time: it becomes the day to validate; forget the time of the previous day."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -6568,9 +6211,7 @@
       {
         "node_id": "SC__SC_CLR",
         "node_type": "registration",
-        "goal": [
-          "New search from scratch: nothing from the previous attempt leaks into the new list of days."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -6616,9 +6257,7 @@
       {
         "node_id": "SC__SC_CLR_D",
         "node_type": "registration",
-        "goal": [
-          "Offer the days again from the same availability: forget the previous day and time."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
@@ -7112,9 +6751,7 @@
       {
         "node_id": "SC__SC_BOOK",
         "node_type": "action",
-        "goal": [
-          "Booked only if book_appointment returns [sc__success] == true."
-        ],
+        "goal": [],
         "do": [
           "[sc__book_try] = [sc__book_try] + 1",
           "TOOL CALL ONLY: call book_appointment now.",
@@ -7500,7 +7137,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Entiendo, podemos dejar la cita para otro momento. Si le parece, le programamos una llamada."
+          "Entiendo, podemos dejar la cita para otro momento. Si le parece, puede escribirnos al WhatsApp <CLINIC_WHATSAPP>."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -7509,31 +7146,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_TO_C",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "SC__SC_TO_C",
-        "node_type": "subflow_change",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "C__CB_START",
+            "target": "SC__SC_TRUE_END",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -7585,24 +7198,6 @@
         "disabled_in": [],
         "say": [
           "Gracias por su tiempo. Que tenga un excelente día."
-        ],
-        "say_verbatim": false,
-        "execute": "end_call",
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": []
-      },
-      {
-        "node_id": "C__CB_END",
-        "node_type": "terminal",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Hasta luego."
         ],
         "say_verbatim": false,
         "execute": "end_call",
@@ -7834,7 +7429,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_TO_C",
+            "target": "CALL_END",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -7858,7 +7453,7 @@
         ],
         "disabled_in": [],
         "say": [
-          "Claro, podemos programar una llamada para otro momento."
+          "Claro, sin problema. Si le queda mejor otro momento, puede escribirnos al WhatsApp <CLINIC_WHATSAPP>."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -7867,7 +7462,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "C__CB_START",
+            "target": "CALL_END",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -8581,150 +8176,6 @@
       ]
     },
     {
-      "name": "callback",
-      "description": "Authorized tool for escalating the conversation to a human call. It must be called when the flow cannot resolve something on its own (no availability, the booking fails repeatedly, a piece of information remains ambiguous, or the user explicitly asks to speak with a person). It only validates and normalizes the request — it does not send any email or create any task; the actual notification mechanism is executed by a subsequent step in the flow.",
-      "inputs": [
-        {
-          "name": "contact_name",
-          "required": true,
-          "description": "Full name of the contact as mentioned during the call.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "contact_phone",
-          "required": false,
-          "description": "Contact's phone number in international format. At least one of contact_phone and contact_email must be provided. e.g. +573001234567",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "contact_email",
-          "required": false,
-          "description": "Contact's email address. At least one of contact_phone and contact_email must be provided. e.g. maria@example.com",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "reason",
-          "required": true,
-          "description": "Callback reason. One of: no_availability (no availability was found), booking_failed (the booking failed repeatedly), user_requested (the user asked to speak with a person), ambiguous_data (a piece of information remained ambiguous after several attempts), technical_error (technical error during the flow).",
-          "type_expr": "Literal[no_availability, booking_failed, user_requested, ambiguous_data, technical_error]",
-          "examples": []
-        },
-        {
-          "name": "context",
-          "required": false,
-          "description": "Short summary of what happened in the conversation, so the person calling does not do so blindly. e.g. 'No availability was found in the next 14 days'",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "preferred_days",
-          "required": false,
-          "description": "Day or days when the user prefers to be called. Accepts one day, multiple days separated by commas, a list, or the shortcuts 'weekdays' / 'weekend' / 'any' (no preference). e.g. 'weekdays', 'monday,wednesday'",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "preferred_time_window",
-          "required": false,
-          "description": "Time window when the user prefers to be called. One of: morning, midday, afternoon, evening, any.",
-          "type_expr": "Literal[morning, midday, afternoon, evening, any]",
-          "examples": []
-        },
-        {
-          "name": "iana_timezone",
-          "required": true,
-          "description": "Standard IANA timezone identifier for the user — the same one already determined for get_available_slots. Examples: 'America/Bogota', 'America/Sao_Paulo', 'Europe/Madrid', 'Asia/Tokyo'.",
-          "type_expr": "str",
-          "examples": []
-        }
-      ],
-      "outputs": [
-        {
-          "name": "success",
-          "required": true,
-          "description": "Boolean value indicating whether the tool executed successfully.",
-          "type_expr": "bool",
-          "examples": []
-        },
-        {
-          "name": "contact_name",
-          "required": true,
-          "description": "Echo of the received name. null if the request was rejected.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "contact_phone",
-          "required": true,
-          "description": "Echo of the received phone number.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "contact_email",
-          "required": true,
-          "description": "Echo of the received email address.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "reason",
-          "required": true,
-          "description": "Normalized echo of the reason (lowercase).",
-          "type_expr": "Literal[no_availability, booking_failed, user_requested, ambiguous_data, technical_error]",
-          "examples": []
-        },
-        {
-          "name": "context",
-          "required": true,
-          "description": "Echo of the received context.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "preferred_days",
-          "required": true,
-          "description": "Normalized list of days (Monday through Sunday, in that order), with shortcuts already expanded. Empty array ([]) if no preference was provided or 'any' was provided.",
-          "type_expr": "list[str]",
-          "examples": []
-        },
-        {
-          "name": "preferred_time_window",
-          "required": true,
-          "description": "Normalized echo of the time window. null if no preference was provided or 'any' was provided.",
-          "type_expr": "Literal[morning, midday, afternoon, evening, any]",
-          "examples": []
-        },
-        {
-          "name": "iana_timezone",
-          "required": true,
-          "description": "Echo of the received timezone.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "errors",
-          "required": true,
-          "description": "Explains why the request was rejected (missing or invalid data: contact_name, contact_phone/contact_email, reason, iana_timezone, preferred_days, or preferred_time_window). null when the request is ready to be escalated.",
-          "type_expr": "str",
-          "examples": []
-        }
-      ],
-      "notes": [
-        "MANDATORY EXECUTION TRIGGER: if the active flow node is C__CB_RUN, execute this tool immediately — execution on this node is mandatory, without exception. Also execute it when get_available_slots returns no availability after several attempts, when book_appointment fails repeatedly, when a piece of information remains ambiguous after retrying, or when the user explicitly asks to speak with a person.",
-        "ARGUMENT RULE: contact_name is always required. You must send at least one of contact_phone and contact_email — you do not need to send both, but do not send neither.",
-        "ARGUMENT RULE: reason must be one of the 5 exact values listed below — map the actual flow situation to the closest one; do not invent another value.",
-        "ARGUMENT RULE: if the user mentions a preferred day, send it in preferred_days — accepts one day, multiple days separated by commas, or shortcuts such as 'weekdays'/'weekend'. If the user mentions a time range, map it to morning/midday/afternoon/evening in preferred_time_window. Neither is mandatory — if the user did not provide a preference, do not send them (or send 'any').",
-        "ARGUMENT RULE: iana_timezone is required and must be the same IANA timezone already determined for the user (the same one you would use for get_available_slots) — do not ask for it again if you already have it.",
-        "SOURCE OF TRUTH RULE: use 'errors' as the sole indicator that the request is incomplete or malformed — if it is null, the request is ready for the flow to escalate.",
-        "POST-EXECUTION RULE: after a successful execution (errors is null), inform the user that someone will contact them and close that branch of the conversation warmly — do not continue trying to resolve yourself what prompted the callback.",
-        "POST-EXECUTION RULE: if errors is not null, the data indicated in the message is missing or invalid — collect or correct it with the user and call the tool again before considering the request complete."
-      ]
-    },
-    {
       "name": "time_now",
       "description": "Authorized tool for getting the real current date and time in the given timezone. Its response is the flow's only authorized time reference.",
       "inputs": [
@@ -8863,468 +8314,6 @@
         "ARGUMENTS: name (nombre legible como 'language' o ID técnico), value (nuevo valor).",
         "CONTEXT RULE: provee contactId para cambios específicos del usuario; si se omite pero se da locationId, actualiza un valor global (Custom Value).",
         "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio."
-      ]
-    },
-    {
-      "name": "add_tags",
-      "description": "Agrega una o varias etiquetas (tags) a un contacto de GoHighLevel.",
-      "inputs": [
-        {
-          "name": "tags",
-          "required": true,
-          "description": "Etiquetas a agregar. Una lista de nombres. Ejemplo: ['calificada', 'cita_agendada'].",
-          "type_expr": "list[str]",
-          "examples": []
-        },
-        {
-          "name": "contact_id",
-          "required": true,
-          "description": "ID del contacto en GHL (disponible en context.contact_id).",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "location_id",
-          "required": false,
-          "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token de la subcuenta.",
-          "type_expr": "str",
-          "examples": []
-        }
-      ],
-      "outputs": [
-        {
-          "name": "success",
-          "required": true,
-          "description": "Indica si GHL aceptó la operación.",
-          "type_expr": "bool",
-          "examples": []
-        },
-        {
-          "name": "tags",
-          "required": false,
-          "description": "Todas las etiquetas que tiene el contacto después de la operación.",
-          "type_expr": "list[str]",
-          "examples": []
-        },
-        {
-          "name": "tags_added",
-          "required": false,
-          "description": "Las etiquetas que se agregaron en esta llamada (vacía si el contacto ya las tenía todas).",
-          "type_expr": "list[str]",
-          "examples": []
-        },
-        {
-          "name": "errors",
-          "required": false,
-          "description": "Mensaje de error si la operación falló.",
-          "type_expr": "str",
-          "examples": []
-        }
-      ],
-      "notes": [
-        "MANDATORY EXECUTION: ejecútala cuando el flujo pida marcar al contacto con una etiqueta (por ejemplo al calificar, al agendar o al cerrar la conversación). Solo agrega etiquetas; nunca quita ninguna.",
-        "ARGUMENTS: tags (lista de nombres de etiqueta, tal como los define el flujo), contact_id y location_id (disponibles en el contexto del contacto).",
-        "BEHAVIOUR: GHL pasa las etiquetas a minúsculas, crea las que la subcuenta aún no tiene e ignora las que el contacto ya tiene, así que repetir la llamada es seguro.",
-        "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; tags_added dice cuáles se agregaron realmente (vacía si el contacto ya las tenía todas).",
-        "SILENT ACTION: nunca le digas a la persona que le estás agregando etiquetas."
-      ]
-    },
-    {
-      "name": "remove_tags",
-      "description": "Quita una o varias etiquetas (tags) de un contacto de GoHighLevel.",
-      "inputs": [
-        {
-          "name": "tags",
-          "required": true,
-          "description": "Etiquetas a quitar. Una lista de nombres. Ejemplo: ['contacted', 'nuevo'].",
-          "type_expr": "list[str]",
-          "examples": []
-        },
-        {
-          "name": "contact_id",
-          "required": true,
-          "description": "ID del contacto en GHL (disponible en context.contact_id).",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "location_id",
-          "required": false,
-          "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token de la subcuenta.",
-          "type_expr": "str",
-          "examples": []
-        }
-      ],
-      "outputs": [
-        {
-          "name": "success",
-          "required": true,
-          "description": "Indica si GHL aceptó la operación.",
-          "type_expr": "bool",
-          "examples": []
-        },
-        {
-          "name": "tags",
-          "required": false,
-          "description": "Las etiquetas que le quedan al contacto después de la operación.",
-          "type_expr": "list[str]",
-          "examples": []
-        },
-        {
-          "name": "tags_removed",
-          "required": false,
-          "description": "Las etiquetas que se quitaron en esta llamada (vacía si el contacto no tenía ninguna).",
-          "type_expr": "list[str]",
-          "examples": []
-        },
-        {
-          "name": "errors",
-          "required": false,
-          "description": "Mensaje de error si la operación falló.",
-          "type_expr": "str",
-          "examples": []
-        }
-      ],
-      "notes": [
-        "MANDATORY EXECUTION: ejecútala cuando el flujo pida quitarle una etiqueta al contacto (por ejemplo al pasar de una etapa a otra). Solo quita las etiquetas que nombra; las demás se conservan.",
-        "ARGUMENTS: tags (lista de nombres de etiqueta, tal como los define el flujo), contact_id y location_id (disponibles en el contexto del contacto).",
-        "BEHAVIOUR: GHL pasa las etiquetas a minúsculas antes de compararlas e ignora las que el contacto no tiene, así que pedir una que no está no es un error.",
-        "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; tags_removed dice cuáles se quitaron realmente (vacía si el contacto no tenía ninguna) y tags cuáles le quedan.",
-        "SILENT ACTION: nunca le digas a la persona que le estás quitando etiquetas."
-      ]
-    },
-    {
-      "name": "update_contact",
-      "description": "Actualiza los datos de un contacto de GoHighLevel (nombre, correo, teléfono, dirección, fecha de nacimiento, país, asignación, no molestar) y varios campos personalizados en una sola llamada.",
-      "inputs": [
-        {
-          "name": "contact_id",
-          "required": true,
-          "description": "ID del contacto en GHL (disponible en context.contact_id).",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "location_id",
-          "required": false,
-          "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token y permite buscar campos personalizados por nombre.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "first_name",
-          "required": false,
-          "description": "Nombre.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "last_name",
-          "required": false,
-          "description": "Apellido.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "name",
-          "required": false,
-          "description": "Nombre completo.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "email",
-          "required": false,
-          "description": "Correo electrónico principal.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "phone",
-          "required": false,
-          "description": "Teléfono principal, con indicativo de país. Ejemplo: '+573001112233'.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "address1",
-          "required": false,
-          "description": "Dirección.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "city",
-          "required": false,
-          "description": "Ciudad.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "state",
-          "required": false,
-          "description": "Estado o departamento.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "postal_code",
-          "required": false,
-          "description": "Código postal.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "country",
-          "required": false,
-          "description": "País como código ISO de dos letras. Ejemplo: 'CO'.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "website",
-          "required": false,
-          "description": "Sitio web.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "timezone",
-          "required": false,
-          "description": "Zona horaria IANA. Ejemplo: 'America/Bogota'.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "source",
-          "required": false,
-          "description": "Fuente del contacto.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "date_of_birth",
-          "required": false,
-          "description": "Fecha de nacimiento. Ejemplo: '1990-05-31'.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "assigned_to",
-          "required": false,
-          "description": "ID del usuario de GHL al que se asigna el contacto.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "dnd",
-          "required": false,
-          "description": "true para no molestar al contacto por ningún canal; false para quitarlo.",
-          "type_expr": "bool",
-          "examples": []
-        },
-        {
-          "name": "custom_fields",
-          "required": false,
-          "description": "Campos personalizados a cambiar, como textos 'nombre=valor'. Ejemplo: ['city_raw=Chía', 'surrogate_interest=interested'].",
-          "type_expr": "list[str]",
-          "examples": []
-        }
-      ],
-      "outputs": [
-        {
-          "name": "success",
-          "required": true,
-          "description": "Indica si GHL aceptó la operación.",
-          "type_expr": "bool",
-          "examples": []
-        },
-        {
-          "name": "contact_id",
-          "required": false,
-          "description": "Eco del ID del contacto.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "updated_fields",
-          "required": false,
-          "description": "Los campos que se enviaron a GHL.",
-          "type_expr": "list[str]",
-          "examples": []
-        },
-        {
-          "name": "errors",
-          "required": false,
-          "description": "Mensaje de error si la operación falló.",
-          "type_expr": "str",
-          "examples": []
-        }
-      ],
-      "notes": [
-        "MANDATORY EXECUTION: ejecútala cuando el flujo deba guardar o corregir varios datos del contacto a la vez. Para un solo campo personalizado también sirve update_custom_field.",
-        "ARGUMENTS: contact_id (obligatorio) y solo los datos que cambian; lo que no se envía no se modifica. Nunca envíes un dato que la persona no haya dado.",
-        "TAGS: esta herramienta no cambia las etiquetas; para eso están add_tags y remove_tags.",
-        "CUSTOM FIELDS: custom_fields es una lista de textos 'nombre=valor' (por ejemplo 'city=Bogotá'). Con location_id se buscan por nombre; un campo desplegable solo acepta una de sus opciones.",
-        "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; updated_fields dice qué se envió. Un correo o teléfono que ya pertenece a otro contacto puede ser rechazado: el motivo viene en errors.",
-        "SILENT ACTION: nunca le digas a la persona que estás guardando o actualizando sus datos."
-      ]
-    },
-    {
-      "name": "update_opportunity",
-      "description": "Actualiza los datos de una oportunidad de GoHighLevel: nombre, pipeline, etapa, estado, valor, previsión de cierre, asignación, motivo de pérdida y campos personalizados.",
-      "inputs": [
-        {
-          "name": "opportunity_id",
-          "required": true,
-          "description": "ID de la oportunidad en GHL.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "location_id",
-          "required": false,
-          "description": "ID de la ubicación (subcuenta) en GHL (disponible en context.location_id). Elige el token de la subcuenta.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "name",
-          "required": false,
-          "description": "Nombre de la oportunidad.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "pipeline_id",
-          "required": false,
-          "description": "ID del pipeline.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "pipeline_stage_id",
-          "required": false,
-          "description": "ID de la etapa del pipeline.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "status",
-          "required": false,
-          "description": "Estado de la oportunidad.",
-          "type_expr": "Literal[open, won, lost, abandoned]",
-          "examples": []
-        },
-        {
-          "name": "monetary_value",
-          "required": false,
-          "description": "Valor monetario, un número de 0 o más escrito como texto. Ejemplo: '1500.50'.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "forecast_expected_close_date",
-          "required": false,
-          "description": "Fecha esperada de cierre. Ejemplo: '2026-12-31'.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "forecast_probability",
-          "required": false,
-          "description": "Probabilidad de cierre, un número escrito como texto. Ejemplo: '75'.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "assigned_to",
-          "required": false,
-          "description": "ID del usuario de GHL al que se asigna la oportunidad.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "lost_reason_id",
-          "required": false,
-          "description": "ID del motivo de pérdida (de GHL). Solo cuenta si el estado es o pasa a lost.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "custom_fields",
-          "required": false,
-          "description": "Campos personalizados a cambiar, como textos 'clave=valor'. Ejemplo: ['source_detail=web'].",
-          "type_expr": "list[str]",
-          "examples": []
-        }
-      ],
-      "outputs": [
-        {
-          "name": "success",
-          "required": true,
-          "description": "Indica si GHL aceptó la operación.",
-          "type_expr": "bool",
-          "examples": []
-        },
-        {
-          "name": "opportunity_id",
-          "required": false,
-          "description": "Eco del ID de la oportunidad.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "updated_fields",
-          "required": false,
-          "description": "Los campos que se enviaron a GHL.",
-          "type_expr": "list[str]",
-          "examples": []
-        },
-        {
-          "name": "status",
-          "required": false,
-          "description": "Estado en que quedó la oportunidad.",
-          "type_expr": "Literal[open, won, lost, abandoned]",
-          "examples": []
-        },
-        {
-          "name": "pipeline_id",
-          "required": false,
-          "description": "Pipeline en que quedó la oportunidad.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "pipeline_stage_id",
-          "required": false,
-          "description": "Etapa en que quedó la oportunidad.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "name",
-          "required": false,
-          "description": "Nombre de la oportunidad.",
-          "type_expr": "str",
-          "examples": []
-        },
-        {
-          "name": "errors",
-          "required": false,
-          "description": "Mensaje de error si la operación falló.",
-          "type_expr": "str",
-          "examples": []
-        }
-      ],
-      "notes": [
-        "MANDATORY EXECUTION: ejecútala cuando el flujo deba mover la oportunidad de etapa, cambiar su estado o actualizar sus datos.",
-        "ARGUMENTS: opportunity_id (obligatorio) y solo los datos que cambian; lo que no se envía no se modifica.",
-        "STATUS: open, won, lost o abandoned. lost_reason_id solo cuenta cuando el estado es o pasa a lost.",
-        "PIPELINE AND STAGE: pipeline_id y pipeline_stage_id son IDs de GHL que define el flujo; nunca los inventes. Mover la oportunidad a un pipeline donde el contacto ya tiene otra puede ser rechazado: el motivo viene en errors.",
-        "CUSTOM FIELDS: custom_fields es una lista de textos 'clave=valor' con la clave del campo sin el prefijo 'opportunity.' (o su ID). Un campo que no existe en la subcuenta lo ignora GHL.",
-        "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; status, pipeline_id y pipeline_stage_id dicen cómo quedó la oportunidad.",
-        "SILENT ACTION: nunca le digas a la persona que estás actualizando la oportunidad."
       ]
     },
     {
@@ -9791,12 +8780,12 @@
     "MANDATORY ADDRESS RULE: always use \"usted\" with the candidate and with anyone who answers. Never use \"tú\". SAY flex lines must be spoken in \"usted\". No emojis, symbols or text formatting: everything is spoken.",
     "MANDATORY SILENT-ACTIONS RULE: never say you are saving, recording, updating, calculating, verifying, consulting or processing information, nor mention tools, systems, fields, the CRM or the BMI as a calculation; run actions silently. After each answer of the candidate, at most one brief natural acknowledgment ('Perfecto', 'Listo', 'Entiendo') and go straight to the next question.",
     "Listening: if the user pauses for long, wait (they may be thinking). If they ask you to repeat, repeat the same key words with slightly different intonation. Confirm what you heard before continuing when the information is critical (phone number, date, name).",
-    "Interruptions (barge-in active): if the user speaks while you speak, stop your voice at once and yield the turn (if both start together, wait 1.5 seconds of silence before resuming); do not resume the sentence if they already answered the question's intent. Noise or a brief acknowledgment ('ajá', 'sí', 'entiendo'): pause briefly and continue without restarting the sentence. A new question or a correction of a datum: drop your previous answer, resolve it and confirm the change before moving on. If they answer before you finish the question, validate only the new information and advance. After an interruption use a transition marker ('Entiendo', 'Perfecto', 'Ah, vale') and answer with the lowest latency.",
+    "Interruptions (barge-in): if the user speaks while you speak, stop at once and yield the turn (if both start together, wait 1.5 seconds of silence); do not resume the sentence if they already answered its intent. Noise or a brief acknowledgment ('ajá', 'sí', 'entiendo'): pause briefly and continue without restarting. A new question or a correction of a datum: drop your previous answer, resolve it and confirm the change. After an interruption use a transition marker ('Entiendo', 'Perfecto') and answer with the lowest latency.",
     "Persistent ambient noise: stop and ask kindly 'Disculpe, no le escuché bien, ¿me lo repite?' instead of speaking into silence.",
-    "MANDATORY AVAILABILITY RULE: never offer, suggest, infer, summarize or promise days, times, schedule ranges or availability (not even 'podría ser' or 'tenemos espacio') without having run get_available_slots and received available_slots as a real, non-empty, parseable list; its latest literal output is the only source. Accept only a day present in the start_local dates of available_slots and a time that is a slot of that day; if the user proposes another, do not adjust or approximate it: say it is not among the options consulted and offer again only what the tool returned. If get_available_slots was not called, failed or returned nulls, an invalid format or an empty list: stop the day/time selection, offer no options, do not improvise, and return to SC_DEC_T to run it again.",
-    "MANDATORY BOOKING RULE: never say an appointment was scheduled, booked, reserved, confirmed or created before running book_appointment and receiving success == true; before that you may only say you are going to create it or are verifying the booking. start_date is the literal start_co of the chosen slot from available_slots; the calendar, the duration and the contact data are already configured in the tool; never fabricate start_date, end_date, email, phone or name.",
+    "MANDATORY AVAILABILITY RULE: never offer, suggest, infer or promise days, times or availability (not even 'podría ser' or 'tenemos espacio') without having run get_available_slots and received available_slots as a real, non-empty list; its latest output is the only source. Accept only a day present in the start_local dates and a time that is a slot of that day; if the user proposes another, do not approximate it: say it is not among the options and offer again only what the tool returned. If get_available_slots was not called, failed or returned nulls or an empty list: offer no options, do not improvise, and return to SC_DEC_T to run it again. SC_AV and SC_CHK are the only points that get availability; every time the user wants to schedule, change the date or time, or see more options, return to SC_DEC_T.",
+    "MANDATORY BOOKING RULE: never say an appointment was scheduled, booked, confirmed or created before running book_appointment and receiving success == true; before that you may only say you are going to create it. start_date is the literal start_co of the chosen slot from available_slots (SC_BOOK needs an [sc__slot] traceable to it; otherwise return to SC_DEC_T); the calendar, duration and contact data are already configured in the tool; never fabricate start_date, end_date, email, phone or name. SC_BOOK runs book_appointment immediately; SC_DONE is only reachable after success == true.",
     "Before saying there were changes in the program, first check whether the person is already in a process with <COMPANY_NAME>; report changes only if that check confirms it applies to her case.",
-    "Scheduling in two steps: first the available days and, only after the date is chosen, the times of that day. When listing times mention only the start time (no duration or place) and do not read the list literally if it sounds mechanical: group consecutive times. Up to 3 options: each time in order ('dos de la tarde, dos y veinte de la tarde y dos y cuarenta de la tarde'). More than 3 in one continuous block: a single range ('tenemos disponibilidad de dos a tres y cuarenta de la tarde'). More than 3 in several blocks: one range per block joined with 'y' ('de dos a dos y cuarenta y de cuatro a cinco y cuarenta de la tarde'). Dates with weekday, day number and month ('lunes 5 de julio'). Times in 12-hour format, always in words and never numeric ('tres y veinte de la tarde', not '3:20 de la tarde'), with 'de la mañana' for am and 'de la tarde' for pm (Colombian custom).",
+    "Scheduling in two steps: first the available days and, only after the date is chosen, the times of that day. List only start times (no duration or place) and group consecutive times instead of reading them one by one. Up to 3 options: each one in order ('dos de la tarde, dos y veinte de la tarde y dos y cuarenta de la tarde'). More than 3 in one block: a single range ('de dos a tres y cuarenta de la tarde'); in several blocks: one range per block joined with 'y'. Dates with weekday, day number and month ('lunes 5 de julio'). Times in 12-hour format, always in words ('tres y veinte de la tarde', not '3:20'), with 'de la mañana' or 'de la tarde'.",
     "Never give medical diagnoses nor recommend specific treatments. Never guarantee participation: it depends on a later evaluation.",
     "Never share the candidate's medical or personal information with third parties without explicit authorization, nor reveal the purpose of the call (surrogate program) to anyone who answers who is not her.",
     "Never accept payments or bank details during the call.",
