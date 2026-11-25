@@ -119,6 +119,181 @@
     ]
   },
   {
+    "name": "send_whatsapp_template",
+    "description": "Envía a un contacto de GoHighLevel una plantilla de WhatsApp aprobada.",
+    "notes": [
+      "MANDATORY EXECUTION: ejecútala cuando el flujo pida enviar una plantilla de WhatsApp al contacto (por ejemplo para retomar a quien no ha escrito en las últimas 24 horas). La plantilla la define el flujo con su nombre e idioma; nunca inventes un nombre.",
+      "ARGUMENTS: template_name y language (los que indica el flujo), contact_id y location_id (disponibles en el contexto del contacto). body_variables solo si la plantilla tiene variables: los valores en orden, o {{contact.first_name}} para el nombre del contacto, que GHL resuelve. from_number_id, to_number y category solo si el flujo los indica.",
+      "BEHAVIOUR: GHL identifica la plantilla por nombre e idioma, no por el ID numérico de su lista; el contacto recibe la plantilla aprobada (la herramienta rellena sola el texto que GHL exige). Fuera de las 24 horas de WhatsApp solo una plantilla llega al contacto.",
+      "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el mensaje; message_id y conversation_id identifican lo enviado. Si success es false, no digas que se envió.",
+      "SILENT ACTION: no le cuentes a la persona detalles técnicos del envío (IDs, plantilla, herramienta)."
+    ],
+    "inputs": [
+      {
+        "name": "template_name",
+        "required": true,
+        "description": "Nombre de la plantilla en GHL, tal como lo indica el flujo (ej. sam_fc_es)."
+      },
+      {
+        "name": "language",
+        "required": true,
+        "description": "Idioma de la plantilla tal como lo muestra GHL: es, en_US o pt_BR."
+      },
+      {
+        "name": "contact_id",
+        "required": false,
+        "description": "ID del contacto en GHL (disponible en context.contact_id)."
+      },
+      {
+        "name": "location_id",
+        "required": false,
+        "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token de la subcuenta."
+      },
+      {
+        "name": "body_variables",
+        "required": false,
+        "description": "Valores de las variables del cuerpo, en orden. Ejemplo: ['{{contact.first_name}}']."
+      },
+      {
+        "name": "category",
+        "required": false,
+        "description": "Categoría de la plantilla: UTILITY (por defecto), MARKETING o AUTHENTICATION."
+      },
+      {
+        "name": "from_number_id",
+        "required": false,
+        "description": "ID del número de WhatsApp remitente. Si falta, el predeterminado de la subcuenta."
+      },
+      {
+        "name": "to_number",
+        "required": false,
+        "description": "Número de WhatsApp del contacto en formato internacional. Si falta, el que GHL tiene del contacto."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Indica si GHL aceptó el mensaje."
+      },
+      {
+        "name": "message_id",
+        "required": false,
+        "description": "ID del mensaje que creó GHL."
+      },
+      {
+        "name": "conversation_id",
+        "required": false,
+        "description": "ID de la conversación del contacto."
+      },
+      {
+        "name": "errors",
+        "required": false,
+        "description": "Mensaje de error si el envío falló."
+      }
+    ]
+  },
+  {
+    "name": "add_tags",
+    "description": "Agrega una o varias etiquetas (tags) a un contacto de GoHighLevel.",
+    "notes": [
+      "MANDATORY EXECUTION: ejecútala cuando el flujo pida marcar al contacto con una etiqueta (por ejemplo al calificar, al agendar o al cerrar la conversación). Solo agrega etiquetas; nunca quita ninguna.",
+      "ARGUMENTS: tags (lista de nombres de etiqueta, tal como los define el flujo), contact_id y location_id (disponibles en el contexto del contacto).",
+      "BEHAVIOUR: GHL pasa las etiquetas a minúsculas, crea las que la subcuenta aún no tiene e ignora las que el contacto ya tiene, así que repetir la llamada es seguro.",
+      "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; tags_added dice cuáles se agregaron realmente (vacía si el contacto ya las tenía todas).",
+      "SILENT ACTION: nunca le digas a la persona que le estás agregando etiquetas."
+    ],
+    "inputs": [
+      {
+        "name": "tags",
+        "required": true,
+        "description": "Etiquetas a agregar. Una lista de nombres. Ejemplo: ['calificada', 'cita_agendada']."
+      },
+      {
+        "name": "contact_id",
+        "required": true,
+        "description": "ID del contacto en GHL (disponible en context.contact_id)."
+      },
+      {
+        "name": "location_id",
+        "required": false,
+        "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token de la subcuenta."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Indica si GHL aceptó la operación."
+      },
+      {
+        "name": "tags",
+        "required": false,
+        "description": "Todas las etiquetas que tiene el contacto después de la operación."
+      },
+      {
+        "name": "tags_added",
+        "required": false,
+        "description": "Las etiquetas que se agregaron en esta llamada (vacía si el contacto ya las tenía todas)."
+      },
+      {
+        "name": "errors",
+        "required": false,
+        "description": "Mensaje de error si la operación falló."
+      }
+    ]
+  },
+  {
+    "name": "remove_tags",
+    "description": "Quita una o varias etiquetas (tags) de un contacto de GoHighLevel.",
+    "notes": [
+      "MANDATORY EXECUTION: ejecútala cuando el flujo pida quitarle una etiqueta al contacto (por ejemplo al pasar de una etapa a otra). Solo quita las etiquetas que nombra; las demás se conservan.",
+      "ARGUMENTS: tags (lista de nombres de etiqueta, tal como los define el flujo), contact_id y location_id (disponibles en el contexto del contacto).",
+      "BEHAVIOUR: GHL pasa las etiquetas a minúsculas antes de compararlas e ignora las que el contacto no tiene, así que pedir una que no está no es un error.",
+      "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; tags_removed dice cuáles se quitaron realmente (vacía si el contacto no tenía ninguna) y tags cuáles le quedan.",
+      "SILENT ACTION: nunca le digas a la persona que le estás quitando etiquetas."
+    ],
+    "inputs": [
+      {
+        "name": "tags",
+        "required": true,
+        "description": "Etiquetas a quitar. Una lista de nombres. Ejemplo: ['contacted', 'nuevo']."
+      },
+      {
+        "name": "contact_id",
+        "required": true,
+        "description": "ID del contacto en GHL (disponible en context.contact_id)."
+      },
+      {
+        "name": "location_id",
+        "required": false,
+        "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token de la subcuenta."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Indica si GHL aceptó la operación."
+      },
+      {
+        "name": "tags",
+        "required": false,
+        "description": "Las etiquetas que le quedan al contacto después de la operación."
+      },
+      {
+        "name": "tags_removed",
+        "required": false,
+        "description": "Las etiquetas que se quitaron en esta llamada (vacía si el contacto no tenía ninguna)."
+      },
+      {
+        "name": "errors",
+        "required": false,
+        "description": "Mensaje de error si la operación falló."
+      }
+    ]
+  },
+  {
     "name": "calculate_bmi",
     "description": "Authorized tool to calculate BMI. Its result is the source of truth for eligibility.",
     "notes": [
