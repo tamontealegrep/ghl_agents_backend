@@ -179,13 +179,13 @@
         "node_id": "O__OP_GREET_NAME",
         "node_type": "message",
         "goal": [
-          "Greet the candidate by her first name ({{contact.first_name}}), introduce yourself as the virtual assistant of <COMPANY_NAME> and welcome her warmly."
+          "Greet the candidate by her first name ({{contact.first_name}}), introduce yourself as the virtual assistant of <COMPANY> and welcome her warmly."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Hi {{contact.first_name}}, welcome! I am <AGENT_NAME>, a virtual assistant of <COMPANY_NAME>."
+          "Hi {{contact.first_name}}, welcome! I am <AGENT>, a virtual assistant of <COMPANY>."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -207,13 +207,13 @@
         "node_id": "O__OP_GREET",
         "node_type": "message",
         "goal": [
-          "Greet the candidate, introduce yourself as the virtual assistant of <COMPANY_NAME> and welcome her warmly."
+          "Greet the candidate, introduce yourself as the virtual assistant of <COMPANY> and welcome her warmly."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Hi, welcome! I am <AGENT_NAME>, a virtual assistant of <COMPANY_NAME>."
+          "Hi, welcome! I am <AGENT>, a virtual assistant of <COMPANY>."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -236,14 +236,14 @@
         "node_type": "question",
         "goal": [
           "Present the personal data processing policy and obtain authorization before asking anything personal.",
-          "Mention the policy reference and its link exactly as written in <DATA_LAW_REFERENCE>; never shorten or rewrite the link.",
+          "Mention the policy reference and its link exactly as written in <DATA_LAW>; never shorten or rewrite the link.",
           "Sandler tone: she decides, and not authorizing is a valid answer."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Before we start, I want to be transparent about your data. By continuing this conversation you accept our <DATA_LAW_REFERENCE>. Do you authorize us to continue?"
+          "Before we start, I want to be transparent about your data. By continuing this conversation you accept our <DATA_LAW>. Do you authorize us to continue?"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -300,9 +300,9 @@
           },
           {
             "target": "O__OP_ASK_STOP",
-            "condition_text": "IF [o__consent_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_ASK_STOP",
+            "condition_text": "IF [o__consent_try] >= <MAX_TRY> -> GO_TO: O__OP_ASK_STOP",
             "is_mechanical": true,
-            "python_expression": "o__consent_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "o__consent_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -361,7 +361,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "So we both make good use of our time: I would like to ask you a few short questions, about <PREQUAL_MINUTES> minutes, to see whether the program is a fit for you. At the end we will both know if it makes sense to schedule an appointment, and if it does not, that is completely fine. Does that sound good to you?"
+          "So we both make good use of our time: I would like to ask you a few short questions, about <PREQUAL_MIN> minutes, to see whether the program is a fit for you. At the end we will both know if it makes sense to schedule an appointment, and if it does not, that is completely fine. Does that sound good to you?"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -425,9 +425,9 @@
           },
           {
             "target": "O__OP_SYNC_INT_NO",
-            "condition_text": "IF [o__agree_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_SYNC_INT_NO",
+            "condition_text": "IF [o__agree_try] >= <MAX_TRY> -> GO_TO: O__OP_SYNC_INT_NO",
             "is_mechanical": true,
-            "python_expression": "o__agree_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "o__agree_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -635,13 +635,13 @@
         "node_id": "O__OP_ASK_PROG",
         "node_type": "question",
         "goal": [
-          "Confirm whether she already takes part in any program of <COMPANY_NAME> before going on with the questions."
+          "Confirm whether she already takes part in any program of <COMPANY> before going on with the questions."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Before we go on, are you currently already part of any <COMPANY_NAME> program?"
+          "Before we go on, are you currently already part of any <COMPANY> program?"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -698,9 +698,9 @@
           },
           {
             "target": "O__OP_TO_Q",
-            "condition_text": "IF [o__prog_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_TO_Q",
+            "condition_text": "IF [o__prog_try] >= <MAX_TRY> -> GO_TO: O__OP_TO_Q",
             "is_mechanical": true,
-            "python_expression": "o__prog_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "o__prog_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -861,9 +861,9 @@
         "route": [
           {
             "target": "O__OP_END_NO",
-            "condition_text": "IF [o__stop_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_END_NO",
+            "condition_text": "IF [o__stop_try] >= <MAX_TRY> -> GO_TO: O__OP_END_NO",
             "is_mechanical": true,
-            "python_expression": "o__stop_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "o__stop_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -930,7 +930,7 @@
         "node_id": "O__OP_BYE_PROG",
         "node_type": "message",
         "goal": [
-          "Say goodbye when she already takes part in a program with <COMPANY_NAME>."
+          "Say goodbye when she already takes part in a program with <COMPANY>."
         ],
         "do": [],
         "trigger": [],
@@ -1355,9 +1355,9 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__doc_type_try] >= <MAX_RETRY_ATTEMPTS> AND [q__doc_type] IS NULL -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__doc_type_try] >= <MAX_TRY> AND [q__doc_type] IS NULL -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__doc_type_try >= MAX_RETRY_ATTEMPTS and q__doc_type is None",
+            "python_expression": "q__doc_type_try >= MAX_TRY and q__doc_type is None",
             "reason": null
           },
           {
@@ -1495,9 +1495,9 @@
           },
           {
             "target": "Q__SQ_FIND_MISSING",
-            "condition_text": "IF [q__doc_num_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FIND_MISSING",
+            "condition_text": "IF [q__doc_num_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FIND_MISSING",
             "is_mechanical": true,
-            "python_expression": "q__doc_num_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__doc_num_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -1813,16 +1813,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__age_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__age_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__age_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__age_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__age_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__age_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__age_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__age_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -1937,9 +1937,9 @@
           },
           {
             "target": "Q__SQ_NAT_SKIP",
-            "condition_text": "IF [q__nat_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_NAT_SKIP",
+            "condition_text": "IF [q__nat_try] >= <MAX_TRY> -> GO_TO: Q__SQ_NAT_SKIP",
             "is_mechanical": true,
-            "python_expression": "q__nat_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__nat_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -2063,7 +2063,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "I understand. For now we only cover <ALLOWED_CITIES>. Do you live in one of these places, or is it a different city?"
+          "I understand. For now we only cover <CITIES>. Do you live in one of these places, or is it a different city?"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -2101,7 +2101,7 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[q__city_residence] = match in <ALLOWED_CITIES> | 'Otro'"
+          "[q__city_residence] = match in <CITIES> | 'Otro'"
         ],
         "capture": [],
         "eval": "code",
@@ -2134,16 +2134,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__city_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__city_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__city_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__city_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__city_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__city_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__city_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__city_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -2281,16 +2281,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__kids_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__kids_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__kids_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__kids_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__kids_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__kids_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__kids_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__kids_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -2464,16 +2464,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__birth_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__birth_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__birth_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__birth_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__birth_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__birth_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__birth_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__birth_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -2579,16 +2579,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__btype_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__btype_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__btype_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__btype_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__btype_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__btype_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__btype_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__btype_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -2693,16 +2693,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__csec_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__csec_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__csec_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__csec_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__csec_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__csec_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__csec_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__csec_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -2808,16 +2808,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__abort_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__abort_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__abort_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__abort_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__abort_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__abort_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__abort_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__abort_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -2923,16 +2923,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__pree_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__pree_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__pree_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__pree_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__pree_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__pree_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__pree_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__pree_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -2996,7 +2996,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "To estimate your body mass index without asking for exact numbers, which of these ranges is your weight in: less than 50 kilos, between 50 and 60, between 60 and 70, between 70 and 80, or more than 80?"
+          "Which of these ranges is your weight in: less than 50 kilos, between 50 and 60, between 60 and 70, between 70 and 80, or more than 80?"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -3037,16 +3037,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__weight_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__weight_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__weight_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__weight_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__weight_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__weight_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__weight_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__weight_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -3151,16 +3151,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__height_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__height_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__height_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__height_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__height_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__height_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__height_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__height_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -3273,16 +3273,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__height_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__height_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__height_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__height_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__height_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__height_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__height_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__height_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -3382,16 +3382,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__drugs_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__drugs_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__drugs_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__drugs_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__drugs_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__drugs_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__drugs_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__drugs_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -3584,16 +3584,16 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__avail_try] >= <MAX_RETRY_ATTEMPTS> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__avail_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__avail_try >= MAX_RETRY_ATTEMPTS and q__force_cls == True",
+            "python_expression": "q__avail_try >= MAX_TRY and q__force_cls == True",
             "reason": null
           },
           {
             "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__avail_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_FORCE_CLS",
+            "condition_text": "IF [q__avail_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
             "is_mechanical": true,
-            "python_expression": "q__avail_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__avail_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -3670,9 +3670,9 @@
           },
           {
             "target": "Q__SQ_DOC_LABEL",
-            "condition_text": "IF [q__doc_type] != 'other' AND [q__doc_number] IS NULL AND [q__doc_num_try] < <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_DOC_LABEL",
+            "condition_text": "IF [q__doc_type] != 'other' AND [q__doc_number] IS NULL AND [q__doc_num_try] < <MAX_TRY> -> GO_TO: Q__SQ_DOC_LABEL",
             "is_mechanical": true,
-            "python_expression": "q__doc_type != 'other' and q__doc_number is None and q__doc_num_try < MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__doc_type != 'other' and q__doc_number is None and q__doc_num_try < MAX_TRY",
             "reason": null
           },
           {
@@ -4381,9 +4381,9 @@
         "route": [
           {
             "target": "Q__SQ_SYNC_ABANDONED",
-            "condition_text": "IF [q__missing_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_SYNC_ABANDONED",
+            "condition_text": "IF [q__missing_try] >= <MAX_TRY> -> GO_TO: Q__SQ_SYNC_ABANDONED",
             "is_mechanical": true,
-            "python_expression": "q__missing_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__missing_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -4499,7 +4499,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Great news: based on your answers you meet our initial criteria. The next step is a short appointment of about <APPOINTMENT_DURATION_MINUTES> minutes with our team at <APPOINTMENT_ADDRESS>, where they go over your case and answer all your questions. It only works if we both commit: you set the time aside, and our team will be ready for you. Taking part is still subject to the full evaluation."
+          "Great news: based on your answers you meet our initial criteria. The next step is a short appointment of about <APPT_MIN> minutes with our team at <APPT_ADDRESS>, where they go over your case and answer all your questions. It only works if we both commit: you set the time aside, and our team will be ready for you. Taking part is still subject to the full evaluation."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -4582,9 +4582,9 @@
           },
           {
             "target": "Q__SQ_SYNC_PROP_SEND_NO",
-            "condition_text": "IF [q__prop_int_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_SYNC_PROP_SEND_NO",
+            "condition_text": "IF [q__prop_int_try] >= <MAX_TRY> -> GO_TO: Q__SQ_SYNC_PROP_SEND_NO",
             "is_mechanical": true,
-            "python_expression": "q__prop_int_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__prop_int_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -4661,13 +4661,13 @@
         "node_id": "Q__SQ_SHOW_PROPOSAL",
         "node_type": "message",
         "goal": [
-          "Present the proposal exactly as written in <PROPOSAL_TEXT>."
+          "Present the proposal exactly as written in <PROPOSAL>."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Here is the proposal: <PROPOSAL_TEXT>"
+          "Here is the proposal: <PROPOSAL>"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -4750,9 +4750,9 @@
           },
           {
             "target": "Q__SQ_SYNC_PROP_NO",
-            "condition_text": "IF [q__prop_ok_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: Q__SQ_SYNC_PROP_NO",
+            "condition_text": "IF [q__prop_ok_try] >= <MAX_TRY> -> GO_TO: Q__SQ_SYNC_PROP_NO",
             "is_mechanical": true,
-            "python_expression": "q__prop_ok_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "q__prop_ok_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -5165,16 +5165,16 @@
           },
           {
             "target": "KQ__KQ_CONFIRM",
-            "condition_text": "IF [kq__next_step] == 'ambiguous' AND [kq__ask_try] < <MAX_RETRY_ATTEMPTS> -> GO_TO: KQ__KQ_CONFIRM",
+            "condition_text": "IF [kq__next_step] == 'ambiguous' AND [kq__ask_try] < <MAX_TRY> -> GO_TO: KQ__KQ_CONFIRM",
             "is_mechanical": true,
-            "python_expression": "kq__next_step == 'ambiguous' and kq__ask_try < MAX_RETRY_ATTEMPTS",
+            "python_expression": "kq__next_step == 'ambiguous' and kq__ask_try < MAX_TRY",
             "reason": null
           },
           {
             "target": "KQ__KQ_TO_SCHED",
-            "condition_text": "IF [kq__ask_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: KQ__KQ_TO_SCHED",
+            "condition_text": "IF [kq__ask_try] >= <MAX_TRY> -> GO_TO: KQ__KQ_TO_SCHED",
             "is_mechanical": true,
-            "python_expression": "kq__ask_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "kq__ask_try >= MAX_TRY",
             "reason": null
           }
         ],
@@ -5499,7 +5499,7 @@
         "node_id": "KQ__KQ_NOANS",
         "node_type": "message",
         "goal": [
-          "Say that the knowledge base does not cover it, that <COMPANY_NAME> focuses on fertility and surrogacy, and that the human team will clarify it during the appointment."
+          "Say that the knowledge base does not cover it, that <COMPANY> focuses on fertility and surrogacy, and that the human team will clarify it during the appointment."
         ],
         "do": [
           "[kq__doubt] = NULL",
@@ -5508,7 +5508,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "I can't confirm that from here. If your question is about the surrogacy process, the <COMPANY_NAME> team can clarify it for you during the appointment."
+          "I can't confirm that from here. If your question is about the surrogacy process, the <COMPANY> team can clarify it for you during the appointment."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -5542,9 +5542,9 @@
         "route": [
           {
             "target": "KQ__KQ_NUDGE",
-            "condition_text": "IF [kq__resume_state] MATCHES scheduling_state_id AND [kq__side_count] == <KB_SIDE_NUDGE_AFTER> -> GO_TO: KQ__KQ_NUDGE",
+            "condition_text": "IF [kq__resume_state] MATCHES scheduling_state_id AND [kq__side_count] == <KB_NUDGE> -> GO_TO: KQ__KQ_NUDGE",
             "is_mechanical": true,
-            "python_expression": "_matches(kq__resume_state, 'scheduling_state_id') and kq__side_count == KB_SIDE_NUDGE_AFTER",
+            "python_expression": "_matches(kq__resume_state, 'scheduling_state_id') and kq__side_count == KB_NUDGE",
             "reason": null
           },
           {
@@ -5556,9 +5556,9 @@
           },
           {
             "target": "KQ__KQ_LIMIT",
-            "condition_text": "IF [kq__rounds] >= <MAX_KB_ROUNDS> -> GO_TO: KQ__KQ_LIMIT",
+            "condition_text": "IF [kq__rounds] >= <MAX_KB> -> GO_TO: KQ__KQ_LIMIT",
             "is_mechanical": true,
-            "python_expression": "kq__rounds >= MAX_KB_ROUNDS",
+            "python_expression": "kq__rounds >= MAX_KB",
             "reason": null
           }
         ],
@@ -5576,7 +5576,7 @@
         "node_id": "KQ__KQ_LIMIT",
         "node_type": "message",
         "goal": [
-          "The question limit was reached: say the <COMPANY_NAME> team will cover the rest in the appointment and move on."
+          "The question limit was reached: say the <COMPANY> team will cover the rest in the appointment and move on."
         ],
         "do": [],
         "trigger": [],
@@ -5604,7 +5604,7 @@
         "node_id": "KQ__KQ_NUDGE",
         "node_type": "message",
         "goal": [
-          "The contact keeps asking while scheduling: say, once, that the <COMPANY_NAME> team can go through every question in the appointment, then go back to the step they were in."
+          "The contact keeps asking while scheduling: say, once, that the <COMPANY> team can go through every question in the appointment, then go back to the step they were in."
         ],
         "do": [],
         "trigger": [],
@@ -5722,9 +5722,9 @@
         "route": [
           {
             "target": "KQ__KQ_TO_SCHED",
-            "condition_text": "IF [kq__rounds] >= <MAX_KB_ROUNDS> -> GO_TO: KQ__KQ_TO_SCHED",
+            "condition_text": "IF [kq__rounds] >= <MAX_KB> -> GO_TO: KQ__KQ_TO_SCHED",
             "is_mechanical": true,
-            "python_expression": "kq__rounds >= MAX_KB_ROUNDS",
+            "python_expression": "kq__rounds >= MAX_KB",
             "reason": null
           },
           {
@@ -6063,9 +6063,9 @@
           },
           {
             "target": "SC__SC_NO_BOOK",
-            "condition_text": "IF [sc__c_name_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_NO_BOOK",
+            "condition_text": "IF [sc__c_name_try] >= <MAX_TRY> -> GO_TO: SC__SC_NO_BOOK",
             "is_mechanical": true,
-            "python_expression": "sc__c_name_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "sc__c_name_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -6242,9 +6242,9 @@
           },
           {
             "target": "SC__SC_NO_BOOK",
-            "condition_text": "IF [sc__c_phone_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_NO_BOOK",
+            "condition_text": "IF [sc__c_phone_try] >= <MAX_TRY> -> GO_TO: SC__SC_NO_BOOK",
             "is_mechanical": true,
-            "python_expression": "sc__c_phone_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "sc__c_phone_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -6435,9 +6435,9 @@
           },
           {
             "target": "SC__SC_NO_BOOK",
-            "condition_text": "IF [sc__c_email_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_NO_BOOK",
+            "condition_text": "IF [sc__c_email_try] >= <MAX_TRY> -> GO_TO: SC__SC_NO_BOOK",
             "is_mechanical": true,
-            "python_expression": "sc__c_email_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "sc__c_email_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -6502,7 +6502,7 @@
         "say_verbatim": false,
         "execute": "get_available_slots",
         "store": [
-          "[sc__appt_minutes] = <APPOINTMENT_DURATION_MINUTES>"
+          "[sc__appt_minutes] = <APPT_MIN>"
         ],
         "capture": [
           [
@@ -6599,9 +6599,9 @@
           },
           {
             "target": "SC__SC_NO_BOOK",
-            "condition_text": "IF [sc__day_now_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_NO_BOOK",
+            "condition_text": "IF [sc__day_now_try] >= <MAX_TRY> -> GO_TO: SC__SC_NO_BOOK",
             "is_mechanical": true,
-            "python_expression": "sc__day_now_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "sc__day_now_try >= MAX_TRY",
             "reason": null
           }
         ],
@@ -6720,9 +6720,9 @@
           },
           {
             "target": "SC__SC_NO_BOOK",
-            "condition_text": "IF [sc__day_now_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_NO_BOOK",
+            "condition_text": "IF [sc__day_now_try] >= <MAX_TRY> -> GO_TO: SC__SC_NO_BOOK",
             "is_mechanical": true,
-            "python_expression": "sc__day_now_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "sc__day_now_try >= MAX_TRY",
             "reason": null
           }
         ],
@@ -6789,7 +6789,7 @@
         "route": [
           {
             "target": "SC__SC_NO_BOOK",
-            "condition_text": "IF [sc__day_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_NO_BOOK",
+            "condition_text": "IF [sc__day_try] >= <MAX_TRY> -> GO_TO: SC__SC_NO_BOOK",
             "is_mechanical": false,
             "python_expression": null,
             "reason": "eval='llm' forces an LLM-evaluated edge"
@@ -7027,9 +7027,9 @@
           },
           {
             "target": "SC__SC_MORE",
-            "condition_text": "IF [sc__slot_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_MORE",
+            "condition_text": "IF [sc__slot_try] >= <MAX_TRY> -> GO_TO: SC__SC_MORE",
             "is_mechanical": true,
-            "python_expression": "sc__slot_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "sc__slot_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -7077,9 +7077,9 @@
         "route": [
           {
             "target": "SC__SC_CLR_D",
-            "condition_text": "IF [sc__start_date] IS NULL AND [sc__slot_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_CLR_D",
+            "condition_text": "IF [sc__start_date] IS NULL AND [sc__slot_try] >= <MAX_TRY> -> GO_TO: SC__SC_CLR_D",
             "is_mechanical": true,
-            "python_expression": "sc__start_date is None and sc__slot_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "sc__start_date is None and sc__slot_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -7425,9 +7425,9 @@
           },
           {
             "target": "SC__SC_NO_BOOK",
-            "condition_text": "IF [sc__time_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_NO_BOOK",
+            "condition_text": "IF [sc__time_try] >= <MAX_TRY> -> GO_TO: SC__SC_NO_BOOK",
             "is_mechanical": true,
-            "python_expression": "sc__time_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "sc__time_try >= MAX_TRY",
             "reason": null
           }
         ],
@@ -7529,9 +7529,9 @@
         "route": [
           {
             "target": "SC__SC_ASK_AGAIN",
-            "condition_text": "IF [sc__ok_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_ASK_AGAIN",
+            "condition_text": "IF [sc__ok_try] >= <MAX_TRY> -> GO_TO: SC__SC_ASK_AGAIN",
             "is_mechanical": true,
-            "python_expression": "sc__ok_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "sc__ok_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -7806,7 +7806,7 @@
           "TOOL CALL ONLY: call book_appointment now.",
           "calendar_type = 'FT' (required in every call to this tool).",
           "start_date = [sc__start_date]",
-          "duration = <APPOINTMENT_DURATION_MINUTES>. iana_timezone = 'America/Bogota'.",
+          "duration = <APPT_MIN>. iana_timezone = 'America/Bogota'.",
           "contact_name = [sc__c_name], contact_email = [sc__c_email], contact_phone = [sc__c_phone] (always in +57 format).",
           "contact_id = [contact.contact_id] (required in every call to this tool; the tool fails without it).",
           "It is FORBIDDEN to write to the contact, confirm the appointment, run FAQs or handlers, or route before capturing [sc__success].",
@@ -7854,9 +7854,9 @@
           },
           {
             "target": "SC__SC_NO_BOOK",
-            "condition_text": "IF [sc__book_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_NO_BOOK",
+            "condition_text": "IF [sc__book_try] >= <MAX_TRY> -> GO_TO: SC__SC_NO_BOOK",
             "is_mechanical": true,
-            "python_expression": "sc__book_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "sc__book_try >= MAX_TRY",
             "reason": null
           }
         ],
@@ -8004,9 +8004,9 @@
         "route": [
           {
             "target": "SC__SC_NO_BOOK",
-            "condition_text": "IF [sc__retry_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: SC__SC_NO_BOOK",
+            "condition_text": "IF [sc__retry_try] >= <MAX_TRY> -> GO_TO: SC__SC_NO_BOOK",
             "is_mechanical": true,
-            "python_expression": "sc__retry_try >= MAX_RETRY_ATTEMPTS",
+            "python_expression": "sc__retry_try >= MAX_TRY",
             "reason": null
           },
           {
@@ -8105,7 +8105,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Perfect, your appointment is scheduled for [sc__day_label] at [sc__slot] (Colombia time). We will see you at <APPOINTMENT_ADDRESS>."
+          "Perfect, your appointment is scheduled for [sc__day_label] at [sc__slot] (Colombia time). We will see you at <APPT_ADDRESS>."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -8365,9 +8365,9 @@
         "route": [
           {
             "target": "SC__SC_TRUE_END",
-            "condition_text": "IF [sc__end_try] >= <END_LISTEN_MAX_ATTEMPTS> -> GO_TO: SC__SC_TRUE_END",
+            "condition_text": "IF [sc__end_try] >= <MAX_END> -> GO_TO: SC__SC_TRUE_END",
             "is_mechanical": true,
-            "python_expression": "sc__end_try >= END_LISTEN_MAX_ATTEMPTS",
+            "python_expression": "sc__end_try >= MAX_END",
             "reason": null
           },
           {
@@ -8426,7 +8426,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Thank you for contacting <COMPANY_NAME>. Have a wonderful day!"
+          "Thank you for contacting <COMPANY>. Have a wonderful day!"
         ],
         "say_verbatim": false,
         "execute": "end_call",
@@ -8832,16 +8832,16 @@
         "route": [
           {
             "target": "[current_state]",
-            "condition_text": "IF [repeat_count] < <MAX_REPEAT_ATTEMPTS> -> GO_TO: [current_state]",
+            "condition_text": "IF [repeat_count] < <MAX_REPEAT> -> GO_TO: [current_state]",
             "is_mechanical": true,
-            "python_expression": "repeat_count < MAX_REPEAT_ATTEMPTS",
+            "python_expression": "repeat_count < MAX_REPEAT",
             "reason": null
           },
           {
             "target": "CONVERSATION_END",
-            "condition_text": "IF [repeat_count] >= <MAX_REPEAT_ATTEMPTS> -> GO_TO: CONVERSATION_END",
+            "condition_text": "IF [repeat_count] >= <MAX_REPEAT> -> GO_TO: CONVERSATION_END",
             "is_mechanical": true,
-            "python_expression": "repeat_count >= MAX_REPEAT_ATTEMPTS",
+            "python_expression": "repeat_count >= MAX_REPEAT",
             "reason": null
           }
         ],
@@ -8900,16 +8900,16 @@
         "route": [
           {
             "target": "[current_state]",
-            "condition_text": "IF [repeat_count] < <MAX_NO_INPUT_ATTEMPTS> -> GO_TO: [current_state]",
+            "condition_text": "IF [repeat_count] < <MAX_NOINPUT> -> GO_TO: [current_state]",
             "is_mechanical": true,
-            "python_expression": "repeat_count < MAX_NO_INPUT_ATTEMPTS",
+            "python_expression": "repeat_count < MAX_NOINPUT",
             "reason": null
           },
           {
             "target": "CONVERSATION_END",
-            "condition_text": "IF [repeat_count] >= <MAX_NO_INPUT_ATTEMPTS> -> GO_TO: CONVERSATION_END",
+            "condition_text": "IF [repeat_count] >= <MAX_NOINPUT> -> GO_TO: CONVERSATION_END",
             "is_mechanical": true,
-            "python_expression": "repeat_count >= MAX_NO_INPUT_ATTEMPTS",
+            "python_expression": "repeat_count >= MAX_NOINPUT",
             "reason": null
           }
         ],
@@ -9132,7 +9132,7 @@
           "con quién hablo"
         ],
         "say": [
-          "I am <AGENT_NAME>, a customer service AI assistant for <COMPANY_NAME>, a clinic specialized in fertility and assisted reproduction."
+          "I am <AGENT>, a customer service AI assistant for <COMPANY>, a clinic specialized in fertility and assisted reproduction."
         ],
         "say_verbatim": false,
         "resume_to": "[current_state]"
@@ -9174,7 +9174,7 @@
           "son muchas preguntas"
         ],
         "say": [
-          "It is just a few basic questions. It should take about <PREQUAL_MINUTES> minutes."
+          "It is just a few basic questions. It should take about <PREQUAL_MIN> minutes."
         ],
         "say_verbatim": false,
         "resume_to": "[current_state]"
@@ -9216,7 +9216,7 @@
           "me garantizan participar"
         ],
         "say": [
-          "No. This is only an initial pre-qualification. Participation depends on a later evaluation by the <COMPANY_NAME> team."
+          "No. This is only an initial pre-qualification. Participation depends on a later evaluation by the <COMPANY> team."
         ],
         "say_verbatim": false,
         "resume_to": "[current_state]"
@@ -9244,7 +9244,7 @@
           "qué municipios"
         ],
         "say": [
-          "The enabled municipalities are <ALLOWED_CITIES>."
+          "The enabled municipalities are <CITIES>."
         ],
         "say_verbatim": false,
         "resume_to": "[current_state]"
@@ -9259,7 +9259,7 @@
           "ubicación"
         ],
         "say": [
-          "We are located in Bogotá, at <APPOINTMENT_ADDRESS>."
+          "We are located in Bogotá, at <APPT_ADDRESS>."
         ],
         "say_verbatim": false,
         "resume_to": "[current_state]"
@@ -9274,7 +9274,7 @@
           "cuanto tiempo dura la cita"
         ],
         "say": [
-          "The appointment lasts about <APPOINTMENT_DURATION_MINUTES> minutes."
+          "The appointment lasts about <APPT_MIN> minutes."
         ],
         "say_verbatim": false,
         "resume_to": "[current_state]"
@@ -10005,7 +10005,7 @@
         {
           "name": "duration",
           "required": true,
-          "description": "Appointment duration in minutes. Fixed: <APPOINTMENT_DURATION_MINUTES>.",
+          "description": "Appointment duration in minutes. Fixed: <APPT_MIN>.",
           "type_expr": "str",
           "examples": []
         },
@@ -10400,20 +10400,20 @@
     }
   ],
   "constants": {
-    "AGENT_NAME": "Sofia",
-    "COMPANY_NAME": "BabyNova",
-    "APPOINTMENT_DURATION_MINUTES": "10",
-    "APPOINTMENT_ADDRESS": "Carrera 16 # 88-81, Consultorio 609",
-    "PREQUAL_MINUTES": "5",
-    "MAX_RETRY_ATTEMPTS": "3",
-    "MAX_REPEAT_ATTEMPTS": "3",
-    "MAX_NO_INPUT_ATTEMPTS": "3",
-    "END_LISTEN_MAX_ATTEMPTS": "3",
-    "MAX_KB_ROUNDS": "8",
-    "KB_SIDE_NUDGE_AFTER": "2",
-    "DATA_LAW_REFERENCE": "Política de Privacidad y Protección de Datos Personales de Novafem S.A.S, que se da en cumplimiento de lo dispuesto por el artículo 15 de la Constitución Política de 1991, así como por la Ley 1581 de 2012, el Decreto 1377 de 2013 y el Decreto 886 de 2014. Que puedes encontrar en https://www.babynovaclinic.com/wp-content/uploads/2026/05/PO-GJ-02-Politica-de-Privacidad-y-Uso-de-Datos-Novafem-V2-27052025.pdf",
-    "ALLOWED_CITIES": "Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá y Sibaté",
-    "PROPOSAL_TEXT": "[PENDING: proposal text]"
+    "AGENT": "Sofia",
+    "COMPANY": "BabyNova",
+    "APPT_MIN": "10",
+    "APPT_ADDRESS": "Carrera 16 # 88-81, Consultorio 609",
+    "PREQUAL_MIN": "5",
+    "MAX_TRY": "3",
+    "MAX_REPEAT": "3",
+    "MAX_NOINPUT": "3",
+    "MAX_END": "3",
+    "MAX_KB": "8",
+    "KB_NUDGE": "2",
+    "DATA_LAW": "Política de Privacidad y Protección de Datos Personales de Novafem S.A.S, que se da en cumplimiento de lo dispuesto por el artículo 15 de la Constitución Política de 1991, así como por la Ley 1581 de 2012, el Decreto 1377 de 2013 y el Decreto 886 de 2014. Que puedes encontrar en https://www.babynovaclinic.com/wp-content/uploads/2026/05/PO-GJ-02-Politica-de-Privacidad-y-Uso-de-Datos-Novafem-V2-27052025.pdf",
+    "CITIES": "Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá y Sibaté",
+    "PROPOSAL": "[PENDING: proposal text]"
   },
   "session_timeout_minutes": 10080,
   "say_policies": [
@@ -10440,7 +10440,7 @@
     "In case of emergencies, refer to emergency services and end the conversation.",
     "Respect the wish not to be contacted: record opposition and close politely.",
     "Do not reveal the reason for the contact (gestation) to third parties.",
-    "Use the retry counter for each question state: increment if invalid, follow the flow if valid but negative, and use the fallback after <MAX_RETRY_ATTEMPTS>."
+    "Use the retry counter for each question state: increment if invalid, follow the flow if valid but negative, and use the fallback after <MAX_TRY>."
   ],
   "judgment_policies": [
     "Memory slots are referenced with square brackets in the DSL. Do not invent undeclared slots.",
@@ -10448,7 +10448,7 @@
     "If the state declares EXECUTE, call the tool immediately: it is your only valid action. FORBIDDEN to deduce or invent results; only use the most recent real output. If it fails or there is no data, stay in the state and retry.",
     "IMPERATIVE RULES: The BMI must come from calculate_bmi. The final classification must come from surrogate_classification. Do not use your own judgment for these values.",
     "AVAILABILITY RULE: The only source of schedules is get_available_slots. FORBIDDEN to suggest or invent availability. Only accept days and hours that literally exist in available_slots.",
-    "BOOKING RULE: Do not confirm the appointment before receiving success == true from book_appointment. Use the literal start_co as start_date, duration <APPOINTMENT_DURATION_MINUTES>, and the confirmed data. Never fabricate entries.",
+    "BOOKING RULE: Do not confirm the appointment before receiving success == true from book_appointment. Use the literal start_co as start_date, duration <APPT_MIN>, and the confirmed data. Never fabricate entries.",
     "CURRENT DATE RULE: Use only the output of time_now for today or relative dates. Do not use your training or the system clock.",
     "KNOWLEDGE BASE ANSWERS: an open question about the company, the program or the process is answered only with the text returned by the kb_answer tool. Never answer it from your own knowledge. Eligibility is never decided by you: only the classification tool decides it.",
     "CRM DATA: the contact's name, phone, email, document type and document number may already be in the CRM. Never ask again for something that is already there."
