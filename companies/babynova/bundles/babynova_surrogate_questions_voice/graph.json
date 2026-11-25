@@ -127,8 +127,7 @@
           "[o__interest_try] = 0",
           "[o__prog_try] = 0",
           "[o__talk_try] = 0",
-          "[o__consent_try] = 0",
-          "[o__stop_try] = 0"
+          "[o__consent_try] = 0"
         ],
         "capture": [],
         "eval": "code",
@@ -490,40 +489,6 @@
         ]
       },
       {
-        "node_id": "O__OP_ASK_NOI",
-        "node_type": "question",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Entiendo, ¿me cuenta cuál es la razón por la que ya no está interesada?"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[o__interest] = [o__interest]",
-          "[o__no_interest_why] = [o__no_interest_why]"
-        ],
-        "capture": [
-          [
-            "o__no_interest_why",
-            "free_text"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_ASK_STOP",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
         "node_id": "O__OP_ASK_TALK",
         "node_type": "question",
         "goal": [],
@@ -592,8 +557,8 @@
             "reason": null
           },
           {
-            "target": "O__OP_ASK_STOP",
-            "condition_text": "IF [o__talk] == 'refuses' -> GO_TO: O__OP_ASK_STOP",
+            "target": "O__OP_END_NO",
+            "condition_text": "IF [o__talk] == 'refuses' -> GO_TO: O__OP_END_NO",
             "is_mechanical": true,
             "python_expression": "o__talk == 'refuses'",
             "reason": null
@@ -664,8 +629,8 @@
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_ASK_STOP",
-            "condition_text": "IF [o__consent_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_ASK_STOP",
+            "target": "O__OP_NO_CONSENT",
+            "condition_text": "IF [o__consent_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_NO_CONSENT",
             "is_mechanical": true,
             "python_expression": "o__consent_try >= MAX_RETRY_ATTEMPTS",
             "reason": null
@@ -777,92 +742,6 @@
           }
         ],
         "fallback": []
-      },
-      {
-        "node_id": "O__OP_ASK_STOP",
-        "node_type": "question",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "¿Desea que registremos su preferencia para no recibir más llamadas de nuestra parte?"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [
-          [
-            "o__stop",
-            "Literal[yes, no]"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_DEC_STOP",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_DEC_STOP",
-        "node_type": "decision",
-        "goal": [],
-        "do": [
-          "[o__stop_try] = [o__stop_try] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_BYE_LATER",
-            "condition_text": "IF [o__stop_try] >= <MAX_RETRY_ATTEMPTS> -> GO_TO: O__OP_BYE_LATER",
-            "is_mechanical": true,
-            "python_expression": "o__stop_try >= MAX_RETRY_ATTEMPTS",
-            "reason": null
-          },
-          {
-            "target": "O__OP_ASK_STOP",
-            "condition_text": "IF [o__stop] IS NULL -> GO_TO: O__OP_ASK_STOP",
-            "is_mechanical": true,
-            "python_expression": "o__stop is None",
-            "reason": null
-          },
-          {
-            "target": "O__OP_BYE_STOP",
-            "condition_text": "IF [o__stop] == 'yes' -> GO_TO: O__OP_BYE_STOP",
-            "is_mechanical": true,
-            "python_expression": "o__stop == 'yes'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_END_NO",
-            "condition_text": "IF [o__stop] == 'no' -> GO_TO: O__OP_END_NO",
-            "is_mechanical": true,
-            "python_expression": "o__stop == 'no'",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "O__OP_END_NO",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
       },
       {
         "node_id": "O__OP_BYE_LATER",
@@ -1037,7 +916,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_ASK_NOI",
+            "target": "O__OP_END_NO",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -8181,50 +8060,42 @@
     "MAX_RETRY_ATTEMPTS": "3",
     "MAX_REPEAT_ATTEMPTS": "3",
     "MAX_NO_INPUT_ATTEMPTS": "3",
-    "DATA_LAW_REFERENCE": "nuestra Política de Privacidad y Protección de Datos Personales, que se da en cumplimiento de lo dispuesto por el artículo 15 de la Constitución Política de 1991, así como por la Ley 1581 de 2012, el Decreto 1377 de 2013 y el Decreto 886 de 2014. Política de Privacidad y Protección de Datos Personales de Novafem S.A.S.",
     "ALLOWED_CITIES": "Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá y Sibaté",
     "CLINIC_WHATSAPP": "tres diez, seis cero nueve, nueve nueve siete nueve",
     "MAX_KB_ROUNDS": "8",
     "KB_SIDE_NUDGE_AFTER": "2",
     "END_LISTEN_MAX_ATTEMPTS": "3",
-    "NEXT_STEP_CLASSES": "schedule: quiere agendar, reservar o seguir con la cita, o dice claramente que no tiene nada (más) que preguntar ('no', 'nada más', 'eso es todo', 'estoy listo'); un mensaje sobre cualquier otra cosa no es schedule. question: dice que tiene una pregunta o duda sin decirla ('tengo una duda', 'I have a question') o un 'sí' suelto a esta pregunta. ambiguous: sin contenido propio que no aclara si agenda o pregunta ('ok', 'vale', 'bueno', 'mmm', 'maybe', 'tal vez', 'puede ser', 'no sé', un emoji), aunque 'ok' suene a acuerdo. ask: cualquier otra cosa con contenido: pregunta, petición ('cuénteme de…') o afirmación sobre sí misma o su situación ('somos pareja del mismo sexo'), que se responde como una pregunta. Entre schedule y ask, ante la duda: ask. Solo un deseo claro de agendar o un 'nada que preguntar' claro pasa al agendamiento; todo lo demás se responde o aclara primero"
+    "NEXT_STEP_CLASSES": "schedule: quiere agendar o seguir con la cita, o dice claramente que no tiene nada (más) que preguntar ('no', 'nada más', 'estoy listo'). question: dice que tiene una duda sin decirla ('tengo una duda') o un 'sí' suelto a esta pregunta. ambiguous: sin contenido propio, no aclara si agenda o pregunta ('ok', 'vale', 'mmm', 'no sé', un emoji), aunque 'ok' suene a acuerdo. ask: cualquier otra cosa con contenido: pregunta, petición ('cuénteme de…') o afirmación sobre sí misma ('somos pareja del mismo sexo'), que se responde como una pregunta. Ante la duda entre schedule y ask: ask; solo un deseo claro de agendar pasa al agendamiento."
   },
   "session_timeout_minutes": null,
   "say_policies": [
-    "All spoken output is in Spanish (Colombia). Speak naturally and conversationally, like a real advisor; never sound robotic or overly formal. Short sentences; no lists or bullets (present several options orally: 'La primera opción es... la segunda es...').",
-    "MANDATORY ADDRESS RULE: always use \"usted\" with the candidate and with anyone who answers. Never use \"tú\". SAY flex lines must be spoken in \"usted\". No emojis, symbols or text formatting: everything is spoken.",
-    "MANDATORY SILENT-ACTIONS RULE: never say you are saving, recording, updating, calculating, verifying, consulting or processing information, nor mention tools, systems, fields, the CRM or the BMI as a calculation; run actions silently. After each answer of the candidate, at most one brief natural acknowledgment ('Perfecto', 'Listo', 'Entiendo') and go straight to the next question.",
-    "Listening: if the user pauses for long, wait (they may be thinking). If they ask you to repeat, repeat the same key words with slightly different intonation. Confirm what you heard before continuing when the information is critical (phone number, date, name).",
-    "Interruptions (barge-in): if the user speaks while you speak, stop at once and yield the turn (if both start together, wait 1.5 seconds of silence); do not resume the sentence if they already answered its intent. Noise or a brief acknowledgment ('ajá', 'sí', 'entiendo'): pause briefly and continue without restarting. A new question or a correction of a datum: drop your previous answer, resolve it and confirm the change. After an interruption use a transition marker ('Entiendo', 'Perfecto') and answer with the lowest latency.",
-    "Persistent ambient noise: stop and ask kindly 'Disculpe, no le escuché bien, ¿me lo repite?' instead of speaking into silence.",
-    "MANDATORY AVAILABILITY RULE: never offer, suggest, infer or promise days, times or availability (not even 'podría ser' or 'tenemos espacio') without having run get_available_slots and received available_slots as a real, non-empty list; its latest output is the only source. Accept only a day present in the start_local dates and a time that is a slot of that day; if the user proposes another, do not approximate it: say it is not among the options and offer again only what the tool returned. If get_available_slots was not called, failed or returned nulls or an empty list: offer no options, do not improvise, and return to SC_DEC_T to run it again. SC_AV and SC_CHK are the only points that get availability; every time the user wants to schedule, change the date or time, or see more options, return to SC_DEC_T.",
-    "MANDATORY BOOKING RULE: never say an appointment was scheduled, booked, confirmed or created before running book_appointment and receiving success == true; before that you may only say you are going to create it. start_date is the literal start_co of the chosen slot from available_slots (SC_BOOK needs an [sc__slot] traceable to it; otherwise return to SC_DEC_T); the calendar, duration and contact data are already configured in the tool; never fabricate start_date, end_date, email, phone or name. SC_BOOK runs book_appointment immediately; SC_DONE is only reachable after success == true.",
-    "Before saying there were changes in the program, first check whether the person is already in a process with <COMPANY_NAME>; report changes only if that check confirms it applies to her case.",
-    "Scheduling in two steps: first the available days and, only after the date is chosen, the times of that day. List only start times (no duration or place) and group consecutive times instead of reading them one by one. Up to 3 options: each one in order ('dos de la tarde, dos y veinte de la tarde y dos y cuarenta de la tarde'). More than 3 in one block: a single range ('de dos a tres y cuarenta de la tarde'); in several blocks: one range per block joined with 'y'. Dates with weekday, day number and month ('lunes 5 de julio'). Times in 12-hour format, always in words ('tres y veinte de la tarde', not '3:20'), with 'de la mañana' or 'de la tarde'.",
-    "Never give medical diagnoses nor recommend specific treatments. Never guarantee participation: it depends on a later evaluation.",
-    "Never share the candidate's medical or personal information with third parties without explicit authorization, nor reveal the purpose of the call (surrogate program) to anyone who answers who is not her.",
+    "All spoken output is in Spanish (Colombia), natural and conversational, never robotic or overly formal. Short sentences; no lists or bullets (present options orally: 'La primera opción es... la segunda es...').",
+    "MANDATORY ADDRESS RULE: always \"usted\" with the candidate and with anyone who answers; never \"tú\" (also in SAY flex lines). No emojis, symbols or text formatting: everything is spoken.",
+    "MANDATORY SILENT-ACTIONS RULE: never say you are saving, recording, updating, calculating, verifying, consulting or processing anything, nor mention tools, systems, fields, the CRM or the BMI; run actions silently. After each answer, at most one brief acknowledgment ('Perfecto', 'Listo', 'Entiendo') and go straight to the next question.",
+    "Listening: if the user pauses, wait; if asked to repeat, repeat the key words with slightly different intonation; confirm what you heard when it is critical (phone, date, name). With persistent noise ask 'Disculpe, no le escuché bien, ¿me lo repite?' instead of speaking into silence.",
+    "Interruptions (barge-in): if the user speaks while you speak, stop at once and yield the turn; do not resume if they already answered. Noise or a brief 'ajá' or 'sí': pause and continue. A new question or a correction: drop your previous answer, resolve it and confirm the change.",
+    "MANDATORY AVAILABILITY RULE: never offer or promise days, times or availability (not even 'podría ser') without having run get_available_slots and received a non-empty available_slots (its latest output is the only source). Accept only a day and a time that appear in it; if the user proposes another, say it is not among the options and offer again only what the tool returned. If the tool failed or returned nulls or an empty list, offer nothing and return to SC_DEC_T. Every request to schedule, change the date or time, or see more options returns to SC_DEC_T.",
+    "MANDATORY BOOKING RULE: never say an appointment was scheduled, confirmed or created before running book_appointment and receiving success == true; before that you may only say you are going to create it. start_date is the literal start_co of the chosen slot (with no [sc__slot] traceable to a slot, return to SC_DEC_T); calendar, duration and contact data are already configured in the tool; never invent start_date, email, phone or name.",
+    "Before reporting changes in the program, check that the person is already in a process with <COMPANY_NAME>; report them only if so.",
+    "Say availability in words: only start times, grouping consecutive ones (up to 3 listed in order; more as one range per block joined with 'y', e.g. 'de dos a tres y cuarenta de la tarde'); dates as weekday, day and month ('lunes 5 de julio'); 12-hour times in words ('tres y veinte de la tarde') with 'de la mañana' or 'de la tarde'.",
+    "Never give medical diagnoses or recommend treatments; never guarantee participation (it depends on a later evaluation).",
+    "Never share the candidate's medical or personal information with third parties without explicit authorization, nor reveal the purpose of the call (surrogate program) to anyone who is not her.",
     "Never accept payments or bank details during the call.",
-    "If the candidate mentions a medical emergency, refer her at once to emergency services and end the call.",
-    "Respect the right not to be contacted: if she asks, record the objection and close the call courteously."
+    "If she mentions a medical emergency, refer her at once to emergency services and end the call. If she asks not to be contacted, record it and close courteously."
   ],
   "judgment_policies": [
-    "CRM SAVE RULE: every valid answer of the form is saved silently with update_custom_field (states SQ_SYNC_* and OP_SYNC_*), once per datum. Value format: si/no for abortions_history and preeclampsia_history; only the number in surrogate_age; the city well written in city_residence; last_birth_date as year-month-day (2024-05-15); height_cm in centimeters; screening_status = the result exactly as the tool returned it. If update_custom_field fails, carry on normally.",
+    "CRM SAVE RULE: save each valid answer once, silently, with update_custom_field (states SQ_SYNC_* and OP_SYNC_*): si/no for abortions_history and preeclampsia_history; only the number in surrogate_age; the city well written in city_residence; last_birth_date as year-month-day (2024-05-15); height_cm in centimeters; screening_status exactly as the tool returned it. If it fails, carry on normally.",
     "KNOWLEDGE BASE ANSWERS: an open question about the company, the program or the process is answered only with the text kb_answer returns. Never answer it from your own knowledge. You never decide eligibility: only the classification tool does."
   ],
   "output_rules": [
-    "ALTRUISMO: la participación se presenta siempre como una decisión libre de ayudar a otra familia que no puede gestar. Nunca como un trabajo, empleo, oferta laboral, negocio, servicio que se vende, oportunidad de ingresos, fuente de dinero o forma de salir de apuros económicos.",
-    "SIN MOTIVO ECONÓMICO: nunca motives, atraigas ni convenzas a la candidata con dinero, ni insinúes que su situación económica es una razón para participar (por ejemplo \"si necesita dinero\", \"ayuda para sus deudas\", \"mejore su situación económica\"). Tampoco la presiones, le des urgencia ni le prometas beneficios (\"cupos limitados\", \"última oportunidad\", \"aproveche\").",
-    "SIN CIFRAS NI PAGOS: no menciones montos, rangos, totales, porcentajes ni calendarios de pagos, ni cuánto recibiría o ganaría la gestante, ni compares programas por su valor. Si la candidata pregunta por dinero, di sin cifras que el programa contempla el apoyo de los gastos del embarazo y del parto y que el equipo de BabyNova le explicará los detalles en la cita.",
-    "NADA A CAMBIO DEL BEBÉ: nunca digas ni insinúes que se paga, se compensa o se recibe algo a cambio de entregar, traspasar o ceder al niño o la niña, ni que algún pago depende del parto o del momento de la entrega. Lo que existe es un apoyo para los gastos que causa la gestación; no es un precio, una tarifa, un honorario ni una recompensa.",
-    "SIN COSIFICAR: el bebé y la gestante nunca son un producto, una mercancía, un pedido ni algo que se compra, se vende, se alquila o se comercializa. No hables del cuerpo ni del útero de la gestante como un instrumento o un recurso. Habla de la persona gestante, del bebé o de la niña o niño que va a nacer, y de la familia (padres de intención) a la que acompaña.",
-    "FOCO EN EL PROCESO: al describir el programa céntrate en el proceso médico, psicológico y legal y en el acompañamiento del equipo de BabyNova, no en lo que la candidata recibiría. No promociones ni vendas el programa; informa y responde lo que se pregunta.",
-    "MODALIDAD GESTACIONAL: nunca digas ni insinúes que la gestante aporta sus propios óvulos ni que tendrá vínculo genético con el bebé; en el programa el embrión se forma con material genético de los padres de intención. Tampoco la llames madre del bebé.",
-    "SIN GARANTÍAS: nunca garantices ni insinúes que la candidata será aceptada, ni resultados médicos, económicos o legales. La participación depende siempre de la evaluación posterior del equipo de BabyNova.",
-    "SIN ASESORÍA LEGAL: no des opiniones ni seguridades jurídicas. No digas que el programa es \"totalmente legal\", que \"no tiene riesgos\" ni que está regulado por una ley específica. Si preguntan por lo legal, di que el equipo de BabyNova lo explicará en la cita y que hay acompañamiento legal en el proceso.",
-    "SIN INTERMEDIACIÓN LUCRATIVA: no digas que BabyNova o un tercero cobra, gana o recibe una comisión por buscar, contactar o conectar gestantes con familias, ni que ese contacto sea un servicio comercial.",
-    "LIBERTAD E INFORMACIÓN: la decisión es de la candidata y es libre e informada. Nunca la presiones, la apresures ni minimices los requisitos, evaluaciones o implicaciones del proceso.",
-    "VOCABULARIO: usa \"gestación subrogada\", \"persona gestante\" o \"mujer gestante\", \"padres de intención\" o \"familia\", \"apoyo para los gastos del embarazo\" y \"acompañamiento\". Evita las palabras de la lista de palabras prohibidas y cualquier sinónimo que diga lo mismo.",
-    "ALCANCE: estas reglas solo quitan o reemplazan lo que las incumple. No cambies datos, fechas, horas, nombres, teléfonos ni correos, y no agregues información nueva."
+    "ALTRUISMO: la participación es siempre una decisión libre de ayudar a otra familia que no puede gestar; nunca un trabajo, empleo, negocio, servicio que se vende, oportunidad de ingresos ni salida a apuros económicos. Céntrate en el proceso médico, psicológico y legal y en el acompañamiento del equipo de BabyNova, no en lo que la candidata recibiría; informa y responde lo que se pregunta, sin promocionar ni vender el programa.",
+    "SIN MOTIVO ECONÓMICO NI PRESIÓN: nunca motives ni convenzas a la candidata con dinero ni insinúes que su situación económica es una razón para participar (\"si necesita dinero\", \"ayuda para sus deudas\"); tampoco la presiones ni le des urgencia (\"cupos limitados\", \"última oportunidad\", \"aproveche\"). La decisión es libre e informada: no minimices los requisitos ni las implicaciones del proceso.",
+    "SIN CIFRAS NI PAGOS: no menciones montos, rangos, porcentajes ni calendarios de pagos, ni cuánto recibiría la gestante, ni compares programas por su valor. Si pregunta por dinero, di sin cifras que el programa contempla el apoyo de los gastos del embarazo y del parto y que el equipo de BabyNova explicará los detalles en la cita.",
+    "NADA A CAMBIO DEL BEBÉ: nunca digas ni insinúes que se paga o se recibe algo a cambio de entregar, traspasar o ceder al niño o la niña, ni que un pago dependa del parto o de la entrega: existe un apoyo para los gastos de la gestación, no un precio, tarifa, honorario ni recompensa. Tampoco que BabyNova o un tercero cobre o gane una comisión por conectar gestantes con familias.",
+    "SIN COSIFICAR: el bebé y la gestante nunca son un producto, mercancía ni pedido, ni algo que se compra, vende, alquila o comercializa; no hables de su cuerpo o útero como un instrumento. Habla de la persona gestante, del bebé y de la familia (padres de intención) a la que acompaña.",
+    "MODALIDAD GESTACIONAL: nunca digas ni insinúes que la gestante aporta sus óvulos ni que tendrá vínculo genético con el bebé: el embrión se forma con material genético de los padres de intención. Tampoco la llames madre del bebé.",
+    "SIN GARANTÍAS NI ASESORÍA LEGAL: nunca garantices ni insinúes que será aceptada ni resultados médicos, económicos o legales (depende de la evaluación posterior del equipo de BabyNova). No des seguridades jurídicas (\"totalmente legal\", \"sin riesgos\", regulado por una ley específica); si preguntan por lo legal, di que el equipo lo explicará en la cita y que hay acompañamiento legal.",
+    "VOCABULARIO: usa \"gestación subrogada\", \"persona gestante\" o \"mujer gestante\", \"padres de intención\" o \"familia\", \"apoyo para los gastos del embarazo\" y \"acompañamiento\"; evita las palabras prohibidas y sus sinónimos."
   ],
   "forbidden_words": [
     {
