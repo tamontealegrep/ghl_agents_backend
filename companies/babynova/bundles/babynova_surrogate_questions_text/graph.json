@@ -1072,7 +1072,6 @@
           "[q__imc] = NULL",
           "[q__uses_drugs] = NULL",
           "[q__availability] = NULL",
-          "[q__avail_pitched] = NULL",
           "[q__result] = NULL",
           "[q__eligibility_result] = NULL",
           "[q__not_eligibility_reason] = NULL",
@@ -3479,94 +3478,6 @@
         "fallback": []
       },
       {
-        "node_id": "Q__SQ_MARK_PITCH",
-        "node_type": "registration",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[q__avail_pitched] = 'yes'"
-        ],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_SANDLER_TIME",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "Q__SQ_SANDLER_TIME",
-        "node_type": "message",
-        "goal": [
-          "Sandler commitment: she said she may not have time. Be upfront and gentle: the process only works with a real commitment from both sides, and being able to attend the medical appointments is essential.",
-          "Make the commitment mutual (she sets the time aside, the team is ready for her), do not pressure and do not promise anything."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "I want to be upfront with you so we both make a good decision: this process only works with a real commitment from both sides. Being able to attend the medical appointments is essential. On our side, our team will be ready and waiting for you; on yours, it means setting that time aside."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_ASK_AVAIL_AGAIN",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "Q__SQ_ASK_AVAIL_AGAIN",
-        "node_type": "question",
-        "goal": [
-          "Ask her, knowing that, whether she can commit to making time. A no is accepted with respect and closes the process softly."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Knowing that, can you set that time aside to attend them? Either answer is fine."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [
-          [
-            "q__availability",
-            "Literal[yes, no, unknown]"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_DEC_AVAIL",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
         "node_id": "Q__SQ_DEC_AVAIL",
         "node_type": "decision",
         "goal": [],
@@ -3820,13 +3731,6 @@
             "condition_text": "IF [q__availability] == 'unknown' AND [q__missing_try] > 0 AND [q__avail_try] == 0 -> GO_TO: Q__SQ_ASK_AVAIL",
             "is_mechanical": true,
             "python_expression": "q__availability == 'unknown' and q__missing_try > 0 and q__avail_try == 0",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_MARK_PITCH",
-            "condition_text": "IF [q__availability] == 'no' AND [q__avail_pitched] IS NULL -> GO_TO: Q__SQ_MARK_PITCH",
-            "is_mechanical": true,
-            "python_expression": "q__availability == 'no' and q__avail_pitched is None",
             "reason": null
           }
         ],

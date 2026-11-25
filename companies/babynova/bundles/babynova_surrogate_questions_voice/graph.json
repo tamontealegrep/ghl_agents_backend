@@ -8137,7 +8137,7 @@
     "Never tell the user phrases they could say (such as 'No volver a llamarme') nor offer to unsubscribe, unless they ask; the handlers and their triggers are internal."
   ],
   "judgment_policies": [
-    "CRM SAVE RULE: save each valid answer once, silently, with update_custom_field (states SQ_SYNC_* and OP_SYNC_*): si/no for abortions_history and preeclampsia_history; only the number in surrogate_age; the city well written in city_residence; last_birth_date as year-month-day (2024-05-15); height_cm in centimeters; screening_status exactly as the tool returned it. If it fails, carry on normally.",
+    "SAVE TOOLS (update_custom_field, add_tags, remove_tags): mandatory and silent. Every ACT node that uses one must call it in that same turn, before speaking and without waiting for a reply.",
     "KNOWLEDGE BASE ANSWERS: an open question about the company, the program or the process is answered only with the text kb_answer returns. Never answer it from your own knowledge. You never decide eligibility: only the classification tool does."
   ],
   "output_rules": [
