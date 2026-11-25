@@ -57,6 +57,14 @@ BabyNova processes personal data under Colombian regulations: article 15 of the 
 
 The information shared in the conversation is confidential and is used only to manage the candidate's care. Medical or personal information is not shared with third parties without authorization. In this conversation BabyNova does not collect payments or bank details.
 
+## Contact and hours
+
+BabyNova attends Monday to Friday from 7:00 am to 4:00 pm and Saturdays from 8:00 to 11:00 am (Colombia time). The candidate can write to the clinic's WhatsApp 310 609 9979, to the email contacto@babynovaclinic.com or through the website babynovaclinic.com.
+
+## Taking part is voluntary
+
+Answering the questions is optional: the candidate decides whether to continue and can stop at any time. This call is only an initial pre-qualification and does not commit her to anything. Without her authorization to process her personal data the pre-qualification cannot continue.
+
 ## What the assistant cannot answer here
 
 The assistant cannot give amounts, compensation details, contract terms, legal advice, medical diagnoses or medical recommendations. For these, the BabyNova team goes over the details with the candidate in the appointment or in later stages of the process.
