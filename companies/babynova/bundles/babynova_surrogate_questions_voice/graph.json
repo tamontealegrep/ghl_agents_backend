@@ -1947,12 +1947,14 @@
       {
         "node_id": "Q__SQ_ASK_WEIGHT",
         "node_type": "question",
-        "goal": [],
+        "goal": [
+          "Take the representative value of the range she picks, in kilos: less than 50 -> 45; 50 to 60 -> 55; 60 to 70 -> 65; 70 to 80 -> 75; more than 80 -> 85. If she gives an exact weight instead, use that exact value (convert pounds: 1 lb = 0.4536 kg)."
+        ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "¿Cuál es su peso actual, en kilos?"
+          "Para calcular su índice de masa corporal sin pedirle datos exactos, ¿en cuál de estos rangos está su peso? Menos de cincuenta kilos, entre cincuenta y sesenta, entre sesenta y setenta, entre setenta y ochenta, o más de ochenta."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -2033,12 +2035,14 @@
       {
         "node_id": "Q__SQ_ASK_HEIGHT",
         "node_type": "question",
-        "goal": [],
+        "goal": [
+          "Take the representative value of the range she picks, in centimeters: less than 150 -> 145; 150 to 160 -> 155; 160 to 170 -> 165; 170 to 180 -> 175; more than 180 -> 185. If she gives an exact height instead, use that exact value in centimeters (convert meters or feet and inches: 1 in = 2.54 cm)."
+        ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "¿Cuál es su estatura, en centímetros?"
+          "¿Y en cuál de estos rangos está su estatura? Menos de ciento cincuenta centímetros, entre ciento cincuenta y ciento sesenta, entre ciento sesenta y ciento setenta, entre ciento setenta y ciento ochenta, o más de ciento ochenta."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -7344,37 +7348,6 @@
         "fallback": []
       },
       {
-        "node_id": "HNDLR_HANDLE_USER_ANGRY",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "dejen de molestar",
-          "qué fastidio",
-          "estoy cansada de estas llamadas",
-          "no molesten"
-        ],
-        "disabled_in": [],
-        "say": [
-          "Entiendo, disculpe la molestia. Si lo desea, podemos registrar que no reciba más llamadas de nuestra parte."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_ASK_STOP",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
         "node_id": "HNDLR_WRONG_NUMBER",
         "node_type": "message",
         "goal": [],
@@ -7472,38 +7445,6 @@
         "fallback": []
       },
       {
-        "node_id": "HNDLR_DIRECT_APPOINTMENT_REQUEST",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "quiero agendar una cita",
-          "quiero una cita",
-          "agendar una cita de una vez",
-          "agendemos una cita",
-          "agendar cita"
-        ],
-        "disabled_in": [],
-        "say": [
-          "Con gusto."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_S",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
         "node_id": "HNDLR_REPEAT",
         "node_type": "message",
         "goal": [],
@@ -7539,36 +7480,6 @@
             "condition_text": "IF [repeat_count] >= <MAX_REPEAT_ATTEMPTS> -> GO_TO: TERMINAL_NO_INPUT",
             "is_mechanical": true,
             "python_expression": "repeat_count >= MAX_REPEAT_ATTEMPTS",
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "HNDLR_RESET_REPEAT",
-        "node_type": "message",
-        "goal": [],
-        "do": [
-          "[repeat_count] = 0"
-        ],
-        "trigger": [
-          "__ANY_INPUT__"
-        ],
-        "disabled_in": [],
-        "say": [
-          "."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
             "reason": null
           }
         ],
@@ -7667,499 +7578,6 @@
           }
         ],
         "fallback": []
-      },
-      {
-        "node_id": "HNDLR_FAQ_LOC",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "dónde están ubicados",
-          "en qué ciudad están",
-          "ubicación"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "Estamos ubicados en <APPOINTMENT_ADDRESS>."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_FAQ_DUR",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "de cuánto es la duración de la cita",
-          "cuánto dura la cita",
-          "cuanto tiempo dura la cita"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "La cita tiene una duración aproximada de <APPOINTMENT_DURATION_MINUTES> minutos."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_O_FAQ_WHO",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "quién eres",
-          "quién me llama",
-          "de dónde llaman",
-          "con quién hablo"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "Soy <AGENT_NAME>, agente de IA de atención al cliente de <COMPANY_NAME>, una clínica especializada en fertilidad y reproducción asistida."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_O_FAQ_SRC",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "de dónde sacaron mi número",
-          "cómo tienen mis datos",
-          "por qué tienen mi teléfono",
-          "quién les dio mi número"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "Entiendo su inquietud. Sus datos se tratan conforme a <DATA_LAW_REFERENCE>. Si lo desea, también podemos registrar que no quiere recibir más llamadas de nuestra parte."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_O_FAQ_PRIV",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "qué hacen con mis datos",
-          "mis datos están seguros",
-          "van a compartir mi información",
-          "cómo protegen mi información"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "Sus datos personales se tratan de forma confidencial y conforme a <DATA_LAW_REFERENCE>. No compartimos información médica o personal con terceros sin autorización."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_O_FAQ_LEN",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "cuánto se demora",
-          "esto toma mucho tiempo",
-          "cuánto dura la llamada",
-          "son muchas preguntas"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "Son solo unas preguntas básicas. La llamada debería tomar pocos minutos, y después podremos enviarle la información más detallada por WhatsApp."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_O_FAQ_OPT",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "tengo que responder",
-          "es obligatorio",
-          "estoy obligada a seguir",
-          "puedo no responder"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "No, no es obligatorio. Usted decide si quiere continuar o no. Si prefiere, también podemos registrar que no desea recibir más llamadas."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_O_FAQ_NOCONS",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "qué pasa si no autorizo mis datos",
-          "puedo no dar permiso",
-          "si no acepto qué pasa",
-          "no quiero autorizar mis datos"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "Sí, puede no autorizar. Sin su autorización no podemos continuar con la llamada ni procesar sus respuestas."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_Q_FAQ_ACC",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "si respondo ya quedo aceptada",
-          "eso significa que aplico",
-          "ya quedo en el programa",
-          "me garantizan participar"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "No. Esta llamada es solo una precalificación inicial. La participación depende de una evaluación posterior del equipo de <COMPANY_NAME>."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_Q_FAQ_AGE",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "cuál es la edad permitida",
-          "hasta qué edad aceptan",
-          "desde qué edad puedo participar",
-          "qué edad debo tener"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "Para esta precalificación inicial, el rango requerido es entre dieciocho y treinta y ocho años."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_Q_FAQ_CITY",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "qué ciudades aplican",
-          "desde dónde puedo participar",
-          "cuáles municipios están permitidos",
-          "en qué ciudades funciona"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "Los municipios habilitados son <ALLOWED_CITIES>."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_FAQ_HOURS",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "qué horario tienen",
-          "a qué hora atienden",
-          "cuál es el horario",
-          "atienden los sábados"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "Atendemos de <CLINIC_HOURS>."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_FAQ_CONTACT",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "cómo me comunico con ustedes",
-          "tienen WhatsApp",
-          "cuál es el correo",
-          "tienen página web",
-          "a dónde les escribo"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "Puede escribirnos al WhatsApp <CLINIC_WHATSAPP>, al correo <CLINIC_EMAIL>, o visitar nuestra página <CLINIC_WEBSITE>."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_FAQ_INTL",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "atienden pacientes del exterior",
-          "tienen programa internacional",
-          "atienden extranjeros"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "Sí, atendemos pacientes de toda Colombia y del exterior, con acompañamiento especializado."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "HNDLR_FAQ_DOUBT",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [
-          "no estoy segura",
-          "lo tengo que pensar",
-          "me da miedo",
-          "no sé si animarme"
-        ],
-        "disabled_in": [
-          "KQ"
-        ],
-        "say": [
-          "Entiendo que es una decisión importante. Esta llamada es solo una precalificación inicial y no la compromete a nada. Usted decide si continúa."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [],
-        "fallback": [
-          {
-            "target": "[current_state]",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
       }
     ],
     "faqs": []
@@ -8766,9 +8184,6 @@
     "DATA_LAW_REFERENCE": "nuestra Política de Privacidad y Protección de Datos Personales, que se da en cumplimiento de lo dispuesto por el artículo 15 de la Constitución Política de 1991, así como por la Ley 1581 de 2012, el Decreto 1377 de 2013 y el Decreto 886 de 2014. Política de Privacidad y Protección de Datos Personales de Novafem S.A.S.",
     "ALLOWED_CITIES": "Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá y Sibaté",
     "CLINIC_WHATSAPP": "tres diez, seis cero nueve, nueve nueve siete nueve",
-    "CLINIC_EMAIL": "contacto arroba babynovaclinic punto com",
-    "CLINIC_WEBSITE": "babynovaclinic punto com",
-    "CLINIC_HOURS": "lunes a viernes de siete de la mañana a cuatro de la tarde, y sábados de ocho a once de la mañana",
     "MAX_KB_ROUNDS": "8",
     "KB_SIDE_NUDGE_AFTER": "2",
     "END_LISTEN_MAX_ATTEMPTS": "3",
@@ -8815,7 +8230,7 @@
     {
       "word": "alquil*",
       "use_instead": "portadoras de vida",
-      "reason": "el cuerpo de la gestante no se alquila"
+      "reason": null
     },
     {
       "word": "vientre de renta",
@@ -8823,7 +8238,7 @@
       "reason": null
     },
     {
-      "word": "mercancia*",
+      "word": "mercan*",
       "use_instead": null,
       "reason": "el bebé y la gestante no son mercancía"
     },
@@ -8838,34 +8253,24 @@
       "reason": null
     },
     {
-      "word": "comprar*",
+      "word": "compra*",
       "use_instead": null,
-      "reason": "nada se compra"
+      "reason": "nada se compra ni se vende"
     },
     {
-      "word": "vender*",
+      "word": "vend*",
       "use_instead": null,
-      "reason": "nada se vende"
+      "reason": "nada se compra ni se vende"
     },
     {
       "word": "venta de",
       "use_instead": null,
-      "reason": "nada se vende"
-    },
-    {
-      "word": "comercializ*",
-      "use_instead": null,
-      "reason": "verbo rector del art. 188-A; es el artículo que tipifica el delito de trata de personas"
-    },
-    {
-      "word": "mercantiliz*",
-      "use_instead": null,
-      "reason": "mercantilización de la vida (Auto A529/26)"
+      "reason": "nada se compra ni se vende"
     },
     {
       "word": "negocio*",
       "use_instead": null,
-      "reason": "no es un negocio"
+      "reason": "nada se compra ni se vende"
     },
     {
       "word": "entregar al bebe",
@@ -8885,67 +8290,67 @@
     {
       "word": "a cambio de",
       "use_instead": null,
-      "reason": "ningún pago es a cambio de la entrega del niño"
+      "reason": "nada se paga a cambio del bebé ni del proceso"
     },
     {
-      "word": "captar*",
+      "word": "recompensa*",
       "use_instead": null,
-      "reason": "verbo rector del art. 188-A; es el artículo que tipifica el delito de trata de personas"
+      "reason": "nada se paga a cambio del bebé ni del proceso"
     },
     {
-      "word": "captaci*",
+      "word": "premio*",
       "use_instead": null,
-      "reason": "verbo rector del art. 188-A; es el artículo que tipifica el delito de trata de personas"
+      "reason": "nada se paga a cambio del bebé ni del proceso"
     },
     {
-      "word": "reclut*",
+      "word": "pago por",
       "use_instead": null,
-      "reason": "la participación no se recluta"
+      "reason": "nada se paga a cambio del bebé ni del proceso"
+    },
+    {
+      "word": "pagos por",
+      "use_instead": null,
+      "reason": "nada se paga a cambio del bebé ni del proceso"
+    },
+    {
+      "word": "comercializ*",
+      "use_instead": null,
+      "reason": "verbos rectores del art. 188-A (trata de personas)"
+    },
+    {
+      "word": "capta*",
+      "use_instead": null,
+      "reason": "verbos rectores del art. 188-A (trata de personas)"
     },
     {
       "word": "promocion*",
       "use_instead": null,
-      "reason": "verbo rector del art. 188-A; es el artículo que tipifica el delito de trata de personas"
+      "reason": "verbos rectores del art. 188-A (trata de personas)"
     },
     {
-      "word": "cupos limitados",
+      "word": "reclut*",
       "use_instead": null,
-      "reason": "presión comercial"
+      "reason": "la participación no se recluta ni se presiona"
     },
     {
       "word": "cupo limitado",
       "use_instead": null,
-      "reason": "presión comercial"
+      "reason": "la participación no se recluta ni se presiona"
+    },
+    {
+      "word": "cupos limitados",
+      "use_instead": null,
+      "reason": "la participación no se recluta ni se presiona"
     },
     {
       "word": "ultima oportunidad",
       "use_instead": null,
-      "reason": "presión comercial"
+      "reason": "la participación no se recluta ni se presiona"
     },
     {
-      "word": "aproveche",
+      "word": "aprovech*",
       "use_instead": null,
-      "reason": "presión comercial"
-    },
-    {
-      "word": "aprovecha",
-      "use_instead": null,
-      "reason": "presión comercial"
-    },
-    {
-      "word": "vacante*",
-      "use_instead": null,
-      "reason": "no es un empleo"
-    },
-    {
-      "word": "oferta laboral",
-      "use_instead": null,
-      "reason": "no es un empleo"
-    },
-    {
-      "word": "oferta de trabajo",
-      "use_instead": null,
-      "reason": "no es un empleo"
+      "reason": "la participación no se recluta ni se presiona"
     },
     {
       "word": "trabajo de gestante",
@@ -8956,6 +8361,51 @@
       "word": "trabajar como gestante",
       "use_instead": "participar en el programa",
       "reason": null
+    },
+    {
+      "word": "vacante*",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "oferta laboral",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "oferta de trabajo",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "empleo",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "sueldo*",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "salario*",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "ingreso*",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "ganancia*",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "ganar*",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
     },
     {
       "word": "dinero facil",
@@ -8983,21 +8433,6 @@
       "reason": "no se motiva con dinero"
     },
     {
-      "word": "ganar dinero",
-      "use_instead": null,
-      "reason": "no se motiva con dinero"
-    },
-    {
-      "word": "ganar plata",
-      "use_instead": null,
-      "reason": "no se motiva con dinero"
-    },
-    {
-      "word": "ganancia*",
-      "use_instead": null,
-      "reason": "no es una fuente de ingresos"
-    },
-    {
       "word": "remuneraci*",
       "use_instead": "apoyo para los gastos del embarazo",
       "reason": null
@@ -9013,39 +8448,9 @@
       "reason": null
     },
     {
-      "word": "recompensa*",
-      "use_instead": null,
-      "reason": "nada se paga a cambio del bebé"
-    },
-    {
-      "word": "premio*",
-      "use_instead": null,
-      "reason": "nada se paga a cambio del bebé"
-    },
-    {
       "word": "comision*",
       "use_instead": null,
       "reason": "no hay intermediación lucrativa"
-    },
-    {
-      "word": "bono*",
-      "use_instead": null,
-      "reason": "no se ofrecen bonos"
-    },
-    {
-      "word": "incentivo*",
-      "use_instead": null,
-      "reason": "no se ofrecen incentivos"
-    },
-    {
-      "word": "tarifa*",
-      "use_instead": null,
-      "reason": "no es un servicio con precio"
-    },
-    {
-      "word": "precio*",
-      "use_instead": null,
-      "reason": "no es un servicio con precio"
     },
     {
       "word": "cobr*",
@@ -9053,119 +8458,109 @@
       "reason": "no hay intermediación lucrativa"
     },
     {
+      "word": "bono*",
+      "use_instead": null,
+      "reason": "sin pagos, precios ni cifras de dinero"
+    },
+    {
+      "word": "incentivo*",
+      "use_instead": null,
+      "reason": "sin pagos, precios ni cifras de dinero"
+    },
+    {
+      "word": "tarifa*",
+      "use_instead": null,
+      "reason": "sin pagos, precios ni cifras de dinero"
+    },
+    {
+      "word": "precio*",
+      "use_instead": null,
+      "reason": "sin pagos, precios ni cifras de dinero"
+    },
+    {
       "word": "pago mensual",
       "use_instead": null,
-      "reason": "sin calendarios de pagos"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "pago unico",
       "use_instead": null,
-      "reason": "sin calendarios de pagos"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "pago total",
       "use_instead": null,
-      "reason": "sin calendarios de pagos"
-    },
-    {
-      "word": "pago por",
-      "use_instead": null,
-      "reason": "no se paga por el bebé ni por el proceso"
-    },
-    {
-      "word": "pagos por",
-      "use_instead": null,
-      "reason": "no se paga por el bebé ni por el proceso"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "le pagamos",
       "use_instead": null,
-      "reason": "no se paga a la gestante por participar"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "le pagaremos",
       "use_instead": null,
-      "reason": "no se paga a la gestante por participar"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "le pagan",
       "use_instead": null,
-      "reason": "no se paga a la gestante por participar"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "te pagamos",
       "use_instead": null,
-      "reason": "no se paga a la gestante por participar"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "pesos",
       "use_instead": null,
-      "reason": "sin cifras de dinero"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "dolares",
       "use_instead": null,
-      "reason": "sin cifras de dinero"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "euros",
       "use_instead": null,
-      "reason": "sin cifras de dinero"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "usd",
       "use_instead": null,
-      "reason": "sin cifras de dinero"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "millon*",
       "use_instead": null,
-      "reason": "sin cifras de dinero"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "totalmente legal",
       "use_instead": null,
-      "reason": "sin seguridades jurídicas"
+      "reason": "sin seguridades jurídicas ni garantías"
     },
     {
       "word": "completamente legal",
       "use_instead": null,
-      "reason": "sin seguridades jurídicas"
+      "reason": "sin seguridades jurídicas ni garantías"
     },
     {
       "word": "100% legal",
       "use_instead": null,
-      "reason": "sin seguridades jurídicas"
+      "reason": "sin seguridades jurídicas ni garantías"
     },
     {
       "word": "sin riesgo*",
       "use_instead": null,
-      "reason": "sin garantías de ningún tipo"
+      "reason": "sin seguridades jurídicas ni garantías"
     },
     {
       "word": "100% seguro",
       "use_instead": null,
-      "reason": "sin garantías de ningún tipo"
-    },
-    {
-      "word": "empleo",
-      "use_instead": null,
-      "reason": "el programa no es un trabajo ni una fuente de ingresos"
-    },
-    {
-      "word": "ingreso*",
-      "use_instead": null,
-      "reason": "el programa no es un trabajo ni una fuente de ingresos"
-    },
-    {
-      "word": "sueldo*",
-      "use_instead": null,
-      "reason": "el programa no es un trabajo ni una fuente de ingresos"
-    },
-    {
-      "word": "salario*",
-      "use_instead": null,
-      "reason": "el programa no es un trabajo ni una fuente de ingresos"
+      "reason": "sin seguridades jurídicas ni garantías"
     }
   ]
 }

@@ -2990,13 +2990,13 @@
         "node_id": "Q__SQ_ASK_WEIGHT",
         "node_type": "question",
         "goal": [
-          "Capture the weight in kilograms (convert pounds: 1 lb = 0.4536 kg)."
+          "Take the representative value of the range she picks, in kilos: less than 50 -> 45; 50 to 60 -> 55; 60 to 70 -> 65; 70 to 80 -> 75; more than 80 -> 85. If she gives an exact weight instead, use that exact value (convert pounds: 1 lb = 0.4536 kg)."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "How much do you weigh right now, in kilos?"
+          "To estimate your body mass index without asking for exact numbers, which of these ranges is your weight in: less than 50 kilos, between 50 and 60, between 60 and 70, between 70 and 80, or more than 80?"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -3104,13 +3104,13 @@
         "node_id": "Q__SQ_ASK_HEIGHT",
         "node_type": "question",
         "goal": [
-          "Capture the height in centimeters (convert meters or feet and inches: 1 in = 2.54 cm)."
+          "Take the representative value of the range she picks, in centimeters: less than 150 -> 145; 150 to 160 -> 155; 160 to 170 -> 165; 170 to 180 -> 175; more than 180 -> 185. If she gives an exact height instead, use that exact value in centimeters (convert meters or feet and inches: 1 in = 2.54 cm)."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "How tall are you, in centimeters?"
+          "And which of these ranges is your height in: less than 150 centimeters, between 150 and 160, between 160 and 170, between 170 and 180, or more than 180?"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -10370,7 +10370,7 @@
     {
       "word": "alquil*",
       "use_instead": "portadoras de vida",
-      "reason": "el cuerpo de la gestante no se alquila"
+      "reason": null
     },
     {
       "word": "vientre de renta",
@@ -10378,7 +10378,7 @@
       "reason": null
     },
     {
-      "word": "mercancia*",
+      "word": "mercan*",
       "use_instead": null,
       "reason": "el bebé y la gestante no son mercancía"
     },
@@ -10393,34 +10393,24 @@
       "reason": null
     },
     {
-      "word": "comprar*",
+      "word": "compra*",
       "use_instead": null,
-      "reason": "nada se compra"
+      "reason": "nada se compra ni se vende"
     },
     {
-      "word": "vender*",
+      "word": "vend*",
       "use_instead": null,
-      "reason": "nada se vende"
+      "reason": "nada se compra ni se vende"
     },
     {
       "word": "venta de",
       "use_instead": null,
-      "reason": "nada se vende"
-    },
-    {
-      "word": "comercializ*",
-      "use_instead": null,
-      "reason": "verbo rector del art. 188-A; es el artículo que tipifica el delito de trata de personas"
-    },
-    {
-      "word": "mercantiliz*",
-      "use_instead": null,
-      "reason": "mercantilización de la vida (Auto A529/26)"
+      "reason": "nada se compra ni se vende"
     },
     {
       "word": "negocio*",
       "use_instead": null,
-      "reason": "no es un negocio"
+      "reason": "nada se compra ni se vende"
     },
     {
       "word": "entregar al bebe",
@@ -10440,67 +10430,67 @@
     {
       "word": "a cambio de",
       "use_instead": null,
-      "reason": "ningún pago es a cambio de la entrega del niño"
+      "reason": "nada se paga a cambio del bebé ni del proceso"
     },
     {
-      "word": "captar*",
+      "word": "recompensa*",
       "use_instead": null,
-      "reason": "verbo rector del art. 188-A; es el artículo que tipifica el delito de trata de personas"
+      "reason": "nada se paga a cambio del bebé ni del proceso"
     },
     {
-      "word": "captaci*",
+      "word": "premio*",
       "use_instead": null,
-      "reason": "verbo rector del art. 188-A; es el artículo que tipifica el delito de trata de personas"
+      "reason": "nada se paga a cambio del bebé ni del proceso"
     },
     {
-      "word": "reclut*",
+      "word": "pago por",
       "use_instead": null,
-      "reason": "la participación no se recluta"
+      "reason": "nada se paga a cambio del bebé ni del proceso"
+    },
+    {
+      "word": "pagos por",
+      "use_instead": null,
+      "reason": "nada se paga a cambio del bebé ni del proceso"
+    },
+    {
+      "word": "comercializ*",
+      "use_instead": null,
+      "reason": "verbos rectores del art. 188-A (trata de personas)"
+    },
+    {
+      "word": "capta*",
+      "use_instead": null,
+      "reason": "verbos rectores del art. 188-A (trata de personas)"
     },
     {
       "word": "promocion*",
       "use_instead": null,
-      "reason": "verbo rector del art. 188-A; es el artículo que tipifica el delito de trata de personas"
+      "reason": "verbos rectores del art. 188-A (trata de personas)"
     },
     {
-      "word": "cupos limitados",
+      "word": "reclut*",
       "use_instead": null,
-      "reason": "presión comercial"
+      "reason": "la participación no se recluta ni se presiona"
     },
     {
       "word": "cupo limitado",
       "use_instead": null,
-      "reason": "presión comercial"
+      "reason": "la participación no se recluta ni se presiona"
+    },
+    {
+      "word": "cupos limitados",
+      "use_instead": null,
+      "reason": "la participación no se recluta ni se presiona"
     },
     {
       "word": "ultima oportunidad",
       "use_instead": null,
-      "reason": "presión comercial"
+      "reason": "la participación no se recluta ni se presiona"
     },
     {
-      "word": "aproveche",
+      "word": "aprovech*",
       "use_instead": null,
-      "reason": "presión comercial"
-    },
-    {
-      "word": "aprovecha",
-      "use_instead": null,
-      "reason": "presión comercial"
-    },
-    {
-      "word": "vacante*",
-      "use_instead": null,
-      "reason": "no es un empleo"
-    },
-    {
-      "word": "oferta laboral",
-      "use_instead": null,
-      "reason": "no es un empleo"
-    },
-    {
-      "word": "oferta de trabajo",
-      "use_instead": null,
-      "reason": "no es un empleo"
+      "reason": "la participación no se recluta ni se presiona"
     },
     {
       "word": "trabajo de gestante",
@@ -10511,6 +10501,51 @@
       "word": "trabajar como gestante",
       "use_instead": "participar en el programa",
       "reason": null
+    },
+    {
+      "word": "vacante*",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "oferta laboral",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "oferta de trabajo",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "empleo",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "sueldo*",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "salario*",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "ingreso*",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "ganancia*",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
+    },
+    {
+      "word": "ganar*",
+      "use_instead": null,
+      "reason": "no es un trabajo ni una fuente de ingresos"
     },
     {
       "word": "dinero facil",
@@ -10538,21 +10573,6 @@
       "reason": "no se motiva con dinero"
     },
     {
-      "word": "ganar dinero",
-      "use_instead": null,
-      "reason": "no se motiva con dinero"
-    },
-    {
-      "word": "ganar plata",
-      "use_instead": null,
-      "reason": "no se motiva con dinero"
-    },
-    {
-      "word": "ganancia*",
-      "use_instead": null,
-      "reason": "no es una fuente de ingresos"
-    },
-    {
       "word": "remuneraci*",
       "use_instead": "apoyo para los gastos del embarazo",
       "reason": null
@@ -10568,39 +10588,9 @@
       "reason": null
     },
     {
-      "word": "recompensa*",
-      "use_instead": null,
-      "reason": "nada se paga a cambio del bebé"
-    },
-    {
-      "word": "premio*",
-      "use_instead": null,
-      "reason": "nada se paga a cambio del bebé"
-    },
-    {
       "word": "comision*",
       "use_instead": null,
       "reason": "no hay intermediación lucrativa"
-    },
-    {
-      "word": "bono*",
-      "use_instead": null,
-      "reason": "no se ofrecen bonos"
-    },
-    {
-      "word": "incentivo*",
-      "use_instead": null,
-      "reason": "no se ofrecen incentivos"
-    },
-    {
-      "word": "tarifa*",
-      "use_instead": null,
-      "reason": "no es un servicio con precio"
-    },
-    {
-      "word": "precio*",
-      "use_instead": null,
-      "reason": "no es un servicio con precio"
     },
     {
       "word": "cobr*",
@@ -10608,119 +10598,109 @@
       "reason": "no hay intermediación lucrativa"
     },
     {
+      "word": "bono*",
+      "use_instead": null,
+      "reason": "sin pagos, precios ni cifras de dinero"
+    },
+    {
+      "word": "incentivo*",
+      "use_instead": null,
+      "reason": "sin pagos, precios ni cifras de dinero"
+    },
+    {
+      "word": "tarifa*",
+      "use_instead": null,
+      "reason": "sin pagos, precios ni cifras de dinero"
+    },
+    {
+      "word": "precio*",
+      "use_instead": null,
+      "reason": "sin pagos, precios ni cifras de dinero"
+    },
+    {
       "word": "pago mensual",
       "use_instead": null,
-      "reason": "sin calendarios de pagos"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "pago unico",
       "use_instead": null,
-      "reason": "sin calendarios de pagos"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "pago total",
       "use_instead": null,
-      "reason": "sin calendarios de pagos"
-    },
-    {
-      "word": "pago por",
-      "use_instead": null,
-      "reason": "no se paga por el bebé ni por el proceso"
-    },
-    {
-      "word": "pagos por",
-      "use_instead": null,
-      "reason": "no se paga por el bebé ni por el proceso"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "le pagamos",
       "use_instead": null,
-      "reason": "no se paga a la gestante por participar"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "le pagaremos",
       "use_instead": null,
-      "reason": "no se paga a la gestante por participar"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "le pagan",
       "use_instead": null,
-      "reason": "no se paga a la gestante por participar"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "te pagamos",
       "use_instead": null,
-      "reason": "no se paga a la gestante por participar"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "pesos",
       "use_instead": null,
-      "reason": "sin cifras de dinero"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "dolares",
       "use_instead": null,
-      "reason": "sin cifras de dinero"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "euros",
       "use_instead": null,
-      "reason": "sin cifras de dinero"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "usd",
       "use_instead": null,
-      "reason": "sin cifras de dinero"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "millon*",
       "use_instead": null,
-      "reason": "sin cifras de dinero"
+      "reason": "sin pagos, precios ni cifras de dinero"
     },
     {
       "word": "totalmente legal",
       "use_instead": null,
-      "reason": "sin seguridades jurídicas"
+      "reason": "sin seguridades jurídicas ni garantías"
     },
     {
       "word": "completamente legal",
       "use_instead": null,
-      "reason": "sin seguridades jurídicas"
+      "reason": "sin seguridades jurídicas ni garantías"
     },
     {
       "word": "100% legal",
       "use_instead": null,
-      "reason": "sin seguridades jurídicas"
+      "reason": "sin seguridades jurídicas ni garantías"
     },
     {
       "word": "sin riesgo*",
       "use_instead": null,
-      "reason": "sin garantías de ningún tipo"
+      "reason": "sin seguridades jurídicas ni garantías"
     },
     {
       "word": "100% seguro",
       "use_instead": null,
-      "reason": "sin garantías de ningún tipo"
-    },
-    {
-      "word": "empleo",
-      "use_instead": null,
-      "reason": "el programa no es un trabajo ni una fuente de ingresos"
-    },
-    {
-      "word": "ingreso*",
-      "use_instead": null,
-      "reason": "el programa no es un trabajo ni una fuente de ingresos"
-    },
-    {
-      "word": "sueldo*",
-      "use_instead": null,
-      "reason": "el programa no es un trabajo ni una fuente de ingresos"
-    },
-    {
-      "word": "salario*",
-      "use_instead": null,
-      "reason": "el programa no es un trabajo ni una fuente de ingresos"
+      "reason": "sin seguridades jurídicas ni garantías"
     }
   ]
 }
