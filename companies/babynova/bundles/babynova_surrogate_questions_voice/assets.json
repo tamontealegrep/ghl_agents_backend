@@ -386,7 +386,7 @@
       {
         "name": "duration",
         "required": true,
-        "description": "Appointment duration in minutes. Fixed: <APPOINTMENT_DURATION_MINUTES>."
+        "description": "Appointment duration in minutes. Fixed: <APPT_MIN>."
       },
       {
         "name": "contact_name",
