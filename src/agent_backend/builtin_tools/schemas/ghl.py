@@ -85,6 +85,31 @@ class GhlRemoveTagsResponse(BaseModel):
     errors: str | None = None
 
 
+class GhlGetContact(BaseModel):
+    contact_id: str = Field(..., alias="contactId", description="ID del contacto en GHL")
+    location_id: str | None = Field(
+        None,
+        alias="locationId",
+        description="ID de la ubicación (subcuenta): elige el token y permite dar los campos personalizados por nombre",
+    )
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class GhlGetContactResponse(BaseModel):
+    success: bool
+    contact_id: str | None = None
+    fields: dict[str, Any] | None = Field(
+        None, description="Los datos del contacto que tienen valor (nombre, correo, teléfono, dirección, país...)"
+    )
+    tags: list[str] | None = Field(None, description="Las etiquetas del contacto")
+    custom_fields: dict[str, Any] | None = Field(
+        None,
+        description="Los campos personalizados con valor: nombre del campo -> valor (o su ID si no se pudo resolver el nombre)",
+    )
+    errors: str | None = None
+
+
 class GhlUpdateContact(BaseModel):
     contact_id: str = Field(..., alias="contactId", description="ID del contacto en GHL")
     location_id: str | None = Field(

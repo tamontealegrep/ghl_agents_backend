@@ -8,6 +8,7 @@ from agent_backend.builtin_tools.endpoints import (
     calculate_bmi,
     callback_request,
     check_days_elapsed,
+    get_contact,
     remove_tags,
     send_whatsapp_file,
     send_whatsapp_template,
@@ -30,6 +31,7 @@ from agent_backend.builtin_tools.endpoints import (
 from agent_backend.builtin_tools.schemas.ghl import (
     GhlAddTagsResponse,
     GhlCustomUpdateResponse,
+    GhlGetContactResponse,
     GhlRemoveTagsResponse,
     GhlUpdateContactResponse,
     GhlUpdateOpportunityResponse,
@@ -102,6 +104,13 @@ router.add_api_route(
     methods=["POST"],
     response_model=GhlSendWhatsappResponse,
     tags=["utils.send_whatsapp_file"],
+)
+router.add_api_route(
+    "/get-contact",
+    get_contact.get_contact,
+    methods=["POST"],
+    response_model=GhlGetContactResponse,
+    tags=["utils.get_contact"],
 )
 router.add_api_route(
     "/update-contact",
