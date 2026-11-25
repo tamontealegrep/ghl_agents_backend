@@ -2794,7 +2794,7 @@
         "node_type": "action",
         "goal": [],
         "do": [
-          "template_name = 'compensation', language = 'es'"
+          "template_name = <WHATSAPP_TEMPLATE_NAME>, language = 'es'"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -8106,7 +8106,8 @@
     "MAX_KB_ROUNDS": "8",
     "KB_SIDE_NUDGE_AFTER": "2",
     "END_LISTEN_MAX_ATTEMPTS": "3",
-    "NEXT_STEP_CLASSES": "schedule: quiere agendar o seguir con la cita, o dice claramente que no tiene nada (más) que preguntar ('no', 'nada más', 'estoy listo'). question: dice que tiene una duda sin decirla ('tengo una duda') o un 'sí' suelto a esta pregunta. ambiguous: sin contenido propio, no aclara si agenda o pregunta ('ok', 'vale', 'mmm', 'no sé', un emoji), aunque 'ok' suene a acuerdo. ask: cualquier otra cosa con contenido: pregunta, petición ('cuénteme de…') o afirmación sobre sí misma ('somos pareja del mismo sexo'), que se responde como una pregunta. Ante la duda entre schedule y ask: ask; solo un deseo claro de agendar pasa al agendamiento."
+    "NEXT_STEP_CLASSES": "schedule: quiere agendar o seguir con la cita, o dice claramente que no tiene nada (más) que preguntar ('no', 'nada más', 'estoy listo'). question: dice que tiene una duda sin decirla ('tengo una duda') o un 'sí' suelto a esta pregunta. ambiguous: sin contenido propio, no aclara si agenda o pregunta ('ok', 'vale', 'mmm', 'no sé', un emoji), aunque 'ok' suene a acuerdo. ask: cualquier otra cosa con contenido: pregunta, petición ('cuénteme de…') o afirmación sobre sí misma ('somos pareja del mismo sexo'), que se responde como una pregunta. Ante la duda entre schedule y ask: ask; solo un deseo claro de agendar pasa al agendamiento.",
+    "WHATSAPP_TEMPLATE_NAME": "compensation"
   },
   "session_timeout_minutes": null,
   "say_policies": [
