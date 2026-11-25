@@ -1931,5 +1931,7 @@
   "judgment_policies": [
     "Memory slots are referenced with square brackets in the DSL. Do not invent undeclared slots.",
     "Never verbalize the contents of internal variables, memory slots, or state IDs."
-  ]
+  ],
+  "output_rules": [],
+  "forbidden_words": []
 }

@@ -9931,20 +9931,20 @@
         }
       ],
       "notes": [
-        "MANDATORY EXECUTION: trigger upon entering node Q__SQ_CALCULATE_BMI.",
-        "ABSOLUTE RULE: do not calculate manually. Do not speak before capturing [imc].",
+        "MANDATORY EXECUTION: trigger upon entering the node that calculates the BMI.",
+        "ABSOLUTE RULE: do not calculate manually. Do not speak before capturing the BMI.",
         "ARGUMENTS: weight_kg (kg), height_cm (cm). If captured in lbs/ft, convert before calling (1 lb = 0.4536 kg; 1 in = 2.54 cm).",
-        "SOURCE OF TRUTH: use [imc] only; do not recompute manually."
+        "SOURCE OF TRUTH: use the captured BMI only; do not recompute manually."
       ]
     },
     {
       "name": "get_available_slots",
-      "description": "Authorized availability tool for commercial appointments. Its output is the source of truth for days and times.",
+      "description": "Authorized availability tool; source of truth for days and times.",
       "inputs": [
         {
           "name": "calendar_type",
           "required": true,
-          "description": "Calendar to use. Always the literal 'FT'; the tool fails if it is missing.",
+          "description": "The calendar to query, as indicated by the flow (e.g. 'FT'). Required: the tool fails without it.",
           "type_expr": "Literal[FT]",
           "examples": [
             "FT"
@@ -9953,33 +9953,53 @@
         {
           "name": "iana_timezone",
           "required": true,
-          "description": "IANA identifier of the user's timezone. Default: America/Bogota.",
+          "description": "Real IANA identifier of the timezone the times are shown in (continent/city, or continent/country/city for zones that need it), as decided by the flow: asked to the contact or fixed by the agent. Never guessed, never shortened to two parts when the real identifier has three. Examples: America/Bogota, Europe/Madrid, America/New_York.",
           "type_expr": "str",
-          "examples": []
+          "examples": [
+            "America/Bogota",
+            "Europe/Madrid",
+            "America/New_York"
+          ]
         }
       ],
       "outputs": [
         {
           "name": "success",
           "required": true,
-          "description": "Execution status (bool).",
+          "description": "Boolean: the query ran correctly. It does not by itself indicate whether there is availability — check available_slots for that.",
           "type_expr": "bool",
           "examples": []
         },
         {
+          "name": "iana_timezone",
+          "required": true,
+          "description": "Echo of the real IANA identifier (continent/city, or continent/country/city) used to compute start_local/end_local.",
+          "type_expr": "str",
+          "examples": [
+            "America/Bogota"
+          ]
+        },
+        {
           "name": "available_slots",
           "required": true,
-          "description": "Array of available slots. Each slot includes start_co/end_co (Colombia time, ISO 8601) and start_local/end_local (contact zone, ISO 8601).",
+          "description": "Array of objects with the available slots. Each object carries start_co/end_co (Colombia time, ISO 8601) and start_local/end_local (contact's zone, ISO 8601). Empty array ([]) if there is no availability.",
           "type_expr": "list[Slot]",
+          "examples": []
+        },
+        {
+          "name": "errors",
+          "required": true,
+          "description": "Error message if the query failed. null on success, even when available_slots came back empty.",
+          "type_expr": "str",
           "examples": []
         }
       ],
       "notes": [
-        "ARGUMENTS: calendar_type is REQUIRED and is always 'FT' (the BabyNova calendar). The tool fails without it.",
-        "MANDATORY EXECUTION: trigger on entering node SC__SC_AV or SC__SC_CHK.",
-        "ABSOLUTE RULE: do not mention availability before execution and [available_slots] capture.",
-        "ARGUMENTS: iana_timezone must be a real IANA identifier (e.g. America/Bogota). Fixed to America/Bogota for this agent.",
-        "SOURCE OF TRUTH: use only the available_slots array. A slot is valid only if it has start_co/end_co and start_local/end_local."
+        "MANDATORY EXECUTION: on entering the availability nodes (SC_AV*) or the re-check nodes (SC_CHK*) to re-verify the chosen time, and on any intent to schedule/reschedule/see-more/retry.",
+        "ABSOLUTE RULE: do not mention availability before executing the tool and capturing the available slots.",
+        "ARGUMENTS: calendar_type is required: the calendar key the flow indicates (e.g. 'FT'); iana_timezone is a real IANA zone (e.g. America/Bogota) resolved or fixed in the flow.",
+        "SOURCE OF TRUTH: use only available_slots; each slot must include start_co/end_co and start_local/end_local.",
+        "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal."
       ]
     },
     {
@@ -9989,7 +10009,7 @@
         {
           "name": "calendar_type",
           "required": true,
-          "description": "Calendar to use. Always the literal 'FT'; the tool fails if it is missing.",
+          "description": "Calendar to use, as indicated by the flow (e.g. 'FT'); the tool fails if it is missing.",
           "type_expr": "Literal[FT]",
           "examples": [
             "FT"
@@ -10033,7 +10053,7 @@
         {
           "name": "contact_id",
           "required": false,
-          "description": "CRM contact the appointment belongs to: the conversation's contact_id, which the GHL webhook provides in the contact. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
+          "description": "CRM contact the appointment belongs to: the conversation's contact_id, which the platform provides in the contact. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
           "type_expr": "str",
           "examples": []
         },
@@ -10092,7 +10112,7 @@
         }
       ],
       "notes": [
-        "ARGUMENTS: calendar_type is REQUIRED and is always 'FT' (the BabyNova calendar). The tool fails without it.",
+        "ARGUMENTS: calendar_type is REQUIRED: the calendar key the flow indicates (e.g. 'FT'). The tool fails without it.",
         "MANDATORY EXECUTION: trigger on entering node SC__SC_BOOK.",
         "ABSOLUTE RULE: do not confirm booking before success == true.",
         "ARGUMENTS: start_date is copied literally from start_co of the chosen slot. iana_timezone is fixed to America/Bogota.",
@@ -10113,7 +10133,7 @@
         {
           "name": "language",
           "required": false,
-          "description": "Language of the answer. Always Spanish in this agent.",
+          "description": "Language of the answer: the language of the conversation.",
           "type_expr": "str",
           "examples": []
         },
@@ -10205,7 +10225,7 @@
         }
       ],
       "notes": [
-        "MANDATORY EXECUTION: trigger on entering node Q__SQ_CHECK_ADRES, and only when document_type and document_number are both known.",
+        "MANDATORY EXECUTION: trigger on entering the ADRES check node, and only when document_type and document_number are both known.",
         "ARGUMENT RULE: document_type is 'CC' for a cédula de ciudadanía and 'PPT' for a permiso por protección temporal. document_number is sent as the person gave it (3 to 30 characters); spaces, dots and dashes are ignored.",
         "SOURCE OF TRUTH RULE: use found, has_active_affiliation and affiliations as the only affiliation data. An affiliation is active when its active field is true.",
         "POST-EXECUTION RULE: found == false means the document is not registered in BDUA; it is not an error and means no active affiliation.",
