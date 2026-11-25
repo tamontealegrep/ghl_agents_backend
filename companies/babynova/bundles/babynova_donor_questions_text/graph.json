@@ -5124,10 +5124,10 @@
         }
       ],
       "notes": [
-        "MANDATORY EXECUTION: trigger upon entering node Q__DQ_CALC_BMI.",
-        "ABSOLUTE RULE: do not calculate manually. Do not speak before capturing [imc].",
+        "MANDATORY EXECUTION: trigger upon entering the node that calculates the BMI.",
+        "ABSOLUTE RULE: do not calculate manually. Do not speak before capturing the BMI.",
         "ARGUMENTS: weight_kg (kg), height_cm (cm). If captured in lbs/ft, convert before calling (1 lb = 0.4536 kg; 1 in = 2.54 cm).",
-        "SOURCE OF TRUTH: use [imc] only; do not recompute manually."
+        "SOURCE OF TRUTH: use the captured BMI only; do not recompute manually."
       ]
     },
     {
@@ -5144,7 +5144,7 @@
         {
           "name": "language",
           "required": false,
-          "description": "Language of the answer. Always Spanish in this agent.",
+          "description": "Language of the answer: the language of the conversation.",
           "type_expr": "str",
           "examples": []
         },
@@ -5236,7 +5236,7 @@
         }
       ],
       "notes": [
-        "MANDATORY EXECUTION: trigger on entering node Q__DQ_CHECK_ADRES, and only when document_type and document_number are both known.",
+        "MANDATORY EXECUTION: trigger on entering the ADRES check node, and only when document_type and document_number are both known.",
         "ARGUMENT RULE: document_type is 'CC' for a cédula de ciudadanía and 'PPT' for a permiso por protección temporal. document_number is sent as the person gave it (3 to 30 characters); spaces, dots and dashes are ignored.",
         "SOURCE OF TRUTH RULE: use found, has_active_affiliation and affiliations as the only affiliation data. An affiliation is active when its active field is true.",
         "POST-EXECUTION RULE: found == false means the document is not registered in BDUA; it is not an error and means no active affiliation.",

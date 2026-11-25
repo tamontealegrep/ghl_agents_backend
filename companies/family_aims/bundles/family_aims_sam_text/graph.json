@@ -11479,14 +11479,16 @@
         {
           "name": "calendar_type",
           "required": true,
-          "description": "The calendar to use: always 'FT' (the round-robin calendar that shares the appointments among the advisors).",
+          "description": "The calendar to query, as indicated by the flow (e.g. 'FT'). Required: the tool fails without it.",
           "type_expr": "Literal[FT]",
-          "examples": []
+          "examples": [
+            "FT"
+          ]
         },
         {
           "name": "iana_timezone",
           "required": true,
-          "description": "Real IANA identifier of the contact's current timezone (continent/city, or continent/country/city for zones that need it). Examples: America/Bogota, Europe/Madrid, America/New_York, America/Argentina/Buenos_Aires. Resolved from the contact's country and city before executing — never guessed, never shortened to two parts when the real identifier has three.",
+          "description": "Real IANA identifier of the timezone the times are shown in (continent/city, or continent/country/city for zones that need it), as decided by the flow: asked to the contact or fixed by the agent. Never guessed, never shortened to two parts when the real identifier has three. Examples: America/Bogota, Europe/Madrid, America/New_York.",
           "type_expr": "str",
           "examples": [
             "America/Bogota",
@@ -11528,8 +11530,9 @@
         }
       ],
       "notes": [
-        "MANDATORY EXECUTION: on entering SC__SC_AV_I or SC__SC_AV_S, or SC__SC_CHK_I or SC__SC_CHK_S to re-verify the chosen time, and on any intent to schedule/reschedule/see-more/retry.",
-        "ARGUMENTS: calendar_type = 'FT'; iana_timezone is a real IANA zone (e.g., America/Bogota) resolved in-flow.",
+        "MANDATORY EXECUTION: on entering the availability nodes (SC_AV*) or the re-check nodes (SC_CHK*) to re-verify the chosen time, and on any intent to schedule/reschedule/see-more/retry.",
+        "ABSOLUTE RULE: do not mention availability before executing the tool and capturing the available slots.",
+        "ARGUMENTS: calendar_type is required: the calendar key the flow indicates (e.g. 'FT'); iana_timezone is a real IANA zone (e.g. America/Bogota) resolved or fixed in the flow.",
         "SOURCE OF TRUTH: use only available_slots; each slot must include start_co/end_co and start_local/end_local.",
         "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal."
       ]
@@ -11541,7 +11544,7 @@
         {
           "name": "calendar_type",
           "required": true,
-          "description": "The calendar where the booking will be made: always 'FT' (the round-robin calendar).",
+          "description": "The calendar where the booking will be made, as indicated by the flow (e.g. 'FT').",
           "type_expr": "Literal[FT]",
           "examples": []
         },
@@ -11596,7 +11599,7 @@
         {
           "name": "contact_id",
           "required": false,
-          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
+          "description": "The conversation's CRM contact id; the runtime fills it.",
           "type_expr": "str",
           "examples": []
         },
@@ -11662,8 +11665,8 @@
         }
       ],
       "notes": [
-        "MANDATORY EXECUTION: on entering SC__SC_BOOK_I or SC__SC_BOOK_S; requires prior get_available_slots.",
-        "ARGUMENTS: start_date = chosen slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT','FR','DE','IT'}; iana_timezone = same as availability; calendar_type = 'FT'.",
+        "MANDATORY EXECUTION: on entering the node that books the appointment; requires prior get_available_slots.",
+        "ARGUMENTS: start_date = chosen slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT','FR','DE','IT'}; iana_timezone = same as availability; calendar_type = the calendar the flow indicates (e.g. 'FT').",
         "SOURCE OF TRUTH: success determines creation; do not confirm before success == true and event_id != null."
       ]
     },
@@ -11688,14 +11691,14 @@
         {
           "name": "contact_id",
           "required": false,
-          "description": "CRM contact the appointment belongs to: the conversation's {{contact.contact_id}}. The tool fails without it (reason missing_contact_id) and never looks a contact up by e-mail or phone.",
+          "description": "The conversation's CRM contact id; the runtime fills it.",
           "type_expr": "str",
           "examples": []
         },
         {
           "name": "calendar_type",
           "required": true,
-          "description": "Calendar filter: always 'FT'.",
+          "description": "Calendar filter, as indicated by the flow (e.g. 'FT').",
           "type_expr": "Literal[FT]",
           "examples": []
         },
@@ -11743,7 +11746,7 @@
       ],
       "notes": [
         "MANDATORY EXECUTION: when the contact asks to check/verify appointment details.",
-        "ARGUMENTS: contact_name and/or contact_email; optional calendar_type = 'FT'; optional iana_timezone/language for formatting.",
+        "ARGUMENTS: contact_name and/or contact_email; optional calendar_type (e.g. 'FT'); optional iana_timezone/language for formatting.",
         "SOURCE OF TRUTH: appointments array; empty -> no records."
       ]
     },
@@ -11761,7 +11764,7 @@
         {
           "name": "calendar_type",
           "required": true,
-          "description": "The calendar where the appointment resides: always 'FT'.",
+          "description": "The calendar where the appointment resides, as indicated by the flow (e.g. 'FT').",
           "type_expr": "Literal[FT]",
           "examples": []
         },
@@ -11793,7 +11796,7 @@
       ],
       "notes": [
         "MANDATORY EXECUTION: only with a confirmed event_id (from find_appointment).",
-        "ARGUMENTS: event_id (exact), calendar_type = 'FT', optional iana_timezone.",
+        "ARGUMENTS: event_id (exact), calendar_type = the calendar the flow indicates (e.g. 'FT'), optional iana_timezone.",
         "SOURCE OF TRUTH: use success as the only authorized verdict."
       ]
     },
@@ -11811,7 +11814,7 @@
         {
           "name": "calendar_type",
           "required": true,
-          "description": "The calendar: always 'FT'.",
+          "description": "The calendar, as indicated by the flow (e.g. 'FT').",
           "type_expr": "Literal[FT]",
           "examples": []
         },
@@ -11886,7 +11889,7 @@
       ],
       "notes": [
         "MANDATORY EXECUTION: when changing date/time/duration of a scheduled appointment.",
-        "ARGUMENTS: event_id (exact), calendar_type = 'FT', optional new_start_date (from availability), optional new_duration, optional iana_timezone/language.",
+        "ARGUMENTS: event_id (exact), calendar_type = the calendar the flow indicates (e.g. 'FT'), optional new_start_date (from availability), optional new_duration, optional iana_timezone/language.",
         "SOURCE OF TRUTH: use success as the only authorized verdict; message/new_start_time are supporting details."
       ]
     },
@@ -11904,7 +11907,7 @@
         {
           "name": "language",
           "required": false,
-          "description": "Language of the answer: English, Spanish, Portuguese, French, German or Italian.",
+          "description": "Language of the answer: the language of the conversation.",
           "type_expr": "str",
           "examples": []
         },

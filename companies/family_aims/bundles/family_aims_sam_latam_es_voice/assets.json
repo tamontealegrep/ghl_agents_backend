@@ -266,8 +266,9 @@
     "name": "get_available_slots",
     "description": "Authorized availability tool; source of truth for days and times.",
     "notes": [
-      "MANDATORY EXECUTION: on entering SC__SC_AV_S or SC__SC_CHK_S to re-verify the chosen time, and on any intent to schedule/reschedule/see-more/retry.",
-      "ARGUMENTS: calendar_type = 'FT'; iana_timezone is a real IANA zone (e.g., America/Bogota) resolved in-flow.",
+      "MANDATORY EXECUTION: on entering the availability nodes (SC_AV*) or the re-check nodes (SC_CHK*) to re-verify the chosen time, and on any intent to schedule/reschedule/see-more/retry.",
+      "ABSOLUTE RULE: do not mention availability before executing the tool and capturing the available slots.",
+      "ARGUMENTS: calendar_type is required: the calendar key the flow indicates (e.g. 'FT'); iana_timezone is a real IANA zone (e.g. America/Bogota) resolved or fixed in the flow.",
       "SOURCE OF TRUTH: use only available_slots; each slot must include start_co/end_co and start_local/end_local.",
       "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal."
     ],
@@ -275,12 +276,12 @@
       {
         "name": "calendar_type",
         "required": true,
-        "description": "The calendar to use: always 'FT' (the round-robin calendar that shares the appointments among the advisors)."
+        "description": "The calendar to query, as indicated by the flow (e.g. 'FT'). Required: the tool fails without it."
       },
       {
         "name": "iana_timezone",
         "required": true,
-        "description": "Real IANA identifier of the contact's current timezone (continent/city, or continent/country/city for zones that need it). Examples: America/Bogota, Europe/Madrid, America/New_York, America/Argentina/Buenos_Aires. Resolved from the contact's country and city before executing — never guessed, never shortened to two parts when the real identifier has three."
+        "description": "Real IANA identifier of the timezone the times are shown in (continent/city, or continent/country/city for zones that need it), as decided by the flow: asked to the contact or fixed by the agent. Never guessed, never shortened to two parts when the real identifier has three. Examples: America/Bogota, Europe/Madrid, America/New_York."
       }
     ],
     "outputs": [
@@ -310,15 +311,15 @@
     "name": "book_appointment",
     "description": "Authorized booking tool; creates the appointment from a valid slot.",
     "notes": [
-      "MANDATORY EXECUTION: on entering SC__SC_BOOK_S; requires prior get_available_slots.",
-      "ARGUMENTS: start_date = chosen slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT'}; iana_timezone = same as availability; calendar_type = 'FT'.",
+      "MANDATORY EXECUTION: on entering the node that books the appointment; requires prior get_available_slots.",
+      "ARGUMENTS: start_date = chosen slot.start_co; duration = <APPOINTMENT_DURATION_MINUTES>; language in {'EN','ES','PT','FR','DE','IT'}; iana_timezone = same as availability; calendar_type = the calendar the flow indicates (e.g. 'FT').",
       "SOURCE OF TRUTH: success determines creation; do not confirm before success == true and event_id != null."
     ],
     "inputs": [
       {
         "name": "calendar_type",
         "required": true,
-        "description": "The calendar where the booking will be made: always 'FT' (the round-robin calendar)."
+        "description": "The calendar where the booking will be made, as indicated by the flow (e.g. 'FT')."
       },
       {
         "name": "start_date",
@@ -333,7 +334,7 @@
       {
         "name": "language",
         "required": true,
-        "description": "Two-letter uppercase language code, strictly 'EN', 'ES', or 'PT', for the confirmation and follow-up notifications. Selected from [preferred_language], the language in which the active conversation is being conducted."
+        "description": "Two-letter uppercase language code, 'EN', 'ES', 'PT', 'FR', 'DE' or 'IT', for the confirmation and follow-up notifications. Selected from [preferred_language], the language in which the active conversation is being conducted."
       },
       {
         "name": "contact_name",
@@ -417,7 +418,7 @@
       {
         "name": "language",
         "required": false,
-        "description": "Language of the answer: English, Spanish or Portuguese."
+        "description": "Language of the answer: the language of the conversation."
       },
       {
         "name": "history",
