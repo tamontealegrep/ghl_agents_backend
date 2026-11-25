@@ -4309,8 +4309,8 @@
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_PASS",
-            "condition_text": "IF [q__result] == 'Approved' -> GO_TO: Q__SQ_PASS",
+            "target": "Q__SQ_TAG_PASS",
+            "condition_text": "IF [q__result] == 'Approved' -> GO_TO: Q__SQ_TAG_PASS",
             "is_mechanical": true,
             "python_expression": "q__result == 'Approved'",
             "reason": null
@@ -4481,6 +4481,40 @@
         "fallback": [
           {
             "target": "Q__SQ_FIND_MISSING",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "Q__SQ_TAG_PASS",
+        "node_type": "action",
+        "goal": [],
+        "do": [
+          "tags = ['pendiente agenda']"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "add_tags",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_PASS",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "Q__SQ_PASS",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -5864,7 +5898,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_TAG_PEND",
+            "target": "SC__SC_DEC_N",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -5872,40 +5906,6 @@
           }
         ],
         "fallback": []
-      },
-      {
-        "node_id": "SC__SC_TAG_PEND",
-        "node_type": "action",
-        "goal": [],
-        "do": [
-          "tags = ['appointment-pending']"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": "add_tags",
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_DEC_N",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "SC__SC_DEC_N",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
       },
       {
         "node_id": "SC__SC_DEC_N",
@@ -7885,8 +7885,8 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_TAG_RM",
-            "condition_text": "IF [sc__success] == TRUE -> GO_TO: SC__SC_TAG_RM",
+            "target": "SC__SC_TAG_SET",
+            "condition_text": "IF [sc__success] == TRUE -> GO_TO: SC__SC_TAG_SET",
             "is_mechanical": true,
             "python_expression": "sc__success == True",
             "reason": null
@@ -8028,23 +8028,23 @@
         ]
       },
       {
-        "node_id": "SC__SC_TAG_RM",
+        "node_id": "SC__SC_TAG_SET",
         "node_type": "action",
         "goal": [],
         "do": [
-          "tags = ['appointment-pending']"
+          "tags = ['cita confirmada']"
         ],
         "trigger": [],
         "disabled_in": [],
         "say": [],
         "say_verbatim": false,
-        "execute": "remove_tags",
+        "execute": "add_tags",
         "store": [],
         "capture": [],
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_TAG_SET",
+            "target": "SC__SC_TAG_RM",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -8053,7 +8053,7 @@
         ],
         "fallback": [
           {
-            "target": "SC__SC_TAG_SET",
+            "target": "SC__SC_TAG_RM",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -8062,17 +8062,17 @@
         ]
       },
       {
-        "node_id": "SC__SC_TAG_SET",
+        "node_id": "SC__SC_TAG_RM",
         "node_type": "action",
         "goal": [],
         "do": [
-          "tags = ['appointment-set']"
+          "tags = ['pendiente agenda']"
         ],
         "trigger": [],
         "disabled_in": [],
         "say": [],
         "say_verbatim": false,
-        "execute": "add_tags",
+        "execute": "remove_tags",
         "store": [],
         "capture": [],
         "eval": "code",
