@@ -69,6 +69,72 @@ async def _resolve_custom_fields(
     return resolved, names, None
 
 
+CONTACT_READ_EXTRAS: dict[str, str] = {"type": "type", "date_added": "dateAdded", "date_updated": "dateUpdated"}
+"""What the read tool also gives besides ``CONTACT_FIELDS``: the name the agent uses -> the name GHL uses."""
+
+
+async def _custom_field_names(location_id: str | None, definitions_location: str | None) -> dict[str, str]:
+    """The name of each custom field of a location, by id; empty when GHL cannot say."""
+    if not definitions_location:
+        return {}
+    body, error = await ghl_call("GET", f"/locations/{definitions_location}/customFields", location_id=location_id)
+    if error or body is None:
+        return {}
+    return {
+        field["id"]: field.get("name") or field.get("fieldKey") or field["id"]
+        for field in body.get("customFields", [])
+        if field.get("id")
+    }
+
+
+async def get_contact_service(contact_id: str, location_id: str | None = None) -> dict[str, Any]:
+    """Reads a GoHighLevel contact (``GET /contacts/{contactId}``): its data, tags and custom fields.
+
+    Only what has a value is returned. Custom fields come by name when the location's field definitions can be read
+    (``GET /locations/{id}/customFields``) and by id when they cannot. Needs the ``contacts.readonly`` scope.
+
+    Args:
+        contact_id: GHL id of the contact.
+        location_id: GHL location (sub-account): it picks the token. When it is missing the contact's own location
+            names the custom fields.
+
+    Returns:
+        ``success``, ``contact_id``, ``fields``, ``tags`` and ``custom_fields``; on failure ``errors`` with the reason.
+        It never raises.
+    """
+    contact_id = (contact_id or "").strip()
+    if not contact_id:
+        return {"success": False, "errors": "contact_id is required"}
+    body, error = await ghl_call("GET", f"/contacts/{contact_id}", location_id=location_id)
+    if error or body is None:
+        return {"success": False, "contact_id": contact_id, "errors": error or "Empty response"}
+    contact = body.get("contact") or body
+    if not isinstance(contact, dict) or not contact.get("id"):
+        return {"success": False, "contact_id": contact_id, "errors": "GHL returned no contact"}
+
+    fields = {
+        name: contact[ghl_name]
+        for name, ghl_name in {**CONTACT_FIELDS, **CONTACT_READ_EXTRAS}.items()
+        if contact.get(ghl_name) not in (None, "")
+    }
+    raw_custom = [item for item in contact.get("customFields") or [] if isinstance(item, dict) and item.get("id")]
+    names = await _custom_field_names(location_id, location_id or contact.get("locationId")) if raw_custom else {}
+    custom: dict[str, Any] = {}
+    for item in raw_custom:
+        value = item.get("value")
+        if value in (None, "", []):
+            continue
+        key = names.get(item["id"], item["id"])
+        custom[key if key not in custom else item["id"]] = value
+    return {
+        "success": True,
+        "contact_id": contact_id,
+        "fields": fields,
+        "tags": [str(tag) for tag in contact.get("tags") or []],
+        "custom_fields": custom,
+    }
+
+
 async def update_contact_service(
     contact_id: str,
     location_id: str | None = None,

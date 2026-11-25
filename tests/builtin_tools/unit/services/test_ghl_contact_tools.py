@@ -1,4 +1,4 @@
-"""remove_tags, update_contact and update_opportunity: the GoHighLevel tools besides add_tags."""
+"""remove_tags, get_contact, update_contact and update_opportunity: the GoHighLevel tools besides add_tags."""
 
 import asyncio
 import json
@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from agent_backend.builtin_tools.services import ghl as custom_field_helpers
-from agent_backend.builtin_tools.services.ghl_contacts import update_contact_service
+from agent_backend.builtin_tools.services.ghl_contacts import get_contact_service, update_contact_service
 from agent_backend.builtin_tools.services.ghl_custom_fields import normalize_custom_fields
 from agent_backend.builtin_tools.services.ghl_opportunities import update_opportunity_service
 from agent_backend.builtin_tools.services.ghl_tags import remove_tags_service
@@ -106,6 +106,116 @@ def test_remove_tags_route(ghl):
 def test_custom_fields_any_shape(raw, expected):
     """Custom fields are normalised whether they come as a list or a dict."""
     assert normalize_custom_fields(raw) == expected
+
+
+# ------------------------------------------------------------------------------------------------ get_contact
+
+CONTACT = {
+    "contact": {
+        "id": "c1",
+        "locationId": "loc1",
+        "firstName": "Ana",
+        "lastName": "Gómez",
+        "email": "ana@example.org",
+        "phone": "+573001112233",
+        "city": "",
+        "country": "CO",
+        "dnd": False,
+        "tags": ["assigned", "pendiente agenda"],
+        "dateAdded": "2026-11-01T10:00:00.000Z",
+        "customFields": [
+            {"id": "f1", "value": "Chía"},
+            {"id": "f2", "value": ""},
+            {"id": "f3", "value": ["a", "b"]},
+        ],
+    }
+}
+FIELD_DEFINITIONS = {
+    "customFields": [
+        {"id": "f1", "name": "City raw"},
+        {"id": "f2", "name": "Empty"},
+        {"id": "f3", "fieldKey": "contact.multi"},
+    ]
+}
+
+
+def _reply_contact(request):
+    if request.url.path.endswith("/customFields"):
+        return httpx.Response(200, json=FIELD_DEFINITIONS)
+    return httpx.Response(200, json=CONTACT)
+
+
+def test_get_contact_returns_fields_tags_and_named_custom_fields(ghl):
+    """The contact comes with the data that has a value, its tags and its custom fields by name."""
+    ghl["reply"] = _reply_contact
+
+    result = asyncio.run(get_contact_service(" c1 ", "loc1"))
+
+    assert result == {
+        "success": True,
+        "contact_id": "c1",
+        "fields": {
+            "first_name": "Ana",
+            "last_name": "Gómez",
+            "email": "ana@example.org",
+            "phone": "+573001112233",
+            "country": "CO",
+            "dnd": False,
+            "date_added": "2026-11-01T10:00:00.000Z",
+        },
+        "tags": ["assigned", "pendiente agenda"],
+        "custom_fields": {"City raw": "Chía", "contact.multi": ["a", "b"]},
+    }
+    methods = [(r.method, r.url.path) for r in ghl["requests"]]
+    assert methods == [("GET", "/contacts/c1"), ("GET", "/locations/loc1/customFields")]
+    assert ghl["locations"] == ["loc1", "loc1"]
+
+
+def test_get_contact_uses_the_contacts_location_to_name_fields(ghl):
+    """Without a location_id the contact's own location is used to read the field names."""
+    ghl["reply"] = _reply_contact
+    result = asyncio.run(get_contact_service("c1"))
+    assert result["custom_fields"]["City raw"] == "Chía"
+    assert ghl["requests"][1].url.path == "/locations/loc1/customFields"
+
+
+def test_get_contact_falls_back_to_field_ids(ghl):
+    """If the field definitions cannot be read, the custom fields come by id."""
+    ghl["reply"] = lambda r: (
+        httpx.Response(403, text="no scope")
+        if r.url.path.endswith("/customFields")
+        else httpx.Response(200, json=CONTACT)
+    )
+    result = asyncio.run(get_contact_service("c1", "loc1"))
+    assert result["success"] is True and result["custom_fields"] == {"f1": "Chía", "f3": ["a", "b"]}
+
+
+def test_get_contact_validates_input(ghl):
+    """A missing contact id is rejected before calling GHL."""
+    assert asyncio.run(get_contact_service(" "))["errors"] == "contact_id is required"
+    assert ghl["requests"] == []
+
+
+def test_get_contact_reports_ghl_errors(ghl):
+    """A GHL error, such as an unknown contact, is returned as data."""
+    ghl["reply"] = lambda r: httpx.Response(404, json={"message": "Contact not found"})
+    result = asyncio.run(get_contact_service("nope", "loc1"))
+    assert result["success"] is False and "HTTP 404" in result["errors"] and "not found" in result["errors"]
+    assert result["contact_id"] == "nope"
+
+
+def test_get_contact_route(ghl):
+    """The route accepts snake_case and GHL-style names and answers with the service result."""
+    ghl["reply"] = _reply_contact
+    snake = client.post("/api/v1/get-contact", json={"contact_id": "c1", "location_id": "loc1"})
+    ghl_style = client.post("/api/v1/get-contact", json={"contactId": "c1", "locationId": "loc1"})
+    assert snake.status_code == 200 and snake.json()["success"] is True
+    assert (
+        snake.json()["custom_fields"]
+        == ghl_style.json()["custom_fields"]
+        == {"City raw": "Chía", "contact.multi": ["a", "b"]}
+    )
+    assert snake.json()["errors"] is None
 
 
 # ----------------------------------------------------------------------------------------------- update_contact
@@ -353,5 +463,5 @@ def test_tools_are_builtin_routes():
     """The tools are built-in routes the runtime finds."""
     from agent_backend.tool_client import candidate_urls
 
-    for tool in ("remove_tags", "update_contact", "update_opportunity"):
+    for tool in ("remove_tags", "get_contact", "update_contact", "update_opportunity"):
         assert f"http://x/builtin-tools/{tool.replace('_', '-')}" in candidate_urls(f"http://x/tools/{tool}")
