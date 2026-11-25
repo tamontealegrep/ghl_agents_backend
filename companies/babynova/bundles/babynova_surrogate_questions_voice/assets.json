@@ -400,18 +400,18 @@
       },
       {
         "name": "contact_name",
-        "required": true,
-        "description": "Contact's full name."
+        "required": false,
+        "description": "Contact's full name; filled in by the platform when not passed."
       },
       {
         "name": "contact_email",
-        "required": true,
-        "description": "Contact's email."
+        "required": false,
+        "description": "Contact's email; filled in by the platform when not passed."
       },
       {
         "name": "contact_phone",
-        "required": true,
-        "description": "Contact's phone (E.164)."
+        "required": false,
+        "description": "Contact's phone (E.164); filled in by the platform when not passed."
       },
       {
         "name": "contact_id",
