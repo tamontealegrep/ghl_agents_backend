@@ -8085,7 +8085,7 @@
     "KB_NUDGE": "2",
     "MAX_END": "3",
     "STEP_CLASSES": "schedule: quiere agendar o seguir con la cita, o dice claramente que no tiene nada (más) que preguntar ('no', 'nada más', 'estoy listo'). question: dice que tiene una duda sin decirla ('tengo una duda') o un 'sí' suelto a esta pregunta. ambiguous: sin contenido propio, no aclara si agenda o pregunta ('ok', 'vale', 'mmm', 'no sé', un emoji), aunque 'ok' suene a acuerdo. ask: cualquier otra cosa con contenido: pregunta, petición ('cuénteme de…') o afirmación sobre sí misma ('somos pareja del mismo sexo'), que se responde como una pregunta. Ante la duda entre schedule y ask: ask; solo un deseo claro de agendar pasa al agendamiento.",
-    "WA_TEMPLATE": "compensation"
+    "WA_TEMPLATE": "sofia_greeting"
   },
   "session_timeout_minutes": null,
   "say_policies": [
