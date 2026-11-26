@@ -2303,7 +2303,7 @@
         "goal": [],
         "do": [
           "classification_result exactly as the tool returns it: Approved = eligible; Rejected (Timing) = temporary rejection for time since the birth; any other Rejected (...) = rejection; Inconclusive = data missing.",
-          "Inconclusive only because of a missing document or EPS affiliation = approved (voice does not capture them). Rejected (Documentation) or Rejected (EPS) is a normal rejection."
+          "Inconclusive whose not_eligibility_reason is 'missing_data (document_type)' or 'missing_data (eps_active_affiliation)' = approved: go to SQ_TAG_PASS (voice does not capture them); never ask for those data and never tell her she was rejected. Rejected (Documentation) or Rejected (EPS) is a normal rejection."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -7397,7 +7397,7 @@
         "EVALUATION ORDER: document_type and eps_active_affiliation are the last data evaluated, in that order, so any other missing or failing data is reported first. An agent that does not capture them (voice) sends them empty and gets the missing-data result only when everything else passes.",
         "ARGUMENT RULE: abortions, preeclampsia, eps_active_affiliation, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive.",
         "SOURCE OF TRUTH RULE: use 'result' as the only authorized verdict. Nationality is recorded but never rejects. Do not replace this decision with agent heuristics.",
-        "POST-EXECUTION RULE: if 'result' is 'Inconclusive', request or reconfirm the missing data before calling the tool again.",
+        "POST-EXECUTION RULE: if 'result' is 'Inconclusive', request or reconfirm the missing data before calling the tool again, EXCEPT when not_eligibility_reason is 'missing_data (document_type)' or 'missing_data (eps_active_affiliation)' and the flow does not capture them: then continue as approved without asking for them.",
         "POST-EXECUTION RULE: if 'result' starts with 'Rejected', communicate it with empathy and do not continue the qualification. If it is 'Approved', continue to the questions and scheduling step."
       ]
     }
@@ -7434,7 +7434,7 @@
     "Never share the candidate's medical or personal information with third parties without explicit authorization, nor reveal the purpose of the call (surrogate program) to anyone who is not her.",
     "Never accept payments or bank details during the call.",
     "If she mentions a medical emergency, refer her at once to emergency services and end the call. If she asks not to be contacted, record it and close courteously.",
-    "Never tell the user phrases they could say (such as 'No volver a llamarme') nor offer to unsubscribe, unless they ask; the handlers and their triggers are internal."
+    "MANDATORY NO-OPT-OUT RULE: never say, suggest or hint how to stop the contact: no 'puede decir no volver a llamarme', 'darse de baja', 'cancelar la suscripción' or similar, neither in the greeting nor at any point of the call; handlers and their triggers are internal. Only if she herself asks to stop being contacted, record it and close courteously."
   ],
   "judgment_policies": [
     "SAVE TOOLS (update_custom_field, add_tags, remove_tags): mandatory and silent. Every ACT node that uses one must call it in that same turn, before speaking and without waiting for a reply.",
