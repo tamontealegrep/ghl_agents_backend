@@ -19,9 +19,7 @@ class SlotsRequest(BaseModel):
 
 class Slot(BaseModel):
     start_co: str
-    end_co: str
     start_local: str
-    end_local: str
 
 
 class ContinuousRange(BaseModel):
@@ -39,6 +37,8 @@ class SingleSlot(BaseModel):
 class SlotDay(BaseModel):
     date: str = Field(examples=["2026-11-27"])
     label: str = Field(examples=["Friday, November 27"])
+    timezone: str = Field(examples=["Europe/Madrid"], description="IANA time zone of date, label and times (the contact's).")
+    utc_offset: str = Field(examples=["+01:00"], description="UTC offset of that zone on that day.")
     parts_of_day: list[Literal["morning", "afternoon", "evening", "night"]] = Field(examples=[["afternoon"]])
     times: list[ContinuousRange | SingleSlot]
     slot_count: int

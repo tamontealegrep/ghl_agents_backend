@@ -249,7 +249,7 @@ def test_duration_sent_only_from_env(world):
     world.env["XX_DURATION_MINUTES_FT"] = "20"
     body = world.client.post("/get-available-slots-ghl", json={"calendar_type": "FT"}).json()
     assert world.calls["free"]["kw"]["duration_minutes"] == 20
-    assert body["available_slots"][0]["end_co"][11:16] == "09:20"
+    assert "end_co" not in body["available_slots"][0] and "end_local" not in body["available_slots"][0]
 
 
 def test_slots_outside_hours_dropped(world):

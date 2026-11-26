@@ -123,7 +123,7 @@ def test_configured_calendar_default_hours(ghl):
 
     assert ghl["asked_calendar"] == "control-cal"
     assert _starts(body) == ["09:00"]  # 12:10 falls in the default lunch break
-    assert body["available_slots"][0]["end_co"][11:16] == "09:20"  # CONTROL's duration
+    assert set(body["available_slots"][0]) == {"start_co", "start_local"}  # no end: a slot ends a fixed duration later
 
     closed = client.post("/api/v1/get-available-slots-ghl", json={"calendar_type": "FT"}).json()
     assert closed["available_slots"] == []
