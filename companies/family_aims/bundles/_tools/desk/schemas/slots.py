@@ -14,6 +14,11 @@ class SlotsRequest(BaseModel):
     )
 
 
+# TODO: migrate to what BabyNova already has (agent_backend/scheduling_schemas.py):
+#   - drop end_co / end_local from Slot (a slot ends a fixed duration after its start);
+#   - add `days` to SlotsResponse (agent_backend/slot_summary.summarize_days), before available_slots;
+#   - update the desk endpoints, the Family Aims voice/text agent definitions, the shared
+#     get_available_slots contract usage and their tests.
 class Slot(BaseModel):
     start_co: str
     end_co: str
