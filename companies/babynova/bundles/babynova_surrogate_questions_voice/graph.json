@@ -4510,6 +4510,10 @@
           [
             "sc__available_slots",
             "list[Slot]"
+          ],
+          [
+            "sc__days",
+            "list[SlotDay]"
           ]
         ],
         "eval": "llm",
@@ -4614,13 +4618,13 @@
         "node_id": "SC__SC_DAYS",
         "node_type": "message",
         "goal": [
-          "Present the days of [sc__available_slots] (date part of start_local only), each with the parts of the day (madrugada, mañana, tarde, noche) that have availability; if [sc__available_slots] is stale, return to SC_DEC_T."
+          "Say the days of [sc__days], in order, each with its label and its parts_of_day: only those, never another day; if [sc__days] is empty or stale, return to SC_DEC_T. Say them in Spanish: weekday and date from label, and morning = mañana, afternoon = tarde, evening = noche, night = madrugada."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Tengo disponibilidad en estas fechas:\n\n[sc__available_slots]"
+          "Tengo disponibilidad en estas fechas:\n\n[sc__days]"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -4838,15 +4842,16 @@
         "node_id": "SC__SC_HOURS",
         "node_type": "message",
         "goal": [
-          "Times of [sc__day] filtered from [sc__available_slots]: single times and ranges of consecutive times; with no valid times, return to SC_DEC_T."
+          "Times of [sc__day] from its [sc__days] entry; with no entry, return to SC_DEC_T.",
+          "Say the times of that day from the times of its [sc__days] entry (date == [sc__day]) in natural spoken Spanish: a continuous_range means a bookable time every every_minutes minutes from first_start to last_start, both included ('de first_start a last_start, cada every_minutes minutos'); a single_slot is the only option of that block ('solo a las start'). Never present a range as a single time or a single time as a range."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "[sc__day_title], cita de [sc__appt_minutes] minutos (presencial).\n\n[sc__available_slots]\nUn rango, como de 12:00 a 12:30, significa que puede elegir cualquier hora dentro de él, cada <APPT_MIN> minutos. Una hora sola es la única opción en ese momento."
+          "[sc__day_title], cita de [sc__appt_minutes] minutos (presencial).\n\n[sc__days]"
         ],
-        "say_verbatim": true,
+        "say_verbatim": false,
         "execute": null,
         "store": [],
         "capture": [],
@@ -5125,14 +5130,16 @@
       {
         "node_id": "SC__SC_NARROW",
         "node_type": "message",
-        "goal": [],
+        "goal": [
+          "Only the times of [sc__day] that fall in the part of the day the contact asked for, from its [sc__days] entry. Say the times of that day from the times of its [sc__days] entry (date == [sc__day]) in natural spoken Spanish: a continuous_range means a bookable time every every_minutes minutes from first_start to last_start, both included ('de first_start a last_start, cada every_minutes minutos'); a single_slot is the only option of that block ('solo a las start'). Never present a range as a single time or a single time as a range."
+        ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Estas son las horas disponibles en esa franja:\n\n[sc__available_slots]\nUn rango, como de 12:00 a 12:30, significa que puede elegir cualquier hora dentro de él, cada <APPT_MIN> minutos. Una hora sola es la única opción en ese momento."
+          "Estas son las horas disponibles en esa franja:\n\n[sc__days]"
         ],
-        "say_verbatim": true,
+        "say_verbatim": false,
         "execute": null,
         "store": [],
         "capture": [],
@@ -7027,6 +7034,13 @@
           ]
         },
         {
+          "name": "days",
+          "required": false,
+          "description": "Summary of available_slots by day, soonest first. Each item has date (YYYY-MM-DD), label (English weekday, month and day, e.g. Friday, November 27), parts_of_day (morning, afternoon, evening or night, those with slots), times (typed blocks) and slot_count. A block is {type: continuous_range, first_start, last_start, every_minutes}: a bookable start time every every_minutes between first_start and last_start, both included; or {type: single_slot, start}: that is the only bookable start time of the block. Say days and times only from here; never invent a day.",
+          "type_expr": "list[SlotDay]",
+          "examples": []
+        },
+        {
           "name": "available_slots",
           "required": true,
           "description": "Array of objects with the available slots. Each object carries start_co/end_co (Colombia time, ISO 8601) and start_local/end_local (contact's zone, ISO 8601). Empty array ([]) if there is no availability.",
@@ -7046,7 +7060,7 @@
         "ABSOLUTE RULE: do not mention availability before executing the tool and capturing the available slots.",
         "ARGUMENTS: calendar_type is required: the calendar key the flow indicates (e.g. 'FT'); iana_timezone is a real IANA zone (e.g. America/Bogota) resolved or fixed in the flow.",
         "SOURCE OF TRUTH: use only available_slots; each slot must include start_co/end_co and start_local/end_local.",
-        "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal."
+        "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal. When days is present, say the days, parts of the day and time blocks from days: it is a summary built by the tool from the same slots, and available_slots stays the source for booking."
       ]
     },
     {
@@ -7406,7 +7420,7 @@
   "constants": {
     "AGENT": "Sofia",
     "COMPANY": "BabyNova",
-    "APPT_MIN": "10",
+    "APPT_MIN": "30",
     "APPT_ADDRESS": "carrera dieciséis número ochenta y ocho, ochenta y uno, consultorio seiscientos nueve, en el sector de El Virrey, en Bogotá",
     "MAX_TRY": "3",
     "MAX_REPEAT": "3",

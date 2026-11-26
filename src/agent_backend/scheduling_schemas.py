@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 DEFAULT_TZ = "America/Bogota"
@@ -22,9 +24,33 @@ class Slot(BaseModel):
     end_local: str
 
 
+class ContinuousRange(BaseModel):
+    type: Literal["continuous_range"] = "continuous_range"
+    first_start: str = Field(examples=["14:00"], description="First start time (HH:MM) of the range.")
+    last_start: str = Field(examples=["16:30"], description="Last start time (HH:MM) of the range, included.")
+    every_minutes: int = Field(examples=[10], description="There is a bookable start time every this many minutes.")
+
+
+class SingleSlot(BaseModel):
+    type: Literal["single_slot"] = "single_slot"
+    start: str = Field(examples=["17:00"], description="The only bookable start time (HH:MM) in this block.")
+
+
+class SlotDay(BaseModel):
+    date: str = Field(examples=["2026-11-27"])
+    label: str = Field(examples=["Friday, November 27"])
+    parts_of_day: list[Literal["morning", "afternoon", "evening", "night"]] = Field(examples=[["afternoon"]])
+    times: list[ContinuousRange | SingleSlot]
+    slot_count: int
+
+
 class SlotsResponse(BaseModel):
     success: bool
     iana_timezone: str
+    days: list[SlotDay] = Field(
+        default_factory=list,
+        description="Summary of available_slots by day (date, English label, parts_of_day, typed time blocks). Say the days from here.",
+    )
     available_slots: list[Slot]
     errors: str | None = None
 

@@ -44,6 +44,7 @@ from agent_backend.scheduling_schemas import (
     SlotsResponse,
 )
 from agent_backend.slot_filters import Busy, conflicts_with_busy, parse_busy, thin_by_interval
+from agent_backend.slot_summary import summarize_days
 
 logger = logging.getLogger(__name__)
 
@@ -249,7 +250,13 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
                         end_local=end.astimezone(ZoneInfo(user_tz)).isoformat(),
                     )
                 )
-            return SlotsResponse(success=True, iana_timezone=user_tz, available_slots=slots, errors=None)
+            return SlotsResponse(
+                success=True,
+                iana_timezone=user_tz,
+                available_slots=slots,
+                days=summarize_days([slot.start_local for slot in slots]),
+                errors=None,
+            )
         except Exception as exc:
             return fail(str(exc))
 
