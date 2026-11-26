@@ -808,7 +808,7 @@
       "EVALUATION ORDER: document_type and eps_active_affiliation are the last data evaluated, in that order, so any other missing or failing data is reported first. An agent that does not capture them (voice) sends them empty and gets the missing-data result only when everything else passes.",
       "ARGUMENT RULE: abortions, preeclampsia, eps_active_affiliation, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive.",
       "SOURCE OF TRUTH RULE: use 'result' as the only authorized verdict. Nationality is recorded but never rejects. Do not replace this decision with agent heuristics.",
-      "POST-EXECUTION RULE: if 'result' is 'Inconclusive', request or reconfirm the missing data before calling the tool again, EXCEPT when not_eligibility_reason is 'missing_data (document_type)' or 'missing_data (eps_active_affiliation)' and the flow does not capture them: then continue as approved without asking for them.",
+      "POST-EXECUTION RULE: if 'result' is 'Inconclusive', request or reconfirm the missing data before calling the tool again.",
       "POST-EXECUTION RULE: if 'result' starts with 'Rejected', communicate it with empathy and do not continue the qualification. If it is 'Approved', continue to the questions and scheduling step."
     ],
     "inputs": [
