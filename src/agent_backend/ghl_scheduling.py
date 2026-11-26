@@ -282,9 +282,21 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
             if not policy.is_valid_business_hour(_weekday(local), local.hour, local.minute):
                 return fail("The requested time is outside business hours", "invalid_hour")
 
-            contact_name = policy.format_contact_name(req.contact_name)
-            contact_email = (req.contact_email or "").strip().lower()
-            contact_phone = (req.contact_phone or "").strip()
+            raw_name, raw_email, raw_phone = req.contact_name, req.contact_email, req.contact_phone
+            if not (raw_name or "").strip() or not ((raw_email or "").strip() or (raw_phone or "").strip()):
+                try:
+                    crm = await ghl.get_contact(settings.ghl_token, contact_id)
+                except Exception as exc:
+                    return fail(f"The contact could not be read to complete the booking data: {exc}", "invalid_contact")
+                full_name = " ".join(str(crm.get(k) or "").strip() for k in ("firstName", "lastName")).strip()
+                raw_name = (raw_name or "").strip() or str(crm.get("name") or crm.get("contactName") or full_name)
+                raw_email = (raw_email or "").strip() or str(crm.get("email") or "")
+                raw_phone = (raw_phone or "").strip() or str(crm.get("phone") or "")
+            if not (raw_name or "").strip():
+                return fail("contact_name is required (the contact has no name)", "invalid_contact")
+            contact_name = policy.format_contact_name(raw_name)
+            contact_email = (raw_email or "").strip().lower()
+            contact_phone = (raw_phone or "").strip()
             if not contact_email and not contact_phone:
                 return fail("contact_email or contact_phone is required", "invalid_contact")
 

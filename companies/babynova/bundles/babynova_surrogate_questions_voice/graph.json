@@ -2379,13 +2379,6 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_WAIT_1Y",
-            "condition_text": "IF [q__classification_result] == 'Rejected (Timing)' -> GO_TO: Q__SQ_WAIT_1Y",
-            "is_mechanical": true,
-            "python_expression": "q__classification_result == 'Rejected (Timing)'",
-            "reason": null
-          },
-          {
             "target": "Q__SQ_TAG_PASS",
             "condition_text": "IF [q__classification_result] == 'Approved' -> GO_TO: Q__SQ_TAG_PASS",
             "is_mechanical": true,
@@ -2542,38 +2535,47 @@
         ]
       },
       {
-        "node_id": "Q__SQ_WAIT_1Y",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Muchas gracias por responder las preguntas. Para continuar con su proceso, necesitamos esperar a que pase el tiempo mínimo desde su último parto. Más adelante le volveremos a contactar. Que tenga un buen día."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_END",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
         "node_id": "Q__SQ_TAG_PASS",
         "node_type": "action",
         "goal": [],
         "do": [
           "TOOL CALL: add_tags",
           "tags = ['pendiente agenda']"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "add_tags",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_TAG_PRE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "Q__SQ_TAG_PRE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "Q__SQ_TAG_PRE",
+        "node_type": "action",
+        "goal": [],
+        "do": [
+          "TOOL CALL: add_tags",
+          "tags = ['preaprobada voz']"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3595,7 +3597,7 @@
         "goal": [],
         "do": [
           "TOOL CALL: update_custom_field",
-          "name = 'eligibility_result', value = [q__classification_result]"
+          "name = 'eligibility_result', value = [q__classification_result] in lowercase and without the parenthesis (approved, rejected or inconclusive; 'Rejected (Timing)' = rejected)"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4984,7 +4986,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "[sc__day_title], cita de [sc__appt_minutes] minutos (presencial).\n\n[sc__available_slots]"
+          "[sc__day_title], cita de [sc__appt_minutes] minutos (presencial).\n\n[sc__available_slots]\nUn rango, como de 12:00 a 12:30, significa que puede elegir cualquier hora dentro de él, cada <APPT_MIN> minutos. Una hora sola es la única opción en ese momento."
         ],
         "say_verbatim": true,
         "execute": null,
@@ -5270,7 +5272,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Estas son las horas disponibles en esa franja:\n\n[sc__available_slots]"
+          "Estas son las horas disponibles en esa franja:\n\n[sc__available_slots]\nUn rango, como de 12:00 a 12:30, significa que puede elegir cualquier hora dentro de él, cada <APPT_MIN> minutos. Una hora sola es la única opción en ese momento."
         ],
         "say_verbatim": true,
         "execute": null,
@@ -5565,7 +5567,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Antes de crear la cita, le confirmo el resumen: [sc__day_full] a las [sc__slot]."
+          "Antes de crear la cita, le confirmo el resumen: [sc__day_full] a las [sc__slot], a nombre de {{contact.first_name}}."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -6541,7 +6543,8 @@
           "se equivocaron",
           "aquí no vive",
           "no conozco a esa persona",
-          "este no es su número"
+          "este no es su número",
+          "the contact says this is the wrong number or that they are not that person (never when they answer a question, ask something or say they want to schedule)"
         ],
         "disabled_in": [],
         "say": [
@@ -7589,7 +7592,7 @@
     "MAX_END": "3",
     "STEP_CLASSES": "schedule: quiere agendar o seguir con la cita, o dice claramente que no tiene nada (más) que preguntar ('no', 'nada más', 'estoy listo'). question: dice que tiene una duda sin decirla ('tengo una duda') o un 'sí' suelto a esta pregunta. ambiguous: sin contenido propio, no aclara si agenda o pregunta ('ok', 'vale', 'mmm', 'no sé', un emoji), aunque 'ok' suene a acuerdo. ask: cualquier otra cosa con contenido: pregunta, petición ('cuénteme de…') o afirmación sobre sí misma ('somos pareja del mismo sexo'), que se responde como una pregunta. Ante la duda entre schedule y ask: ask; solo un deseo claro de agendar pasa al agendamiento.",
     "WA_INFO": "sofia_greeting",
-    "WA_BOOKED": "cita_confirmada"
+    "WA_BOOKED": "sofia_greeting"
   },
   "session_timeout_minutes": null,
   "say_policies": [

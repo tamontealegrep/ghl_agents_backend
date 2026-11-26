@@ -152,6 +152,13 @@ def world(monkeypatch):
         w.calls["delete"] = appointment_id
         return True
 
+    w.crm = {}
+
+    async def get_contact(token, contact_id, **kw):
+        w.calls["get_contact"] = contact_id
+        return w.crm
+
+    monkeypatch.setattr(ghl_calendar, "get_contact", get_contact)
     monkeypatch.setattr(ghl_calendar, "get_available_slots", free_slots)
     monkeypatch.setattr(ghl_calendar, "list_events", list_events)
     monkeypatch.setattr(ghl_calendar, "upsert_contact", upsert)
@@ -374,6 +381,17 @@ def test_booking_needs_an_email_or_a_phone(world):
     world.free = [start]
     body = book(world, start, contact_email="", contact_phone="")
     assert body["success"] is False and "required" in body["errors"]
+
+
+def test_booking_takes_missing_contact_data_from_the_crm(world):
+    """Without name, email and phone the booking reads them from the GHL contact."""
+    start = at(day(), 9)
+    world.free = [start]
+    world.crm = {"firstName": "ana", "lastName": "perez", "email": "Ana@Example.com", "phone": "+573001112233"}
+    body = book(world, start, contact_name=None, contact_email=None, contact_phone=None)
+    assert body["success"] is True
+    assert world.calls["get_contact"] == "c1"
+    assert "Ana Perez" in str(world.calls["create"]) and "+573001112233" in str(world.calls["create"])
 
 
 def test_ghl_400_is_slot_taken(world):

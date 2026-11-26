@@ -32,9 +32,21 @@ class SlotsResponse(BaseModel):
 class BookAppointmentRequest(BaseModel):
     start_date: str = Field(examples=["2026-08-28T09:00:00-05:00"])
     duration: str | None = Field(default="10", examples=["10"])
-    contact_name: str = Field(examples=["Maria Perez"])
-    contact_email: str = Field(examples=["maria.perez@example.com"])
-    contact_phone: str = Field(examples=["+573001234567"])
+    contact_name: str | None = Field(
+        default=None,
+        examples=["Maria Perez"],
+        description="Optional: when missing, it is read from the GHL contact (contact_id).",
+    )
+    contact_email: str | None = Field(
+        default=None,
+        examples=["maria.perez@example.com"],
+        description="Optional: when missing, it is read from the GHL contact (contact_id).",
+    )
+    contact_phone: str | None = Field(
+        default=None,
+        examples=["+573001234567"],
+        description="Optional: when missing, it is read from the GHL contact (contact_id).",
+    )
     contact_id: str | None = Field(
         default=None,
         examples=["F2FikaF1uvDozXJIcRB1"],
