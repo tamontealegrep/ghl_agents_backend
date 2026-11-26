@@ -2250,12 +2250,21 @@
         "node_type": "action",
         "goal": [],
         "do": [
-          "TOOL CALL: surrogate_classification",
-          "age = [q__surrogate_age], city = [q__city_residence], nationality = [q__nationality], number_of_children = [q__children_count]",
-          "last_birth_date = [q__last_birth_date], birth_type = [q__birth_type], number_of_c_sections = [q__csections_count], abortions = [q__abortos]",
-          "preeclampsia = [q__pree], bmi = [q__imc], drug_use = [q__uses_drugs], availability = [q__availability]",
-          "yes/no values as 'si'/'no' lowercase without accent; an empty, ambiguous or 'unknown' value → send it empty; send everything already captured (also on retries); with [q__force_cls] == true run anyway with partial data; never send document_type or eps_active_affiliation (voice does not capture them: they come back as missing data)",
-          "Also capture not_eligibility_reason exactly as returned (e.g. 'missing_data (document_type)')"
+          "TOOL CALL: call surrogate_classification with all collected slots.",
+          "age = [q__surrogate_age]",
+          "city = [q__city_residence]",
+          "nationality = [q__nationality]",
+          "number_of_children = [q__children_count]",
+          "last_birth_date = [q__last_birth_date]",
+          "birth_type = [q__birth_type]",
+          "number_of_c_sections = [q__csections_count]",
+          "abortions = [q__abortos]",
+          "preeclampsia = [q__pree]",
+          "bmi = [q__imc]",
+          "document_type = \"\"",
+          "eps_active_affiliation = \"\"",
+          "drug_use = [q__uses_drugs]",
+          "availability = [q__availability]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2298,12 +2307,11 @@
         ]
       },
       {
-        "node_id": "Q__SQ_DEC_ELIGIBILITY",
+        "node_id": "Q__SQ_DEC_EXCEPT",
         "node_type": "decision",
         "goal": [],
         "do": [
-          "classification_result exactly as the tool returns it: Approved = eligible; Rejected (Timing) = temporary rejection for time since the birth; any other Rejected (...) = rejection; Inconclusive = data missing.",
-          "Inconclusive only because of a missing document or EPS affiliation = approved (voice does not capture them). Rejected (Documentation) or Rejected (EPS) is a normal rejection."
+          "Inconclusive only because of a missing document or EPS affiliation = approved (voice does not capture them)."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2314,13 +2322,6 @@
         "capture": [],
         "eval": "code",
         "route": [
-          {
-            "target": "Q__SQ_ASK_NATIONALITY",
-            "condition_text": "IF [q__nationality] IS NULL -> GO_TO: Q__SQ_ASK_NATIONALITY",
-            "is_mechanical": true,
-            "python_expression": "q__nationality is None",
-            "reason": null
-          },
           {
             "target": "Q__SQ_RUN_CLASSIFICATION",
             "condition_text": "IF [q__classification_result] IS NULL -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
@@ -2340,6 +2341,40 @@
             "condition_text": "IF [q__classification_result] == 'Inconclusive' AND [q__not_eligibility_reason] == 'missing_data (eps_active_affiliation)' -> GO_TO: Q__SQ_TAG_PASS",
             "is_mechanical": true,
             "python_expression": "q__classification_result == 'Inconclusive' and q__not_eligibility_reason == 'missing_data (eps_active_affiliation)'",
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "Q__SQ_DEC_ELIGIBILITY",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "Q__SQ_DEC_ELIGIBILITY",
+        "node_type": "decision",
+        "goal": [],
+        "do": [
+          "classification_result exactly as the tool returns it: Approved = eligible; Rejected (Timing) = temporary rejection for time since the birth; any other Rejected (...) = rejection; Inconclusive = data missing."
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_RUN_CLASSIFICATION",
+            "condition_text": "IF [q__classification_result] IS NULL -> GO_TO: Q__SQ_RUN_CLASSIFICATION",
+            "is_mechanical": true,
+            "python_expression": "q__classification_result is None",
             "reason": null
           },
           {
@@ -3526,7 +3561,7 @@
         ],
         "fallback": [
           {
-            "target": "Q__SQ_DEC_ELIGIBILITY",
+            "target": "Q__SQ_DEC_EXCEPT",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -3552,7 +3587,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_DEC_ELIGIBILITY",
+            "target": "Q__SQ_DEC_EXCEPT",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -5733,14 +5768,6 @@
           [
             "sc__reason",
             "str"
-          ],
-          [
-            "sc__event_link",
-            "str"
-          ],
-          [
-            "sc__meet_link",
-            "str"
           ]
         ],
         "eval": "code",
@@ -6044,32 +6071,6 @@
         "disabled_in": [],
         "say": [
           "Perfecto, su cita quedó agendada para el [sc__day_label] a las [sc__slot], hora de Colombia. Le esperamos en <APPT_ADDRESS>."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_EMAIL",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "SC__SC_EMAIL",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Recibirá un correo con toda la información de su cita. Si no lo ve en unos minutos, revise la carpeta de spam, por favor."
         ],
         "say_verbatim": false,
         "execute": null,
