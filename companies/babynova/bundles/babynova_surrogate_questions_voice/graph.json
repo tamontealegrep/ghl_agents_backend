@@ -1690,14 +1690,12 @@
       {
         "node_id": "Q__SQ_ASK_WEIGHT",
         "node_type": "question",
-        "goal": [
-          "Take the representative value of the range she picks, in kilos: less than 50 -> 45; 50 to 60 -> 55; 60 to 70 -> 65; 70 to 80 -> 75; more than 80 -> 85. If she gives an exact weight instead, use that exact value (convert pounds: 1 lb = 0.4536 kg)."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "¿En cuál de estos rangos está su peso? Menos de cincuenta kilos, entre cincuenta y sesenta, entre sesenta y setenta, entre setenta y ochenta, o más de ochenta."
+          "¿Cuál es su peso actual, en kilos?"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -1778,14 +1776,12 @@
       {
         "node_id": "Q__SQ_ASK_HEIGHT",
         "node_type": "question",
-        "goal": [
-          "Take the representative value of the range she picks, in centimeters: less than 150 -> 145; 150 to 160 -> 155; 160 to 170 -> 165; 170 to 180 -> 175; more than 180 -> 185. If she gives an exact height instead, use that exact value in centimeters (convert meters or feet and inches: 1 in = 2.54 cm)."
-        ],
+        "goal": [],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "¿Y en cuál de estos rangos está su estatura? Menos de ciento cincuenta centímetros, entre ciento cincuenta y ciento sesenta, entre ciento sesenta y ciento setenta, entre ciento setenta y ciento ochenta, o más de ciento ochenta."
+          "¿Cuál es su estatura, en centímetros?"
         ],
         "say_verbatim": false,
         "execute": null,

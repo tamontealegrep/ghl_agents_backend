@@ -3015,13 +3015,13 @@
         "node_id": "Q__SQ_ASK_WEIGHT",
         "node_type": "question",
         "goal": [
-          "Take the representative value of the range she picks, in kilos: less than 50 -> 45; 50 to 60 -> 55; 60 to 70 -> 65; 70 to 80 -> 75; more than 80 -> 85. If she gives an exact weight instead, use that exact value (convert pounds: 1 lb = 0.4536 kg)."
+          "Capture the weight in kilograms (convert pounds: 1 lb = 0.4536 kg)."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Which of these ranges is your weight in: less than 50 kilos, between 50 and 60, between 60 and 70, between 70 and 80, or more than 80?"
+          "How much do you weigh right now, in kilos?"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -3129,13 +3129,13 @@
         "node_id": "Q__SQ_ASK_HEIGHT",
         "node_type": "question",
         "goal": [
-          "Take the representative value of the range she picks, in centimeters: less than 150 -> 145; 150 to 160 -> 155; 160 to 170 -> 165; 170 to 180 -> 175; more than 180 -> 185. If she gives an exact height instead, use that exact value in centimeters (convert meters or feet and inches: 1 in = 2.54 cm)."
+          "Capture the height in centimeters (convert meters or feet and inches: 1 in = 2.54 cm)."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "And which of these ranges is your height in: less than 150 centimeters, between 150 and 160, between 160 and 170, between 170 and 180, or more than 180?"
+          "How tall are you, in centimeters?"
         ],
         "say_verbatim": false,
         "execute": null,
