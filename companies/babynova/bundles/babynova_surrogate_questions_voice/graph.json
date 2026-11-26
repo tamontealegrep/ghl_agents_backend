@@ -2585,6 +2585,41 @@
         "eval": "code",
         "route": [
           {
+            "target": "Q__SQ_TAG_PRE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "Q__SQ_TAG_PRE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "Q__SQ_TAG_PRE",
+        "node_type": "action",
+        "goal": [],
+        "do": [
+          "TOOL CALL: add_tags",
+          "tags = ['preaprobada voz']"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "add_tags",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
             "target": "Q__SQ_PASS",
             "condition_text": null,
             "is_mechanical": true,
