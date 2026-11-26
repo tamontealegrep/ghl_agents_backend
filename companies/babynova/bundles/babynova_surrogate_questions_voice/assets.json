@@ -504,7 +504,9 @@
       "ARGUMENTS: send captured fields as-is; empty when missing. Do not invent values. bmi must be copied literally from calculate_bmi.",
       "ARGUMENT RULE: city must be one of: Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá, Sibaté, or 'Otro'. Any other city rejects the candidate by city.",
       "ARGUMENT RULE: birth_type ('csection' or 'natural') is only required when the last birth was less than 18 months ago; otherwise it may be empty.",
-      "ARGUMENT RULE: document_type is 'cedula_ciudadania', 'ppt' or 'other'. Only the first two are accepted.",
+      "ARGUMENT RULE: document_type is 'cedula_ciudadania', 'ppt' or 'other'. Only the first two are accepted. It may be empty (or an empty string): then the result is Inconclusive with not_eligibility_reason 'missing_data (document_type)'. A value that is not accepted is rejected by documentation.",
+      "ARGUMENT RULE: eps_active_affiliation may be empty (or an empty string): then the result is Inconclusive with not_eligibility_reason 'missing_data (eps_active_affiliation)'. A 'no' is rejected by EPS.",
+      "EVALUATION ORDER: document_type and eps_active_affiliation are the last data evaluated, in that order, so any other missing or failing data is reported first. An agent that does not capture them (voice) sends them empty and gets the missing-data result only when everything else passes.",
       "ARGUMENT RULE: abortions, preeclampsia, eps_active_affiliation, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive.",
       "SOURCE OF TRUTH RULE: use 'result' as the only authorized verdict. Nationality is recorded but never rejects. Do not replace this decision with agent heuristics.",
       "POST-EXECUTION RULE: if 'result' is 'Inconclusive', request or reconfirm the missing data before calling the tool again.",
@@ -564,12 +566,12 @@
       {
         "name": "document_type",
         "required": false,
-        "description": "Identity document: cedula_ciudadania, ppt or other."
+        "description": "Identity document: cedula_ciudadania, ppt or other. Empty when it was not captured (the result is then Inconclusive for this field)."
       },
       {
         "name": "eps_active_affiliation",
         "required": false,
-        "description": "Whether the candidate has an active EPS affiliation (from check_adres)."
+        "description": "Whether the candidate has an active EPS affiliation (from check_adres). Empty when it was not captured (the result is then Inconclusive for this field)."
       },
       {
         "name": "drug_use",
@@ -601,7 +603,7 @@
       {
         "name": "not_eligibility_reason",
         "required": true,
-        "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'eps', 'drug_use', 'availability' when rejected, 'missing_data' when inconclusive, 'none' when approved."
+        "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'eps', 'drug_use', 'availability' when rejected, 'missing_data (<field>)' with the first missing field (for example 'missing_data (document_type)') when inconclusive, 'none' when approved."
       },
       {
         "name": "errors",

@@ -804,32 +804,6 @@
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_INIT_DOC",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "Q__SQ_INIT_DOC",
-        "node_type": "registration",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[q__doc_type] = NULL"
-        ],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
             "target": "Q__SQ_TIME_START",
             "condition_text": null,
             "is_mechanical": true,
@@ -2278,9 +2252,9 @@
         "do": [
           "TOOL CALL: surrogate_classification",
           "age = [q__surrogate_age], city = [q__city_residence], nationality = [q__nationality], number_of_children = [q__children_count]",
-          "document_type = [q__doc_type], last_birth_date = [q__last_birth_date], birth_type = [q__birth_type], number_of_c_sections = [q__csections_count], abortions = [q__abortos]",
+          "last_birth_date = [q__last_birth_date], birth_type = [q__birth_type], number_of_c_sections = [q__csections_count], abortions = [q__abortos]",
           "preeclampsia = [q__pree], bmi = [q__imc], drug_use = [q__uses_drugs], availability = [q__availability]",
-          "yes/no values as 'si'/'no' lowercase without accent; an empty, ambiguous or 'unknown' value → send it empty; send everything already captured (also on retries); with [q__force_cls] == true run anyway with partial data; do not send eps_active_affiliation (voice does not capture it: it is reported as missing); document_type is asked only to foreigners, so for Colombians it is reported as missing",
+          "yes/no values as 'si'/'no' lowercase without accent; an empty, ambiguous or 'unknown' value → send it empty; send everything already captured (also on retries); with [q__force_cls] == true run anyway with partial data; never send document_type or eps_active_affiliation (voice does not capture them: they come back as missing data)",
           "Also capture not_eligibility_reason exactly as returned (e.g. 'missing_data (document_type)')"
         ],
         "trigger": [],
@@ -2292,6 +2266,10 @@
         "capture": [
           [
             "q__classification_result",
+            "str"
+          ],
+          [
+            "q__eligibility_result",
             "str"
           ],
           [
@@ -2325,7 +2303,7 @@
         "goal": [],
         "do": [
           "classification_result exactly as the tool returns it: Approved = eligible; Rejected (Timing) = temporary rejection for time since the birth; any other Rejected (...) = rejection; Inconclusive = data missing.",
-          "Inconclusive only because of a missing document or EPS affiliation = approved (voice does not capture them)."
+          "Inconclusive only because of a missing document or EPS affiliation = approved (voice does not capture them). Rejected (Documentation) or Rejected (EPS) is a normal rejection."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -2908,161 +2886,6 @@
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_SET_CC",
-            "condition_text": "IF [q__nationality] == 'COL' AND [q__doc_type] IS NULL -> GO_TO: Q__SQ_SET_CC",
-            "is_mechanical": true,
-            "python_expression": "q__nationality == 'COL' and q__doc_type is None",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_ASK_DOC_TYPE",
-            "condition_text": "IF [q__nationality] != 'COL' AND [q__doc_type] IS NULL -> GO_TO: Q__SQ_ASK_DOC_TYPE",
-            "is_mechanical": true,
-            "python_expression": "q__nationality != 'COL' and q__doc_type is None",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_ASK_CITY",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "Q__SQ_SET_CC",
-        "node_type": "registration",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[q__doc_type] = 'cedula_ciudadania'"
-        ],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_SYNC_DOC_TYPE",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "Q__SQ_ASK_DOC_TYPE",
-        "node_type": "question",
-        "goal": [
-          "Map the answer to exactly one of: cedula_ciudadania, ppt, other. A bare 'cédula' or 'CC' is cedula_ciudadania; a passport, a cédula de extranjería or any other document is other."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "¿Tiene cédula de ciudadanía, PPT (permiso por protección temporal) u otro documento?"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [
-          [
-            "q__doc_type",
-            "Literal[cedula_ciudadania, ppt, other]"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_DECIDE_DOC_TYPE",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "Q__SQ_DECIDE_DOC_TYPE",
-        "node_type": "decision",
-        "goal": [],
-        "do": [
-          "[q__doc_type_try] = [q__doc_type_try] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_BYE_NOFIT",
-            "condition_text": "IF [q__doc_type_try] >= <MAX_TRY> AND [q__force_cls] == TRUE -> GO_TO: Q__SQ_BYE_NOFIT",
-            "is_mechanical": true,
-            "python_expression": "q__doc_type_try >= MAX_TRY and q__force_cls == True",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_FORCE_CLS",
-            "condition_text": "IF [q__doc_type_try] >= <MAX_TRY> -> GO_TO: Q__SQ_FORCE_CLS",
-            "is_mechanical": true,
-            "python_expression": "q__doc_type_try >= MAX_TRY",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_ASK_DOC_TYPE",
-            "condition_text": "IF [q__doc_type] IS NULL -> GO_TO: Q__SQ_ASK_DOC_TYPE",
-            "is_mechanical": true,
-            "python_expression": "q__doc_type is None",
-            "reason": null
-          },
-          {
-            "target": "Q__SQ_SYNC_DOC_TYPE",
-            "condition_text": "IF [q__doc_type] IS NOT NULL -> GO_TO: Q__SQ_SYNC_DOC_TYPE",
-            "is_mechanical": true,
-            "python_expression": "q__doc_type is not None",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "Q__SQ_ASK_DOC_TYPE",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "Q__SQ_SYNC_DOC_TYPE",
-        "node_type": "action",
-        "goal": [],
-        "do": [
-          "TOOL CALL: update_custom_field",
-          "name = 'document_type', value = [q__doc_type]"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": "update_custom_field",
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
             "target": "Q__SQ_ASK_CITY",
             "condition_text": null,
             "is_mechanical": true,
@@ -3597,7 +3420,7 @@
         "goal": [],
         "do": [
           "TOOL CALL: update_custom_field",
-          "name = 'eligibility_result', value = [q__classification_result] in lowercase and without the parenthesis (approved, rejected or inconclusive; 'Rejected (Timing)' = rejected)"
+          "name = 'eligibility_result', value = [q__eligibility_result] exactly as the tool returned it (approved, rejected or inconclusive)"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -3624,7 +3447,7 @@
         "goal": [],
         "do": [
           "TOOL CALL: update_custom_field",
-          "name = 'not_eligibility_reason', value = [q__not_eligibility_reason]"
+          "name = 'not_eligibility_reason', value = [q__not_eligibility_reason] without the parenthesis part ('missing_data (bmi)' is saved as 'missing_data')"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -7488,7 +7311,7 @@
         {
           "name": "document_type",
           "required": false,
-          "description": "Identity document: cedula_ciudadania, ppt or other.",
+          "description": "Identity document: cedula_ciudadania, ppt or other. Empty when it was not captured (the result is then Inconclusive for this field).",
           "type_expr": "str",
           "examples": [
             "cedula_ciudadania",
@@ -7499,7 +7322,7 @@
         {
           "name": "eps_active_affiliation",
           "required": false,
-          "description": "Whether the candidate has an active EPS affiliation (from check_adres).",
+          "description": "Whether the candidate has an active EPS affiliation (from check_adres). Empty when it was not captured (the result is then Inconclusive for this field).",
           "type_expr": "str",
           "examples": [
             "si",
@@ -7552,7 +7375,7 @@
         {
           "name": "not_eligibility_reason",
           "required": true,
-          "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'eps', 'drug_use', 'availability' when rejected, 'missing_data' when inconclusive, 'none' when approved.",
+          "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'eps', 'drug_use', 'availability' when rejected, 'missing_data (<field>)' with the first missing field (for example 'missing_data (document_type)') when inconclusive, 'none' when approved.",
           "type_expr": "str",
           "examples": []
         },
@@ -7569,7 +7392,9 @@
         "ARGUMENTS: send captured fields as-is; empty when missing. Do not invent values. bmi must be copied literally from calculate_bmi.",
         "ARGUMENT RULE: city must be one of: Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá, Sibaté, or 'Otro'. Any other city rejects the candidate by city.",
         "ARGUMENT RULE: birth_type ('csection' or 'natural') is only required when the last birth was less than 18 months ago; otherwise it may be empty.",
-        "ARGUMENT RULE: document_type is 'cedula_ciudadania', 'ppt' or 'other'. Only the first two are accepted.",
+        "ARGUMENT RULE: document_type is 'cedula_ciudadania', 'ppt' or 'other'. Only the first two are accepted. It may be empty (or an empty string): then the result is Inconclusive with not_eligibility_reason 'missing_data (document_type)'. A value that is not accepted is rejected by documentation.",
+        "ARGUMENT RULE: eps_active_affiliation may be empty (or an empty string): then the result is Inconclusive with not_eligibility_reason 'missing_data (eps_active_affiliation)'. A 'no' is rejected by EPS.",
+        "EVALUATION ORDER: document_type and eps_active_affiliation are the last data evaluated, in that order, so any other missing or failing data is reported first. An agent that does not capture them (voice) sends them empty and gets the missing-data result only when everything else passes.",
         "ARGUMENT RULE: abortions, preeclampsia, eps_active_affiliation, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive.",
         "SOURCE OF TRUTH RULE: use 'result' as the only authorized verdict. Nationality is recorded but never rejects. Do not replace this decision with agent heuristics.",
         "POST-EXECUTION RULE: if 'result' is 'Inconclusive', request or reconfirm the missing data before calling the tool again.",
