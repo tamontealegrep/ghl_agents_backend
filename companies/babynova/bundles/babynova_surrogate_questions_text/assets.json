@@ -219,6 +219,81 @@
     ]
   },
   {
+    "name": "send_whatsapp_template",
+    "description": "Envía a un contacto de GoHighLevel una plantilla de WhatsApp aprobada.",
+    "notes": [
+      "MANDATORY EXECUTION: ejecútala cuando el flujo pida enviar una plantilla de WhatsApp al contacto (por ejemplo para retomar a quien no ha escrito en las últimas 24 horas). La plantilla la define el flujo con su nombre e idioma; nunca inventes un nombre.",
+      "ARGUMENTS: template_name y language (los que indica el flujo), contact_id y location_id (disponibles en el contexto del contacto). body_variables solo si la plantilla tiene variables: los valores en orden, o {{contact.first_name}} para el nombre del contacto, que GHL resuelve. from_number_id, to_number y category solo si el flujo los indica.",
+      "BEHAVIOUR: GHL identifica la plantilla por nombre e idioma, no por el ID numérico de su lista; el contacto recibe la plantilla aprobada (la herramienta rellena sola el texto que GHL exige). Fuera de las 24 horas de WhatsApp solo una plantilla llega al contacto.",
+      "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el mensaje; message_id y conversation_id identifican lo enviado. Si success es false, no digas que se envió.",
+      "SILENT ACTION: no le cuentes a la persona detalles técnicos del envío (IDs, plantilla, herramienta)."
+    ],
+    "inputs": [
+      {
+        "name": "template_name",
+        "required": true,
+        "description": "Nombre de la plantilla en GHL, tal como lo indica el flujo (ej. sam_fc_es)."
+      },
+      {
+        "name": "language",
+        "required": true,
+        "description": "Idioma de la plantilla tal como lo muestra GHL: es, en_US o pt_BR."
+      },
+      {
+        "name": "contact_id",
+        "required": false,
+        "description": "ID del contacto en GHL (disponible en context.contact_id)."
+      },
+      {
+        "name": "location_id",
+        "required": false,
+        "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token de la subcuenta."
+      },
+      {
+        "name": "body_variables",
+        "required": false,
+        "description": "Valores de las variables del cuerpo, en orden. Ejemplo: ['{{contact.first_name}}']."
+      },
+      {
+        "name": "category",
+        "required": false,
+        "description": "Categoría de la plantilla: UTILITY (por defecto), MARKETING o AUTHENTICATION."
+      },
+      {
+        "name": "from_number_id",
+        "required": false,
+        "description": "ID del número de WhatsApp remitente. Si falta, el predeterminado de la subcuenta."
+      },
+      {
+        "name": "to_number",
+        "required": false,
+        "description": "Número de WhatsApp del contacto en formato internacional. Si falta, el que GHL tiene del contacto."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Indica si GHL aceptó el mensaje."
+      },
+      {
+        "name": "message_id",
+        "required": false,
+        "description": "ID del mensaje que creó GHL."
+      },
+      {
+        "name": "conversation_id",
+        "required": false,
+        "description": "ID de la conversación del contacto."
+      },
+      {
+        "name": "errors",
+        "required": false,
+        "description": "Mensaje de error si el envío falló."
+      }
+    ]
+  },
+  {
     "name": "update_contact",
     "description": "Actualiza los datos de un contacto de GoHighLevel (nombre, correo, teléfono, dirección, fecha de nacimiento, país, asignación, no molestar) y varios campos personalizados en una sola llamada.",
     "notes": [
@@ -573,18 +648,18 @@
       },
       {
         "name": "contact_name",
-        "required": true,
-        "description": "Contact's full name."
+        "required": false,
+        "description": "Contact's full name; filled in by the platform when not passed."
       },
       {
         "name": "contact_email",
-        "required": true,
-        "description": "Contact's email."
+        "required": false,
+        "description": "Contact's email; filled in by the platform when not passed."
       },
       {
         "name": "contact_phone",
-        "required": true,
-        "description": "Contact's phone (E.164)."
+        "required": false,
+        "description": "Contact's phone (E.164); filled in by the platform when not passed."
       },
       {
         "name": "contact_id",
@@ -728,7 +803,9 @@
       "ARGUMENTS: send captured fields as-is; empty when missing. Do not invent values. bmi must be copied literally from calculate_bmi.",
       "ARGUMENT RULE: city must be one of: Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá, Sibaté, or 'Otro'. Any other city rejects the candidate by city.",
       "ARGUMENT RULE: birth_type ('csection' or 'natural') is only required when the last birth was less than 18 months ago; otherwise it may be empty.",
-      "ARGUMENT RULE: document_type is 'cedula_ciudadania', 'ppt' or 'other'. Only the first two are accepted.",
+      "ARGUMENT RULE: document_type is 'cedula_ciudadania', 'ppt' or 'other'. Only the first two are accepted. It may be empty (or an empty string): then the result is Inconclusive with not_eligibility_reason 'missing_data (document_type)'. A value that is not accepted is rejected by documentation.",
+      "ARGUMENT RULE: eps_active_affiliation may be empty (or an empty string): then the result is Inconclusive with not_eligibility_reason 'missing_data (eps_active_affiliation)'. A 'no' is rejected by EPS.",
+      "EVALUATION ORDER: document_type and eps_active_affiliation are the last data evaluated, in that order, so any other missing or failing data is reported first. An agent that does not capture them (voice) sends them empty and gets the missing-data result only when everything else passes.",
       "ARGUMENT RULE: abortions, preeclampsia, eps_active_affiliation, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive.",
       "SOURCE OF TRUTH RULE: use 'result' as the only authorized verdict. Nationality is recorded but never rejects. Do not replace this decision with agent heuristics.",
       "POST-EXECUTION RULE: if 'result' is 'Inconclusive', request or reconfirm the missing data before calling the tool again.",
@@ -788,12 +865,12 @@
       {
         "name": "document_type",
         "required": false,
-        "description": "Identity document: cedula_ciudadania, ppt or other."
+        "description": "Identity document: cedula_ciudadania, ppt or other. Empty when it was not captured (the result is then Inconclusive for this field)."
       },
       {
         "name": "eps_active_affiliation",
         "required": false,
-        "description": "Whether the candidate has an active EPS affiliation (from check_adres)."
+        "description": "Whether the candidate has an active EPS affiliation (from check_adres). Empty when it was not captured (the result is then Inconclusive for this field)."
       },
       {
         "name": "drug_use",
@@ -825,7 +902,7 @@
       {
         "name": "not_eligibility_reason",
         "required": true,
-        "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'eps', 'drug_use', 'availability' when rejected, 'missing_data' when inconclusive, 'none' when approved."
+        "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'eps', 'drug_use', 'availability' when rejected, 'missing_data (<field>)' with the first missing field (for example 'missing_data (document_type)') when inconclusive, 'none' when approved."
       },
       {
         "name": "errors",
