@@ -2379,13 +2379,6 @@
             "reason": null
           },
           {
-            "target": "Q__SQ_WAIT_1Y",
-            "condition_text": "IF [q__classification_result] == 'Rejected (Timing)' -> GO_TO: Q__SQ_WAIT_1Y",
-            "is_mechanical": true,
-            "python_expression": "q__classification_result == 'Rejected (Timing)'",
-            "reason": null
-          },
-          {
             "target": "Q__SQ_TAG_PASS",
             "condition_text": "IF [q__classification_result] == 'Approved' -> GO_TO: Q__SQ_TAG_PASS",
             "is_mechanical": true,
@@ -2540,32 +2533,6 @@
             "reason": null
           }
         ]
-      },
-      {
-        "node_id": "Q__SQ_WAIT_1Y",
-        "node_type": "message",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Muchas gracias por responder las preguntas. Para continuar con su proceso, necesitamos esperar a que pase el tiempo mínimo desde su último parto. Más adelante le volveremos a contactar. Que tenga un buen día."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_END",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
       },
       {
         "node_id": "Q__SQ_TAG_PASS",
