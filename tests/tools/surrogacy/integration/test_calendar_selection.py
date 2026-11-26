@@ -65,8 +65,7 @@ def test_slots_use_requested_calendar(monkeypatch):
     assert body["success"] is True and body["available_slots"]
     for slot in body["available_slots"]:
         start = datetime.fromisoformat(slot["start_co"])
-        end = datetime.fromisoformat(slot["end_co"])
-        assert end - start == timedelta(minutes=20)  # CONTROL's own duration
+        assert set(slot) == {"start_co", "start_local"}
         assert start.isoweekday() <= 5  # default hours: Monday to Friday
         assert not (12 <= start.hour < 13)  # default lunch break
 

@@ -166,9 +166,7 @@ def compute_available_slots(
                 result_slots.append(
                     Slot(
                         start_co=format_iso_with_offset(slot_start, BUSINESS_TZ),
-                        end_co=format_iso_with_offset(slot_end, BUSINESS_TZ),
                         start_local=format_iso_with_offset(slot_start, user_tz),
-                        end_local=format_iso_with_offset(slot_end, user_tz),
                     )
                 )
 

@@ -38,6 +38,14 @@ def _label(day: date) -> str:
     return f"{_WEEKDAYS[day.weekday()]}, {_MONTHS[day.month - 1]} {day.day}"
 
 
+def _offset(moment: datetime) -> str:
+    """``+01:00`` / ``-05:00`` / ``+05:30``: the UTC offset of ``moment``."""
+    total = int(moment.utcoffset().total_seconds() // 60) if moment.utcoffset() is not None else 0
+    sign = "+" if total >= 0 else "-"
+    hours, minutes = divmod(abs(total), 60)
+    return f"{sign}{hours:02d}:{minutes:02d}"
+
+
 def _part_of(hour: int) -> str:
     return next((name for name, start, end in _PARTS if start <= hour < end), "night")
 
@@ -58,24 +66,29 @@ def _blocks(times: list[str], step: int) -> list[dict[str, Any]]:
     ]
 
 
-def summarize_days(slot_starts: list[str]) -> list[dict[str, Any]]:
+def summarize_days(slot_starts: list[str], timezone: str) -> list[dict[str, Any]]:
     """Groups slot start times (ISO 8601 with offset) by day.
 
     Args:
-        slot_starts: The ``start_local`` of every offered slot.
+        slot_starts: The ``start_local`` of every offered slot: ISO 8601 in the contact's time zone, so the day, the
+            part of the day and the times are all the contact's own, not the company's.
+        timezone: IANA name of that time zone, echoed on every day.
 
     Returns:
-        One dict per day, soonest first: ``date`` (YYYY-MM-DD), ``label`` (English weekday, month and day),
+        One dict per day, soonest first: ``date`` (YYYY-MM-DD, the contact's local date), ``label`` (English weekday,
+        month and day), ``timezone`` (IANA) and ``utc_offset`` (``+01:00``) of that day,
         ``parts_of_day`` (morning, afternoon, evening or night, those that have slots), ``times`` (typed blocks:
         ``continuous_range`` with first_start, last_start and every_minutes, or ``single_slot`` with start)
         and ``slot_count``.
     """
     by_day: dict[date, list[str]] = {}
+    offsets: dict[date, str] = {}
     for start in slot_starts:
         moment = datetime.fromisoformat(start)
         by_day.setdefault(moment.date(), []).append(f"{moment.hour:02d}:{moment.minute:02d}")
+        offsets.setdefault(moment.date(), _offset(moment))
     gaps = [
-        _minutes(b) - _minutes(a) for times in by_day.values() for a, b in zip(sorted(times), sorted(times)[1:])
+        _minutes(b) - _minutes(a) for times in by_day.values() for a, b in zip(sorted(times), sorted(times)[1:], strict=False)
     ]
     step = min(gaps) if gaps else 30
     days = []
@@ -86,6 +99,8 @@ def summarize_days(slot_starts: list[str]) -> list[dict[str, Any]]:
             {
                 "date": day.isoformat(),
                 "label": _label(day),
+                "timezone": timezone,
+                "utc_offset": offsets[day],
                 "parts_of_day": [name for name in ("morning", "afternoon", "evening", "night") if name in parts],
                 "times": _blocks(times, step),
                 "slot_count": len(times),

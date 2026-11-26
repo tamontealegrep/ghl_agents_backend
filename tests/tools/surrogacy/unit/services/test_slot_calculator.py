@@ -159,7 +159,6 @@ def test_slots_single_monday():
     slots = _compute(interval_minutes=35)
     assert len(slots) == 8
     assert slots[0].start_co == "2026-08-24T07:00:00-05:00"
-    assert slots[0].end_co == "2026-08-24T07:30:00-05:00"
     assert slots[-1].start_co == "2026-08-24T11:05:00-05:00"
 
 

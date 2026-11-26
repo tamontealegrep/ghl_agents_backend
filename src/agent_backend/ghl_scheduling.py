@@ -241,20 +241,17 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
 
             slots = []
             for start in thin_by_interval(starts, schedule.interval_minutes):
-                end = start + duration
                 slots.append(
                     Slot(
                         start_co=start.astimezone(tz).isoformat(),
-                        end_co=end.astimezone(tz).isoformat(),
                         start_local=start.astimezone(ZoneInfo(user_tz)).isoformat(),
-                        end_local=end.astimezone(ZoneInfo(user_tz)).isoformat(),
                     )
                 )
             return SlotsResponse(
                 success=True,
                 iana_timezone=user_tz,
                 available_slots=slots,
-                days=summarize_days([slot.start_local for slot in slots]),
+                days=summarize_days([slot.start_local for slot in slots], user_tz),
                 errors=None,
             )
         except Exception as exc:

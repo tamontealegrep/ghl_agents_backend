@@ -4497,7 +4497,7 @@
           "TOOL CALL ONLY: call get_available_slots now.",
           "calendar_type = 'FT' (required in every call to this tool).",
           "iana_timezone = 'America/Bogota'.",
-          "[sc__available_slots] is valid only if it is a list of objects carrying start_co, end_co, start_local and end_local and errors is null."
+          "[sc__available_slots] is valid only if it is a list of objects carrying start_co and start_local and errors is null."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -7029,7 +7029,7 @@
         {
           "name": "iana_timezone",
           "required": true,
-          "description": "Echo of the real IANA identifier (continent/city, or continent/country/city) used to compute start_local/end_local.",
+          "description": "Echo of the real IANA identifier (continent/city, or continent/country/city) used to compute start_local (and the days summary).",
           "type_expr": "str",
           "examples": [
             "America/Bogota"
@@ -7038,14 +7038,14 @@
         {
           "name": "days",
           "required": false,
-          "description": "Summary of available_slots by day, soonest first. Each item has date (YYYY-MM-DD), label (English weekday, month and day, e.g. Friday, November 27), parts_of_day (morning, afternoon, evening or night, those with slots), times (typed blocks) and slot_count. A block is {type: continuous_range, first_start, last_start, every_minutes}: a bookable start time every every_minutes between first_start and last_start, both included; or {type: single_slot, start}: that is the only bookable start time of the block. Say days and times only from here; never invent a day.",
+          "description": "Summary of available_slots by day, soonest first. Each item has date (YYYY-MM-DD), label (English weekday, month and day, e.g. Friday, November 27), timezone (IANA zone) and utc_offset of that day, parts_of_day (morning, afternoon, evening or night, those with slots), times (typed blocks) and slot_count. A block is {type: continuous_range, first_start, last_start, every_minutes}: a bookable start time every every_minutes between first_start and last_start, both included; or {type: single_slot, start}: that is the only bookable start time of the block. Date, label, parts_of_day and times are all in the timezone of the contact, not of the company. Say days and times only from here; never invent a day.",
           "type_expr": "list[SlotDay]",
           "examples": []
         },
         {
           "name": "available_slots",
           "required": true,
-          "description": "Array of objects with the available slots. Each object carries start_co/end_co (Colombia time, ISO 8601) and start_local/end_local (contact's zone, ISO 8601). Empty array ([]) if there is no availability.",
+          "description": "Array of objects with the available slots. Each object carries start_co (Colombia time, ISO 8601) and start_local (contact's zone, ISO 8601), the same instant, so book with the start_co of the slot whose start_local the contact chose. Empty array ([]) if there is no availability.",
           "type_expr": "list[Slot]",
           "examples": []
         },
@@ -7061,8 +7061,8 @@
         "MANDATORY EXECUTION: on entering the availability nodes (SC_AV*) or the re-check nodes (SC_CHK*) to re-verify the chosen time, and on any intent to schedule/reschedule/see-more/retry.",
         "ABSOLUTE RULE: do not mention availability before executing the tool and capturing the available slots.",
         "ARGUMENTS: calendar_type is required: the calendar key the flow indicates (e.g. 'FT'); iana_timezone is a real IANA zone (e.g. America/Bogota) resolved or fixed in the flow.",
-        "SOURCE OF TRUTH: use only available_slots; each slot must include start_co/end_co and start_local/end_local.",
-        "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal. When days is present, say the days, parts of the day and time blocks from days: it is a summary built by the tool from the same slots, and available_slots stays the source for booking."
+        "SOURCE OF TRUTH: use only available_slots; each slot must include start_co and start_local.",
+        "PRESENTATION: speak only with start_local; start_co is internal. A slot has no end; it lasts the fixed appointment duration of the calendar. When days is present, say the days, parts of the day and time blocks from days: it is a summary built by the tool from the same slots, and available_slots stays the source for booking."
       ]
     },
     {

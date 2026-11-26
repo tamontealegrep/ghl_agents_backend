@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 import pytest
 from surrogacy.services import booking, slot_calculator
@@ -102,4 +102,5 @@ def test_configured_slots_skip_lunch_and_closed():
     assert starts and all(s.isoweekday() == 2 for s in starts)  # only Tuesdays
     assert all(s.hour != 12 for s in starts)
     assert any(s.hour == 8 for s in starts) and any(s.hour == 13 for s in starts)
-    assert timedelta(hours=1) == datetime.fromisoformat(slots[0].end_co) - starts[0]
+    # 60-minute slots: the last start before the 14:00 closing is 13:00, never 13:30
+    assert max(starts).hour == 13 and max(starts).minute == 0
