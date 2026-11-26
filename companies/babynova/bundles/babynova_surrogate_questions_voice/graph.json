@@ -3595,7 +3595,7 @@
         "goal": [],
         "do": [
           "TOOL CALL: update_custom_field",
-          "name = 'eligibility_result', value = [q__classification_result]"
+          "name = 'eligibility_result', value = [q__classification_result] in lowercase and without the parenthesis (approved, rejected or inconclusive; 'Rejected (Timing)' = rejected)"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4978,7 +4978,8 @@
         "node_id": "SC__SC_HOURS",
         "node_type": "message",
         "goal": [
-          "Times of [sc__day] filtered from [sc__available_slots]: single times and ranges of consecutive times; with no valid times, return to SC_DEC_T."
+          "Times of [sc__day] filtered from [sc__available_slots]: single times and ranges of consecutive times; with no valid times, return to SC_DEC_T.",
+          "Say the times in natural spoken Spanish, no emojis, keeping the Mañana/Tarde grouping. '🕐 A a B' is a range: appointments every <APPT_MIN> minutes from A to B ('de A a B, cada <APPT_MIN> minutos'). '🕐 A' alone is a single option ('solo a las A'). Never present a range as a single time or a single time as a range."
         ],
         "do": [],
         "trigger": [],
@@ -4986,7 +4987,7 @@
         "say": [
           "[sc__day_title], cita de [sc__appt_minutes] minutos (presencial).\n\n[sc__available_slots]"
         ],
-        "say_verbatim": true,
+        "say_verbatim": false,
         "execute": null,
         "store": [],
         "capture": [],
@@ -5265,14 +5266,16 @@
       {
         "node_id": "SC__SC_NARROW",
         "node_type": "message",
-        "goal": [],
+        "goal": [
+          "Say the times in natural spoken Spanish, no emojis, keeping the Mañana/Tarde grouping. '🕐 A a B' is a range: appointments every <APPT_MIN> minutes from A to B ('de A a B, cada <APPT_MIN> minutos'). '🕐 A' alone is a single option ('solo a las A'). Never present a range as a single time or a single time as a range."
+        ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
           "Estas son las horas disponibles en esa franja:\n\n[sc__available_slots]"
         ],
-        "say_verbatim": true,
+        "say_verbatim": false,
         "execute": null,
         "store": [],
         "capture": [],
@@ -5565,7 +5568,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Antes de crear la cita, le confirmo el resumen: [sc__day_full] a las [sc__slot]."
+          "Antes de crear la cita, le confirmo el resumen: [sc__day_full] a las [sc__slot], a nombre de {{contact.first_name}}."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -6541,7 +6544,8 @@
           "se equivocaron",
           "aquí no vive",
           "no conozco a esa persona",
-          "este no es su número"
+          "este no es su número",
+          "the contact says this is the wrong number or that they are not that person (never when they answer a question, ask something or say they want to schedule)"
         ],
         "disabled_in": [],
         "say": [
@@ -7589,7 +7593,7 @@
     "MAX_END": "3",
     "STEP_CLASSES": "schedule: quiere agendar o seguir con la cita, o dice claramente que no tiene nada (más) que preguntar ('no', 'nada más', 'estoy listo'). question: dice que tiene una duda sin decirla ('tengo una duda') o un 'sí' suelto a esta pregunta. ambiguous: sin contenido propio, no aclara si agenda o pregunta ('ok', 'vale', 'mmm', 'no sé', un emoji), aunque 'ok' suene a acuerdo. ask: cualquier otra cosa con contenido: pregunta, petición ('cuénteme de…') o afirmación sobre sí misma ('somos pareja del mismo sexo'), que se responde como una pregunta. Ante la duda entre schedule y ask: ask; solo un deseo claro de agendar pasa al agendamiento.",
     "WA_INFO": "sofia_greeting",
-    "WA_BOOKED": "cita_confirmada"
+    "WA_BOOKED": "sofia_greeting"
   },
   "session_timeout_minutes": null,
   "say_policies": [
