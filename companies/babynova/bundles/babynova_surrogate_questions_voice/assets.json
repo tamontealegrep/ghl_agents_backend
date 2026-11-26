@@ -335,7 +335,7 @@
       "ABSOLUTE RULE: do not mention availability before executing the tool and capturing the available slots.",
       "ARGUMENTS: calendar_type is required: the calendar key the flow indicates (e.g. 'FT'); iana_timezone is a real IANA zone (e.g. America/Bogota) resolved or fixed in the flow.",
       "SOURCE OF TRUTH: use only available_slots; each slot must include start_co/end_co and start_local/end_local.",
-      "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal."
+      "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal. When days is present, say the days, parts of the day and time blocks from days: it is a summary built by the tool from the same slots, and available_slots stays the source for booking."
     ],
     "inputs": [
       {
@@ -359,6 +359,11 @@
         "name": "iana_timezone",
         "required": true,
         "description": "Echo of the real IANA identifier (continent/city, or continent/country/city) used to compute start_local/end_local."
+      },
+      {
+        "name": "days",
+        "required": false,
+        "description": "Summary of available_slots by day, soonest first. Each item has date (YYYY-MM-DD), label (English weekday, month and day, e.g. Friday, November 27), parts_of_day (morning, afternoon, evening or night, those with slots), times (typed blocks) and slot_count. A block is {type: continuous_range, first_start, last_start, every_minutes}: a bookable start time every every_minutes between first_start and last_start, both included; or {type: single_slot, start}: that is the only bookable start time of the block. Say days and times only from here; never invent a day."
       },
       {
         "name": "available_slots",
