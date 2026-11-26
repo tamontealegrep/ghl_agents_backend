@@ -306,6 +306,18 @@ async def upsert_contact(
 # ============================================================
 
 
+async def get_contact(
+    access_token: str,
+    contact_id: str,
+    *,
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any]:
+    """Lee un contacto de GHL por su ID (``GET /contacts/{id}``) y devuelve el objeto del contacto."""
+    data = await _request(access_token, "GET", f"/contacts/{_encode_id(contact_id)}", client=client)
+    contact = data.get("contact")
+    return contact if isinstance(contact, dict) else data
+
+
 async def create_appointment(
     access_token: str,
     calendar_id: str,
