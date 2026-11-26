@@ -4430,6 +4430,7 @@
           "[sc__book_try] = 0",
           "[sc__end_try] = 0",
           "[sc__available_slots] = NULL",
+          "[sc__days] = NULL",
           "[sc__fresh_available_slots] = NULL",
           "[sc__day] = NULL",
           "[sc__slot] = NULL",
@@ -5243,6 +5244,7 @@
         "execute": null,
         "store": [
           "[sc__available_slots] = NULL",
+          "[sc__days] = NULL",
           "[sc__fresh_available_slots] = NULL",
           "[sc__day] = NULL",
           "[sc__day_label] = NULL",
