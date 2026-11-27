@@ -65,7 +65,7 @@ def test_ivf_slots_shape(mocked_google_calendar):
     assert body["errors"] is None
     assert isinstance(body["available_slots"], list)
     for slot in body["available_slots"]:
-        assert set(slot.keys()) == {"start_co", "end_co", "start_local", "end_local"}
+        assert set(slot.keys()) == {"start_co", "start_local"}
 
 
 def test_ivf_slots_missing_credentials(monkeypatch):

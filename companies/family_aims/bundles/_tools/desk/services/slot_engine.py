@@ -88,12 +88,10 @@ def compute_end_date(start_date: datetime, date_range_days: int, closing_hour_fn
     return build_business_instant(to_date.year, to_date.month, to_date.day, hour, minute, BUSINESS_TZ)
 
 
-def _format_slot(slot_start: datetime, slot_end: datetime, user_tz: str) -> Slot:
+def _format_slot(slot_start: datetime, user_tz: str) -> Slot:
     return Slot(
         start_co=format_iso_with_offset(slot_start, BUSINESS_TZ),
-        end_co=format_iso_with_offset(slot_end, BUSINESS_TZ),
         start_local=format_iso_with_offset(slot_start, user_tz),
-        end_local=format_iso_with_offset(slot_end, user_tz),
     )
 
 
@@ -141,7 +139,7 @@ def compute_available_slots(
                     slot_start < ev_end and slot_end > ev_start for ev_start, ev_end in busy_events
                 )
                 if not overlaps and slot_start >= min_advance_instant:
-                    result.append(_format_slot(slot_start, slot_end, user_tz))
+                    result.append(_format_slot(slot_start, user_tz))
 
             cursor = cursor + timedelta(minutes=interval_minutes)
 

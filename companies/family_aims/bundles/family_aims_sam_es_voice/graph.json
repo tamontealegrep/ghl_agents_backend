@@ -606,6 +606,10 @@
           [
             "am__available_slots",
             "list[Slot]"
+          ],
+          [
+            "am__days",
+            "list[SlotDay]"
           ]
         ],
         "eval": "code",
@@ -632,14 +636,14 @@
         "node_id": "AM__AM_RESCHED_PICK",
         "node_type": "question",
         "goal": [
+          "Say the days and times from [am__days], never another: for each day its label and parts_of_day, and its times (a continuous_range is a bookable time every every_minutes minutes from first_start to last_start, both included ('de first_start a last_start, cada every_minutes minutos'); a single_slot is the only option ('solo a las start')). They are already in the contact's time zone: never convert them. Say them in natural spoken Spanish: translate the weekday and month names and say morning = mañana, afternoon = tarde, evening = noche, night = madrugada.",
           "Ask for a new slot from [am__available_slots]. Capture [am__new_time] as the exact time written (24-hour HH:MM); with only a day or no exact time leave it empty, never pick one. Capture [am__new_slot] as the offered slot on the chosen day and time."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Por favor elige una nueva fecha y hora para tu cita:",
-          "[am__available_slots]"
+          "Por favor elige una nueva fecha y hora para tu cita:\n\n[am__days]"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -685,14 +689,14 @@
         "node_id": "AM__AM_RESCHED_TIME",
         "node_type": "question",
         "goal": [
+          "Say the days and times from [am__days], never another: for each day its label and parts_of_day, and its times (a continuous_range is a bookable time every every_minutes minutes from first_start to last_start, both included ('de first_start a last_start, cada every_minutes minutos'); a single_slot is the only option ('solo a las start')). They are already in the contact's time zone: never convert them. Say them in natural spoken Spanish: translate the weekday and month names and say morning = mañana, afternoon = tarde, evening = noche, night = madrugada.",
           "No exact time yet. Capture [am__new_time] as the exact time written (24-hour HH:MM), else empty; capture [am__new_slot] as the offered slot on the day chosen earlier at that time."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "¿Qué horario te viene mejor ese día? Estos son los horarios disponibles (formato de 24 horas):",
-          "[am__available_slots]"
+          "¿Qué horario te viene mejor ese día? Estos son los horarios disponibles (formato de 24 horas):\n\n[am__days]"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -4471,6 +4475,7 @@
           "[sc__end_try] = 0",
           "[user_timezone] = NULL",
           "[sc__available_slots] = NULL",
+          "[sc__days] = NULL",
           "[sc__fresh_available_slots] = NULL",
           "[sc__day] = NULL",
           "[sc__slot] = NULL",
@@ -5396,7 +5401,7 @@
         ],
         "do": [
           "Send [user_timezone] as iana_timezone.",
-          "[sc__available_slots] is valid only if it is a list of objects carrying start_co, end_co, start_local, and end_local and errors is null. If you do not execute the tool, STAY here and retry."
+          "[sc__available_slots] is valid only if it is a list of objects carrying start_co and start_local (a slot has no end) and errors is null. If you do not execute the tool, STAY here and retry."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -5410,6 +5415,10 @@
           [
             "sc__available_slots",
             "list[Slot]"
+          ],
+          [
+            "sc__days",
+            "list[SlotDay]"
           ]
         ],
         "eval": "llm",
@@ -5513,15 +5522,15 @@
         "node_id": "SC__SC_DAYS",
         "node_type": "message",
         "goal": [
-          "Days from [sc__available_slots] (date of start_local) with the parts of the day available; if stale, return to SC_DEC_T."
+          "Say the days of [sc__days], in order, each with its label and its parts_of_day: only those, never another day; if [sc__days] is empty or stale, return to SC_DEC_T. They are already in the contact's time zone: never convert them. Say them in Spanish: weekday and date from label (translate the weekday and month names), and morning = mañana, afternoon = tarde, evening = noche, night = madrugada in natural words."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Tengo disponibilidad en estas fechas:\n\n[sc__available_slots]"
+          "Tengo disponibilidad en estas fechas:\n\n[sc__days]"
         ],
-        "say_verbatim": true,
+        "say_verbatim": false,
         "execute": null,
         "store": [],
         "capture": [],
@@ -5734,15 +5743,16 @@
         "node_id": "SC__SC_HOURS",
         "node_type": "message",
         "goal": [
-          "Times for [sc__day] from [sc__available_slots]: single times and ranges of consecutive ones; with none, return to SC_DEC_T."
+          "Times of [sc__day] from its [sc__days] entry; with no entry, return to SC_DEC_T.",
+          "Say the times of that day from the times of its [sc__days] entry (date == [sc__day]) in natural spoken Spanish: a continuous_range means a bookable time every every_minutes minutes from first_start to last_start, both included ('de first_start a last_start, cada every_minutes minutos'); a single_slot is the only option of that block ('solo a las start'). Never present a range as a single time or a single time as a range. The times are already in the contact's time zone: never convert them."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Para el [sc__day_label], estos son los horarios disponibles para una cita virtual de [appt_minutes] minutos, en la zona horaria de [sc__location_label]:\n\n[sc__available_slots]"
+          "Para el [sc__day_label], estos son los horarios disponibles para una cita virtual de [appt_minutes] minutos, en la zona horaria de [sc__location_label]:\n\n[sc__days]"
         ],
-        "say_verbatim": true,
+        "say_verbatim": false,
         "execute": null,
         "store": [],
         "capture": [],
@@ -6062,6 +6072,7 @@
         "execute": null,
         "store": [
           "[sc__available_slots] = NULL",
+          "[sc__days] = NULL",
           "[sc__fresh_available_slots] = NULL",
           "[sc__day] = NULL",
           "[sc__day_label] = NULL",
@@ -6439,7 +6450,7 @@
           "New name, phone or email: set [sc__c_name], [sc__c_phone] or [sc__c_email] to it; if they only want to change one, set it to NULL.",
           "New time: set [sc__slot] as 24-hour HH:MM when they give minutes or am/pm (3 pm is 15:00); a bare hour ('a las 3') is copied as written, never as am or pm; if they only want to change it, NULL.",
           "New day: set [sc__day] as YYYY-MM-DD and [sc__slot] to NULL; if they only want to change it, both NULL.",
-          "New country or city: set [user_timezone], [sc__day], [sc__slot] and [sc__available_slots] to NULL."
+          "New country or city: set [user_timezone], [sc__day], [sc__slot], [sc__available_slots] and [sc__days] to NULL."
         ],
         "trigger": [],
         "disabled_in": [],
@@ -9188,16 +9199,23 @@
         {
           "name": "iana_timezone",
           "required": true,
-          "description": "Echo of the real IANA identifier (continent/city, or continent/country/city) used to compute start_local/end_local.",
+          "description": "Echo of the real IANA identifier (continent/city, or continent/country/city) used to compute start_local (and the days summary).",
           "type_expr": "str",
           "examples": [
             "America/Bogota"
           ]
         },
         {
+          "name": "days",
+          "required": false,
+          "description": "Summary of available_slots by day, soonest first. Each item has date (YYYY-MM-DD), label (English weekday, month and day, e.g. Friday, November 27), timezone (IANA zone) and utc_offset of that day, parts_of_day (morning, afternoon, evening or night, those with slots), times (typed blocks) and slot_count. A block is {type: continuous_range, first_start, last_start, every_minutes}: a bookable start time every every_minutes between first_start and last_start, both included; or {type: single_slot, start}: that is the only bookable start time of the block. Date, label, parts_of_day and times are all in the timezone of the contact, not of the company. Say days and times only from here; never invent a day.",
+          "type_expr": "list[SlotDay]",
+          "examples": []
+        },
+        {
           "name": "available_slots",
           "required": true,
-          "description": "Array of objects with the available slots. Each object carries start_co/end_co (Colombia time, ISO 8601) and start_local/end_local (contact's zone, ISO 8601). Empty array ([]) if there is no availability.",
+          "description": "Array of objects with the available slots. Each object carries start_co (Colombia time, ISO 8601) and start_local (contact's zone, ISO 8601), the same instant, so book with the start_co of the slot whose start_local the contact chose. Empty array ([]) if there is no availability.",
           "type_expr": "list[Slot]",
           "examples": []
         },
@@ -9213,8 +9231,8 @@
         "MANDATORY EXECUTION: on entering the availability nodes (SC_AV*) or the re-check nodes (SC_CHK*) to re-verify the chosen time, and on any intent to schedule/reschedule/see-more/retry.",
         "ABSOLUTE RULE: do not mention availability before executing the tool and capturing the available slots.",
         "ARGUMENTS: calendar_type is required: the calendar key the flow indicates (e.g. 'FT'); iana_timezone is a real IANA zone (e.g. America/Bogota) resolved or fixed in the flow.",
-        "SOURCE OF TRUTH: use only available_slots; each slot must include start_co/end_co and start_local/end_local.",
-        "PRESENTATION: speak only with start_local/end_local; start_co/end_co are internal."
+        "SOURCE OF TRUTH: use only available_slots; each slot must include start_co and start_local.",
+        "PRESENTATION: speak only with start_local; start_co is internal. A slot has no end; it lasts the fixed appointment duration of the calendar. When days is present, say the days, parts of the day and time blocks from days: it is a summary built by the tool from the same slots, and available_slots stays the source for booking."
       ]
     },
     {

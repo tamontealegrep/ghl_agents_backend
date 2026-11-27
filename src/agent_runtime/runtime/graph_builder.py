@@ -1192,8 +1192,8 @@ def _format_appointment_list(items: list[dict[str, Any]], slots: dict[str, Any],
         parts_out = []
         for item in items:
             start = item.get("start_local") or item.get("start_co", "?")
-            end = item.get("end_local") or item.get("end_co", "?")
-            parts_out.append(f"{start} - {end}")
+            end = item.get("end_local") or item.get("end_co")
+            parts_out.append(f"{start} - {end}" if end else str(start))
         return "; ".join(parts_out)
 
     candidate_dates = {date_parts for date_parts, _ in dated_items}

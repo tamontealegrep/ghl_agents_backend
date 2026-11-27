@@ -68,7 +68,8 @@ def test_slots_query_the_calendars_own_id(monkeypatch):
     assert body["success"] is True and len(body["available_slots"]) == 1
     # duration comes from that calendar's own configuration (20 min), not IVF's
     assert body["available_slots"][0]["start_co"][11:16] == "09:00"
-    assert body["available_slots"][0]["end_co"][11:16] == "09:20"
+    assert seen["duration_minutes"] == 20
+    assert set(body["available_slots"][0]) == {"start_co", "start_local"}  # no end: a slot lasts the configured time
 
 
 def test_unknown_calendar_is_rejected_with_the_valid_keys(monkeypatch):
