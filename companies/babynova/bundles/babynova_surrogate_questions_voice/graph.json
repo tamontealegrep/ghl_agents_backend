@@ -6112,12 +6112,13 @@
         "node_id": "SC__SC_SEND_BOOKED",
         "node_type": "action",
         "goal": [
-          "The appointment is booked and appointment_date and appointment_time are already saved in the contact: send the booking WhatsApp template. This step always runs after a successful booking; if it was not accepted, try again before moving on."
+          "The appointment is booked and appointment_date and appointment_time are already saved in the contact: send the booking WhatsApp template, which has two variables (the date and the time). This step always runs after a successful booking; if it was not accepted, try again before moving on."
         ],
         "do": [
           "[sc__wa_try] = [sc__wa_try] + 1",
           "TOOL CALL: send_whatsapp_template",
           "template_name = <WA_BOOKED>, language = 'es'",
+          "body_variables = a list with exactly two items, in this order: [sc__appointment_date] (variable {{1}}, the date) and [sc__appointment_time] (variable {{2}}, the time), each one copied exactly as saved in the contact. They are two separate items of the list: the date contains a comma, so never send them as one text separated by commas. The template fails if the two values are missing.",
           "contact_id = [contact.contact_id]"
         ],
         "trigger": [],
@@ -6847,7 +6848,7 @@
         {
           "name": "body_variables",
           "required": false,
-          "description": "Valores de las variables del cuerpo, en orden. Ejemplo: ['{{contact.first_name}}'].",
+          "description": "Valores de las variables del cuerpo, en orden, un elemento por variable de la plantilla. Ejemplos: ['{{contact.first_name}}'] o, para una plantilla con fecha y hora, ['Miércoles, 2 de DICIEMBRE de 2026', '11:00 a.m'] (dos elementos: la fecha lleva una coma y no se parte).",
           "type_expr": "list[str]",
           "examples": []
         },
@@ -6905,7 +6906,7 @@
       ],
       "notes": [
         "MANDATORY EXECUTION: ejecútala cuando el flujo pida enviar una plantilla de WhatsApp al contacto (por ejemplo para retomar a quien no ha escrito en las últimas 24 horas). La plantilla la define el flujo con su nombre e idioma; nunca inventes un nombre.",
-        "ARGUMENTS: template_name y language (los que indica el flujo), contact_id y location_id (disponibles en el contexto del contacto). body_variables solo si la plantilla tiene variables: los valores en orden, o {{contact.first_name}} para el nombre del contacto, que GHL resuelve. from_number_id, to_number y category solo si el flujo los indica.",
+        "ARGUMENTS: template_name y language (los que indica el flujo), contact_id y location_id (disponibles en el contexto del contacto). body_variables solo si la plantilla tiene variables: los valores en orden, una variable por elemento de la lista (aunque el valor lleve comas), o {{contact.first_name}} para el nombre del contacto, que GHL resuelve. Debe haber exactamente tantos elementos como variables tiene la plantilla ({{1}}, {{2}}...): si faltan o sobran, WhatsApp rechaza el mensaje con el error (#132000), número de parámetros distinto del esperado. from_number_id, to_number y category solo si el flujo los indica.",
         "BEHAVIOUR: GHL identifica la plantilla por nombre e idioma, no por el ID numérico de su lista; el contacto recibe la plantilla aprobada (la herramienta rellena sola el texto que GHL exige). Fuera de las 24 horas de WhatsApp solo una plantilla llega al contacto.",
         "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el mensaje; message_id y conversation_id identifican lo enviado. Si success es false, no digas que se envió.",
         "SILENT ACTION: no le cuentes a la persona detalles técnicos del envío (IDs, plantilla, herramienta)."
