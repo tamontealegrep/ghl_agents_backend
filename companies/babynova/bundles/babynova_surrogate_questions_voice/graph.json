@@ -2679,8 +2679,12 @@
       {
         "node_id": "Q__SQ_SEND_PROP_TEMPLATE",
         "node_type": "action",
-        "goal": [],
+        "goal": [
+          "She authorized the information: send the information WhatsApp template. It is sent first and the authorization is saved after it; if it was not accepted, try again before moving on."
+        ],
         "do": [
+          "[q__info_try] = [q__info_try] + 1",
+          "TOOL CALL: send_whatsapp_template",
           "template_name = <WA_INFO>, language = 'es'"
         ],
         "trigger": [],
@@ -2689,14 +2693,26 @@
         "say_verbatim": false,
         "execute": "send_whatsapp_template",
         "store": [],
-        "capture": [],
+        "capture": [
+          [
+            "q__info_success",
+            "bool"
+          ]
+        ],
         "eval": "code",
         "route": [
           {
             "target": "Q__SQ_SYNC_PROP_AUTH_YES",
-            "condition_text": null,
+            "condition_text": "IF [q__info_success] == TRUE -> GO_TO: Q__SQ_SYNC_PROP_AUTH_YES",
             "is_mechanical": true,
-            "python_expression": null,
+            "python_expression": "q__info_success == True",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_SEND_PROP_TEMPLATE",
+            "condition_text": "IF [q__info_success] == FALSE AND [q__info_try] < <MAX_TRY> -> GO_TO: Q__SQ_SEND_PROP_TEMPLATE",
+            "is_mechanical": true,
+            "python_expression": "q__info_success == False and q__info_try < MAX_TRY",
             "reason": null
           }
         ],
@@ -4399,7 +4415,7 @@
           "[sc__user_location] = 'Colombia, Bogota'",
           "[sc__part_asked] = NULL",
           "[sc__part_shown] = NULL",
-          "[sc__wa_sent] = NULL"
+          "[sc__wa_success] = NULL"
         ],
         "capture": [],
         "eval": "code",
@@ -4455,9 +4471,7 @@
         "say": [],
         "say_verbatim": false,
         "execute": "get_available_slots",
-        "store": [
-          "[sc__appt_minutes] = <APPT_MIN>"
-        ],
+        "store": [],
         "capture": [
           [
             "sc__available_slots",
@@ -4801,7 +4815,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "[sc__day_title], cita de [sc__appt_minutes] minutos (presencial).\n\n[sc__days]"
+          "[sc__day_title], cita presencial.\n\n[sc__days]"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -5214,7 +5228,7 @@
           "[sc__book_try] = 0",
           "[sc__appointment_date] = NULL",
           "[sc__appointment_time] = NULL",
-          "[sc__wa_sent] = NULL",
+          "[sc__wa_success] = NULL",
           "[sc__wa_try] = 0",
           "[sc__time_try] = 0",
           "[sc__day_now_try] = 0",
@@ -6057,7 +6071,7 @@
         "store": [],
         "capture": [
           [
-            "sc__wa_sent",
+            "sc__wa_success",
             "bool"
           ]
         ],
@@ -6065,16 +6079,16 @@
         "route": [
           {
             "target": "SC__SC_DONE",
-            "condition_text": "IF [sc__wa_sent] == TRUE -> GO_TO: SC__SC_DONE",
+            "condition_text": "IF [sc__wa_success] == TRUE -> GO_TO: SC__SC_DONE",
             "is_mechanical": true,
-            "python_expression": "sc__wa_sent == True",
+            "python_expression": "sc__wa_success == True",
             "reason": null
           },
           {
             "target": "SC__SC_SEND_BOOKED",
-            "condition_text": "IF [sc__wa_sent] == FALSE AND [sc__wa_try] < <MAX_TRY> -> GO_TO: SC__SC_SEND_BOOKED",
+            "condition_text": "IF [sc__wa_success] == FALSE AND [sc__wa_try] < <MAX_TRY> -> GO_TO: SC__SC_SEND_BOOKED",
             "is_mechanical": true,
-            "python_expression": "sc__wa_sent == False and sc__wa_try < MAX_TRY",
+            "python_expression": "sc__wa_success == False and sc__wa_try < MAX_TRY",
             "reason": null
           }
         ],
@@ -7474,7 +7488,7 @@
   "constants": {
     "AGENT": "Sofia",
     "COMPANY": "BabyNova",
-    "APPT_MIN": "30",
+    "APPT_MIN": "10",
     "APPT_ADDRESS": "carrera dieciséis número ochenta y ocho, ochenta y uno, consultorio seiscientos nueve, en el sector de El Virrey, en Bogotá",
     "MAX_TRY": "3",
     "MAX_REPEAT": "3",

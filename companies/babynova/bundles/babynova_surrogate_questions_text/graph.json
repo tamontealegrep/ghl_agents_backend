@@ -124,7 +124,6 @@
           "[o__consent_try] = 0",
           "[o__agree_try] = 0",
           "[o__start_try] = 0",
-          "[o__stop_try] = 0",
           "[o__prog_try] = 0",
           "[user_timezone] = 'America/Bogota'"
         ],
@@ -342,8 +341,8 @@
             "reason": null
           },
           {
-            "target": "O__OP_ASK_STOP",
-            "condition_text": "IF [o__consent_try] >= <MAX_TRY> -> GO_TO: O__OP_ASK_STOP",
+            "target": "O__OP_END_NO",
+            "condition_text": "IF [o__consent_try] >= <MAX_TRY> -> GO_TO: O__OP_END_NO",
             "is_mechanical": true,
             "python_expression": "o__consent_try >= MAX_TRY",
             "reason": null
@@ -814,7 +813,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_ASK_STOP",
+            "target": "O__OP_END_NO",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -850,96 +849,6 @@
           }
         ],
         "fallback": []
-      },
-      {
-        "node_id": "O__OP_ASK_STOP",
-        "node_type": "question",
-        "goal": [
-          "Offer the contact the option to register that she does not want to be contacted."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Would you like us to register that you prefer not to receive more messages from us?"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[o__stop] = [o__stop]"
-        ],
-        "capture": [
-          [
-            "o__stop",
-            "Literal[yes, no]"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_DEC_STOP",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_DEC_STOP",
-        "node_type": "decision",
-        "goal": [],
-        "do": [
-          "[o__stop_try] = [o__stop_try] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_END_NO",
-            "condition_text": "IF [o__stop_try] >= <MAX_TRY> -> GO_TO: O__OP_END_NO",
-            "is_mechanical": true,
-            "python_expression": "o__stop_try >= MAX_TRY",
-            "reason": null
-          },
-          {
-            "target": "O__OP_ASK_STOP",
-            "condition_text": "IF [o__stop] IS NULL -> GO_TO: O__OP_ASK_STOP",
-            "is_mechanical": true,
-            "python_expression": "o__stop is None",
-            "reason": null
-          },
-          {
-            "target": "O__OP_BYE_STOP",
-            "condition_text": "IF [o__stop] == 'yes' -> GO_TO: O__OP_BYE_STOP",
-            "is_mechanical": true,
-            "python_expression": "o__stop == 'yes'",
-            "reason": null
-          },
-          {
-            "target": "O__OP_END_NO",
-            "condition_text": "IF [o__stop] == 'no' -> GO_TO: O__OP_END_NO",
-            "is_mechanical": true,
-            "python_expression": "o__stop == 'no'",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "O__OP_END_NO",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
       },
       {
         "node_id": "O__OP_BYE_LATER",
@@ -989,34 +898,6 @@
         "route": [
           {
             "target": "O__OP_END_PROG",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "O__OP_BYE_STOP",
-        "node_type": "message",
-        "goal": [
-          "Say goodbye politely confirming no further contact."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Done, it is registered. You will not receive more messages from us. Have a great day!"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "O__OP_END_STOP",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -1140,7 +1021,9 @@
           "[q__prop_interest] = NULL",
           "[q__prop_ok] = NULL",
           "[q__prop_int_try] = 0",
-          "[q__prop_ok_try] = 0"
+          "[q__prop_ok_try] = 0",
+          "[q__info_success] = NULL",
+          "[q__info_try] = 0"
         ],
         "capture": [],
         "eval": "code",
@@ -4121,7 +4004,8 @@
           "document_type = [q__doc_type]",
           "eps_active_affiliation = [q__eps_active_affiliation]",
           "drug_use = [q__uses_drugs]",
-          "availability = [q__availability]"
+          "availability = [q__availability]",
+          "voice = 'no'"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -4636,7 +4520,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Great news: based on your answers you meet our initial criteria. The next step is a short appointment of about <APPT_MIN> minutes with our team at <APPT_ADDRESS>, where they go over your case and answer all your questions. It only works if we both commit: you set the time aside, and our team will be ready for you. Taking part is still subject to the full evaluation."
+          "Great news: based on your answers you meet our initial criteria. The next step is a short appointment with our team at <APPT_ADDRESS>, where they go over your case and answer all your questions. It only works if we both commit: you set the time aside, and our team will be ready for you. Taking part is still subject to the full evaluation."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -4704,8 +4588,8 @@
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_SYNC_PROP_SEND_YES",
-            "condition_text": "IF [q__prop_interest] == 'yes' -> GO_TO: Q__SQ_SYNC_PROP_SEND_YES",
+            "target": "Q__SQ_SEND_INFO",
+            "condition_text": "IF [q__prop_interest] == 'yes' -> GO_TO: Q__SQ_SEND_INFO",
             "is_mechanical": true,
             "python_expression": "q__prop_interest == 'yes'",
             "reason": null
@@ -4759,7 +4643,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_SEND_INFO",
+            "target": "Q__SQ_ASK_PROP_OK",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -4797,8 +4681,11 @@
       {
         "node_id": "Q__SQ_SEND_INFO",
         "node_type": "action",
-        "goal": [],
+        "goal": [
+          "She wants the proposal: send the information WhatsApp template. It is sent first and the authorization is saved after it; if it was not accepted, try again before moving on."
+        ],
         "do": [
+          "[q__info_try] = [q__info_try] + 1",
           "template_name = <WA_INFO>, language = 'es'",
           "contact_id = [contact.contact_id]"
         ],
@@ -4808,20 +4695,32 @@
         "say_verbatim": false,
         "execute": "send_whatsapp_template",
         "store": [],
-        "capture": [],
+        "capture": [
+          [
+            "q__info_success",
+            "bool"
+          ]
+        ],
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_ASK_PROP_OK",
-            "condition_text": null,
+            "target": "Q__SQ_SYNC_PROP_SEND_YES",
+            "condition_text": "IF [q__info_success] == TRUE -> GO_TO: Q__SQ_SYNC_PROP_SEND_YES",
             "is_mechanical": true,
-            "python_expression": null,
+            "python_expression": "q__info_success == True",
+            "reason": null
+          },
+          {
+            "target": "Q__SQ_SEND_INFO",
+            "condition_text": "IF [q__info_success] == FALSE AND [q__info_try] < <MAX_TRY> -> GO_TO: Q__SQ_SEND_INFO",
+            "is_mechanical": true,
+            "python_expression": "q__info_success == False and q__info_try < MAX_TRY",
             "reason": null
           }
         ],
         "fallback": [
           {
-            "target": "Q__SQ_ASK_PROP_OK",
+            "target": "Q__SQ_SYNC_PROP_SEND_YES",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -5956,14 +5855,12 @@
           "[sc__ok_try] = 0",
           "[sc__retry_try] = 0",
           "[sc__c_name_try] = 0",
-          "[sc__c_phone_try] = 0",
-          "[sc__c_email_try] = 0",
           "[sc__time_try] = 0",
           "[sc__day_now_try] = 0",
           "[sc__book_try] = 0",
           "[sc__appointment_date] = NULL",
           "[sc__appointment_time] = NULL",
-          "[sc__wa_sent] = NULL",
+          "[sc__wa_success] = NULL",
           "[sc__wa_try] = 0",
           "[sc__end_try] = 0",
           "[sc__available_slots] = NULL",
@@ -6014,8 +5911,15 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_DEC_P",
-            "condition_text": "IF [sc__c_name] IS NOT NULL -> GO_TO: SC__SC_DEC_P",
+            "target": "SC__SC_SUM",
+            "condition_text": "IF [sc__c_name] IS NOT NULL AND [sc__slot] IS NOT NULL -> GO_TO: SC__SC_SUM",
+            "is_mechanical": true,
+            "python_expression": "sc__c_name is not None and sc__slot is not None",
+            "reason": null
+          },
+          {
+            "target": "SC__SC_DEC_T",
+            "condition_text": "IF [sc__c_name] IS NOT NULL -> GO_TO: SC__SC_DEC_T",
             "is_mechanical": true,
             "python_expression": "sc__c_name is not None",
             "reason": null
@@ -6086,7 +5990,14 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_DEC_P",
+            "target": "SC__SC_SUM",
+            "condition_text": "IF [sc__slot] IS NOT NULL -> GO_TO: SC__SC_SUM",
+            "is_mechanical": true,
+            "python_expression": "sc__slot is not None",
+            "reason": null
+          },
+          {
+            "target": "SC__SC_DEC_T",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -6147,8 +6058,15 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_DEC_P",
-            "condition_text": "IF [sc__c_name] IS NOT NULL AND [sc__c_name] != '{{contact.first_name}}' -> GO_TO: SC__SC_DEC_P",
+            "target": "SC__SC_SUM",
+            "condition_text": "IF [sc__c_name] IS NOT NULL AND [sc__c_name] != '{{contact.first_name}}' AND [sc__slot] IS NOT NULL -> GO_TO: SC__SC_SUM",
+            "is_mechanical": true,
+            "python_expression": "sc__c_name is not None and sc__c_name != '{{contact.first_name}}' and sc__slot is not None",
+            "reason": null
+          },
+          {
+            "target": "SC__SC_DEC_T",
+            "condition_text": "IF [sc__c_name] IS NOT NULL AND [sc__c_name] != '{{contact.first_name}}' -> GO_TO: SC__SC_DEC_T",
             "is_mechanical": true,
             "python_expression": "sc__c_name is not None and sc__c_name != '{{contact.first_name}}'",
             "reason": null
@@ -6171,378 +6089,6 @@
         "fallback": [
           {
             "target": "SC__SC_ASK_N",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "SC__SC_DEC_P",
-        "node_type": "decision",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_DEC_E",
-            "condition_text": "IF [sc__c_phone] IS NOT NULL -> GO_TO: SC__SC_DEC_E",
-            "is_mechanical": true,
-            "python_expression": "sc__c_phone is not None",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "SC__SC_DEC_P_CRM",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "SC__SC_DEC_P_CRM",
-        "node_type": "decision",
-        "goal": [
-          "Check the CRM for the contact's phone number."
-        ],
-        "do": [
-          "Treat the literal unresolved placeholder '{{contact.phone}}' as missing data, not as a valid phone number."
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "llm",
-        "route": [
-          {
-            "target": "SC__SC_ST_P",
-            "condition_text": "IF {{contact.phone}} IS NOT NULL AND {{contact.phone}} != '{{contact.phone}}' -> GO_TO: SC__SC_ST_P",
-            "is_mechanical": false,
-            "python_expression": null,
-            "reason": "disallowed syntax: Set"
-          }
-        ],
-        "fallback": [
-          {
-            "target": "SC__SC_ASK_P",
-            "condition_text": null,
-            "is_mechanical": false,
-            "python_expression": null,
-            "reason": "eval='llm' forces an LLM-evaluated edge"
-          }
-        ]
-      },
-      {
-        "node_id": "SC__SC_ST_P",
-        "node_type": "registration",
-        "goal": [],
-        "do": [
-          "[sc__c_phone] = {{contact.phone}}"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[sc__c_phone] = {{contact.phone}}"
-        ],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_DEC_E",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "SC__SC_ASK_P",
-        "node_type": "question",
-        "goal": [
-          "Ask for the contact's phone number without asking for a country code. Colombian phone numbers only, store it in international format with the +57 prefix. If the number has no country code, prepend +57 (for example 3219876543 is stored as +573219876543); if it already starts with 57 or +57, store it as +57 followed by the 10-digit number; keep digits only after the +."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "What is your phone number?"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[sc__c_phone] = the phone number normalized to +57 format (prepend +57 when it has no country code, e.g. 3219876543 becomes +573219876543)"
-        ],
-        "capture": [
-          [
-            "sc__c_phone",
-            "str"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_DEC_PC",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "SC__SC_DEC_PC",
-        "node_type": "decision",
-        "goal": [],
-        "do": [
-          "[sc__c_phone_try] = [sc__c_phone_try] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_DEC_E",
-            "condition_text": "IF [sc__c_phone] IS NOT NULL AND [sc__c_phone] != '{{contact.phone}}' -> GO_TO: SC__SC_DEC_E",
-            "is_mechanical": true,
-            "python_expression": "sc__c_phone is not None and sc__c_phone != '{{contact.phone}}'",
-            "reason": null
-          },
-          {
-            "target": "SC__SC_NO_BOOK",
-            "condition_text": "IF [sc__c_phone_try] >= <MAX_TRY> -> GO_TO: SC__SC_NO_BOOK",
-            "is_mechanical": true,
-            "python_expression": "sc__c_phone_try >= MAX_TRY",
-            "reason": null
-          },
-          {
-            "target": "SC__SC_ASK_P",
-            "condition_text": "IF [sc__c_phone] IS NULL -> GO_TO: SC__SC_ASK_P",
-            "is_mechanical": true,
-            "python_expression": "sc__c_phone is None",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "SC__SC_ASK_P",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "SC__SC_DEC_E",
-        "node_type": "decision",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_SUM",
-            "condition_text": "IF [sc__c_email] IS NOT NULL AND [sc__slot] IS NOT NULL -> GO_TO: SC__SC_SUM",
-            "is_mechanical": true,
-            "python_expression": "sc__c_email is not None and sc__slot is not None",
-            "reason": null
-          },
-          {
-            "target": "SC__SC_DEC_T",
-            "condition_text": "IF [sc__c_email] IS NOT NULL -> GO_TO: SC__SC_DEC_T",
-            "is_mechanical": true,
-            "python_expression": "sc__c_email is not None",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "SC__SC_DEC_E_CRM",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "SC__SC_DEC_E_CRM",
-        "node_type": "decision",
-        "goal": [
-          "Check the CRM for the contact's email."
-        ],
-        "do": [
-          "Treat the literal unresolved placeholder '{{contact.email}}' as missing data, not as a valid email address."
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "llm",
-        "route": [
-          {
-            "target": "SC__SC_ST_E",
-            "condition_text": "IF {{contact.email}} IS NOT NULL AND {{contact.email}} != '{{contact.email}}' -> GO_TO: SC__SC_ST_E",
-            "is_mechanical": false,
-            "python_expression": null,
-            "reason": "disallowed syntax: Set"
-          }
-        ],
-        "fallback": [
-          {
-            "target": "SC__SC_ASK_E",
-            "condition_text": null,
-            "is_mechanical": false,
-            "python_expression": null,
-            "reason": "eval='llm' forces an LLM-evaluated edge"
-          }
-        ]
-      },
-      {
-        "node_id": "SC__SC_ST_E",
-        "node_type": "registration",
-        "goal": [],
-        "do": [
-          "[sc__c_email] = {{contact.email}}"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[sc__c_email] = {{contact.email}}"
-        ],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_DEC_T",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "SC__SC_ASK_E",
-        "node_type": "question",
-        "goal": [
-          "Ask for the contact's email address."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "To which email address should we send the appointment confirmation?"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [
-          "[sc__c_email] = [sc__c_email]"
-        ],
-        "capture": [
-          [
-            "sc__c_email",
-            "email"
-          ]
-        ],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_DEC_EC",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "SC__SC_DEC_EC",
-        "node_type": "decision",
-        "goal": [],
-        "do": [
-          "[sc__c_email_try] = [sc__c_email_try] + 1"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_SUM",
-            "condition_text": "IF [sc__c_email] IS NOT NULL AND [sc__c_email] != '{{contact.email}}' AND [sc__slot] IS NOT NULL -> GO_TO: SC__SC_SUM",
-            "is_mechanical": true,
-            "python_expression": "sc__c_email is not None and sc__c_email != '{{contact.email}}' and sc__slot is not None",
-            "reason": null
-          },
-          {
-            "target": "SC__SC_DEC_T",
-            "condition_text": "IF [sc__c_email] IS NOT NULL AND [sc__c_email] != '{{contact.email}}' -> GO_TO: SC__SC_DEC_T",
-            "is_mechanical": true,
-            "python_expression": "sc__c_email is not None and sc__c_email != '{{contact.email}}'",
-            "reason": null
-          },
-          {
-            "target": "SC__SC_NO_BOOK",
-            "condition_text": "IF [sc__c_email_try] >= <MAX_TRY> -> GO_TO: SC__SC_NO_BOOK",
-            "is_mechanical": true,
-            "python_expression": "sc__c_email_try >= MAX_TRY",
-            "reason": null
-          },
-          {
-            "target": "SC__SC_ASK_E",
-            "condition_text": "IF [sc__c_email] IS NULL -> GO_TO: SC__SC_ASK_E",
-            "is_mechanical": true,
-            "python_expression": "sc__c_email is None",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "SC__SC_ASK_E",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -6593,9 +6139,7 @@
         "say": [],
         "say_verbatim": false,
         "execute": "get_available_slots",
-        "store": [
-          "[sc__appt_minutes] = <APPT_MIN>"
-        ],
+        "store": [],
         "capture": [
           [
             "sc__available_slots",
@@ -6950,7 +6494,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "📅 [sc__day_title] | ⏱️ [sc__appt_minutes] min (Presencial)\n🌎 [sc__location_label]\n\n[sc__available_slots]"
+          "📅 [sc__day_title] | Presencial\n🌎 [sc__location_label]\n\n[sc__available_slots]"
         ],
         "say_verbatim": true,
         "execute": null,
@@ -7365,7 +6909,7 @@
           "[sc__book_try] = 0",
           "[sc__appointment_date] = NULL",
           "[sc__appointment_time] = NULL",
-          "[sc__wa_sent] = NULL",
+          "[sc__wa_success] = NULL",
           "[sc__wa_try] = 0",
           "[sc__time_try] = 0",
           "[sc__day_now_try] = 0",
@@ -7548,7 +7092,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Before creating the appointment, I confirm the summary:\n\n🗓️ [sc__day_full]\n├─ 🕐 [sc__slot] (24h)\n├─ 🌎 [sc__location_label]\n├─ 👤 [sc__c_name]\n├─ ✉️ [sc__c_email]\n└─ 📞 [sc__c_phone]"
+          "Before creating the appointment, I confirm the summary:\n\n🗓️ [sc__day_full]\n├─ 🕐 [sc__slot] (24h)\n├─ 🌎 [sc__location_label]\n└─ 👤 [sc__c_name]"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -7571,7 +7115,7 @@
         "node_type": "question",
         "goal": [
           "Ask for confirmation of the summary before creating the appointment.",
-          "Also capture [sc__fix] when the reply asks to change or gives a new value for the name, phone, email, day or time; otherwise leave [sc__fix] null."
+          "Also capture [sc__fix] when the reply asks to change or gives a new value for the name, day or time; otherwise leave [sc__fix] null."
         ],
         "do": [],
         "trigger": [],
@@ -7741,7 +7285,7 @@
         "node_type": "registration",
         "goal": [],
         "do": [
-          "If the contact gives a new name, phone, or email, set [sc__c_name], [sc__c_phone], or [sc__c_email] to it. If they only say they want to change one of them, set it to NULL.",
+          "If the contact gives a new name, set [sc__c_name] to it. If they only say they want to change the name, set it to NULL.",
           "If the contact gives a new time, set [sc__slot] to it written as 24-hour HH:MM when they give minutes or am/pm (3 pm is 15:00); a bare hour with no minutes and no am/pm (like 'a las 3') is copied as the number they wrote, never as am or pm. If they only say they want to change the time, set [sc__slot] to NULL.",
           "If the contact gives a new day, set [sc__day] to it written as YYYY-MM-DD and [sc__slot] to NULL. If they only say they want to change the day, set [sc__day] and [sc__slot] to NULL."
         ],
@@ -7796,20 +7340,6 @@
             "condition_text": "IF [sc__c_name] IS NULL -> GO_TO: SC__SC_ASK_N",
             "is_mechanical": true,
             "python_expression": "sc__c_name is None",
-            "reason": null
-          },
-          {
-            "target": "SC__SC_ASK_P",
-            "condition_text": "IF [sc__c_phone] IS NULL -> GO_TO: SC__SC_ASK_P",
-            "is_mechanical": true,
-            "python_expression": "sc__c_phone is None",
-            "reason": null
-          },
-          {
-            "target": "SC__SC_ASK_E",
-            "condition_text": "IF [sc__c_email] IS NULL -> GO_TO: SC__SC_ASK_E",
-            "is_mechanical": true,
-            "python_expression": "sc__c_email is None",
             "reason": null
           },
           {
@@ -7903,7 +7433,7 @@
           "calendar_type = 'FT' (required in every call to this tool).",
           "start_date = [sc__start_date]",
           "duration = <APPT_MIN>. iana_timezone = 'America/Bogota'. time_format = '12h' (appointment_time comes back as 08:50 AM).",
-          "contact_name = [sc__c_name], contact_email = [sc__c_email], contact_phone = [sc__c_phone] (always in +57 format).",
+          "contact_name = [sc__c_name]. Never send contact_email or contact_phone, the tool takes them from the contact in the CRM.",
           "contact_id = [contact.contact_id] (required in every call to this tool; the tool fails without it).",
           "It is FORBIDDEN to write to the contact, confirm the appointment, run FAQs or handlers, or route before capturing [sc__success].",
           "If you do not execute book_appointment, STAY here and retry. NEVER continue with an empty or assumed [sc__success]."
@@ -7929,14 +7459,6 @@
           ],
           [
             "sc__appointment_time",
-            "str"
-          ],
-          [
-            "sc__event_link",
-            "str"
-          ],
-          [
-            "sc__meet_link",
             "str"
           ]
         ],
@@ -8259,7 +7781,7 @@
         "store": [],
         "capture": [
           [
-            "sc__wa_sent",
+            "sc__wa_success",
             "bool"
           ]
         ],
@@ -8267,16 +7789,16 @@
         "route": [
           {
             "target": "SC__SC_DONE",
-            "condition_text": "IF [sc__wa_sent] == TRUE -> GO_TO: SC__SC_DONE",
+            "condition_text": "IF [sc__wa_success] == TRUE -> GO_TO: SC__SC_DONE",
             "is_mechanical": true,
-            "python_expression": "sc__wa_sent == True",
+            "python_expression": "sc__wa_success == True",
             "reason": null
           },
           {
             "target": "SC__SC_SEND_BOOKED",
-            "condition_text": "IF [sc__wa_sent] == FALSE AND [sc__wa_try] < <MAX_TRY> -> GO_TO: SC__SC_SEND_BOOKED",
+            "condition_text": "IF [sc__wa_success] == FALSE AND [sc__wa_try] < <MAX_TRY> -> GO_TO: SC__SC_SEND_BOOKED",
             "is_mechanical": true,
-            "python_expression": "sc__wa_sent == False and sc__wa_try < MAX_TRY",
+            "python_expression": "sc__wa_success == False and sc__wa_try < MAX_TRY",
             "reason": null
           }
         ],
@@ -8301,164 +7823,6 @@
         "disabled_in": [],
         "say": [
           "Perfect, your appointment is scheduled for [sc__day_label] at [sc__slot] (Colombia time). We will see you at <APPT_ADDRESS>."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_LINK_DEC",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "SC__SC_LINK_DEC",
-        "node_type": "decision",
-        "goal": [],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_LINK",
-            "condition_text": "IF [sc__event_link] IS NOT NULL AND [sc__meet_link] IS NOT NULL -> GO_TO: SC__SC_LINK",
-            "is_mechanical": true,
-            "python_expression": "sc__event_link is not None and sc__meet_link is not None",
-            "reason": null
-          },
-          {
-            "target": "SC__SC_LINK_RSVP",
-            "condition_text": "IF [sc__event_link] IS NOT NULL -> GO_TO: SC__SC_LINK_RSVP",
-            "is_mechanical": true,
-            "python_expression": "sc__event_link is not None",
-            "reason": null
-          },
-          {
-            "target": "SC__SC_LINK_MEET",
-            "condition_text": "IF [sc__meet_link] IS NOT NULL -> GO_TO: SC__SC_LINK_MEET",
-            "is_mechanical": true,
-            "python_expression": "sc__meet_link is not None",
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "SC__SC_EMAIL",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "SC__SC_LINK",
-        "node_type": "message",
-        "goal": [
-          "Give the RSVP link to confirm attendance and the video call link, say that an email with the appointment information is on its way, and ask to check the spam folder."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Here is the link to confirm your attendance (RSVP): [sc__event_link]\n\nAnd this is the link to the video call: [sc__meet_link]\n\nYou will also receive an email at [sc__c_email] with all the information. If you don't see it in a few minutes, please check your spam folder just in case."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_COMMIT",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "SC__SC_LINK_RSVP",
-        "node_type": "message",
-        "goal": [
-          "Give the RSVP link to confirm attendance, say that an email with the appointment information is on its way, and ask to check the spam folder."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Here is the link to confirm your attendance (RSVP): [sc__event_link]\n\nYou will also receive an email at [sc__c_email] with all the information. If you don't see it in a few minutes, please check your spam folder just in case."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_COMMIT",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "SC__SC_LINK_MEET",
-        "node_type": "message",
-        "goal": [
-          "Give the video call link, say that an email with the appointment information is on its way, and ask to check the spam folder."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Here is the link to the video call: [sc__meet_link]\n\nYou will also receive an email at [sc__c_email] with all the information. If you don't see it in a few minutes, please check your spam folder just in case."
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_COMMIT",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "SC__SC_EMAIL",
-        "node_type": "message",
-        "goal": [
-          "No link came back: say that an email with the appointment information is on its way and ask to check the spam folder."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "You will receive an email at [sc__c_email] with all the information about your appointment. If you don't see it in a few minutes, please check your spam folder just in case."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -8655,14 +8019,12 @@
         "node_id": "O__OP_END_STOP",
         "node_type": "terminal",
         "goal": [
-          "Close the conversation after registering opposition to contact."
+          "Close the conversation when the contact asks not to be contacted: the handler already said goodbye. Nothing is promised or registered."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
-        "say": [
-          "See you."
-        ],
+        "say": [],
         "say_verbatim": false,
         "execute": "end_call",
         "store": [],
@@ -8762,7 +8124,7 @@
         ],
         "disabled_in": [],
         "say": [
-          "Of course, we will register your preference so you do not receive more messages from us."
+          "Understood, thank you for your time. Have a great day!"
         ],
         "say_verbatim": false,
         "execute": null,
@@ -8771,7 +8133,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_BYE_STOP",
+            "target": "O__OP_END_STOP",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -8793,7 +8155,7 @@
         ],
         "disabled_in": [],
         "say": [
-          "I understand, and I am sorry for the bother. If you wish, we can register that you do not want more messages from us."
+          "I understand, and I am sorry for the bother. Thank you for your time, have a great day."
         ],
         "say_verbatim": false,
         "execute": null,
@@ -8802,7 +8164,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_ASK_STOP",
+            "target": "O__OP_END_STOP",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -9469,7 +8831,7 @@
           "cuanto tiempo dura la cita"
         ],
         "say": [
-          "The appointment lasts about <APPT_MIN> minutes."
+          "It is a short appointment."
         ],
         "say_verbatim": false,
         "resume_to": "[current_state]"
@@ -10881,7 +10243,7 @@
     "BOOKING RULE: Do not confirm the appointment before receiving success == true from book_appointment. Use the literal start_co as start_date, duration <APPT_MIN>, and the confirmed data. Never fabricate entries.",
     "CURRENT DATE RULE: Use only the output of time_now for today or relative dates. Do not use your training or the system clock.",
     "KNOWLEDGE BASE ANSWERS: an open question about the company, the program or the process is answered only with the text returned by the kb_answer tool. Never answer it from your own knowledge. Eligibility is never decided by you: only the classification tool decides it.",
-    "CRM DATA: the contact's name, phone, email, document type and document number may already be in the CRM. Never ask again for something that is already there."
+    "CRM DATA: the contact's name, document type and document number may already be in the CRM. Never ask again for something that is already there. The phone and the e-mail are never asked: the booking tool takes them from the CRM."
   ],
   "output_rules": [
     "ALTRUISMO: la participación es siempre una decisión libre de ayudar a otra familia que no puede gestar; nunca un trabajo, empleo, negocio, servicio que se vende, oportunidad de ingresos ni salida a apuros económicos. Céntrate en el proceso médico, psicológico y legal y en el acompañamiento del equipo de BabyNova, no en lo que la candidata recibiría; informa y responde lo que se pregunta, sin promocionar ni vender el programa.",
