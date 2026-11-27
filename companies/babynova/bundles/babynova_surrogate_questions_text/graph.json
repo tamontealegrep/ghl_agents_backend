@@ -7902,7 +7902,7 @@
           "TOOL CALL ONLY: call book_appointment now.",
           "calendar_type = 'FT' (required in every call to this tool).",
           "start_date = [sc__start_date]",
-          "duration = <APPT_MIN>. iana_timezone = 'America/Bogota'.",
+          "duration = <APPT_MIN>. iana_timezone = 'America/Bogota'. time_format = '12h' (appointment_time comes back as 08:50 AM).",
           "contact_name = [sc__c_name], contact_email = [sc__c_email], contact_phone = [sc__c_phone] (always in +57 format).",
           "contact_id = [contact.contact_id] (required in every call to this tool; the tool fails without it).",
           "It is FORBIDDEN to write to the contact, confirm the appointment, run FAQs or handlers, or route before capturing [sc__success].",
@@ -8135,7 +8135,7 @@
         "node_id": "SC__SC_APPT_FMT",
         "node_type": "registration",
         "goal": [
-          "The booking succeeded: keep the date and the time of the appointment exactly as book_appointment returned them (appointment_date and appointment_time). Only if one of them did not come back, write it from [sc__start_date] in the contact's local time."
+          "The booking succeeded: book_appointment returns appointment_date and appointment_time in English; translate them to Spanish, the language of this conversation, with the same day and time and nothing added. Only if one of them did not come back, write it from [sc__start_date] in the contact's local time."
         ],
         "do": [],
         "trigger": [],
@@ -8144,8 +8144,8 @@
         "say_verbatim": false,
         "execute": null,
         "store": [
-          "[sc__appointment_date] = the appointment_date returned by book_appointment, copied exactly; when it did not return it: the weekday in Spanish with its first letter in capitals, a comma, the day number, 'de', the month in Spanish in CAPITAL LETTERS, 'de' and the year (for example Martes, 16 de NOVIEMBRE de 2026)",
-          "[sc__appointment_time] = the appointment_time returned by book_appointment, copied exactly; when it did not return it: the 12-hour time with two digits for the hour, a colon, two digits for the minutes, a space and a.m or p.m with no final period (for example 08:50 a.m)"
+          "[sc__appointment_date] = the appointment_date returned by book_appointment (for example Tuesday, November 16, 2026) translated to Spanish as the weekday with its first letter in capitals, a comma, the day number, 'de', the month in CAPITAL LETTERS, 'de' and the year (Martes, 16 de NOVIEMBRE de 2026); when it did not return it, the same format from [sc__start_date]",
+          "[sc__appointment_time] = the appointment_time returned by book_appointment (for example 08:50 AM) with AM written a.m and PM written p.m, no final period, two digits for the hour (08:50 a.m); the hours and minutes never change; when it did not return it, the same format from [sc__start_date]"
         ],
         "capture": [],
         "eval": "code",
@@ -10508,6 +10508,16 @@
           "examples": [
             "America/Bogota"
           ]
+        },
+        {
+          "name": "time_format",
+          "required": false,
+          "description": "How appointment_time is returned: '12h' (08:50 AM, the default) or '24h' (08:50, 14:05). Send the one the language of the conversation uses.",
+          "type_expr": "str",
+          "examples": [
+            "12h",
+            "24h"
+          ]
         }
       ],
       "outputs": [
@@ -10549,14 +10559,14 @@
         {
           "name": "appointment_date",
           "required": false,
-          "description": "Date of the booked appointment in the contact's time zone, ready to save in the contact's appointment_date field (for example Martes, 16 de NOVIEMBRE de 2026). null if the booking was not completed.",
+          "description": "Date of the booked appointment, always in English, in the contact's time zone (for example Tuesday, November 16, 2026). The agent translates it to the language it speaks before saving it in the contact's appointment_date field. null if the booking was not completed.",
           "type_expr": "str",
           "examples": []
         },
         {
           "name": "appointment_time",
           "required": false,
-          "description": "Time of the booked appointment in the contact's time zone, ready to save in the contact's appointment_time field (for example 08:50 a.m). null if the booking was not completed.",
+          "description": "Time of the booked appointment in the contact's time zone, in the format asked with time_format (for example 08:50 AM or 14:05). The agent adapts AM/PM to the language it speaks before saving it in the contact's appointment_time field. null if the booking was not completed.",
           "type_expr": "str",
           "examples": []
         },

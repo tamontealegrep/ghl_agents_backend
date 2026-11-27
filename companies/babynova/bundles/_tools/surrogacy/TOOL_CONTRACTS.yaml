@@ -61,6 +61,9 @@ tool_contracts:
       - name: iana_timezone
         required: false
         description: "Identificador IANA de la zona horaria del contacto. Defecto: America/Bogota."
+      - name: time_format
+        required: false
+        description: "Formato de appointment_time: '12h' (08:50 AM, el defecto) o '24h' (08:50, 14:05). Envía el que use el idioma de la conversación."
     outputs:
       - name: success
         required: true
@@ -79,10 +82,10 @@ tool_contracts:
         description: "Enlace de videollamada de la cita. null si la reserva no se completó."
       - name: appointment_date
         required: false
-        description: "Fecha de la cita agendada en la zona del contacto, lista para guardar en el campo appointment_date (por ejemplo Martes, 16 de NOVIEMBRE de 2026). null si la reserva no se completó."
+        description: "Fecha de la cita agendada, siempre en inglés, en la zona del contacto (por ejemplo Tuesday, November 16, 2026). El agente la traduce al idioma en que habla antes de guardarla en el campo appointment_date. null si la reserva no se completó."
       - name: appointment_time
         required: false
-        description: "Hora de la cita agendada en la zona del contacto, lista para guardar en el campo appointment_time (por ejemplo 08:50 a.m). null si la reserva no se completó."
+        description: "Hora de la cita agendada en la zona del contacto, en el formato pedido con time_format (por ejemplo 08:50 AM o 14:05). El agente adapta AM/PM al idioma en que habla antes de guardarla en el campo appointment_time. null si la reserva no se completó."
       - name: errors
         required: true
         description: "Mensaje de error técnico o de notificación. Puede venir presente con success == true si la cita se creó pero falló la notificación al contact center."

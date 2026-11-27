@@ -385,7 +385,9 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
                     start_dt=start_dt,
                     timezone=(req.iana_timezone or hooks.business_tz).strip(),
                 )
-            appointment_date, appointment_time = appointment_labels(start_dt, (req.iana_timezone or "").strip() or hooks.business_tz)
+            appointment_date, appointment_time = appointment_labels(
+                start_dt, (req.iana_timezone or "").strip() or hooks.business_tz, req.time_format
+            )
             return BookAppointmentResponse(
                 success=True,
                 event_id=event_id,

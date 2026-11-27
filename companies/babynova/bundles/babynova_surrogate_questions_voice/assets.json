@@ -427,6 +427,11 @@
         "name": "iana_timezone",
         "required": true,
         "description": "Identificador IANA de la zona horaria del contacto, valor fijo America/Bogota."
+      },
+      {
+        "name": "time_format",
+        "required": false,
+        "description": "How appointment_time is returned: '12h' (08:50 AM, the default) or '24h' (08:50, 14:05). Send the one the language of the conversation uses."
       }
     ],
     "outputs": [
@@ -458,12 +463,12 @@
       {
         "name": "appointment_date",
         "required": false,
-        "description": "Date of the booked appointment in the contact's time zone, ready to save in the contact's appointment_date field (for example Martes, 16 de NOVIEMBRE de 2026). null if the booking was not completed."
+        "description": "Date of the booked appointment, always in English, in the contact's time zone (for example Tuesday, November 16, 2026). The agent translates it to the language it speaks before saving it in the contact's appointment_date field. null if the booking was not completed."
       },
       {
         "name": "appointment_time",
         "required": false,
-        "description": "Time of the booked appointment in the contact's time zone, ready to save in the contact's appointment_time field (for example 08:50 a.m). null if the booking was not completed."
+        "description": "Time of the booked appointment in the contact's time zone, in the format asked with time_format (for example 08:50 AM or 14:05). The agent adapts AM/PM to the language it speaks before saving it in the contact's appointment_time field. null if the booking was not completed."
       },
       {
         "name": "errors",
