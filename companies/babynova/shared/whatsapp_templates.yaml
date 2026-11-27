@@ -1,0 +1,20 @@
+# Text of the approved WhatsApp templates of BabyNova, so that the conversation of the contact shows what was sent.
+#
+# GHL has no public API to read the text of a WhatsApp template, and it refuses a message with no content. The
+# contact receives the approved template whatever `message` says, so the text written here only has to be what the
+# advisors should read in the chat. Keep it equal to the one approved in Meta; {{1}}, {{2}}... are the variables of the
+# body, in order. A template that is not listed here shows as "[WhatsApp template: <name>]".
+#
+# One file per company, in its shared/ folder: the backend of a company reads only its own file. A change is read on the
+# next message sent (no restart); in a deployed image the file travels with the Docker build.
+templates:
+  - name: sofia_booking
+    language: es
+    body: |-
+      🌸 ¡Nos alegra mucho que hayas agendado tu cita con nosotros! ❤️
+
+      Queremos darte la bienvenida y compartirte toda la información para que tengas una excelente experiencia en nuestra clínica.
+
+      📅 FECHA: {{1}}.
+      ⏰ HORA: {{2}}. Te recomendamos llegar 15 minutos antes.
+      📍 DIRECCIÓN: Cra. 16 #88-81, Localidad de Chapinero. Edificio 9016, consultorios 606-607. (Cerca de la estación de TransMilenio Virrey).
