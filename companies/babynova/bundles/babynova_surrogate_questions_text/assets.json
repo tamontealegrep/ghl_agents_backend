@@ -223,7 +223,7 @@
     "description": "Envía a un contacto de GoHighLevel una plantilla de WhatsApp aprobada.",
     "notes": [
       "MANDATORY EXECUTION: ejecútala cuando el flujo pida enviar una plantilla de WhatsApp al contacto (por ejemplo para retomar a quien no ha escrito en las últimas 24 horas). La plantilla la define el flujo con su nombre e idioma; nunca inventes un nombre.",
-      "ARGUMENTS: template_name y language (los que indica el flujo), contact_id y location_id (disponibles en el contexto del contacto). body_variables solo si la plantilla tiene variables: los valores en orden, o {{contact.first_name}} para el nombre del contacto, que GHL resuelve. from_number_id, to_number y category solo si el flujo los indica.",
+      "ARGUMENTS: template_name y language (los que indica el flujo), contact_id y location_id (disponibles en el contexto del contacto). body_variables solo si la plantilla tiene variables: los valores en orden, una variable por elemento de la lista (aunque el valor lleve comas), o {{contact.first_name}} para el nombre del contacto, que GHL resuelve. Debe haber exactamente tantos elementos como variables tiene la plantilla ({{1}}, {{2}}...): si faltan o sobran, WhatsApp rechaza el mensaje con el error (#132000), número de parámetros distinto del esperado. from_number_id, to_number y category solo si el flujo los indica.",
       "BEHAVIOUR: GHL identifica la plantilla por nombre e idioma, no por el ID numérico de su lista; el contacto recibe la plantilla aprobada (la herramienta rellena sola el texto que GHL exige). Fuera de las 24 horas de WhatsApp solo una plantilla llega al contacto.",
       "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el mensaje; message_id y conversation_id identifican lo enviado. Si success es false, no digas que se envió.",
       "SILENT ACTION: no le cuentes a la persona detalles técnicos del envío (IDs, plantilla, herramienta)."
@@ -252,7 +252,7 @@
       {
         "name": "body_variables",
         "required": false,
-        "description": "Valores de las variables del cuerpo, en orden. Ejemplo: ['{{contact.first_name}}']."
+        "description": "Valores de las variables del cuerpo, en orden, un elemento por variable de la plantilla. Ejemplos: ['{{contact.first_name}}'] o, para una plantilla con fecha y hora, ['Miércoles, 2 de DICIEMBRE de 2026', '11:00 a.m'] (dos elementos: la fecha lleva una coma y no se parte)."
       },
       {
         "name": "category",
@@ -730,6 +730,11 @@
         "name": "iana_timezone",
         "required": true,
         "description": "Identificador IANA de la zona horaria del contacto, valor fijo America/Bogota."
+      },
+      {
+        "name": "time_format",
+        "required": false,
+        "description": "How appointment_time is returned: '12h' (08:50 AM, the default) or '24h' (08:50, 14:05). Send the one the language of the conversation uses."
       }
     ],
     "outputs": [
@@ -757,6 +762,16 @@
         "name": "meet_link",
         "required": true,
         "description": "Video call link for the appointment. null if the booking was not completed."
+      },
+      {
+        "name": "appointment_date",
+        "required": false,
+        "description": "Date of the booked appointment, always in English, in the contact's time zone (for example Tuesday, November 16, 2026). The agent translates it to the language it speaks before saving it in the contact's appointment_date field. null if the booking was not completed."
+      },
+      {
+        "name": "appointment_time",
+        "required": false,
+        "description": "Time of the booked appointment in the contact's time zone, in the format asked with time_format (for example 08:50 AM or 14:05). The agent adapts AM/PM to the language it speaks before saving it in the contact's appointment_time field. null if the booking was not completed."
       },
       {
         "name": "errors",

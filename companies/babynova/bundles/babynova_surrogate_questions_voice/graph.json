@@ -588,7 +588,7 @@
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Si continúa con esta conversación, está aceptando nuestra Política de Privacidad y Protección de Datos Personales, en cumplimiento de la normatividad colombiana vigente."
+          "Si continúa con esta conversación, está aceptando nuestra Política de Privacidad y Protección de Datos Personales, en cumplimiento de la normatividad colombiana vigente, disponible en beibinova punto com."
         ],
         "say_verbatim": true,
         "execute": null,
@@ -4375,7 +4375,10 @@
           "[sc__time_try] = 0",
           "[sc__day_now_try] = 0",
           "[sc__book_try] = 0",
+          "[sc__wa_try] = 0",
           "[sc__end_try] = 0",
+          "[sc__appointment_date] = NULL",
+          "[sc__appointment_time] = NULL",
           "[sc__available_slots] = NULL",
           "[sc__days] = NULL",
           "[sc__fresh_available_slots] = NULL",
@@ -4395,7 +4398,8 @@
           "[user_timezone] = 'America/Bogota'",
           "[sc__user_location] = 'Colombia, Bogota'",
           "[sc__part_asked] = NULL",
-          "[sc__part_shown] = NULL"
+          "[sc__part_shown] = NULL",
+          "[sc__wa_sent] = NULL"
         ],
         "capture": [],
         "eval": "code",
@@ -5208,6 +5212,10 @@
           "[sc__slot_try] = 0",
           "[sc__ok_try] = 0",
           "[sc__book_try] = 0",
+          "[sc__appointment_date] = NULL",
+          "[sc__appointment_time] = NULL",
+          "[sc__wa_sent] = NULL",
+          "[sc__wa_try] = 0",
           "[sc__time_try] = 0",
           "[sc__day_now_try] = 0",
           "[sc__part_asked] = NULL",
@@ -5707,7 +5715,7 @@
           "TOOL CALL ONLY: call book_appointment now.",
           "calendar_type = 'FT' (required in every call to this tool).",
           "start_date = [sc__start_date]",
-          "duration = <APPT_MIN>. iana_timezone = 'America/Bogota'.",
+          "duration = <APPT_MIN>. iana_timezone = 'America/Bogota'. time_format = '12h' (appointment_time comes back as 08:50 AM).",
           "contact_id = [contact.contact_id] (required in every call to this tool; the tool fails without it)."
         ],
         "trigger": [],
@@ -5723,6 +5731,14 @@
           ],
           [
             "sc__reason",
+            "str"
+          ],
+          [
+            "sc__appointment_date",
+            "str"
+          ],
+          [
+            "sc__appointment_time",
             "str"
           ]
         ],
@@ -5775,8 +5791,8 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_TAG_SET",
-            "condition_text": "IF [sc__success] == TRUE -> GO_TO: SC__SC_TAG_SET",
+            "target": "SC__SC_APPT_FMT",
+            "condition_text": "IF [sc__success] == TRUE -> GO_TO: SC__SC_APPT_FMT",
             "is_mechanical": true,
             "python_expression": "sc__success == True",
             "reason": null
@@ -5914,6 +5930,115 @@
         ]
       },
       {
+        "node_id": "SC__SC_APPT_FMT",
+        "node_type": "registration",
+        "goal": [
+          "The booking succeeded: book_appointment returns appointment_date and appointment_time in English; translate them to Spanish, the language of this conversation, with the same day and time and nothing added. Only if one of them did not come back, write it from [sc__start_date] in the contact's local time."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[sc__appointment_date] = the appointment_date returned by book_appointment (for example Tuesday, November 16, 2026) translated to Spanish as the weekday with its first letter in capitals, a comma, the day number, 'de', the month in CAPITAL LETTERS, 'de' and the year (Martes, 16 de NOVIEMBRE de 2026); when it did not return it, the same format from [sc__start_date]",
+          "[sc__appointment_time] = the appointment_time returned by book_appointment (for example 08:50 AM) with AM written a.m and PM written p.m, no final period, two digits for the hour (08:50 a.m); the hours and minutes never change; when it did not return it, the same format from [sc__start_date]"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_SYNC_APPT_DATE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_SYNC_APPT_DATE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "SC__SC_SYNC_APPT_DATE",
+        "node_type": "action",
+        "goal": [],
+        "do": [
+          "TOOL CALL: update_custom_field",
+          "name = 'appointment_date', value = [sc__appointment_date]",
+          "contact_id = [contact.contact_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "update_custom_field",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_SYNC_APPT_TIME",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_SYNC_APPT_TIME",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "SC__SC_SYNC_APPT_TIME",
+        "node_type": "action",
+        "goal": [],
+        "do": [
+          "TOOL CALL: update_custom_field",
+          "name = 'appointment_time', value = [sc__appointment_time]",
+          "contact_id = [contact.contact_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "update_custom_field",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_TAG_SET",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_TAG_SET",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
         "node_id": "SC__SC_TAG_SET",
         "node_type": "action",
         "goal": [],
@@ -5986,10 +6111,15 @@
       {
         "node_id": "SC__SC_SEND_BOOKED",
         "node_type": "action",
-        "goal": [],
+        "goal": [
+          "The appointment is booked and appointment_date and appointment_time are already saved in the contact: send the booking WhatsApp template, which has two variables (the date and the time). This step always runs after a successful booking; if it was not accepted, try again before moving on."
+        ],
         "do": [
+          "[sc__wa_try] = [sc__wa_try] + 1",
           "TOOL CALL: send_whatsapp_template",
-          "template_name = <WA_BOOKED>, language = 'es'"
+          "template_name = <WA_BOOKED>, language = 'es'",
+          "body_variables = a list with exactly two items, in this order: [sc__appointment_date] (variable {{1}}, the date) and [sc__appointment_time] (variable {{2}}, the time), each one copied exactly as saved in the contact. They are two separate items of the list: the date contains a comma, so never send them as one text separated by commas. The template fails if the two values are missing.",
+          "contact_id = [contact.contact_id]"
         ],
         "trigger": [],
         "disabled_in": [],
@@ -5997,14 +6127,26 @@
         "say_verbatim": false,
         "execute": "send_whatsapp_template",
         "store": [],
-        "capture": [],
+        "capture": [
+          [
+            "sc__wa_sent",
+            "bool"
+          ]
+        ],
         "eval": "code",
         "route": [
           {
             "target": "SC__SC_DONE",
-            "condition_text": null,
+            "condition_text": "IF [sc__wa_sent] == TRUE -> GO_TO: SC__SC_DONE",
             "is_mechanical": true,
-            "python_expression": null,
+            "python_expression": "sc__wa_sent == True",
+            "reason": null
+          },
+          {
+            "target": "SC__SC_SEND_BOOKED",
+            "condition_text": "IF [sc__wa_sent] == FALSE AND [sc__wa_try] < <MAX_TRY> -> GO_TO: SC__SC_SEND_BOOKED",
+            "is_mechanical": true,
+            "python_expression": "sc__wa_sent == False and sc__wa_try < MAX_TRY",
             "reason": null
           }
         ],
@@ -6706,7 +6848,7 @@
         {
           "name": "body_variables",
           "required": false,
-          "description": "Valores de las variables del cuerpo, en orden. Ejemplo: ['{{contact.first_name}}'].",
+          "description": "Valores de las variables del cuerpo, en orden, un elemento por variable de la plantilla. Ejemplos: ['{{contact.first_name}}'] o, para una plantilla con fecha y hora, ['Miércoles, 2 de DICIEMBRE de 2026', '11:00 a.m'] (dos elementos: la fecha lleva una coma y no se parte).",
           "type_expr": "list[str]",
           "examples": []
         },
@@ -6764,7 +6906,7 @@
       ],
       "notes": [
         "MANDATORY EXECUTION: ejecútala cuando el flujo pida enviar una plantilla de WhatsApp al contacto (por ejemplo para retomar a quien no ha escrito en las últimas 24 horas). La plantilla la define el flujo con su nombre e idioma; nunca inventes un nombre.",
-        "ARGUMENTS: template_name y language (los que indica el flujo), contact_id y location_id (disponibles en el contexto del contacto). body_variables solo si la plantilla tiene variables: los valores en orden, o {{contact.first_name}} para el nombre del contacto, que GHL resuelve. from_number_id, to_number y category solo si el flujo los indica.",
+        "ARGUMENTS: template_name y language (los que indica el flujo), contact_id y location_id (disponibles en el contexto del contacto). body_variables solo si la plantilla tiene variables: los valores en orden, una variable por elemento de la lista (aunque el valor lleve comas), o {{contact.first_name}} para el nombre del contacto, que GHL resuelve. Debe haber exactamente tantos elementos como variables tiene la plantilla ({{1}}, {{2}}...): si faltan o sobran, WhatsApp rechaza el mensaje con el error (#132000), número de parámetros distinto del esperado. from_number_id, to_number y category solo si el flujo los indica.",
         "BEHAVIOUR: GHL identifica la plantilla por nombre e idioma, no por el ID numérico de su lista; el contacto recibe la plantilla aprobada (la herramienta rellena sola el texto que GHL exige). Fuera de las 24 horas de WhatsApp solo una plantilla llega al contacto.",
         "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el mensaje; message_id y conversation_id identifican lo enviado. Si success es false, no digas que se envió.",
         "SILENT ACTION: no le cuentes a la persona detalles técnicos del envío (IDs, plantilla, herramienta)."
@@ -7075,6 +7217,16 @@
           "examples": [
             "America/Bogota"
           ]
+        },
+        {
+          "name": "time_format",
+          "required": false,
+          "description": "How appointment_time is returned: '12h' (08:50 AM, the default) or '24h' (08:50, 14:05). Send the one the language of the conversation uses.",
+          "type_expr": "str",
+          "examples": [
+            "12h",
+            "24h"
+          ]
         }
       ],
       "outputs": [
@@ -7110,6 +7262,20 @@
           "name": "meet_link",
           "required": true,
           "description": "Video call link for the appointment. null if the booking was not completed.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "appointment_date",
+          "required": false,
+          "description": "Date of the booked appointment, always in English, in the contact's time zone (for example Tuesday, November 16, 2026). The agent translates it to the language it speaks before saving it in the contact's appointment_date field. null if the booking was not completed.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "appointment_time",
+          "required": false,
+          "description": "Time of the booked appointment in the contact's time zone, in the format asked with time_format (for example 08:50 AM or 14:05). The agent adapts AM/PM to the language it speaks before saving it in the contact's appointment_time field. null if the booking was not completed.",
           "type_expr": "str",
           "examples": []
         },
@@ -7392,7 +7558,7 @@
     "MAX_END": "3",
     "STEP_CLASSES": "schedule: quiere agendar o seguir con la cita, o dice claramente que no tiene nada (más) que preguntar ('no', 'nada más', 'estoy listo'). question: dice que tiene una duda sin decirla ('tengo una duda') o un 'sí' suelto a esta pregunta. ambiguous: sin contenido propio, no aclara si agenda o pregunta ('ok', 'vale', 'mmm', 'no sé', un emoji), aunque 'ok' suene a acuerdo. ask: cualquier otra cosa con contenido: pregunta, petición ('cuénteme de…') o afirmación sobre sí misma ('somos pareja del mismo sexo'), que se responde como una pregunta. Ante la duda entre schedule y ask: ask; solo un deseo claro de agendar pasa al agendamiento.",
     "WA_INFO": "sofia_greeting",
-    "WA_BOOKED": "sofia_greeting"
+    "WA_BOOKED": "sofia_booking"
   },
   "session_timeout_minutes": null,
   "say_policies": [

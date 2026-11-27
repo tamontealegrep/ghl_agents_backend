@@ -83,6 +83,14 @@ class BookAppointmentRequest(BaseModel):
     )
     iana_timezone: str | None = Field(default=DEFAULT_TZ, examples=["America/Bogota"])
     calendar_type: str | None = Field(default=None, examples=["FT"], description=_CALENDAR)
+    time_format: str | None = Field(
+        default="12h",
+        examples=["12h", "24h"],
+        description=(
+            "How appointment_time is returned: '12h' (08:50 AM, the default) or '24h' (08:50, 14:05). Anything else "
+            "is read as '12h'."
+        ),
+    )
 
 
 class BookAppointmentResponse(BaseModel):
@@ -91,6 +99,22 @@ class BookAppointmentResponse(BaseModel):
     event_id: str | None = None
     event_link: str | None = None
     meet_link: str | None = None
+    appointment_date: str | None = Field(
+        default=None,
+        examples=["Tuesday, November 16, 2026"],
+        description=(
+            "Date of the booked appointment in English, in the contact's time zone. The agent translates it to the "
+            "language it speaks before saving it."
+        ),
+    )
+    appointment_time: str | None = Field(
+        default=None,
+        examples=["08:50 AM", "14:05"],
+        description=(
+            "Time of the booked appointment in the contact's time zone, in the format asked with time_format. The "
+            "agent adapts AM/PM to the language it speaks before saving it."
+        ),
+    )
     errors: str | None = None
 
 

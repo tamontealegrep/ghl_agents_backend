@@ -335,6 +335,35 @@ def test_booking_creates_and_notifies(world):
     assert world.notified and world.notified[0]["contact_name"] == "Ana Gomez"
 
 
+def test_booking_returns_the_labels_in_english(world):
+    """A successful booking returns the date in English and the time in the format asked, in her time zone."""
+    start = at(day(), 9, 50)
+    world.free = [start]
+
+    body = book(world, start)
+
+    local = start.astimezone(ZoneInfo("America/Bogota"))
+    weekday = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")[local.weekday()]
+    assert body["appointment_date"].startswith(f"{weekday}, ")
+    assert body["appointment_date"].endswith(f" {local.day}, {local.year}")
+    assert body["appointment_time"] == "09:50 AM"  # 12h is the default
+
+
+def test_booking_time_format_can_be_24_hours(world):
+    """With time_format 24h the time has no AM/PM."""
+    start = at(day(), 14, 10)
+    world.free = [start]
+
+    assert book(world, start, time_format="24h")["appointment_time"] == "14:10"
+    assert book(world, start, time_format="12h")["appointment_time"] == "02:10 PM"
+
+
+def test_a_failed_booking_has_no_labels(world):
+    """Without a booking there are no labels."""
+    body = book(world, datetime.now(UTC) - timedelta(days=1))
+    assert body["success"] is False and body["appointment_date"] is None and body["appointment_time"] is None
+
+
 def test_notification_failure_keeps_booking(world):
     """A notification failure does not fail the booking."""
     start = at(day(), 9)
