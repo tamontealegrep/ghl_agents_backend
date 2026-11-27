@@ -273,7 +273,8 @@ tool_contracts:
       - "MANDATORY EXECUTION TRIGGER: run it as soon as the questionnaire reaches the final classification step."
       - "ARGUMENT RULE: never invent values; send an empty field when the data is missing."
       - "ARGUMENT RULE: birth_type (cesarea or natural) is only needed when the last birth was less than 18 months ago; otherwise it can be empty."
-      - "ARGUMENT RULE: document_type is cedula_ciudadania, ppt or other. Only the first two are accepted."
+      - "ARGUMENT RULE: voice is true only in a voice call. With voice true the document and the EPS are not evaluated (document_type and eps_active_affiliation are ignored) and the best verdict is Pre-approved; with voice false or empty the full classification runs."
+      - "ARGUMENT RULE: document_type is cedula_ciudadania, ppt or other. Only the first two are accepted. Ignored when voice is true."
       - "RULES: age 18-38; allowed city; 1 to 4 children; last birth at least 18 months ago after a C-section or 12 months after a natural birth; at most 2 C-sections; preeclampsia rejects; abortions are only recorded; BMI 18.5-29.9; CC or PPT; active EPS affiliation; no drug use; time available for appointments."
       - "SOURCE OF TRUTH RULE: use result as the only verdict. Nationality is recorded but never rejects."
     inputs:
@@ -319,16 +320,19 @@ tool_contracts:
       - name: availability
         required: false
         description: "Whether the candidate has time to attend the medical appointments."
+      - name: voice
+        required: false
+        description: "Whether this is a voice call. True skips the document and EPS evaluation and the best verdict is Pre-approved; false or empty runs the full classification."
     outputs:
       - name: success
         required: true
         description: "Whether the classification ran correctly."
       - name: result
         required: true
-        description: "'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (EPS)', 'Rejected (Drug Use)' or 'Rejected (Availability)'."
+        description: "'Approved', 'Pre-approved' (only with voice), 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (EPS)', 'Rejected (Drug Use)' or 'Rejected (Availability)'."
       - name: eligibility_result
         required: true
-        description: "approved, rejected or inconclusive."
+        description: "approved, pre-approved (only with voice), rejected or inconclusive."
       - name: not_eligibility_reason
         required: true
         description: 'Rejection reason, "missing_data (<field>)" naming the first missing field (for example "missing_data (last_birth_date)"), or none.'

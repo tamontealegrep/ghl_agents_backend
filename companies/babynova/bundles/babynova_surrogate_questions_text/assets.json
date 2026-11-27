@@ -857,19 +857,20 @@
   },
   {
     "name": "surrogate_classification",
-    "description": "Authorized final classification tool for medical and demographic eligibility. Its response is the only authorized source to resolve if the candidate is approved, rejected or inconclusive.",
+    "description": "Authorized final classification tool for medical and demographic eligibility. Its response is the only authorized source to resolve if the candidate is approved, pre-approved (voice calls only), rejected or inconclusive.",
     "notes": [
       "MANDATORY EXECUTION TRIGGER: execute this tool immediately upon reaching node Q__SQ_RUN_CLASSIFICATION — imperative, without exception — with all the data collected up to that point.",
       "ARGUMENTS: send captured fields as-is; empty when missing. Do not invent values. bmi must be copied literally from calculate_bmi.",
       "ARGUMENT RULE: city must be one of: Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá, Sibaté, or 'Otro'. Any other city rejects the candidate by city.",
       "ARGUMENT RULE: birth_type ('csection' or 'natural') is only required when the last birth was less than 18 months ago; otherwise it may be empty.",
-      "ARGUMENT RULE: document_type is 'cedula_ciudadania', 'ppt' or 'other'. Only the first two are accepted. It may be empty (or an empty string): then the result is Inconclusive with not_eligibility_reason 'missing_data (document_type)'. A value that is not accepted is rejected by documentation.",
-      "ARGUMENT RULE: eps_active_affiliation may be empty (or an empty string): then the result is Inconclusive with not_eligibility_reason 'missing_data (eps_active_affiliation)'. A 'no' is rejected by EPS.",
-      "EVALUATION ORDER: document_type and eps_active_affiliation are the last data evaluated, in that order, so any other missing or failing data is reported first. An agent that does not capture them (voice) sends them empty and gets the missing-data result only when everything else passes.",
-      "ARGUMENT RULE: abortions, preeclampsia, eps_active_affiliation, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive.",
+      "ARGUMENT RULE: voice is true only in a voice call and false (or empty) in every other channel. With voice true the document and the EPS are not evaluated at all (document_type and eps_active_affiliation are ignored even if they are sent: a voice agent does not send them) and the best verdict is Pre-approved. With voice false or empty the full classification runs.",
+      "ARGUMENT RULE: document_type is 'cedula_ciudadania', 'ppt' or 'other'. Only the first two are accepted. With voice false it may be empty (or an empty string): then the result is Inconclusive with not_eligibility_reason 'missing_data (document_type)'. A value that is not accepted is rejected by documentation.",
+      "ARGUMENT RULE: with voice false, eps_active_affiliation may be empty (or an empty string): then the result is Inconclusive with not_eligibility_reason 'missing_data (eps_active_affiliation)'. A 'no' is rejected by EPS.",
+      "EVALUATION ORDER: with voice false, document_type and eps_active_affiliation are the last data evaluated, in that order, so any other missing or failing data is reported first. With voice true the evaluation ends before them.",
+      "ARGUMENT RULE: abortions, preeclampsia, eps_active_affiliation, drug_use and availability accept 'si'/'no', 'yes'/'no', 'true'/'false' or '1'/'0', case-insensitive. So does voice.",
       "SOURCE OF TRUTH RULE: use 'result' as the only authorized verdict. Nationality is recorded but never rejects. Do not replace this decision with agent heuristics.",
       "POST-EXECUTION RULE: if 'result' is 'Inconclusive', request or reconfirm the missing data before calling the tool again.",
-      "POST-EXECUTION RULE: if 'result' starts with 'Rejected', communicate it with empathy and do not continue the qualification. If it is 'Approved', continue to the questions and scheduling step."
+      "POST-EXECUTION RULE: if 'result' starts with 'Rejected', communicate it with empathy and do not continue the qualification. If it is 'Approved' or 'Pre-approved', continue to the questions and scheduling step."
     ],
     "inputs": [
       {
@@ -941,6 +942,11 @@
         "name": "availability",
         "required": false,
         "description": "Whether the candidate has time available to attend the medical appointments."
+      },
+      {
+        "name": "voice",
+        "required": false,
+        "description": "Whether this is a voice call. True skips the document and EPS evaluation (they are ignored) and the best verdict is Pre-approved; false or empty runs the full classification."
       }
     ],
     "outputs": [
@@ -952,17 +958,17 @@
       {
         "name": "result",
         "required": true,
-        "description": "Final classification: 'Approved', 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (EPS)', 'Rejected (Drug Use)' or 'Rejected (Availability)'."
+        "description": "Final classification: 'Approved', 'Pre-approved' (only with voice), 'Inconclusive', 'Rejected (Age)', 'Rejected (Timing)', 'Rejected (City)', 'Rejected (Children)', 'Rejected (C-Sections)', 'Rejected (Preeclampsia)', 'Rejected (BMI)', 'Rejected (Documentation)', 'Rejected (EPS)', 'Rejected (Drug Use)' or 'Rejected (Availability)'."
       },
       {
         "name": "eligibility_result",
         "required": true,
-        "description": "Eligibility value for the GHL field: 'approved', 'rejected' or 'inconclusive'."
+        "description": "Eligibility value for the GHL field: 'approved', 'pre-approved' (only with voice), 'rejected' or 'inconclusive'."
       },
       {
         "name": "not_eligibility_reason",
         "required": true,
-        "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'eps', 'drug_use', 'availability' when rejected, 'missing_data (<field>)' with the first missing field (for example 'missing_data (document_type)') when inconclusive, 'none' when approved."
+        "description": "Reason for the GHL field: 'age', 'timing', 'city', 'children', 'c_sections', 'preeclampsia', 'bmi', 'documentation', 'eps', 'drug_use', 'availability' when rejected, 'missing_data (<field>)' with the first missing field (for example 'missing_data (document_type)') when inconclusive, 'none' when approved or pre-approved."
       },
       {
         "name": "errors",
