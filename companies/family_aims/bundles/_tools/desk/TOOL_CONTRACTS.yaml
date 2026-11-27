@@ -4,8 +4,8 @@ tool_contracts:
     notes:
       - "EJECUCIÓN OBLIGATORIA: al entrar a SC__SC_AV_I (IVF) o SC__SC_AV_S (SUR) y en intentos de agenda/reagenda/ver-más/reintento."
       - "ARGUMENTOS: iana_timezone (IANA real; defecto America/Bogota si vacío), calendar_type en {'IVF','SUR'}."
-      - "FUENTE DE VERDAD: available_slots con start_co/end_co y start_local/end_local."
-      - "PRESENTACIÓN: hablar con start_local/end_local; start_co/end_co internos."
+      - "FUENTE DE VERDAD: available_slots con start_co y start_local (un espacio dura una duración fija desde su inicio, no trae fin); days resume esos espacios por día en la zona del contacto."
+      - "PRESENTACIÓN: decir los días desde days (fecha, label, parts_of_day y bloques de horas en la zona del contacto) y reservar con start_co; start_co es interno."
     inputs:
       - name: iana_timezone
         required: true
@@ -19,10 +19,13 @@ tool_contracts:
         description: "Booleano: la consulta se ejecutó correctamente. No indica por sí solo si hay disponibilidad — para eso revisa available_slots."
       - name: iana_timezone
         required: true
-        description: "Eco del identificador IANA usado para calcular start_local/end_local."
+        description: "Eco del identificador IANA usado para calcular start_local y days."
+      - name: days
+        required: false
+        description: "Resumen de available_slots por día, en la zona horaria del contacto (iana_timezone): date (YYYY-MM-DD), label en inglés (p. ej. Friday, November 27), timezone, utc_offset de ese día, parts_of_day (morning, afternoon, evening, night), times (bloques continuous_range con first_start, last_start y every_minutes, o single_slot con start) y slot_count. Los días y horas se dicen desde aquí."
       - name: available_slots
         required: true
-        description: "Array de objetos con los espacios disponibles. Cada objeto trae start_co/end_co (hora del calendario en Colombia, ISO 8601) y start_local/end_local (zona del contacto, ISO 8601). Array vacío ([]) si no hay disponibilidad o si la consulta falló."
+        description: "Array de objetos con los espacios disponibles. Cada objeto trae start_co (hora del calendario en Colombia, ISO 8601) y start_local (zona del contacto, ISO 8601). Array vacío ([]) si no hay disponibilidad o si la consulta falló."
       - name: errors
         required: true
         description: "Mensaje de error si la consulta falló. null cuando fue exitosa, incluso si available_slots vino vacío."

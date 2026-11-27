@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 from fastapi import APIRouter
 
 from agent_backend.google_calendar import get_access_token, get_free_busy
+from agent_backend.slot_summary import summarize_days
 
 from ....core.config import get_settings
 from ....schemas.slots import SlotsRequest, SlotsResponse
@@ -69,7 +70,13 @@ async def get_available_slots_google(req: SlotsRequest):
             lunch_break_fn=policy.lunch_break,
         )
 
-        return SlotsResponse(success=True, iana_timezone=user_tz, available_slots=slots, errors=None)
+        return SlotsResponse(
+            success=True,
+            iana_timezone=user_tz,
+            days=summarize_days([slot.start_local for slot in slots], user_tz),
+            available_slots=slots,
+            errors=None,
+        )
 
     except Exception as e:
         return SlotsResponse(success=False, iana_timezone=user_tz, available_slots=[], errors=str(e))

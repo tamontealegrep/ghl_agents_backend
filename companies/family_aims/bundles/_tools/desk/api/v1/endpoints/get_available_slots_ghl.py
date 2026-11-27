@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from agent_backend.ghl_calendar import get_available_slots as ghl_get_available_slots
 from agent_backend.ghl_calendar import list_events as ghl_list_events
 from agent_backend.slot_filters import conflicts_with_busy, thin_by_interval
+from agent_backend.slot_summary import summarize_days
 from agent_backend.timezones import format_iso_with_offset, get_weekday_in_tz
 
 from ....core.config import get_settings
@@ -123,7 +124,13 @@ async def get_available_slots_ghl(req: SlotsRequest):
                 )
             )
 
-        return SlotsResponse(success=True, iana_timezone=user_tz, available_slots=result, errors=None)
+        return SlotsResponse(
+            success=True,
+            iana_timezone=user_tz,
+            days=summarize_days([slot.start_local for slot in result], user_tz),
+            available_slots=result,
+            errors=None,
+        )
 
     except Exception as e:
         return SlotsResponse(success=False, iana_timezone=user_tz, available_slots=[], errors=str(e))
