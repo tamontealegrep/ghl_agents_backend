@@ -28,6 +28,7 @@ import httpx
 from fastapi import APIRouter
 
 from agent_backend import ghl_calendar as ghl
+from agent_backend.appointment_labels import appointment_labels
 from agent_backend.ghl_schedule import Schedule, resolve_schedule
 from agent_backend.scheduling_schemas import (
     AppointmentInfo,
@@ -384,8 +385,15 @@ def build_ghl_scheduling_router(hooks: GhlSchedulingHooks) -> APIRouter:
                     start_dt=start_dt,
                     timezone=(req.iana_timezone or hooks.business_tz).strip(),
                 )
+            appointment_date, appointment_time = appointment_labels(start_dt, (req.iana_timezone or "").strip() or hooks.business_tz)
             return BookAppointmentResponse(
-                success=True, event_id=event_id, event_link=None, meet_link=meet_link, errors=notify_error
+                success=True,
+                event_id=event_id,
+                event_link=None,
+                meet_link=meet_link,
+                appointment_date=appointment_date,
+                appointment_time=appointment_time,
+                errors=notify_error,
             )
         except Exception as exc:
             return fail(str(exc))

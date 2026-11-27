@@ -77,6 +77,12 @@ tool_contracts:
       - name: meet_link
         required: true
         description: "Enlace de videollamada de la cita. null si la reserva no se completó."
+      - name: appointment_date
+        required: false
+        description: "Fecha de la cita agendada en la zona del contacto, lista para guardar en el campo appointment_date (por ejemplo Martes, 16 de NOVIEMBRE de 2026). null si la reserva no se completó."
+      - name: appointment_time
+        required: false
+        description: "Hora de la cita agendada en la zona del contacto, lista para guardar en el campo appointment_time (por ejemplo 08:50 a.m). null si la reserva no se completó."
       - name: errors
         required: true
         description: "Mensaje de error técnico o de notificación. Puede venir presente con success == true si la cita se creó pero falló la notificación al contact center."

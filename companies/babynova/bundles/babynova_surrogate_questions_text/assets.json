@@ -759,6 +759,16 @@
         "description": "Video call link for the appointment. null if the booking was not completed."
       },
       {
+        "name": "appointment_date",
+        "required": false,
+        "description": "Date of the booked appointment in the contact's time zone, ready to save in the contact's appointment_date field (for example Martes, 16 de NOVIEMBRE de 2026). null if the booking was not completed."
+      },
+      {
+        "name": "appointment_time",
+        "required": false,
+        "description": "Time of the booked appointment in the contact's time zone, ready to save in the contact's appointment_time field (for example 08:50 a.m). null if the booking was not completed."
+      },
+      {
         "name": "errors",
         "required": true,
         "description": "Technical error message. May be present with success == true if the appointment was created but email notification failed."

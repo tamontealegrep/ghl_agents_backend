@@ -5961,6 +5961,10 @@
           "[sc__time_try] = 0",
           "[sc__day_now_try] = 0",
           "[sc__book_try] = 0",
+          "[sc__appointment_date] = NULL",
+          "[sc__appointment_time] = NULL",
+          "[sc__wa_sent] = NULL",
+          "[sc__wa_try] = 0",
           "[sc__end_try] = 0",
           "[sc__available_slots] = NULL",
           "[sc__fresh_available_slots] = NULL",
@@ -7359,6 +7363,10 @@
           "[sc__slot_try] = 0",
           "[sc__ok_try] = 0",
           "[sc__book_try] = 0",
+          "[sc__appointment_date] = NULL",
+          "[sc__appointment_time] = NULL",
+          "[sc__wa_sent] = NULL",
+          "[sc__wa_try] = 0",
           "[sc__time_try] = 0",
           "[sc__day_now_try] = 0",
           "[sc__part_asked] = NULL",
@@ -7916,6 +7924,14 @@
             "str"
           ],
           [
+            "sc__appointment_date",
+            "str"
+          ],
+          [
+            "sc__appointment_time",
+            "str"
+          ],
+          [
             "sc__event_link",
             "str"
           ],
@@ -7973,8 +7989,8 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_TAG_SET",
-            "condition_text": "IF [sc__success] == TRUE -> GO_TO: SC__SC_TAG_SET",
+            "target": "SC__SC_APPT_FMT",
+            "condition_text": "IF [sc__success] == TRUE -> GO_TO: SC__SC_APPT_FMT",
             "is_mechanical": true,
             "python_expression": "sc__success == True",
             "reason": null
@@ -8116,6 +8132,115 @@
         ]
       },
       {
+        "node_id": "SC__SC_APPT_FMT",
+        "node_type": "registration",
+        "goal": [
+          "The booking succeeded: keep the date and the time of the appointment exactly as book_appointment returned them (appointment_date and appointment_time). Only if one of them did not come back, write it from [sc__start_date] in the contact's local time."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[sc__appointment_date] = the appointment_date returned by book_appointment, copied exactly; when it did not return it: the weekday in Spanish with its first letter in capitals, a comma, the day number, 'de', the month in Spanish in CAPITAL LETTERS, 'de' and the year (for example Martes, 16 de NOVIEMBRE de 2026)",
+          "[sc__appointment_time] = the appointment_time returned by book_appointment, copied exactly; when it did not return it: the 12-hour time with two digits for the hour, a colon, two digits for the minutes, a space and a.m or p.m with no final period (for example 08:50 a.m)"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_SYNC_APPT_DATE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_SYNC_APPT_DATE",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "SC__SC_SYNC_APPT_DATE",
+        "node_type": "action",
+        "goal": [],
+        "do": [
+          "TOOL CALL: update_custom_field",
+          "name = 'appointment_date', value = [sc__appointment_date]",
+          "contact_id = [contact.contact_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "update_custom_field",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_SYNC_APPT_TIME",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_SYNC_APPT_TIME",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "node_id": "SC__SC_SYNC_APPT_TIME",
+        "node_type": "action",
+        "goal": [],
+        "do": [
+          "TOOL CALL: update_custom_field",
+          "name = 'appointment_time', value = [sc__appointment_time]",
+          "contact_id = [contact.contact_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "update_custom_field",
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_TAG_SET",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "SC__SC_TAG_SET",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
+      },
+      {
         "node_id": "SC__SC_TAG_SET",
         "node_type": "action",
         "goal": [],
@@ -8188,8 +8313,12 @@
       {
         "node_id": "SC__SC_SEND_BOOKED",
         "node_type": "action",
-        "goal": [],
+        "goal": [
+          "The appointment is booked and appointment_date and appointment_time are already saved in the contact: send the booking WhatsApp template. This step always runs after a successful booking; if it was not accepted, try again before moving on."
+        ],
         "do": [
+          "[sc__wa_try] = [sc__wa_try] + 1",
+          "TOOL CALL: send_whatsapp_template",
           "template_name = <WA_BOOKED>, language = 'es'",
           "contact_id = [contact.contact_id]"
         ],
@@ -8199,14 +8328,26 @@
         "say_verbatim": false,
         "execute": "send_whatsapp_template",
         "store": [],
-        "capture": [],
+        "capture": [
+          [
+            "sc__wa_sent",
+            "bool"
+          ]
+        ],
         "eval": "code",
         "route": [
           {
             "target": "SC__SC_DONE",
-            "condition_text": null,
+            "condition_text": "IF [sc__wa_sent] == TRUE -> GO_TO: SC__SC_DONE",
             "is_mechanical": true,
-            "python_expression": null,
+            "python_expression": "sc__wa_sent == True",
+            "reason": null
+          },
+          {
+            "target": "SC__SC_SEND_BOOKED",
+            "condition_text": "IF [sc__wa_sent] == FALSE AND [sc__wa_try] < <MAX_TRY> -> GO_TO: SC__SC_SEND_BOOKED",
+            "is_mechanical": true,
+            "python_expression": "sc__wa_sent == False and sc__wa_try < MAX_TRY",
             "reason": null
           }
         ],
@@ -10406,6 +10547,20 @@
           "examples": []
         },
         {
+          "name": "appointment_date",
+          "required": false,
+          "description": "Date of the booked appointment in the contact's time zone, ready to save in the contact's appointment_date field (for example Martes, 16 de NOVIEMBRE de 2026). null if the booking was not completed.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "appointment_time",
+          "required": false,
+          "description": "Time of the booked appointment in the contact's time zone, ready to save in the contact's appointment_time field (for example 08:50 a.m). null if the booking was not completed.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
           "name": "errors",
           "required": true,
           "description": "Technical error message. May be present with success == true if the appointment was created but email notification failed.",
@@ -10749,7 +10904,7 @@
     "DATA_LAW": "Política de Privacidad y Protección de Datos Personales de Novafem S.A.S, que se da en cumplimiento de lo dispuesto por el artículo 15 de la Constitución Política de 1991, así como por la Ley 1581 de 2012, el Decreto 1377 de 2013 y el Decreto 886 de 2014. Que puedes encontrar en https://www.babynovaclinic.com/wp-content/uploads/2026/05/PO-GJ-02-Politica-de-Privacidad-y-Uso-de-Datos-Novafem-V2-27052025.pdf",
     "CITIES": "Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá y Sibaté",
     "WA_INFO": "sofia_greeting",
-    "WA_BOOKED": "cita_confirmada"
+    "WA_BOOKED": "sofia_booking"
   },
   "session_timeout_minutes": 10080,
   "say_policies": [

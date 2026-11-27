@@ -91,6 +91,16 @@ class BookAppointmentResponse(BaseModel):
     event_id: str | None = None
     event_link: str | None = None
     meet_link: str | None = None
+    appointment_date: str | None = Field(
+        default=None,
+        examples=["Martes, 16 de NOVIEMBRE de 2026"],
+        description="Date of the booked appointment in the contact's time zone, ready for the contact's custom field.",
+    )
+    appointment_time: str | None = Field(
+        default=None,
+        examples=["08:50 a.m"],
+        description="Time of the booked appointment in the contact's time zone, ready for the contact's custom field.",
+    )
     errors: str | None = None
 
 
