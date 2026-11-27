@@ -194,7 +194,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_ASK_CONSENT",
+            "target": "O__OP_GET_CRM",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -222,7 +222,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "O__OP_ASK_CONSENT",
+            "target": "O__OP_GET_CRM",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -230,6 +230,49 @@
           }
         ],
         "fallback": []
+      },
+      {
+        "node_id": "O__OP_GET_CRM",
+        "node_type": "action",
+        "goal": [
+          "Read what the contact already has in the CRM so the pre-qualification does not ask again what she already answered. Silent: say nothing about it."
+        ],
+        "do": [
+          "TOOL CALL: call get_contact.",
+          "contact_id = [contact.contact_id]",
+          "location_id = [contact.location_id]"
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": "get_contact",
+        "store": [],
+        "capture": [
+          [
+            "custom_fields",
+            "str"
+          ]
+        ],
+        "eval": "code",
+        "route": [
+          {
+            "target": "O__OP_ASK_CONSENT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "O__OP_ASK_CONSENT",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
       },
       {
         "node_id": "O__OP_ASK_CONSENT",
@@ -1293,7 +1336,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_FIND_MISSING",
+            "target": "Q__SQ_PRELOAD",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -1301,6 +1344,59 @@
           }
         ],
         "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_PRELOAD",
+        "node_type": "registration",
+        "goal": [
+          "Reuse what the candidate already answered in a previous conversation so it is not asked again. [custom_fields] holds the custom fields the CRM already has for her (field name -> value). Copy a value only when the field is present there with a real value; otherwise leave the slot as it is (NULL). Never invent, estimate or correct a value, and never say anything about this to the candidate."
+        ],
+        "do": [],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [
+          "[q__doc_type] = the document_type field of [custom_fields] when [q__doc_type] is still NULL and that field is cedula_ciudadania, ppt or other",
+          "[q__doc_number] = the document_number field of [custom_fields] when [q__doc_number] is still NULL",
+          "[q__eps_active_affiliation] = the eps_active_affiliation field of [custom_fields] only when it is yes or no (NULL when it is unknown or absent); [q__eps_name] and [q__eps_regime] = the eps_name and eps_regime fields, only when [q__eps_active_affiliation] was copied",
+          "[q__surrogate_age] = the surrogate_age field of [custom_fields] as a number",
+          "[q__nationality] = the nationality field of [custom_fields] (an ISO 3166-1 alpha-3 code); NULL when it is UNKNOWN",
+          "[q__city_residence] = the city_residence field of [custom_fields] and [q__city_raw] = the city_raw field; NULL both when city_residence is Otro (she is asked again) or absent",
+          "[q__children_count] = the children_count field of [custom_fields] as a number",
+          "[q__last_birth_date] = the last_birth_date field of [custom_fields], copied exactly as it is (YYYY/MM/DD)",
+          "[q__birth_window] = 'under_12' when less than 12 whole months have passed between [q__last_birth_date] and [q__now]; '12_to_18' when 12 or more but less than 18 whole months have passed; 'over_18' when 18 or more whole months have passed; NULL when [q__last_birth_date] is NULL",
+          "[q__birth_type] = the birth_type field of [custom_fields] (csection or natural), only when [q__birth_window] is under_12 or 12_to_18",
+          "[q__csections_count] = the csections_count field of [custom_fields] as a number",
+          "[q__abortos] = the abortions_history field of [custom_fields] only when it is yes or no (NULL when it is unknown or absent)",
+          "[q__pree] = the preeclampsia_history field of [custom_fields] only when it is yes or no (NULL when it is unknown or absent)",
+          "[q__weight] = the weight_kg field of [custom_fields] as a number",
+          "[q__height] = the height_cm field of [custom_fields] as a number",
+          "[q__imc] = the bmi field of [custom_fields] as a number, only when both [q__weight] and [q__height] were copied; otherwise NULL",
+          "[q__uses_drugs] = the uses_drugs field of [custom_fields] only when it is yes or no (NULL when it is unknown or absent)",
+          "[q__availability] = the time_availability field of [custom_fields] only when it is yes or no (NULL when it is unknown or absent)"
+        ],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "Q__SQ_FIND_MISSING",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": [
+          {
+            "target": "Q__SQ_FIND_MISSING",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ]
       },
       {
         "node_id": "Q__SQ_ASK_DOC_TYPE",
@@ -10016,6 +10112,77 @@
         "CUSTOM FIELDS: custom_fields es una lista de textos 'clave=valor' con la clave del campo sin el prefijo 'opportunity.' (o su ID). Un campo que no existe en la subcuenta lo ignora GHL.",
         "SOURCE OF TRUTH: usa success para confirmar que GHL aceptó el cambio; status, pipeline_id y pipeline_stage_id dicen cómo quedó la oportunidad.",
         "SILENT ACTION: nunca le digas a la persona que estás actualizando la oportunidad."
+      ]
+    },
+    {
+      "name": "get_contact",
+      "description": "Lee los datos de un contacto de GoHighLevel: los campos normales (nombre, correo, teléfono, dirección, país...), las etiquetas y los campos personalizados con valor.",
+      "inputs": [
+        {
+          "name": "contact_id",
+          "required": true,
+          "description": "ID del contacto en GHL (disponible en context.contact_id).",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "location_id",
+          "required": false,
+          "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token y permite dar los campos personalizados por nombre.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "success",
+          "required": true,
+          "description": "Indica si GHL devolvió el contacto.",
+          "type_expr": "bool",
+          "examples": []
+        },
+        {
+          "name": "contact_id",
+          "required": false,
+          "description": "Eco del ID del contacto.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "fields",
+          "required": false,
+          "description": "Datos del contacto que tienen valor, como objeto JSON nombre -> valor: first_name, last_name, name, email, phone, address1, city, state, postal_code, website, timezone, source, date_of_birth, country, assigned_to, dnd, type, date_added y date_updated.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "tags",
+          "required": false,
+          "description": "Las etiquetas que tiene el contacto.",
+          "type_expr": "list[str]",
+          "examples": []
+        },
+        {
+          "name": "custom_fields",
+          "required": false,
+          "description": "Campos personalizados con valor, como objeto JSON nombre del campo -> valor. Ejemplo: {'city_residence': 'Bogotá', 'surrogate_age': '30'}.",
+          "type_expr": "str",
+          "examples": []
+        },
+        {
+          "name": "errors",
+          "required": false,
+          "description": "Mensaje de error si la consulta falló.",
+          "type_expr": "str",
+          "examples": []
+        }
+      ],
+      "notes": [
+        "MANDATORY EXECUTION: ejecútala cuando el flujo necesite saber qué datos ya tiene el contacto en el CRM antes de preguntarle o de decidir el siguiente paso (por ejemplo para retomar una conversación). Solo lee: no cambia nada.",
+        "ARGUMENTS: contact_id y location_id (disponibles en el contexto del contacto).",
+        "BEHAVIOUR: devuelve solo los datos que tienen valor. Los campos personalizados vienen como nombre del campo -> valor; si no se puede leer su definición, el nombre es el ID del campo.",
+        "SOURCE OF TRUTH: usa success para confirmar que GHL respondió. Si success es false, el motivo viene en errors: no inventes ni supongas ningún dato del contacto.",
+        "SILENT ACTION: no le cuentes a la persona detalles técnicos de la consulta (IDs, campos, herramienta)."
       ]
     },
     {

@@ -542,6 +542,61 @@
     ]
   },
   {
+    "name": "get_contact",
+    "description": "Lee los datos de un contacto de GoHighLevel: los campos normales (nombre, correo, teléfono, dirección, país...), las etiquetas y los campos personalizados con valor.",
+    "notes": [
+      "MANDATORY EXECUTION: ejecútala cuando el flujo necesite saber qué datos ya tiene el contacto en el CRM antes de preguntarle o de decidir el siguiente paso (por ejemplo para retomar una conversación). Solo lee: no cambia nada.",
+      "ARGUMENTS: contact_id y location_id (disponibles en el contexto del contacto).",
+      "BEHAVIOUR: devuelve solo los datos que tienen valor. Los campos personalizados vienen como nombre del campo -> valor; si no se puede leer su definición, el nombre es el ID del campo.",
+      "SOURCE OF TRUTH: usa success para confirmar que GHL respondió. Si success es false, el motivo viene en errors: no inventes ni supongas ningún dato del contacto.",
+      "SILENT ACTION: no le cuentes a la persona detalles técnicos de la consulta (IDs, campos, herramienta)."
+    ],
+    "inputs": [
+      {
+        "name": "contact_id",
+        "required": true,
+        "description": "ID del contacto en GHL (disponible en context.contact_id)."
+      },
+      {
+        "name": "location_id",
+        "required": false,
+        "description": "ID de la ubicación (subcuenta) del contacto en GHL (disponible en context.location_id). Elige el token y permite dar los campos personalizados por nombre."
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "required": true,
+        "description": "Indica si GHL devolvió el contacto."
+      },
+      {
+        "name": "contact_id",
+        "required": false,
+        "description": "Eco del ID del contacto."
+      },
+      {
+        "name": "fields",
+        "required": false,
+        "description": "Datos del contacto que tienen valor, como objeto JSON nombre -> valor: first_name, last_name, name, email, phone, address1, city, state, postal_code, website, timezone, source, date_of_birth, country, assigned_to, dnd, type, date_added y date_updated."
+      },
+      {
+        "name": "tags",
+        "required": false,
+        "description": "Las etiquetas que tiene el contacto."
+      },
+      {
+        "name": "custom_fields",
+        "required": false,
+        "description": "Campos personalizados con valor, como objeto JSON nombre del campo -> valor. Ejemplo: {'city_residence': 'Bogotá', 'surrogate_age': '30'}."
+      },
+      {
+        "name": "errors",
+        "required": false,
+        "description": "Mensaje de error si la consulta falló."
+      }
+    ]
+  },
+  {
     "name": "calculate_bmi",
     "description": "Authorized tool to calculate BMI. Its result is the source of truth for eligibility.",
     "notes": [
