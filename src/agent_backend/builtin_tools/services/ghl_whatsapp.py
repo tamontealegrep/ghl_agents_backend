@@ -1,10 +1,12 @@
 """WhatsApp messages sent through GoHighLevel (``POST /conversations/messages``): an approved template, or a file."""
 
 import json
+from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlparse
 
 from agent_backend.builtin_tools.services.ghl_http import ghl_call
+from agent_backend.builtin_tools.services.whatsapp_templates import visible_message
 
 MEDIA_TYPES = ("image", "video", "audio", "document")
 """The kinds of file GHL's ``whatsapp.media.type`` accepts."""
@@ -69,10 +71,6 @@ def _base_body(contact_id: str, from_number: str | None) -> dict[str, Any]:
     return body
 
 
-TEMPLATE_MESSAGE = "."
-"""What goes in `message` of a template. GHL refuses a message with no content, even when the template is named; the
-contact receives the approved template (checked on WhatsApp), so the text only has to be something."""
-
 
 def normalize_variables(raw: Any) -> list[str]:
     """The values of a template's variables as a list of texts: a list, or a JSON list or a comma separated text."""
@@ -103,6 +101,7 @@ async def send_whatsapp_template_service(
     category: str = "UTILITY",
     from_number_id: str | None = None,
     to_number: str | None = None,
+    templates_file: Path | None = None,
 ) -> dict[str, Any]:
     """Sends an approved WhatsApp template to a contact, in the shape GHL's own web app sends it.
 
@@ -110,7 +109,9 @@ async def send_whatsapp_template_service(
     values of its variables in ``whatsapp.placeholders``: ``["{{contact.first_name}}"]`` is resolved by GHL as a merge
     tag, any other text goes as written. That shape is the one GHL's web app posts to ``/conversations/messages``
     (minus the fields it was shown not to need: ``MessageType`` and, in a real test, the two numbers); the public page
-    of the endpoint documents only media, so it can change without notice. The call needs the
+    of the endpoint documents only media, so it can change without notice. GHL refuses a message with no content, so
+    `message` carries the text of the template with its variables filled in (the company's ``whatsapp_templates.yaml``): the
+    contact receives the approved template, and the advisors read that same text in the conversation. The call needs the
     ``conversations/message.write`` scope on the token of the contact's location.
 
     Args:
@@ -123,6 +124,7 @@ async def send_whatsapp_template_service(
         category: Category of the template (``UTILITY``, ``MARKETING``, ``AUTHENTICATION``).
         from_number_id: Id of the WhatsApp number to send from (``whatsapp.fromNumberId``); GHL's default when missing.
         to_number: The contact's WhatsApp number in international format; GHL's own record when missing.
+        templates_file: The company's ``whatsapp_templates.yaml``, with the text each template shows in the chat.
 
     Returns:
         ``success``; on success ``message_id`` and ``conversation_id``; on failure ``errors`` with the reason.
@@ -133,6 +135,7 @@ async def send_whatsapp_template_service(
         return {"success": False, "errors": "template_name is required"}
     if not (language or "").strip():
         return {"success": False, "errors": "language is required"}
+    body_values = normalize_variables(body_variables)
     whatsapp: dict[str, Any] = {
         "type": "template",
         "template": {
@@ -140,7 +143,7 @@ async def send_whatsapp_template_service(
             "lang": language.strip(),
             "category": (category or "UTILITY").strip().upper(),
         },
-        "placeholders": {"header": normalize_variables(header_variables), "body": normalize_variables(body_variables)},
+        "placeholders": {"header": normalize_variables(header_variables), "body": body_values},
     }
     if from_number_id and from_number_id.strip():
         whatsapp["fromNumberId"] = from_number_id.strip()
@@ -149,7 +152,7 @@ async def send_whatsapp_template_service(
     body: dict[str, Any] = {
         "type": "WhatsApp",
         "contactId": contact_id.strip(),
-        "message": TEMPLATE_MESSAGE,
+        "message": visible_message(template_name, language, body_values, templates_file),
         "whatsapp": whatsapp,
     }
     return await _send(body, location_id)

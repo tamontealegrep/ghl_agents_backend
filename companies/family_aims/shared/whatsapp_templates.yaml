@@ -1,0 +1,16 @@
+# Text of the approved WhatsApp templates of Family Aims, so that the conversation of the contact shows what was sent.
+#
+# GHL has no public API to read the text of a WhatsApp template, and it refuses a message with no content. The
+# contact receives the approved template whatever `message` says, so the text written here only has to be what the
+# advisors should read in the chat. Keep it equal to the one approved in Meta; {{1}}, {{2}}... are the variables of the
+# body, in order. A template that is not listed here shows as "[WhatsApp template: <name>]".
+#
+# One file per company, in its shared/ folder: the backend of a company reads only its own file. A change is read on the
+# next message sent (no restart); in a deployed image the file travels with the Docker build.
+#
+# Example:
+#   - name: sam_fc_es
+#     language: es
+#     body: |-
+#       Hola {{1}}, ...
+templates: []
