@@ -4658,15 +4658,15 @@
         "node_id": "Q__SQ_ASK_PROP_INT",
         "node_type": "question",
         "goal": [
-          "Ask, without pressure, whether she is interested in hearing the proposal; that answer is the authorization to send it. A no is accepted with respect."
+          "Ask, without pressure, whether she wants us to send her the proposal; that answer is the authorization to send it. A no is accepted with respect."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Would you like to hear the proposal we have for you? Either answer is fine."
+          "¿Te gustaría que te enviemos la propuesta que tenemos para ti? Cualquiera de las dos respuestas está bien."
         ],
-        "say_verbatim": false,
+        "say_verbatim": true,
         "execute": null,
         "store": [],
         "capture": [
@@ -4759,7 +4759,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_SHOW_PROPOSAL",
+            "target": "Q__SQ_SEND_INFO",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -4786,34 +4786,6 @@
         "route": [
           {
             "target": "Q__SQ_BYE_PROPOSAL",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": []
-      },
-      {
-        "node_id": "Q__SQ_SHOW_PROPOSAL",
-        "node_type": "message",
-        "goal": [
-          "Present the proposal exactly as written in <PROPOSAL>."
-        ],
-        "do": [],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [
-          "Here is the proposal: <PROPOSAL>"
-        ],
-        "say_verbatim": false,
-        "execute": null,
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "Q__SQ_SEND_INFO",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -4861,21 +4833,22 @@
         "node_id": "Q__SQ_ASK_PROP_OK",
         "node_type": "question",
         "goal": [
-          "Ask whether she agrees with the proposal and wants to continue."
+          "Ask, once the proposal was sent, whether she accepts it and wants to schedule her appointment.",
+          "Map the answer to exactly one of: yes (accepts and wants to schedule), no (does not accept or does not want to schedule), questions (she asks a question, says she has one or wants to know more before deciding: always questions, never null)."
         ],
         "do": [],
         "trigger": [],
         "disabled_in": [],
         "say": [
-          "Do you agree with the proposal and would you like to continue?"
+          "¿Aceptas la propuesta y deseas agendar tu cita?"
         ],
-        "say_verbatim": false,
+        "say_verbatim": true,
         "execute": null,
         "store": [],
         "capture": [
           [
             "q__prop_ok",
-            "Literal[yes, no]"
+            "Literal[yes, no, questions]"
           ]
         ],
         "eval": "code",
@@ -4921,6 +4894,13 @@
             "reason": null
           },
           {
+            "target": "Q__SQ_TO_KQ",
+            "condition_text": "IF [q__prop_ok] == 'questions' -> GO_TO: Q__SQ_TO_KQ",
+            "is_mechanical": true,
+            "python_expression": "q__prop_ok == 'questions'",
+            "reason": null
+          },
+          {
             "target": "Q__SQ_SYNC_PROP_NO",
             "condition_text": "IF [q__prop_ok_try] >= <MAX_TRY> -> GO_TO: Q__SQ_SYNC_PROP_NO",
             "is_mechanical": true,
@@ -4962,7 +4942,7 @@
         "eval": "code",
         "route": [
           {
-            "target": "Q__SQ_TO_KQ",
+            "target": "Q__SQ_TO_SCHED",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -5017,6 +4997,32 @@
         "route": [
           {
             "target": "Q__SQ_END",
+            "condition_text": null,
+            "is_mechanical": true,
+            "python_expression": null,
+            "reason": null
+          }
+        ],
+        "fallback": []
+      },
+      {
+        "node_id": "Q__SQ_TO_SCHED",
+        "node_type": "subflow_change",
+        "goal": [],
+        "do": [
+          "Load the SCHEDULING subflow reference document before continuing."
+        ],
+        "trigger": [],
+        "disabled_in": [],
+        "say": [],
+        "say_verbatim": false,
+        "execute": null,
+        "store": [],
+        "capture": [],
+        "eval": "code",
+        "route": [
+          {
+            "target": "SC__SC_S",
             "condition_text": null,
             "is_mechanical": true,
             "python_expression": null,
@@ -10731,7 +10737,6 @@
     "KB_NUDGE": "2",
     "DATA_LAW": "Política de Privacidad y Protección de Datos Personales de Novafem S.A.S, que se da en cumplimiento de lo dispuesto por el artículo 15 de la Constitución Política de 1991, así como por la Ley 1581 de 2012, el Decreto 1377 de 2013 y el Decreto 886 de 2014. Que puedes encontrar en https://www.babynovaclinic.com/wp-content/uploads/2026/05/PO-GJ-02-Politica-de-Privacidad-y-Uso-de-Datos-Novafem-V2-27052025.pdf",
     "CITIES": "Bogotá, Soacha, Zipaquirá, Chía, Mosquera, Funza, Cajicá, Madrid, La Calera, Cota, Facatativá y Sibaté",
-    "PROPOSAL": "[PENDING: proposal text]",
     "WA_INFO": "sofia_greeting",
     "WA_BOOKED": "cita_confirmada"
   },
