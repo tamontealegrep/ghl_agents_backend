@@ -21,7 +21,7 @@ Taking part in the program is never guaranteed at the first contact. It depends 
 ## Steps of the process
 
 1. Text pre-qualification: the virtual assistant asks a short set of questions (about 5 minutes) to check that the candidate meets the initial criteria.
-2. Appointment with the BabyNova team: candidates who pass the pre-qualification schedule a short appointment of about 10 minutes, in person at the clinic. The team reviews the case and answers questions.
+2. Appointment with the BabyNova team: candidates who pass the pre-qualification schedule a short appointment, in person at the clinic. The team reviews the case and answers questions.
 3. Medical and psychological evaluation: candidates who continue are summoned for a full in-person evaluation.
 4. Legal and medical process: approved candidates begin the formal surrogacy process accompanied by the BabyNova team.
 
@@ -47,7 +47,7 @@ Nationality is asked and recorded, but it is not a reason for exclusion by itsel
 
 ## The appointment
 
-The appointment with the BabyNova team lasts about 10 minutes and is held in person at the clinic (Carrera 16 # 88-81, Consultorio 609, Bogotá). All times are Colombia time. It is booked through this chat. After booking, the candidate receives the confirmation details and an email with the information about the appointment.
+The appointment with the BabyNova team is short and is held in person at the clinic (Carrera 16 # 88-81, Consultorio 609, Bogotá). All times are Colombia time. It is booked through this chat. After booking, the candidate receives a WhatsApp message with the confirmation details.
 
 The appointment is a commitment for the candidate and for the BabyNova team.
 
