@@ -1349,7 +1349,7 @@
         "node_id": "Q__SQ_PRELOAD",
         "node_type": "registration",
         "goal": [
-          "Reuse what the candidate already answered in a previous conversation so it is not asked again. [custom_fields] holds the custom fields the CRM already has for her (field name -> value). Copy a value only when the field is present there with a real value; otherwise leave the slot as it is (NULL). Never invent, estimate or correct a value, and never say anything about this to the candidate."
+          "Reuse what the candidate already answered in a previous conversation so it is not asked again. [custom_fields] holds the custom fields the CRM already has for her (field name -> value). Copy a value only when the field is present there with a real value; otherwise leave the slot as it is (NULL). Never invent, estimate or correct a value, and never say anything about this to the candidate. The EPS affiliation is never copied from the CRM: it changes over time, so check_adres always runs again once the document type and number are known."
         ],
         "do": [],
         "trigger": [],
@@ -1360,7 +1360,6 @@
         "store": [
           "[q__doc_type] = the document_type field of [custom_fields] when [q__doc_type] is still NULL and that field is cedula_ciudadania, ppt or other",
           "[q__doc_number] = the document_number field of [custom_fields] when [q__doc_number] is still NULL",
-          "[q__eps_active_affiliation] = the eps_active_affiliation field of [custom_fields] only when it is yes or no (NULL when it is unknown or absent); [q__eps_name] and [q__eps_regime] = the eps_name and eps_regime fields, only when [q__eps_active_affiliation] was copied",
           "[q__surrogate_age] = the surrogate_age field of [custom_fields] as a number",
           "[q__nationality] = the nationality field of [custom_fields] (an ISO 3166-1 alpha-3 code); NULL when it is UNKNOWN",
           "[q__city_residence] = the city_residence field of [custom_fields] and [q__city_raw] = the city_raw field; NULL both when city_residence is Otro (she is asked again) or absent",
