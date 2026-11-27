@@ -3,6 +3,7 @@ from datetime import date
 import pytest
 from surrogacy.services.surrogate_classifier import (
     classify_surrogate,
+    classify_surrogate_detailed,
     eligibility_fields,
 )
 
@@ -288,3 +289,60 @@ def test_document_is_checked_last(valid):
     valid["document_type"] = "pasaporte"
     valid["drug_use"] = "si"
     assert classify(valid) == "Rejected (Drug Use)"
+
+
+# ---------------------------------------------------------------------------
+# voice: no document or EPS evaluation, and the best verdict is "Pre-approved"
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("voice", [True, "true", "yes", "si", "SI"])
+def test_voice_valid_candidate_is_pre_approved(valid, voice):
+    """In a voice call, a candidate who meets everything else is pre-approved, never approved."""
+    valid["voice"] = voice
+    assert classify(valid) == "Pre-approved"
+
+
+@pytest.mark.parametrize("voice", [None, "", False, "false", "no", "unknown"])
+def test_voice_off_keeps_the_full_classification(valid, voice):
+    """With voice off or missing nothing changes: the document and the EPS are evaluated and she is approved."""
+    valid["voice"] = voice
+    assert classify(valid) == "Approved"
+    valid.pop("document_type")
+    assert classify_surrogate_detailed(valid, TODAY) == ("Inconclusive", "document_type")
+
+
+@pytest.mark.parametrize(
+    "document,eps",
+    [
+        (None, None),
+        ("", ""),
+        ("pasaporte", "no"),  # would be rejected by documentation outside voice
+        ("cedula_ciudadania", "no"),  # would be rejected by EPS outside voice
+        ("ppt", "yes"),
+        ("cedula_ciudadania", "unknown"),
+    ],
+)
+def test_voice_ignores_document_and_eps(valid, document, eps):
+    """In a voice call the document type and the EPS are ignored, whatever they are."""
+    valid.update(voice="yes", document_type=document, eps_active_affiliation=eps)
+    assert classify_surrogate_detailed(valid, TODAY) == ("Pre-approved", None)
+
+
+def test_voice_still_rejects_for_the_other_criteria(valid):
+    """Voice does not relax any other criterion."""
+    valid.update(voice="yes", drug_use="si")
+    assert classify(valid) == "Rejected (Drug Use)"
+    valid.update(drug_use="no", age="45")
+    assert classify(valid) == "Rejected (Age)"
+
+
+def test_voice_still_reports_the_missing_data(valid):
+    """Voice does not hide missing data of the other criteria: the first missing field is reported."""
+    valid.update(voice="yes", bmi=None)
+    assert classify_surrogate_detailed(valid, TODAY) == ("Inconclusive", "bmi")
+
+
+def test_pre_approved_eligibility_fields():
+    """Pre-approved is saved to GoHighLevel as 'pre-approved', with no rejection reason."""
+    assert eligibility_fields("Pre-approved") == ("pre-approved", "none")

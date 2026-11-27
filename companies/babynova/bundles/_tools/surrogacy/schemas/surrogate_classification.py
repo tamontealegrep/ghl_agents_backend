@@ -26,12 +26,21 @@ class SurrogateClassificationRequest(BaseModel):
     eps_active_affiliation: Any | None = Field(default=None, examples=["si"])
     drug_use: Any | None = Field(default=None, examples=["no"])
     availability: Any | None = Field(default=None, examples=["si"])
+    voice: Any | None = Field(
+        default=None,
+        examples=["si"],
+        description=(
+            "Llamada de voz. Con verdadero no se evalua el documento ni la EPS (document_type y "
+            "eps_active_affiliation se ignoran) y quien cumple el resto queda 'Pre-approved'. "
+            "Falso o ausente: clasificacion completa."
+        ),
+    )
 
 
 class SurrogateClassificationResponse(BaseModel):
     success: bool
     result: str | None = None
-    eligibility_result: str | None = Field(default=None, description="approved, rejected o inconclusive.")
+    eligibility_result: str | None = Field(default=None, description="approved, pre-approved (solo con voice), rejected o inconclusive.")
     not_eligibility_reason: str | None = Field(
         default=None,
         description="Motivo del rechazo, 'missing_data (<campo>)' con el primer dato faltante, o none.",

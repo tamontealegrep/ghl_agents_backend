@@ -81,6 +81,8 @@ def eligibility_fields(result: str, missing_field: str | None = None) -> tuple[s
     """
     if result == "Approved":
         return "approved", "none"
+    if result == "Pre-approved":
+        return "pre-approved", "none"
     if result == "Inconclusive":
         return "inconclusive", f"missing_data ({missing_field})" if missing_field else "missing_data"
     rejection = result.partition("(")[2].rstrip(")")
@@ -133,7 +135,11 @@ def classify_surrogate(data: dict[str, Any], today: date | None = None) -> str:
 
 
 def classify_surrogate_detailed(data: dict[str, Any], today: date | None = None) -> tuple[str, str | None]:
-    """Igual que classify_surrogate, pero devuelve tambien el primer dato faltante cuando el resultado es Inconclusive."""
+    """Igual que classify_surrogate, pero devuelve tambien el primer dato faltante cuando el resultado es Inconclusive.
+
+    Con `voice` verdadero no se evaluan el documento ni la EPS (se ignoran aunque lleguen) y quien cumple todo lo
+    demas queda 'Pre-approved' en lugar de 'Approved'.
+    """
     today = today or date.today()
 
     # 1. Edad
@@ -208,6 +214,10 @@ def classify_surrogate_detailed(data: dict[str, Any], today: date | None = None)
         return "Inconclusive", "availability"
     if availability is False:
         return "Rejected (Availability)", None
+
+    # En voz no se pide el documento ni se consulta la EPS: quien llega hasta aqui queda preaprobada.
+    if parse_boolean(data.get("voice")) is True:
+        return "Pre-approved", None
 
     # 11. Documento: solo cedula de ciudadania o PPT
     if not is_present(data.get("document_type")):
