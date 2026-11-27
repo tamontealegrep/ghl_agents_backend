@@ -82,10 +82,10 @@ tool_contracts:
         description: "Enlace de videollamada de la cita. null si la reserva no se completó."
       - name: appointment_date
         required: false
-        description: "Fecha de la cita agendada, siempre en inglés, en la zona del contacto (por ejemplo Tuesday, November 16, 2026). El agente la traduce al idioma en que habla antes de guardarla en el campo appointment_date. null si la reserva no se completó."
+        description: "Fecha de la cita agendada, siempre en inglés, en la zona del contacto (por ejemplo Tuesday, November 16, 2026). El agente la traduce al idioma en que habla antes de usarla como variable de la plantilla de WhatsApp de la cita. null si la reserva no se completó."
       - name: appointment_time
         required: false
-        description: "Hora de la cita agendada en la zona del contacto, en el formato pedido con time_format (por ejemplo 08:50 AM o 14:05). El agente adapta AM/PM al idioma en que habla antes de guardarla en el campo appointment_time. null si la reserva no se completó."
+        description: "Hora de la cita agendada en la zona del contacto, en el formato pedido con time_format (por ejemplo 08:50 AM o 14:05). El agente adapta AM/PM al idioma en que habla antes de usarla como variable de la plantilla de WhatsApp de la cita. null si la reserva no se completó."
       - name: errors
         required: true
         description: "Mensaje de error técnico o de notificación. Puede venir presente con success == true si la cita se creó pero falló la notificación al contact center."

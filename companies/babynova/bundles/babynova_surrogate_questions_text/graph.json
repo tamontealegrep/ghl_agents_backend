@@ -8151,78 +8151,6 @@
         "eval": "code",
         "route": [
           {
-            "target": "SC__SC_SYNC_APPT_DATE",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "SC__SC_SYNC_APPT_DATE",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "SC__SC_SYNC_APPT_DATE",
-        "node_type": "action",
-        "goal": [],
-        "do": [
-          "TOOL CALL: update_custom_field",
-          "name = 'appointment_date', value = [sc__appointment_date]",
-          "contact_id = [contact.contact_id]"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": "update_custom_field",
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
-            "target": "SC__SC_SYNC_APPT_TIME",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ],
-        "fallback": [
-          {
-            "target": "SC__SC_SYNC_APPT_TIME",
-            "condition_text": null,
-            "is_mechanical": true,
-            "python_expression": null,
-            "reason": null
-          }
-        ]
-      },
-      {
-        "node_id": "SC__SC_SYNC_APPT_TIME",
-        "node_type": "action",
-        "goal": [],
-        "do": [
-          "TOOL CALL: update_custom_field",
-          "name = 'appointment_time', value = [sc__appointment_time]",
-          "contact_id = [contact.contact_id]"
-        ],
-        "trigger": [],
-        "disabled_in": [],
-        "say": [],
-        "say_verbatim": false,
-        "execute": "update_custom_field",
-        "store": [],
-        "capture": [],
-        "eval": "code",
-        "route": [
-          {
             "target": "SC__SC_TAG_SET",
             "condition_text": null,
             "is_mechanical": true,
@@ -8314,13 +8242,13 @@
         "node_id": "SC__SC_SEND_BOOKED",
         "node_type": "action",
         "goal": [
-          "The appointment is booked and appointment_date and appointment_time are already saved in the contact: send the booking WhatsApp template, which has two variables (the date and the time). This step always runs after a successful booking; if it was not accepted, try again before moving on."
+          "The appointment is booked and appointment_date and appointment_time are already translated: send the booking WhatsApp template, which has two variables (the date and the time). This step always runs after a successful booking; if it was not accepted, try again before moving on."
         ],
         "do": [
           "[sc__wa_try] = [sc__wa_try] + 1",
           "TOOL CALL: send_whatsapp_template",
           "template_name = <WA_BOOKED>, language = 'es'",
-          "body_variables = a list with exactly two items, in this order: [sc__appointment_date] (variable {{1}}, the date) and [sc__appointment_time] (variable {{2}}, the time), each one copied exactly as saved in the contact. They are two separate items of the list: the date contains a comma, so never send them as one text separated by commas. The template fails if the two values are missing.",
+          "body_variables = a list with exactly two items, in this order: [sc__appointment_date] (variable {{1}}, the date) and [sc__appointment_time] (variable {{2}}, the time), each one copied exactly as translated. They are two separate items of the list: the date contains a comma, so never send them as one text separated by commas. The template fails if the two values are missing.",
           "contact_id = [contact.contact_id]"
         ],
         "trigger": [],
@@ -10560,14 +10488,14 @@
         {
           "name": "appointment_date",
           "required": false,
-          "description": "Date of the booked appointment, always in English, in the contact's time zone (for example Tuesday, November 16, 2026). The agent translates it to the language it speaks before saving it in the contact's appointment_date field. null if the booking was not completed.",
+          "description": "Date of the booked appointment, always in English, in the contact's time zone (for example Tuesday, November 16, 2026). The agent translates it to the language it speaks before using it as a variable of the booking WhatsApp template. null if the booking was not completed.",
           "type_expr": "str",
           "examples": []
         },
         {
           "name": "appointment_time",
           "required": false,
-          "description": "Time of the booked appointment in the contact's time zone, in the format asked with time_format (for example 08:50 AM or 14:05). The agent adapts AM/PM to the language it speaks before saving it in the contact's appointment_time field. null if the booking was not completed.",
+          "description": "Time of the booked appointment in the contact's time zone, in the format asked with time_format (for example 08:50 AM or 14:05). The agent adapts AM/PM to the language it speaks before using it as a variable of the booking WhatsApp template. null if the booking was not completed.",
           "type_expr": "str",
           "examples": []
         },
